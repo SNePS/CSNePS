@@ -114,8 +114,6 @@
   [channel]
   (dosync (ref-set (:valve-open channel) false)))
 
-(build/fix-fn-defs submit-to-channel new-message create-rui-structure)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Simple Event Model ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -557,7 +555,7 @@
   (let [ruis (get-rule-use-info rui-set-ref new-rui)]
     (filter #(and (>= (:pos %) pos) (>= (:neg %) neg)) ruis)))
 
-
+(build/fix-fn-defs submit-to-channel new-message create-rui-structure)
 
 
   

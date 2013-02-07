@@ -27,6 +27,8 @@ public class Term {
 	private static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
 	private static Keyword downcableset_key = Keyword.intern("down-cableset");
 	private static Keyword activation_key = Keyword.intern("activation-value");
+	private static Keyword i_channels_key = Keyword.intern("i-channels");
+	private static Keyword y_channels_key = Keyword.intern("y-channels");
 	
 	private IPersistentMap term;
 	
@@ -34,6 +36,9 @@ public class Term {
 	private ArrayList<Term> upcablesetterms;
 	private HashMap<Slot, Set<Term>> upcableset;
 	private HashMap<Slot, Set<Term>> downcableset;
+	private ArrayList<Channel> ichannels = new ArrayList<Channel>();
+	private ArrayList<Channel> ychannels = new ArrayList<Channel>();
+	
 	
 	private String termstring;
 	private String termname;
@@ -167,6 +172,35 @@ public class Term {
 		
 	}
 	
+	//The number of i-channels can increase. Compare arity of cache with the one in the term
+	//to determine if we have to do real work.
+	public ArrayList<Channel> getIChannels(){
+		APersistentSet i = (APersistentSet)((Ref)term.valAt(i_channels_key)).deref();
+		if(i.count() == ichannels.size()) return ichannels;
+		
+		//Do the real work.
+		for (Iterator<IPersistentMap> iter = i.iterator(); iter.hasNext(); ){
+			Channel c = Channel.create(iter.next());
+			if(ichannels.contains(c)) continue;
+			ichannels.add(c);
+		}
+		return ichannels;
+	}
+	
+	//The number of y-channels can increase. Compare arity of cache with the one in the term
+	//to determine if we have to do real work.
+	public ArrayList<Channel> getYChannels(){
+		APersistentSet y = (APersistentSet)((Ref)term.valAt(y_channels_key)).deref();
+		if(y.count() == ychannels.size()) return ychannels;
+		
+		//Do the real work.
+		for (Iterator<IPersistentMap> iter = y.iterator(); iter.hasNext(); ){
+			Channel c = Channel.create(iter.next());
+			if(ychannels.contains(c)) continue;
+			ychannels.add(c);
+		}
+		return ychannels;
+	}
 	
 	public Boolean isMolecular(){
 		return FnInterop.molecularTermQ(term);

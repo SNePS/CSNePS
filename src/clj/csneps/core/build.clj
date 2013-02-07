@@ -16,7 +16,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels)
+(declare assert build check-and-build-variables build-channels create-rui-structure)
 
 (load "build_assert")
 (load "build_utils")
