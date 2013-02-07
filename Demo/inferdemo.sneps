@@ -1,0 +1,31 @@
+;;; Demonstration of Some Inference Methods
+;;;
+;;; Currently, if we ask if a term, A, is asserted, the following is tried:
+;;; 1. Is A already asserted?
+;;; 2. Is A derivable by sort-based inference?
+;;; 3. Is A derivable by slot-based inference?
+;;; 4. Is A derivable by natural deduction?
+;;;    a. Is A derivable by some Elimination rule?
+;;;       i. Is A a conjunct of some term, and derivable by And Elimination?
+;;;    b. Is A derivable by the Introduction rule of its main connective?
+;;; 5. Is (not A) derivable?  Try 1--4.
+
+(in-ns 'snuser)
+
+(clearkb true)
+(assert '(and (Isa (setof Fido Rover Lassie) (setof Dog Pet))
+	  (Isa (setof Fluffy Tom) (setof Cat Pet))
+	  (not (Isa (setof Fido Rover) Cat))
+	  (not (Isa (setof Fluffy Tom) Dog))))
+
+;;; These require And Elimination and Slot-Based inference:
+(ask '(Isa (setof Fido Lassie) Dog))
+(ask '(Isa Tom Dog))
+
+;;; This is an example that would require
+;;;    a kind of And Introduction with the elements of a set argument.
+;;; In general, it would require a combinatorial number of checks.
+;;; It doesn't work as yet.  Should it be implemented?
+(ask '(Isa (setof Fido Fluffy) Pet))
+
+

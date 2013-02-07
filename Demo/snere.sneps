@@ -1,0 +1,47 @@
+;;; Demonstration of SNeRE
+
+(in-package :snuser)
+(clearkb t)
+
+;;; Action functions that need no arguments may be attached to Acts.
+(attachPrimaction (defineTerm 'helloWorld 'Act)
+		   (definePrimaction helloWorldfn ()
+		     (format t "~&Hello world.~%")))
+(perform 'helloWorld)
+
+;;; An Act with an action of no arguments.
+;;; Define a caseframe with just an action slot,
+;;;    and give it a function symbol.
+(defineCaseframe 'Act '(actions) :fsymbols '(sayHello))
+
+ ;;; Attach a primitive action function to the action function symbol.
+(attachPrimaction (defineTerm 'sayHello 'Action)
+		   (definePrimaction sayHellofn ()
+		     (format t "~&Hello.~%")))
+;;; Now, can perform it.
+(perform '(sayHello))
+
+;;; Associate another action function symbol to the same caseframe,
+(sameFrame 'sayHiThere 'sayHello)
+;;; attach another action function of no arguments to it,
+(attachPrimaction (defineTerm 'sayHiThere 'Action)
+		   (definePrimaction sayHiTherefn ()
+		     (format t "~&Hi there.~%")))
+;;; and perform it.
+(perform '(sayHiThere))
+
+;;; Attach an existing primitive action function to another action symbol.
+(sameFrame 'sayHi 'sayHiThere)
+(attachPrimaction (defineTerm 'sayHi 'Action)
+		   'sayHiTherefn)
+(perform '(sayHi))
+
+;;; An action with one argument
+(defineType Person (Thing))
+(defineSlot addressee :type Person  :posadjust none :negadjust none)
+(defineCaseframe 'Act '(actions addressee) :fsymbols '(Greet))
+(attachPrimaction (defineTerm 'Greet 'Action)
+		   (definePrimaction greetfn (addressee)
+		     (set:loopset for person in addressee
+				  do (format t "~&Hello ~S.~%" person))))
+(perform '(Greet (setof Stu Bill)))

@@ -1,0 +1,80 @@
+(clearkb t)
+
+;;; Define Types
+(defineType Agent (Thing) "Individuals that have agency")
+(defineType Action (Thing) "Actions that Agents can perform.")
+
+;;; Define Slots
+(defineSlot agent :type Agent)
+(defineSlot object :type Thing
+	    :docstring "Non-agentive objects of actions.")
+(defineSlot property :type Thing)
+(defineSlot life :type Thing)
+(defineSlot whole :type Thing)
+(defineSlot part :type Thing)
+(defineSlot group :type Thing)
+ 
+;;; Caseframes
+
+(defineCaseframe 'Proposition '('Owns agent object)
+  :docstring "[agent] owns [object]")
+
+
+(defineCaseframe 'Proposition '('Beats agent life)
+  :docstring "[agent] beats [object]")
+
+
+(defineCaseframe 'Proposition '('Property object property)
+  :docstring "[object] has property [property]")
+
+
+(defineCaseframe 'Proposition '('isPartOf part whole)
+  :docstring "[part] is part of [whole]")
+
+
+
+;;;(defineCaseframe 'Proposition '('Hates group))
+;;; Assertions
+
+
+;;; Every man is mortal
+(assert '(Property (every x (Isa x Man)) Mortal))
+
+
+;;; Albino elephants are valuable
+
+(assert '(Property (every x (Isa x Elephant) (Property x Albino)) Valuable))
+
+
+
+;;; Every elephant has a trunk
+(assert '(isPartOf 
+	  (some y(x) (Isa y Trunk))
+	  (every x (Isa x Elephant))))
+
+
+;;; Every man is human
+(assert '(Isa (every x (Isa x Man)) Human))
+
+;;; Albino Elephants are white
+(assert '(Property  (every x (Isa x Elephant) (Property x Albino)) White))
+
+;;; Every elephant is large
+(assert '(Property (every x (Isa x Elephant)) Large))
+
+;;; Every farmer that owns a donkey beats it
+(assert '(Beats (every x (Isa x Farmer) 
+		 (Owns x (some y(x) (Isa y Donkey))))
+	  y))
+
+
+;;; A trunk of every elephant is flexible
+(assert '(Property (some y(x) (Isa y Trunk) 
+		    (isPartOf y (every x (Isa x Elephant))))
+	           Flexible))
+			
+
+(list-terms)
+
+
+

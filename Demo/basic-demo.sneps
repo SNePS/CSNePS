@@ -1,0 +1,129 @@
+;;; Basic Demo of SNePS 3 Facilities
+;;; ================================
+
+;;; The contents of this file are subject to the University at Buffalo
+;;; Public License Version 1.0 (the "License"); you may not use this file
+;;; except in compliance with the License. You may obtain a copy of the
+;;; License at http://www.cse.buffalo.edu/sneps/Downloads/ubpl.pdf.
+;;; 
+;;; Software distributed under the License is distributed on an "AS IS"
+;;; basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+;;; the License for the specific language governing rights and limitations
+;;; under the License.
+;;; 
+;;; The Original Code is SNePS 3.
+;;; 
+;;; The Initial Developer of the Original Code is Research Foundation of
+;;; State University of New York, on behalf of University at Buffalo.
+;;; 
+;;; Portions created by the Initial Developer are Copyright (C) 2007
+;;; Research Foundation of State University of New York, on behalf of
+;;; University at Buffalo. All Rights Reserved.
+;;; 
+;;; Contributor(s): ______________________________________.
+
+(in-ns 'snuser)
+;; Initialize KB completely
+(clearkb true)
+;;; Initial set of semantic types
+(showTypes)
+;;; Initial set of contexts
+(listContexts)
+;;; The current context
+(currentContext)
+;;; Can use Propositional Logic
+;;; ===========================
+;;; Assert p
+(assert 'p)
+;;; Query p
+(ask 'p)
+;;; Go to a new child context
+(setCurrentContext (defineContext 'CT2 :parents '(DefaultCT)))
+;;; Assert q in this context
+(assert 'q)
+;;; See terms
+(list-terms)
+;;; Go to a sibling context
+(setCurrentContext (defineContext 'CT3 :parents '(DefaultCT) :hyps '(r)))
+;;; See the terms here
+(list-terms)
+;;; Query some terms
+(ask 'p)
+(ask 'q)
+(ask 'r)
+;;;
+;;; Predicate Logic
+;;; ===============
+;;; Reinitialize
+(clearkb true)
+;;; Initial set of slots
+(list-slots)
+;;; Initial set of caseframes
+(list-caseframes)
+;;; Terms can be symbols, strings, or numbers
+(assert '(Isa Fido Dog))
+(assert '(Isa "Lake Erie" Lake))
+(assert '(Isa 3 Integer))
+(assert '(Isa 3.1415932 Transcendental))
+;;; A term can also be a wft name
+(assert '(Isa wft1 Proposition))
+;;; Type of input term is irrelevant
+(assert '(Isa "3" Integer))
+;;; *PRECISION* determines round-off of floating point numbers
+*PRECISION*
+(assert '(Isa 3.1415943219 Transcendental))
+;;; Reinitialize
+(clearkb)
+;;; Set arguments
+(assert '(Isa (setof Fido Rover) Dog))
+(assert '(Isa (setof Rover Fido) Dog))
+;;; A bigger set is different
+(assert '(Isa (setof Fido Rover Lassie) Dog))
+;;; A smaller set is different
+(assert '(Isa (setof Fido) Dog))
+;;; A single argument is the same as a singleton
+(assert '(Isa Fido Dog))
+;;; Now let's see all the terms
+(list-terms)
+;;; Let's see just the asserted terms.
+(list-terms :asserted true)
+;;; and describe the asserted ones.
+(describe-terms wft3 wft1 wft2)
+;;;
+;;; A caseframe with unquoted function symbol
+;;;
+(clearkb true)
+(defineType Action (Thing) "The category of actions")
+(defineSlot object :type Thing
+		:docstring "The object argument of an act."
+		:posadjust none :negadjust none
+		:min 1 :max 1)
+;;; Note that the actions slot is predefined.
+(defineCaseframe 'Act '(actions object)
+  :docstring "[actions] [object]"
+  :fsymbols '(senseFor go))
+(assert '(Isa (senseFor smell) Act))
+(assert '(Isa (go left) Act))
+(sameFrame 'say 'go)
+(assert '(Isa (say Hello) Act))
+(list-terms)
+(describe-terms wft2 wft4 wft6)
+;;;
+;;; Negations
+;;;
+(clearkb true)
+(assert '(not (Isa Fido Cat)))
+(assert '(nor (Isa Fluffy Dog) (Isa Tweety Penguin) (Isa Rover Cat)))
+(list-terms)
+;;;
+;;; Violating the min/max slot restrictions
+;;;
+(clearkb true)
+(assert '(Equiv (setof Superman "Clark Kent")))
+(assert '(Equiv UniqueMan))
+(defineSlot min3 :type Entity :min 3)
+(defineSlot max3 :type Entity :max 3)
+(defineCaseframe 'Proposition '('MinMax min3 max3))
+(assert '(MinMax (setof a b) (setof 1 2 3 4)))
+(assert '(MinMax (setof a b c) (setof 1 2 3 4)))
+(assert '(MinMax (setof a b c) (setof 1 2 3)))

@@ -1,0 +1,52 @@
+;;; Demonstration of use of xor
+
+;;; Xor Introduction
+;;; ================
+;;; No arguments asserted.
+(clearkb)
+(assert '(not c))
+(ask '(xor a b c))
+
+;;; One argument asserted.
+;;;     but one is unknown.
+(clearkb)
+(assert 'a)
+(assert '(not c))
+(ask '(xor a b c))
+
+;;; One argument asserted.
+;;;     and the negation of the others are asserted.
+(clearkb)
+(assert 'a)
+(assert '(not b))
+(assert '(not c))
+(ask '(xor a b c))
+
+;;; Too many arguments are asserted
+;;;     and the negation of the others are asserted.
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert '(not c))
+(ask '(xor a b c))
+
+;;; One argument is asserted,
+;;; one is derived,
+;;;     and the negation of the other is asserted.
+(clearkb)
+(assert '(if p a))
+(assert 'p)
+(assert 'b)
+(assert '(not c))
+(ask '(xor a b c))
+
+;;; One argument is asserted,
+;;; the negation of one is derived,
+;;;     and the negation of the other is asserted.
+(clearkb)
+(assert '(if p a))
+(assert 'p)
+(assert '(nand q b))
+(assert 'q)
+(assert '(not c))
+(ask '(xor a b c))

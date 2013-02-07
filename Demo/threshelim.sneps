@@ -1,0 +1,84 @@
+;;; Demonstrations of Thresh Elimination
+
+;;; Deriving positive instances of arguments of thresh
+
+;;; If no argument is derivable,
+;;;    and no negation of an argument is derivable,
+;;; then nothing can be derived.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6))
+;;; Should not derive anything.
+(ask 'p1)
+
+;;; If fewer than min arguments are derivable
+;;;    and no negation of an argument is derivable,
+;;; then nothing can be derived.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6))
+(assert 'p1)
+(assert '(if a p2))
+(assert 'a)
+;;; Should not derive anything.
+(ask 'p3)
+
+;;; If more than tot-min negations are derivable,
+;;; then nothing can be derived.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6))
+(assert '(not p1))
+(assert '(not p2))
+(assert '(if a (not p3)))
+(assert 'a)
+;;; Should not derive anything.
+(ask 'p4)
+
+;;; If at least min args can be derived,
+;;;    and tot-max-1 negations can be derived,
+;;; then can derive another argument.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6))
+(assert 'p1)
+(assert 'p2)
+(assert '(if a p3))
+(assert 'a)
+;;; Should derive p4.
+(ask 'p4)
+
+;;; Retry with tot > 6
+;;; If at least min args can be derived,
+;;;    and tot-max-1 negations can be derived,
+;;; then can derive another argument.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6 p7))
+(assert 'p1)
+(assert 'p2)
+(assert '(if a p3))
+(assert 'a)
+(assert '(not p4))
+;;; Should derive p5
+(ask 'p5)
+
+;;; But one fewer negation being derivable,
+;;; causes it not to fire.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6 p7))
+(assert 'p1)
+(assert 'p2)
+(assert '(if a p3))
+(assert 'a)
+;;; Should not derive anything
+(ask 'p5)
+
+;;; Deriving negative instances of arguments of thresh
+;;; If min-1 arguments are derived
+;;;    and at least tot-max negations of arguments are derived
+;;; then the negation of another argument is derivable.
+(clearkb)
+(assert '(thresh (3 5) p1 p2 p3 p4 p5 p6 p7))
+(assert 'p1)
+(assert 'p2)
+(assert '(not p3))
+(assert '(if a (not p4)))
+(assert 'a)
+;;; Should derive (not p5)
+(ask 'p5)

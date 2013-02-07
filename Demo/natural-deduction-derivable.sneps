@@ -1,0 +1,76 @@
+;;; Demonstration of Natural Deduction Rules of Inference
+
+(clearkb)
+
+;;; And Elimination and Disjunctive Syllogism
+(assert '(and (not a) (not b)))
+(assert '(or a b c))
+(ask 'c)
+
+;;; OR introduction
+(ask '(or c d))
+
+;;; Can't use Disjunctive Syllogism
+;;;    if the disjunction is not derivable. 
+(clearkb)
+(assert '(if a (or b c)))
+(assert '(not b))
+(ask 'c)
+
+;;; Disjuctive Syllogism version of Modus Tollens
+(assert '(or (not p) q))
+(assert '(not q))
+(ask 'p)
+
+;;; AND introduction
+(assert 'a)
+(ask '(and a (not b) (not q)))
+
+;;; Implication Elimination Chaining
+(clearkb)
+(assert 'a)
+(assert '(if a b))
+(assert '(if b c))
+(assert '(if c d))
+(ask 'd)
+(list-terms)
+
+;;; Don't get into an infinite loop.
+(clearkb)
+(assert '(if a b))
+(assert '(if b c))
+(assert '(if c a))
+(ask 'a)
+
+;;; Implication Elimination Chaining
+;;;    with sets of antecedents and consequents
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert '(if (setof a b) (setof c d)))
+(assert '(if a e))
+(assert '(if (setof d e) g))
+(ask 'g)
+(list-terms)
+
+;;; Using explicit conjunctions instead of sets
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert '(if (and a b) (and c d)))
+(assert '(if a e))
+(assert '(if (and d e) g))
+(ask 'g)
+(list-terms)
+
+;;; Using
+;;;   And Introduction
+;;;   Implication Elimination
+;;;   And Elimination
+;;;   Or Introduction
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert '(if (and a b) (and c d)))
+(ask '(or c d))
+

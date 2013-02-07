@@ -1,0 +1,179 @@
+;;; Demonstration of contextual determination of semantic types,
+;;;    and of changing semantic types 
+;;;
+;;; This demonstration won't show what it's meant to
+;;; if run a second time in the same Lisp image.
+
+(in-ns 'snuser)
+(clearkb true)
+
+;;; Types
+;;; =====
+;;; Thing
+;;;    NameableThing
+;;;       Agent
+;;;    InanimateThing
+;;;    Action
+;;;       MentalAction
+;;;          PropositionalAttitude
+;;;       PhysicalAction
+;;;    Word
+;;;       Name
+
+(defineType NameableThing (Thing) "Things that can be given a name.")
+(defineType Agent (NameableThing) "Individuals that have agency")
+(defineType InanimateThing (Thing) "Things without agency.")
+
+(defineType Action (Thing) "Actions that Agents can perform.")
+(defineType MentalAction (Action) "Mental actions.")
+(defineType PropositionalAttitude (MentalAction))
+(defineType PhysicalAction (Action) 
+  "Actions that can be performed on physical objects.")
+
+(defineType Word (Thing) "English words.")
+(defineType Name (Word) "Names.")
+
+;;; Display the type structure.
+(showTypes)
+
+;;; Slots
+;;; =========
+(defineSlot theme :type Thing
+		:docstring "A theme of an action could be any Thing.") 
+(defineSlot named :type NameableThing)
+(defineSlot agent :type Agent)
+(defineSlot experiencer :type Agent)
+
+(defineSlot object :type InanimateThing
+		:docstring "Non-agentive objects of actions.")
+
+(defineSlot attitude :type PropositionalAttitude)
+
+(defineSlot propername :type Name)
+
+(defineSlot content :type Proposition)
+
+;;; Caseframes
+;;; ==========
+;;; Note that the actions slot is predefined.
+(defineCaseframe 'Proposition '(actions agent theme)
+  :docstring "[agent] [actions] [theme]"
+  :fsymbols '(PickedUp))
+
+(defineCaseframe 'Proposition '(actions agent object)
+  :docstring "[agent] [actions] [object]"
+  :fsymbols '(Wielded))
+
+(defineCaseframe 'Proposition '(attitude experiencer content)
+  :docstring "[experiencer] [attitude] [content]"
+  :fsymbols '(Believed))
+
+(defineCaseframe 'Proposition '('hasProperName named propername)
+  :docstring "[named] is named [propername]")
+
+;;; Building the Knowledge Base
+;;; ===========================
+(assert '(Isa maid1 Maid))
+;;; The type of maid1 should be Entity.
+(semantic-type-of (findTerm 'maid1))
+
+(assert '(hasProperName maid1 Marion))	
+;;; The type of maid1 should be lowered to NameableThing.
+(semantic-type-of (findTerm 'maid1))
+
+(assert '(hasProperName lance Lancelot))
+;;; The type of lance should be NameableThing.
+(semantic-type-of (findTerm 'lance))
+
+(assert '(Isa lance Knight))
+;;; The type of lance should still be NameableThing.
+(semantic-type-of (findTerm 'lance))
+
+;;; Marion believed that Lancelot picked up a hound.
+(assert '(Believed maid1 (and (PickedUp lance dog1) (Isa dog1 hound))))
+;;; The type of dog1 should be Thing, because it was picked up.
+(semantic-type-of (findTerm 'dog1))
+;;; The type of maid1 should be lowered to Agent.
+(semantic-type-of (findTerm 'maid1))
+;;; The type of lance should also be lowered to Agent.
+(semantic-type-of (findTerm 'lance))
+
+;;; King Arthur wielded the sword, Excalibur.
+(assert '(hasProperName art Arthur))
+(assert '(Isa art King))
+(assert '(Wielded art sword1))
+;;; the type of sword1 should be InanimateThing.
+(semantic-type-of (findTerm 'sword1))
+
+;;; This should be a type error: an InanimateThing isn't a NameableThing.
+(assert '(hasProperName sword1 Excalibur))
+
+;;; Add the type, Weapons, as nameable inanimate Things.
+(defineType Weapon (InanimateThing NameableThing))
+
+;;; Display the type structure again.
+(showTypes)
+
+;;; Now can give sword1 a name,
+(assert '(hasProperName sword1 Excalibur))
+;;; and its type should be Weapon.
+(semantic-type-of (findTerm 'sword1))
+
+;;; A car is another inamimate nameable thing.
+(defineType Car (InanimateThing NameableThing)
+  "Cars are nameable inanimate things.")
+
+;;; Display the type structure again.
+(showTypes)
+
+;;; "agent bought object" will be represented
+;;;    by the same frame as "agent wielded object."
+(sameFrame 'Bought 'Wielded)
+
+;;; Hank Morgan, the Connecticut Yankee in King Arthur's Court
+;;;    bought a car named "Lizzie."
+;;;
+;;; The hasProperName term forces car1 to be a NameableThing.
+;;; The Bought term forces car1 also to be an InanimateThing.
+;;; Thus, there are two possibile sorts for car1: Weapon and Car.
+;;; The user must pick.
+(assert '(and (Isa ctYankee Man)
+	  (hasProperName ctYankee Hank)
+	  (hasProperName car1 Lizzie)
+	  (Bought ctYankee car1)))
+
+;;; SNePS can now infer that car1 is a car.
+(ask '(Isa car1 Car))
+
+;;; An example of a subtype of Proposition.
+(defineType OralEvidence (Proposition)
+  "Oral evidence is a kind of proposition.")
+
+(defineType Event (Thing)
+  "An Event is a kind of a Thing.")
+
+;;; Display the type structure again.
+(showTypes)
+
+(defineSlot testimony :type OralEvidence
+		:docstring "Oral evidence given in testimony.")
+
+(defineSlot events :type Event
+		:docstring "The events of a term.")
+
+(defineCaseframe 'Proposition '('Testified agent testimony)
+  :docstring "[agent] testified that [testimony]")
+
+(defineCaseframe 'Proposition '('willOccur events)
+  :docstring "[events] will occur")
+
+;;; Hank Morgan testified that there would be a solar eclipse.
+(assert '(Testified ctYankee
+	  (willOccur SolarEclipse)))
+
+;;; Although, by its own structure, (willOccur SolarEclipse) is a proposition,
+;;;    its use makes it OralEvidence
+(semantic-type-of (sneps3.core.build/build '(willOccur SolarEclipse) :Entity {}))
+
+;;; See all the terms and their types.
+(list-terms :types true)

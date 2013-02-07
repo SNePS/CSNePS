@@ -1,0 +1,52 @@
+;;; Basic Demo of SNePS 3 Equivalence Elimination and Introduction
+;;; ================================
+
+(in-ns 'snuser)
+;; Initialize KB completely
+(clearkb true)
+
+
+;; equivalence elimination
+
+(assert '(iff a b c))
+
+(assert 'a)
+
+(ask 'b)
+
+
+(clearkb true)
+
+
+(assert '(iff a b c))
+
+(assert '(not a))
+
+(ask 'b)
+
+
+(clearkb true)
+
+
+;; equivalence introduction
+
+(assert '(and a b c))
+
+(ask '(iff a b c d))
+
+(ask '(iff a b c))
+
+(ask '(iff a b))
+
+
+(clearkb true)
+
+
+(assert '(and (not a) (not b) (not c)))
+
+(ask '(iff a b c d))
+
+(ask '(iff a b c))
+
+(ask '(iff a b))
+

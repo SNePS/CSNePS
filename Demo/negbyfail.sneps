@@ -1,0 +1,27 @@
+;;; Demonstration of Negation by Failure
+
+(in-ns 'snuser)
+
+(clearkb)
+;;; A kind of bird that is not known not to fly flies.
+(assert '(if (setof bird (thnot (not flies))) flies))
+;;; Canaries are birds.
+(assert '(if canary bird))
+;;; Penguins are birds that don't fly.
+(assert '(if penguin (setof bird (not flies))))
+;;; It's a canary.
+(assert 'canary)
+;;; It should fly.
+(ask 'flies)
+
+(clearkb)
+;;; A kind of bird that is not known not to fly flies.
+(assert '(if (setof bird (thnot (not flies))) flies))
+;;; Canaries are birds.
+(assert '(if canary bird))
+;;; Penguins are birds that don't fly.
+(assert '(if penguin (setof bird (not flies))))
+;;; It's a penguin.
+(assert 'penguin)
+;;; It should not fly.
+(ask 'flies)

@@ -1,0 +1,54 @@
+;; Initialize KB completely
+(clearkb t)
+;;; Demonstrate function-valued functions with the reflexive closure of binary slots.
+(defineType Relation (Thing))
+(defineType BinaryRelation (Relation))
+(defineType SnepsFunction (Relation))
+(defineSlot relarg :type BinaryRelation
+	    :docstring "Filler is a binary relation used as an argument."
+	    :posadjust none
+	    :negadjust none
+	    :min 1
+	    :max 1)
+(defineSlot relational :type SnepsFunction
+	    :docstring "Filler is a relation-valued function."
+	    :posadjust none
+	    :negadjust none
+	    :min 1
+	    :max 1)
+(defineSlot relation :type Relation
+	    :docstring "Filler is a relation."
+	    :posadjust none
+	    :negadjust none
+	    :min 1
+	    :max 1)
+(defineSlot arg1 :type Entity
+	    :docstring "Filler is the first argument of some relation."
+	    :posadjust none
+	    :negadjust none
+	    :min 1
+	    :max 1)
+(defineSlot arg2 :type Entity
+	    :docstring "Filler is the second argument of some relation."
+	    :posadjust none
+	    :negadjust none
+	    :min 1
+	    :max 1)
+(defineCaseframe 'BinaryRelation '(relational relarg)
+		 :docstring "the [relational] of [relarg]"
+		 :fsymbols '(refClose))
+(defineCaseframe 'Proposition '(relation arg1 arg2)
+		 :docstring "[arg1] has the relation [relation] to [arg2]"
+		 :fsymbols '(< (refClose)))
+;;; < holds between 3 and 5.
+(assert '(< 3 5))
+
+;;; The reflexive closure of < holds between 3 and 3.
+(assert '((refClose <) 3 3))
+
+;;; See all the terms
+(list-terms)
+
+;;; The relation wft2 is the reflexive closure of <,
+;;;     and it holds between 5 and 5.
+(assert '(wft2 5 5))

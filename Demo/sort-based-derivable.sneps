@@ -1,0 +1,29 @@
+
+;;; Basic Demo of SNePS 3 Sort-Based Inference
+;;; ================================
+
+(in-package :snuser)
+;; Initialize KB completely
+(clearkb t)
+
+;;; Two new types:
+(defineType Animal (Thing))
+(defineType Dog (Animal))
+
+;;; One new slot with sort dog:
+(defineSlot dogs :type Dog)
+
+;;; One caseframe to assert dog sort:
+(defineCaseframe 'Proposition '('Dog dogs)
+  :docstring "[dogs] is a dog.")
+
+;; Assert the proposition that Fido and Dolly are both dogs:
+(assert '(Dog (setof Fido Dolly)))
+
+;; Ask if Fido is an Animal:
+(ask '(Isa Fido Animal))
+
+;; Ask if both Fido and Dolly are Animal and Dog:
+(ask '(Isa (setof Dolly Fido) (setof Animal Dog)))
+
+

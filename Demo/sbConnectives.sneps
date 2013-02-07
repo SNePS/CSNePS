@@ -1,0 +1,101 @@
+;;; Demonstration of Using Slot-Based Inference to Derive Rules
+;;; In each example,
+;;;    the first ask should succeed by Slot-Based Inference
+;;;    and the next ask(s) should not succeed.
+
+(showproofs)
+
+;;; and
+;;; ===
+;;; conjunctions are stored only with at least 2 arguments.
+;;; (and a b c) |- (and a b)
+(clearkb)
+(assert '(and a b c))
+(ask '(and a b))
+(ask '(and a b c d))
+
+;;; (not (and a b c)) |- (not (and a b c d))
+;;; However, (not (and a b c)) = (nand a b c)
+(clearkb)
+(assert '(not (and a b c)))
+(ask '(not (and a b c d)))
+(ask '(not (and a b)))
+
+;;; nor
+;;; ===
+;;; negations are stored with at least 1 argument.
+;;; (nor a b c) |- (nor a b)
+(clearkb)
+(assert '(nor a b c))
+(ask '(nor a b))
+(ask '(nor a b c d))
+
+;;; (not (nor a b c)) |- (not (nor a b c d))
+;;; However, (not (nor a b c)) = (or a b c)
+(clearkb)
+(assert '(not (nor a b c)))
+(ask '(not (nor a b c d)))
+(ask '(not (nor a b)))
+
+;;; or
+;;; ==
+;;; disjunctions are stored only with at least 2 arguments.
+;;; (or a b c) |- (or a b c d)
+(clearkb)
+(assert '(or a b c))
+(ask '(or a b c d))
+(ask '(or a b))
+
+;;; (not (or a b c)) |- (not (or a b))
+;;; However (not (or a b c)) = (nor a b c)
+(clearkb)
+(assert '(not (or a b c)))
+(ask '(not (or a b)))
+(ask '(not (or a b c d)))
+
+;;; nand
+;;; ====
+;;; negatedconjunctions are stored only with a least 2 arguments
+;;; (nand a b c) |- (nand a b c d)
+(clearkb)
+(assert '(nand a b c))
+(ask '(nand a b c d))
+(ask '(nand a b))
+
+;;; (not (nand a b c)) |- (not (nand a b))
+;;; However (not (nand a b c)) = (and a b c)
+(clearkb)
+(assert '(not (nand a b c)))
+(ask '(not (nand a b)))
+(ask '(not (nand a b c d)))
+
+;;; iff
+
+;;; xor
+
+;;; andor
+
+;;; thresh
+
+;;; if
+;;; ==
+;;; implications are stored
+;;;    with at least 1 antecedent and at least one consequent.
+;;; (if (setof a b c) (setof p q r)) |- (if (setof a b c d) (setof p q))
+(clearkb)
+(assert '(if (setof a b c) (setof p q r)))
+(ask '(if (setof a b c d) (setof p q)))
+(ask '(if (setof a b) (setof p q r)))
+(ask '(if (setof a b c) (setof p q r s)))
+
+;;; (not (if (setof a b c) (setof p q r)))
+;;;    |- (not (if (setof a b) (setof p q r s)))
+(clearkb)
+(assert '(not (if (setof a b c) (setof p q r))))
+(ask '(not (if (setof a b) (setof p q r s))))
+(ask '(not (if (setof a b c d) (setof p q r))))
+(ask '(not (if (setof a b c) (setof p q))))
+
+;;; v=>
+
+;;; i=>

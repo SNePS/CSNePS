@@ -1,0 +1,127 @@
+(ns csneps.test.benchmark
+  (:require [csneps.core.contexts :as ct]
+            [csneps.core.caseframes :as cf]
+            [csneps.core.relations :as slot]
+            [csneps.core :as csneps]
+            [csneps.core.build :as build]
+            [csneps.snip :as snip]
+            [clojure.set :as set]
+            [csneps.core.snuser :as snuser]))
+
+(def ^:dynamic start-time nil)
+(def ^:dynamic end-time nil)
+
+(declare benchmark-impl)
+
+(defn generate-and
+  [assert? ant-ct]
+  (let [ant-syms (map gensym (repeat ant-ct "ant"))
+        term (if assert?
+               (do 
+                 ;(doall (map #(snuser/assert %) ant-syms))
+                 (snuser/assert (list* 'and ant-syms)))
+               (snuser/defineTerm (list* 'and ant-syms)))]
+    (if assert?
+      ;; If the and is snuser/asserted, don't snuser/assert the
+      ;; ants, but return them.
+      (do 
+        (snuser/assert (list* 'and ant-syms))
+        ant-syms)
+      ;; Otherwise, snuser/assert the ants, and return the rule
+      (do 
+        (doall (map #(snuser/assert %) ant-syms))
+        (:name (snuser/defineTerm (list* 'and ant-syms)))))))
+
+(defn generate-andor
+  [assert? ant-ct]
+  (let [min-ct (int (inc (rand ant-ct)))
+        max-ct (+ min-ct (int (rand (- ant-ct min-ct))))
+        true-ants (map gensym (repeat max-ct "ant"))
+        false-ants (map gensym (repeat (- ant-ct max-ct) "ant"))
+        term (if assert?
+               (snuser/assert (list* 'andor (list min-ct max-ct) (concat true-ants false-ants)))
+               (snuser/defineTerm (list* 'andor (list min-ct max-ct) (concat true-ants false-ants))))]
+    [true-ants false-ants term]))
+
+(defn generate-implication
+  [assert? ant-ct cqset]
+  (let [ants (set (map gensym (repeat ant-ct "ant")))]
+    (if assert?
+      [ants (snuser/assert (list 'if ants cqset))]
+      [ants (snuser/defineTerm (list 'if ants cqset))])))
+
+(defn generate-implication-chain
+  [branching-factor maxdepth]
+  (loop [depth 0
+         cqset '#{cq}]
+    (if (< depth maxdepth)
+      (recur (inc depth)
+             (apply clojure.set/union
+                    (map first 
+                         (map #(generate-implication true branching-factor %) cqset))))
+      (doall (map #(snuser/assert %) cqset)))))
+
+(def totaltime (atom 0))
+(def iterations (atom 10))
+
+(defn log-elapsed
+  [start-time]
+  (swap! totaltime + (/ (- (. java.lang.System (clojure.core/nanoTime)) start-time) 1000000.0)))
+
+
+(defn print-elapsed
+  [start-time]
+  (println "Elapsed:"
+           (/ (- (. java.lang.System (clojure.core/nanoTime)) start-time) 1000000.0) "ms"))
+
+
+(defn benchmark-done?
+  [start-time ref key oldvalue newvalue]
+  (when (newvalue (snuser/find-term 'cq))
+    (println "Done.")
+    (log-elapsed start-time)
+    (remove-watch (:ders (ct/currentContext)) :ders)
+    (if (> (swap! iterations dec) 0)
+      (benchmark-impl)
+      (println "Total Time:" @totaltime)
+    )))
+
+(defn benchmark-impl
+  []
+  (snuser/clearkb true)
+  (generate-implication-chain 2 10)
+  (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+    (add-watch (:ders (ct/currentContext)) :ders (partial benchmark-done? start-time))
+    (snip/backward-infer (snuser/find-term 'cq))))
+
+(defn benchmark
+  []
+  (def totaltime (atom 0))
+  (def iterations (atom 10))
+  (benchmark-impl))
+
+(defn generate-next-level
+  [true-cqs false-cqs]
+  
+  
+  
+  )
+
+
+
+
+
+
+
+(defn statistics
+  []
+  (let [molterms (filter csneps/molecularTerm? (vals @csneps/TERMS))
+        inferredin (filter #(not (nil? @(:ruis %))) molterms)]
+    (println "Molecular Terms:" (count molterms))
+    (println "Terms Inferred In:" (count inferredin))))
+
+(defn generate-graph
+  [depth order]
+  
+  
+  )

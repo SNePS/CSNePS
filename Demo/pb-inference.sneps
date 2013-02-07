@@ -1,0 +1,58 @@
+;;; Demonstration of SNePS 3 Path-Based Inference
+;;; Stuart C. Shapiro
+;;; January 30, 2012
+
+(in-ns 'csneps.core.snuser)
+(clearkb true)
+
+(defineSlot subclass :type Category :negadjust reduce
+	    :path (compose ! subclass (kstar (compose superclass- ! subclass)))
+	    :docstring "Subcategories of some category/ies.")
+(defineSlot superclass :type Category :negadjust reduce
+	    :path (compose ! superclass (kstar (compose subclass- ! superclass)))
+	    :docstring "Supercategories of some category/ies.")
+
+(definePath 'class '(compose ! class (kstar (compose subclass- ! superclass))))
+
+(definePath 'member '(compose ! member (kstar (compose equiv- ! equiv))))
+
+(defineCaseframe 'Proposition '('Ako subclass superclass)
+  :docstring "every [subclass] is a [superclass]")
+
+(showproofs)
+(assert '(Isa Fido Dog))
+(assert '(Ako Dog Mammal))
+(assert '(Ako (setof Mammal Fish) Vertebrate))
+(assert '(Ako Vertebrate Animal))
+(assert '(not (Ako Mammal Fish)))
+(assert '(Ako Fish SeaCreature))
+
+;; Mammals are Vertebrates, and Vertebrates are Animals, so Mammals are Animals.
+(ask '(Ako Mammal Animal))
+
+;; SeaCreatures are Fish, but Fish are not Animals. 
+;; Should this derive (not (Ako Mammal SeaCreature))?
+(ask '(Ako Mammal SeaCreature))
+
+;; Fido is a Dog, Dogs are Mammals, and Mammals are Animals, so Fido is an Animal.
+(ask '(Isa Fido Animal))
+
+;; Fido is a Dog, Dogs are Mammals. Mammals aren't known to be SeaCreatures, so neither is Fido.
+(ask '(Isa Fido SeaCreature))
+(assert '(Equiv (setof Fido mydog)))
+
+;; mydog is Equiv to Fido, and Fido is an Animal, so mydog is an Animal.
+(ask '(Isa mydog Animal))
+(assert '(Equiv (setof mydog wifesdog)))
+
+;; Fido is equiv to mydog, and mydog is equiv to wifesdog, so Fido is equiv to wifesdog.
+(ask '(Equiv (setof Fido wifesdog)))
+
+;;; Demonstration of path constructs using pathsfrom
+;; Without requiring the term to be asserted, the result is (Animal Dog SeaCreature).
+(pathsfrom 'Fido '(compose member- class))
+(pathsfrom 'Fido '(compose member- ! class))
+
+;; irreflexive-restrict should remove Fido from the result set.
+(pathsfrom 'Fido '(compose equiv- equiv))
+(pathsfrom 'Fido '(irreflexive-restrict (compose equiv- equiv)))

@@ -1,0 +1,94 @@
+;;; Demonstration of use of Andor and Thresh Introduction
+(in-ns 'snuser)
+
+;;; Too many arguments asserted: 6
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert 'c)
+(assert 'd)
+(assert 'e)
+(assert 'f)
+(assert '(not g))
+;;; Should derive (thresh (3 5) b! d! f! a! c! e! g)
+(ask '(andor (3 5) a b c d e f g))
+
+;;; Too many negated arguments asserted: 5
+(clearkb)
+(assert '(not a))
+(assert '(not b))
+(assert '(not c))
+(assert '(not d))
+(assert '(not e))
+;;; Should derive (thresh (3 5) e f g a b c d)
+(ask '(andor (3 5) a b c d e f g))
+
+;;; The correct number of negated (2) arguments
+;;;     but not enough arguments asserted (2)
+;;;     and too many (3) unknowns.
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert '(not f))
+(assert '(not g))
+;;; Should not derive anything.
+(ask '(andor (3 5) a b c d e f g))
+
+;;; The correct number of arguments asserted (3),
+;;;     but not enough arguments negated (1)
+;;;     and too many (3) unknowns.
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert 'c)
+(assert '(not g))
+;;; Should not derive anything.
+(ask '(andor (3 5) a b c d e f g))
+
+;;; The correct number of asserted (3) and negated (2) arguments
+;;;     and some (2) unknowns.
+(clearkb)
+(assert 'a)
+(assert 'b)
+(assert 'c)
+(assert '(not f))
+(assert '(not g))
+;;; Should derive (andor (3 5) b! f g d a! c! e)
+(ask '(andor (3 5) a b c d e f g))
+
+;;; Too many arguments derived: 6
+(clearkb)
+(assert '(if p a))
+(assert 'p)
+(assert 'b)
+(assert 'c)
+(assert 'd)
+(assert 'e)
+(assert 'f)
+(assert '(not g))
+;;; Should derive (thresh (3 5) f! c! e! g a! b! d!)
+(ask '(andor (3 5) a b c d e f g))
+
+;;; Too many negated arguments derived: 5
+(clearkb)
+(assert '(nand p a))
+(assert 'p)
+(assert '(not b))
+(assert '(not c))
+(assert '(not d))
+(assert '(not e))
+;;; Should derive (thresh (3 5) g a b c d e f)
+(ask '(andor (3 5) a b c d e f g))
+
+;;; The correct number of derived (3) and negated (2) arguments
+;;;     and some (2) unknowns.
+(clearkb)
+(assert '(if p a))
+(assert 'p)
+(assert 'b)
+(assert 'c)
+(assert '(nand q f))
+(assert 'q)
+(assert '(not g))
+;;; Should derive (andor (3 5) g d b! a! e c! f)
+(ask '(andor (3 5) a b c d e f g))

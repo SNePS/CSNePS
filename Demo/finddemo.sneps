@@ -1,0 +1,121 @@
+(in-ns 'csneps.core.snuser)
+
+(clearkb true)
+
+;;; Define Types
+(defineType Agent (Thing) "Individuals that have agency")
+(defineType Action (Thing) "Actions that Agents can perform.")
+
+;;; Define Slots
+(defineSlot agent :type Agent)
+(defineSlot object :type Thing
+	    :docstring "Non-agentive objects of actions.")
+(defineSlot property :type Thing)
+(defineSlot life :type Thing)
+(defineSlot whole :type Thing)
+(defineSlot part :type Thing)
+(defineSlot group :type Thing)
+
+ 
+;;; Caseframes
+
+(defineCaseframe 'Proposition '(actions agent object)
+  :docstring "[agent] [actions] [object]"
+  :fsymbols '(Owns Buys))
+
+;;; Assert some propositions to find
+
+(assert '(Isa Fido Dog))
+(assert '(Isa Rover Dog))
+(assert '(Isa Fluffy Cat))
+(assert '(Isa Cat Cat))
+
+
+;;; Test if a base proposition can be found.
+
+(find '(Isa Rover Dog))
+
+;;; Demonstrate proper use of variables
+(find '(Isa x Dog))
+(find '(Isa x Dog) '(x))
+
+;;; Find all terms, mostly ungrounded expression
+(find '(Isa x y) '(x y))
+
+;;; Demonstrate variable binding property that a variable can only
+;;; bind one term
+(find '(Isa x x) '(x))
+
+;;; Assert a meta-proposition
+(assert '(Isa (Isa Clark Man) Proposition))
+
+;;; Demonstarte a find on that proposition
+(find '(Isa (Isa Clark x) y) '(x y))
+
+;;; Assert a more complex proposition
+(assert '(Isa (Isa (Isa Clark Man) Proposition) Proposition))
+
+;;; Demonstrate properties of meta-propositions with variables
+(find '(Isa (Isa x y) z) '(x y z))
+(find '(Isa (Isa x y) y) '(x y))
+
+
+;;; Demonstrate that mtching works with unquoted caseframes
+(assert '(Buys Mike Dog))
+(assert '(Buys Mike Cat))
+(find '(Buys Mike x) '(x))
+
+
+;;; Assert some propositions with sets
+(assert '(Isa (setof Fido Rover Lassie Rags) Dog))
+(assert '(Isa (setof Fluffy Scratch) (setof Cat Mammal)))
+(assert '(Isa (setof Frog Amphibian) Amphibian))  
+
+;;; Check ground propositions
+(find '(Isa (setof Lassie Rags Fido Rover) Dog))
+
+;;; Check that whole sets can be bound
+(find '(Isa x  Dog) '(x))
+
+;;; Check various combinations of single variables in sets
+(find '(Isa (setof Lassie Rover Fido x) Dog) '(x))
+(find '(Isa (setof Rags  x  Rover Lassie) Dog) '(x))
+(find '(Isa (setof  x  Rover Lassie) Dog) '(x))
+(find '(Isa (setof  x  Fluffy) (setof Mammal Cat)) '(x))
+
+;;; Check various combinations of multiple variables in sets
+(find '(Isa (setof y Rover Fido x) Dog) '(x y))
+(find '(Isa (setof Rags  x  z Lassie) y) '(x y z))
+(find '(Isa (setof  x  Rover Lassie) y) '(x y))
+(find '(Isa (setof  x  Fluffy) (setof Mammal y)) '(x y))
+
+;;; Check variable binding in and out of sets
+(find '(Isa (setof Frog x) x) '(x))
+(find '(Isa (setof y x) z) '(x y z))
+(find '(Isa (setof y x) x) '(x y))
+
+;;; Assert some sets with propositions
+(assert '(Isa 
+	  (setof (Isa Fido Dog) (Isa Fluffy Cat) 
+	   (Isa Frog Amphibian))
+	  Proposition))
+
+;;; Can we find ground proposition sets?
+(find '(Isa (setof (Isa Fluffy Cat) (Isa Frog Amphibian)
+              (Isa Fido Dog)) Proposition))
+
+;;; Check binding and matching of  propositions in sets
+(find '(Isa (setof x (Isa Fluffy Cat) y) Proposition) '(x y))
+
+;;; Variables in propositions in sets? Oh My!
+(find '(Isa (setof x (Isa y Cat) z) Proposition) '(x y z))
+
+;;; Even more variables!
+(find '(Isa (setof x (Isa y w) z) Proposition) '(x y z w))
+
+;;; More still!
+(find '(Isa (setof x (Isa y w) (Isa u v)) Proposition) '(x y u v w))
+
+;;; This is just craziness!
+(find '(Isa (setof (Isa u v)  (Isa w x) (Isa y z)) t) '(t u v w
+							       x y z ))

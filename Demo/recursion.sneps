@@ -1,0 +1,30 @@
+;;; Demonstration of SNePS not getting into infinite recursive loops.
+
+(showproofs :goals t)
+
+;;; Circular implication with no base case could lead to infinite recursion.
+(clearkb)
+(assert '(if a b))
+(assert '(if b c))
+(assert '(if c a))
+(ask 'a)
+
+;;; One important part of cutting recursion
+;;;    is not working on the same goal multiple times.
+;;; Storing lemmas in the KB is one way to do this,
+;;;    and is equivalent to tabling.
+;;; This example was the motivating example for the acting system,
+;;;    because performing the same act multiple times does make sense.
+(clearkb)
+(assert '(if (setof q1 q2) q))
+(assert '(if (setof p s) q1))
+(assert '(if (setof r s) q2))
+(assert '(if t s))
+(assert 'p)
+(assert 'r)
+(assert 't)
+;;; Note that the derivation t, t=>s |- s is done only once,
+;;;    then s! is stored.
+(ask 'q)
+
+;;; To be continued once variables are added.
