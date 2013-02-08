@@ -18,6 +18,7 @@ import edu.buffalo.cse.sneps3.gui.business.SemanticType;
 import edu.buffalo.cse.sneps3.gui.business.Term;
 import edu.buffalo.cse.sneps3.gui.graph.ArrowFillTransformer;
 import edu.buffalo.cse.sneps3.gui.graph.ArrowShapeTransformer;
+import edu.buffalo.cse.sneps3.gui.graph.ChannelEdge;
 import edu.buffalo.cse.sneps3.gui.graph.IEdge;
 import edu.buffalo.cse.sneps3.gui.graph.ITermNode;
 import edu.buffalo.cse.sneps3.gui.graph.RestrictionEdge;
@@ -136,6 +137,15 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	final float dash[] = { 10.0f };
 	final Stroke dashStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
 			BasicStroke.JOIN_MITER, 10.0f, dash, 0.0f);
+	
+	final float dot[] = { 2.0f, 2.0f };
+	final Stroke dotStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+			BasicStroke.JOIN_MITER, 10.0f, dot, 0.0f);
+	
+	final float dashdot[] = { 10.0f, 5.0f, 2.0f, 5.0f };
+	final Stroke dashdotStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT,
+			BasicStroke.JOIN_MITER, 10.0f, dashdot, 0.0f);
+	
 	final Stroke solidStroke = new BasicStroke(1.0f);
 
 	public int scale_btn_click = 0;
@@ -234,6 +244,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 					public Stroke transform(IEdge i) {
 						if (i instanceof RestrictionEdge) {
 							return dashStroke;
+						}
+						else if (i instanceof ChannelEdge) {
+							if (((ChannelEdge) i).getType() == ChannelEdge.ChannelType.ICHANNEL)
+								return dotStroke;
+							return dashdotStroke;
 						}
 						return solidStroke;
 					}

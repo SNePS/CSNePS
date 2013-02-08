@@ -1,6 +1,8 @@
 pom.xml
 /lib/
 /classes/
+/.lein-plugins/
+/.settings/
 .lein-failures
 .lein-deps-sum
 /target/
