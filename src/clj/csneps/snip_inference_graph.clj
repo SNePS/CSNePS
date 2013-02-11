@@ -38,7 +38,7 @@
 
 ;(def queue (LinkedBlockingQueue.))
 
-(def cpus-to-use 2) ;(.availableProcessors (Runtime/getRuntime))
+(def cpus-to-use (/ (.availableProcessors (Runtime/getRuntime)) 2))
 
 ;; Fixed Thread Pool of size 2 * processors, using queue as it's queue.
 (def executorService (ThreadPoolExecutor.
@@ -113,26 +113,6 @@
 (defn close-valve
   [channel]
   (dosync (ref-set (:valve-open channel) false)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Simple Event Model ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def subscribers (ref {}))
-
-(defn invoke-event 
-  [event-key object]
-  (when (event-key @subscribers)
-    (doseq [callback @(event-key @subscribers)] 
-      (callback object))))
-
-(defn assert-callback
-  [term]
-  ;; Generate a new messsage which says "I'm asserted"
-  ;; and put it on whatever channels necessary.
-  )
-
-
 
 ;;;;;;;;;;;;;;;;;
 ;;; Inference ;;;
@@ -215,7 +195,6 @@
 (defn negation-elimination
   "Invert the truth of the :true? key in the message, and pass onward."
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         dermsg (derivative-message message
                                    :origin node
@@ -232,7 +211,6 @@
 (defn negation-introduction
   "Pretty much conjunction-introduction, but with :neg instead of :pos"
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         der-rui (some #(= (:neg %) (count @(:y-channels node))) new-ruis)
         dermsg (derivative-message message
@@ -251,14 +229,11 @@
   "Since the implication is true, send a Y-INFER message to each
    of the consequents." 
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         match-ruis (some #(when (>= (:pos %) (:min node))
                             %)
                          new-ruis)]
     (when match-ruis 
-;      (cancel-infer node)
-      ;(when (< (:pos match-ruis) (csneps/totparam node)) (cancel-infer node))
       (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true true))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))))
 
@@ -282,7 +257,6 @@
   "We are in an unasserted 'and' node, and would like to know if we now
    can say it is true based on message."
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         der-rui-t (some #(= (:pos %) (count @(:y-channels node))) new-ruis)
         der-rui-f (some #(> (:neg %) 0) new-ruis)
@@ -293,7 +267,6 @@
                                    :type 'I-INFER
                                    :true? false)
         ich @(:i-channels node)]
-    ;(println "HERE!!!" new-ruis "\n" der-rui)
     (cond
       der-rui-t [true (zipmap ich (repeat (count ich) dermsg-t))]
       der-rui-f [false (zipmap ich (repeat (count ich) dermsg-f))]
@@ -303,7 +276,6 @@
   "Since the andor is true, we may have enough information to do elimination
    on it. "
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         totparam (csneps/totparam node)
         pos-match (some #(when (= (:pos %) (:max node))
@@ -336,7 +308,6 @@
 (defn param2op-introduction
   "Check the RUIs to see if I have enough to be true."
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         merged-rui (when new-ruis (reduce merge new-ruis)) ;; If they contradict, we have other problems...
         totparam (csneps/totparam node)
@@ -358,18 +329,13 @@
       (isa? (csneps/syntactic-type-of node) :csneps.core/Andor)
       (if case2
         [true (zipmap ich (repeat (count ich) dermsg-t))])
-        ;[false (zipmap ich (repeat (count ich) dermsg-f))])
-        ;(and (not case1) case2) (zipmap ich (repeat (count ich) dermsg)))
       (isa? (csneps/syntactic-type-of node) :csneps.core/Thresh)
       (if case1
         [true (zipmap ich (repeat (count ich) dermsg-t))]))))
-        ;[false (zipmap ich (repeat (count ich) dermsg-f))]))))
-      ;(when (and case1 (not case2)) (zipmap ich (repeat (count ich) dermsg))))))
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
   [message node]
-  ;(when (nil? @(:ruis node)) (create-rui-structure node))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
         totparam (csneps/totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
@@ -393,10 +359,6 @@
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% (RUI->message less-than-max-true-match node 'Y-INFER false true)])
                                      @(:y-channels node))))))))
-
- ; (if (= (:type message) 'FORWARD-INFER)
- ;   (derive-forward-infer message node)
- ;   (imessage-from-ymessage message node))) ;; should be y-message from y-message
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
@@ -463,7 +425,6 @@
       ;; make the assertion and let my i-channels know I am now
       ;; true.
       (do
-        ;(println (ct/asserted?  (csneps/get-term 'wft1) (ct/currentContext)) (:support-set message))
         (dosync (alter (:support term) conj (:support-set message)))
         (when-not (ct/asserted? term (ct/currentContext))
           (if print-intermediate-results
@@ -496,27 +457,6 @@
                                            :type 'I-INFER)]
               (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
             )))))
-      
-;    
-;    (when-not (ct/asserted? term (ct/currentContext))
-;      (send screenprinter (fn [_]  (println "TRUE?" (:true? message) term)))
-;      ;(let [term (if (:true? message) 
-;      ;             (build/assert term (ct/currentContext) :der)
-;      ;             (build/assert (list 'not term) (ct/currentContext) :der))] ;; Todo: origin set fix.
-;      (if (:true? message) 
-;        (send screenprinter (fn [_]  (println "> " (build/assert term (ct/currentContext) :der))))
-;        (send screenprinter (fn [_]  (println "> " (build/assert (list 'not term) (ct/currentContext) :der)))))
-;        ;; TODO: If we asserted (not term), we're no longer concerned with
-;        ;; term. We need to re-define term. Did this for this section.
-;        (let [imsg (derivative-i-message message term)]
-;          (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg))))
-;    ;; Step 3: Apply elimination rules
-;    (when (ct/asserted? term (ct/currentContext))
-;      (when-let [result (elimination-infer message term)]
-;        (send screenprinter (fn [_]  (println "Result Inferred " result)))
-;        ;; Step 4: Report results of elimination rules
-;        (doseq [[ch msg] result] 
-;          (submit-to-channel ch msg)))))
   ;; ---- Introduction Rules ---- ;;
   (when (and 
           (not (ct/asserted? term (ct/currentContext)))

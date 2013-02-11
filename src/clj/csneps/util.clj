@@ -354,24 +354,5 @@
                         (remove (fn [k] (= (m1 k) (m2 k)))
                                 ks1*ks2)))))
 
-;;; Binning Queue ;;;
-
-;(def BinQueue
-;  (proxy [java.util.concurrent.BlockingQueue] []
-;    ;(let [bins {1 #{}, 2 #{}, 3 #{}, 4 #{}, 5 #{},
-;    ;            6 #{}, 7 #{}, 8 #{}, 9 #{}, 10 #{}}]
-;      
-;      
-;      
-;      
-;      
-;      )
-;  
-;  
-;  
-;  ))
-
-
-
 
 

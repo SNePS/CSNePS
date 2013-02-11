@@ -1,9 +1,8 @@
 ;;; sneps3_printer.clj
 ;;; A printer for SNePS 3 terms.
 ;;; Author: Daniel R. Schlegel
-;;; Modified: 6/3/2012
+;;; Modified: 2/11/2013
 
-;(in-ns 'sneps3)
 (ns csneps.core.printer
   (:require [csneps.core.contexts :as ct]
             [csneps.core :as csneps]
@@ -17,7 +16,6 @@
 
 (defn print-atom
   [term]
-  ;(println "Atom.")
   (:name term))
 
 (defn wft-string
@@ -172,18 +170,6 @@
           (and (= (csneps.core/semantic-type-of term) :Proposition)
 	       (ct/asserted? term (ct/currentContext)))
           "!" ""))))
-
-;(defn term-printer
-;  [term]
-;  (if (isa? (sneps3/syntactic-type-of term) :csneps.core/Molecular)
-;    (do
-;      (println (wft-string term) (print-term term)))
-;    (do
-;      (println (print-atom term)
-;        (if
-;          (and (= (sneps3/semantic-type-of term) :Proposition)
-;	       (ct/asserted? term (ct/current-context)))
-;          "!" "")))))
 
 (defn sneps-printer
   [object]
