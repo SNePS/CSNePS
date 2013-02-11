@@ -24,17 +24,19 @@
 
 (declare askif askifnot defineTerm find-term)
 
-(defn assert [expr]
-  (let [assertion (build/assert expr (currentContext) :hyp)]
-    (snip/submit-assertion-to-channels assertion)
-    assertion))
+(defn assert [expr & {:keys [precision]}]
+  (binding [*PRECISION* (or precision *PRECISION*)]
+    (let [assertion (build/assert expr (currentContext) :hyp)]
+      (snip/submit-assertion-to-channels assertion)
+      assertion)))
 
-(defn assert! [expr]
-  (snip/forward-infer (build/build expr :Proposition {})))
-  ;(snip/forward-infer (build/assert expr (currentContext) :hyp)))
+(defn assert! [expr & {:keys [precision]}]
+  (binding [*PRECISION* (or precision *PRECISION*)]
+    (snip/forward-infer (build/build expr :Proposition {}))))
 
-(defn assertAll [exprs]
-  (doseq [expr exprs] (assert expr)))
+(defn assertAll [exprs & {:keys [precision]}]
+  (binding [*PRECISION* (or precision *PRECISION*)]
+    (doseq [expr exprs] (assert expr))))
 
 (defn ask
   "Returns a set of instances of the term pattern exprpat or its negation
