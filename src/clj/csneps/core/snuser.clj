@@ -160,6 +160,21 @@
   [fname]
   (clojure.lang.Compiler/loadFile fname))
 
+(defmacro withInstances 
+  "For each asserted substitution instance of pattern, evaluates the forms in forms,
+      with each variable in variables
+         taking on the term appropriate for the instance.
+   Question mark variables in pattern that are not in variables
+      take on the values they should have gotten in an enclosing withInstances."
+  [vars of pattern & forms]
+  (let [res (map second (find pattern vars))]
+    `(do
+       ~@(for [r res]
+           (let [rnobj (into {} (for [[k v] r] [k (:name v)]))
+                 larg (vec (interleave vars (for [v vars] `(get '~rnobj '~v))))]
+             `(let ~larg
+                ~@forms))))))
+
 (clojure.core/load "/csneps/core/initialize")
 
 (clearkb true)
@@ -168,142 +183,5 @@
   (set! *print-length* 40)
   (set! *print-level* 4)
   (gui/startGUI))
-
-;(defmacro local-dynamic-binds
-;  []
-;  
-;  )
-;
-;(defn fn-from [args & forms]
-;  `(fn ~args ~@forms))
-;
-;(defmacro withInstances-helper
-;  [variables of pattern & forms]
-;  `(let [subs# (map second (find '~pattern '~variables))
-;         kvecs# (map #(vec (keys %)) subs#)]
-;     (map #(list (list 'fn %1 '~@forms) %2) kvecs# (map #(vals %) subs#))))
-;
-;(defmacro withInstances
-;  [variables of pattern & forms]
-;  `(let [subs# (map second (find '~pattern '~variables))
-;         kvecs# (map #(vec (keys %)) subs#)]
-;    (do (map #(list (eval (list 'fn %1 '~@forms %2))) kvecs# (map #(vals %) subs#)))))
-
-
-
-
-;(defmacro withInstances
-;  [variables of pattern & forms]
-;  `(let [subs# (map second (find '~pattern '~variables))
-;         kvecs# (map #(vec (keys %)) subs#)]
-;     (map #((eval (list 'fn %1 '~@forms) %2)) kvecs# (map #(vals %) subs#))))
-     
-     
-(use 'clojure.walk)
-(defn expand-qmvar
-  [forms]
-  (println forms)
-  (map #(postwalk (fn [x] (if (re-matches #"^\?.*" (str x)) (list 'binds x) x)) %) forms))
-
-(defmacro withInstances 
-  "Builds a form which runs find on the pattern. "
-  [variables of pattern & forms]
-  `(let [subs# (map second (find '~pattern '~variables))
-         vars# (map #(keys %) subs#)
-         vals# (map #(vals %) subs#)]
-     (println subs# vars# vals#)
-     (map #(eval (list 'let (vec (interleave %1 %2)))) ~@`(expand-qmvar '~forms)) vars# vals#))
-
-
-
-     ;(map #(fn (vec %) ~@forms) (keys subs#))
-     
-     
-;     )
-;  
-;  `(find '~pattern '~variables))
-  
-  
-  
-
-
-;(defun subNonLocals (pattern variables)
-;  "Returns an instance of pattern
-;      in which every ?-variable not in variables
-;      is replaced by its value,
-;      assuming that that value is a sneps:term."
-;  (cond ((and (sneps:qVarp pattern)
-;	      (not (member pattern variables)))
-;	 (symbol-value pattern))
-;	((atom pattern) pattern)
-;	(t (mapcar #'(lambda (subpat) (subNonLocals subpat variables))
-;		   pattern))))
-;
-;(defn subNonLocals
-;  "Returns an instance of pattern
-;      in which every ?-variable not in variables
-;      is replaced by its value,
-;      assuming that that value is a sneps:term."
-;  [pattern variables]
-;  (cond
-;    (and (re-matches #"^\?.*" pattern)
-;         (not ((set variables) pattern)))
-;      (str pattern)
-;    (atom? pattern)
-;      pattern
-;    :else
-;    (map #(subNonLocals % variables) pattern)))
-;    
-;
-;(defmacro withInstances
-;  [variables of pattern & forms]
-  
-    
-;    ((and (sneps:qVarp pattern)
-;	      (not (member pattern variables)))
-;	 (symbol-value pattern))
-;	((atom pattern) pattern)
-;	(t (mapcar #'(lambda (subpat) (subNonLocals subpat variables))
-;		   pattern))))
-
-
-
-
-;(defmacro withInstances (variables of pattern &body forms)
-;  "For each asserted substitution instance of pattern, evaluates the forms in forms,
-;      with each variable in variables
-;         taking on the term appropriate for the instance.
-;   Question mark variables in pattern that are not in variables
-;      take on the values they should have gotten in an enclosing withInstances."
-;  ;; For example,
-;  ;; (withInstances (?x ?y) of '(Isa ?x ?y) (format t "~s is an instance of ~s.~%" ?x ?y))
-;  ;; or
-;  ;; (withInstances (?x ?y) of (Isa ?x ?y)
-;  ;;    (format t "~s is an instance of ~s.~%" ?x ?y)
-;  ;;    (withInstances (?z) of (Type ?y ?z)
-;  ;;       (format t "~s is an instance of ~s, and also of ~s.~%" ?x ?y ?z)))
-;  (declare (ignore of))
-;  `(let ,variables
-;     (declare (special ,@variables))
-;     (set:loopset for sub in (nth-value 1 (find (subNonLocals ',pattern ',variables)))
-;	do
-;	,@(mapcar #'(lambda (var) `(setf ,var (subs:var-to-term ',var sub)))
-;			  variables)
-;		(unless (set:emptyp (askif (subNonLocals ',pattern nil)))
-;		  ,@forms))))
-;
-;(defun subNonLocals (pattern variables)
-;  "Returns an instance of pattern
-;      in which every ?-variable not in variables
-;      is replaced by its value,
-;      assuming that that value is a sneps:term."
-;  (cond ((and (sneps:qVarp pattern)
-;	      (not (member pattern variables)))
-;	 (symbol-value pattern))
-;	((atom pattern) pattern)
-;	(t (mapcar #'(lambda (subpat) (subNonLocals subpat variables))
-;		   pattern))))
-
-
 
 
