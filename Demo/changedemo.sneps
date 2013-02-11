@@ -4,7 +4,7 @@
 ;;; This demonstration won't show what it's meant to
 ;;; if run a second time in the same Lisp image.
 
-(in-ns 'snuser)
+(in-ns 'csneps.core.snuser)
 (clearkb true)
 
 ;;; Types

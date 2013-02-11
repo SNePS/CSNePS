@@ -1,5 +1,5 @@
 ;;; Demonstration of use of Andor and Thresh Introduction
-(in-ns 'snuser)
+(in-ns 'csneps.core.snuser)
 
 ;;; Too many arguments asserted: 6
 (clearkb)
