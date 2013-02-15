@@ -104,9 +104,7 @@
 (defn get-terms-from-find-results
   "Given results from a find operation, return all of the terms in the substitutions."
   [findres]
-  ;(println findres "\n" (doall (map #(vals %) (vals findres))))
-  (set (filter #(term? %) (flatten (map #(vals %) (vals findres))))))
-  ;(set (filter #(term? %) (map #(first (vals (first (vals %)))) findres))))
+  (set (map #(val (first %)) (map second findres))))
 
 (defn find-old-arb-node
   "If an existing arbitrary node can be found such that:
