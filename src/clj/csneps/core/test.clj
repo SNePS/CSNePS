@@ -199,6 +199,27 @@ times, respectively."
 ;  (map #(postwalk (fn [x] (if (re-matches #"^\?.*" (str x)) (list 'binds x) x)) %) forms))
 
 
+;(defmacro subs-non-locals
+;  [pattern vars subs]
+;  `(postwalk #(if (and (build/synvariable? %)
+;                      (not (some #{%} ~vars)))
+;               (or (~subs %) (eval %))
+;               %)
+;            ~pattern))
 
-
+;(defmacro withInstances 
+;  "For each asserted substitution instance of pattern, evaluates the forms in forms,
+;      with each variable in variables
+;         taking on the term appropriate for the instance.
+;   Question mark variables in pattern that are not in variables
+;      take on the values they should have gotten in an enclosing withInstances."
+;  [vars of pattern & forms]
+;  `(let [pat2# (eval-non-locals '~pattern '~vars)
+;         res# (map second (find pat2# '~vars))]
+;     (do
+;       (for [r# res#]
+;          (let [rnobj# (into {} (for [[k# v#] r#] [k# (symbol (:name v#))]))
+;                larg# (vec (interleave '~vars (for [v# '~vars] `(get '~rnobj# '~v#))))]
+;            (eval `(let ~larg#
+;               (do ~'~@forms))))))))
 

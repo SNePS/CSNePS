@@ -11,6 +11,7 @@
   (:use clojure.stacktrace)
   (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load])
   (:use [clojure.pprint :only (cl-format)]
+        [clojure.walk]
         [csneps.core.caseframes :only (list-caseframes sameFrame description)]
         [csneps.demo :only (demo)]
         [csneps.core.relations :only (list-slots)]
@@ -162,6 +163,18 @@
   [fname]
   (clojure.lang.Compiler/loadFile fname))
 
+(defn subs-non-locals
+  [pattern vars subs]
+  (postwalk #(if (and (build/synvariable? %)
+                      (not (some #{%} vars)))
+               (subs %)
+               %)
+            pattern))
+
+(defn fix-forms
+  [forms subs]
+  (for [f forms] (replace {'of subs} f)))
+
 (defmacro withInstances 
   "For each asserted substitution instance of pattern, evaluates the forms in forms,
       with each variable in variables
@@ -169,13 +182,16 @@
    Question mark variables in pattern that are not in variables
       take on the values they should have gotten in an enclosing withInstances."
   [vars of pattern & forms]
-  (let [res (map second (find pattern vars))]
+  (let [subs (when (map? of) of)
+        pattern (if subs (subs-non-locals pattern vars subs) pattern)
+        res (map second (find pattern vars))]
     `(do
        ~@(for [r res]
            (let [rnobj (into {} (for [[k v] r] [k (:name v)]))
+                 varmap (merge subs (zipmap vars (for [v vars] (get rnobj v))))
                  larg (vec (interleave vars (for [v vars] `(get '~rnobj '~v))))]
              `(let ~larg
-                ~@forms))))))
+                ~@(fix-forms forms varmap)))))))
 
 (clojure.core/load "/csneps/core/initialize")
 
@@ -185,5 +201,4 @@
   (set! *print-length* 40)
   (set! *print-level* 4)
   (gui/startGUI))
-
 
