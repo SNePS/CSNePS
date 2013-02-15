@@ -354,5 +354,7 @@
                         (remove (fn [k] (= (m1 k) (m2 k)))
                                 ks1*ks2)))))
 
-
+(defn seqable? 
+  [x]
+  (instance? clojure.lang.Seqable x))
 

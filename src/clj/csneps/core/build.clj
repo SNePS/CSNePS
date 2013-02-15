@@ -188,7 +188,7 @@
   [args semtype]
   (let [cf (cf/find-frame 'andor)]
     (when-not cf (error "There is no frame associated with andor."))
-    (when-not (seq? (first args))
+    (when-not (seqable? (first args))
       (error "andor must be followed by a list, (i j) in " (list* 'andor args) "."))
     (let [min (first (first args))
           max (second (first args))
@@ -226,7 +226,7 @@
   [args semtype]
   (let [cf (cf/find-frame 'thresh)]
     (when-not cf (error "There is no frame associated with thresh."))
-    (when-not (seq? (first args))
+    (when-not (seqable? (first args))
       (error
        "thresh must be followed by a list, (i) or (i j), in "
          (list* 'thresh args) "."))
@@ -616,7 +616,7 @@
               (let [fillers (build (set (rest expr)) semtype substitution)]
                 (build-channels (build-molecular-node cf (list fillers) :csneps.core/Conjunction semtype :fsemtype (semantic-type-of fillers))))
             (rest expr) ;;1 conjunct
-               (if (or (and (seq? (second expr)) (= (first (second expr)) 'setof))
+               (if (or (and (seqable? (second expr)) (= (first (second expr)) 'setof))
                        (set? (second expr)))
                 ;; if the argument is a set, treat it as the set of conjuncts
                 (if (= (count (second expr)) 1)
@@ -911,7 +911,7 @@
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
   ;(println "Aspec: " assertion-spec " Arbs: " @arb-rsts)
-  (if (seq? assertion-spec)
+  (if (seqable? assertion-spec)
     (cond
       (= (first assertion-spec) 'some)
       (let [rsts (rest (get @ind-deps-rsts (second assertion-spec)))]

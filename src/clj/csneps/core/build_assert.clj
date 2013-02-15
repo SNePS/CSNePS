@@ -59,6 +59,10 @@
   [clojure.lang.Cons] [expr context origintag]
   (assert (variable-parse-and-build (seq expr)) context origintag))
 
+(defmethod assert
+  [clojure.lang.PersistentVector] [expr context origintag]
+  (assert (variable-parse-and-build (seq expr)) context origintag))
+
 (defn assert-term
   [expr context origintag]
   (let [ct (csneps.core.contexts/find-context context)]
