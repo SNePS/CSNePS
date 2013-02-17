@@ -2,6 +2,9 @@
 
 (in-ns 'csneps.snip)
 
+(defprotocol RUIStructure
+  (get-rule-use-info [this new-rui]))
+
 (defrecord2 Rui
   [subst {}        ;; Substitution
    pos 0           ;; Number of known positive ants

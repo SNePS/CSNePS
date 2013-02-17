@@ -158,7 +158,7 @@
 (defn statistics
   []
   (let [molterms (filter csneps/molecularTerm? (vals @csneps/TERMS))
-        inferredin (filter #(not (nil? @(:ruis %))) molterms)]
+        inferredin (filter #(not (empty? @(:rui-set (:ruis %)))) molterms)]
     (println "Molecular Terms:" (count molterms))
     (println "Terms Inferred In:" (count inferredin))))
 

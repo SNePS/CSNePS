@@ -2,16 +2,19 @@
 
 ;; This is the worst case, combinatorial algorithm. 
 
-(defn get-rule-use-info-linear
-  "Finds all RUIs which are compatible with the new-rui. It then
-   merges the new one with compatible ones, adds all newly created
-   RUIs to the nodes rui-set, and returns the list of new RUIs."
-  [rui-set-ref new-rui]
-  ;; if new-rui isn't actually new, return empty set.
-  (dosync
-    (if (@rui-set-ref new-rui)
-      #{}
-      (let [compat-ruis (filter #(compatible? % new-rui) @rui-set-ref)
-            merged-ruis (set (map #(merge new-rui %) compat-ruis))]
-        (alter rui-set-ref union merged-ruis #{new-rui})
-        (conj merged-ruis new-rui)))))
+(defrecord LinearRUISet
+  [rui-set] ;;A ref to a set.
+  RUIStructure
+  (get-rule-use-info [this new-rui]
+    ;; if new-rui isn't actually new, return empty set.
+    (dosync
+      (if (@(:rui-set this) new-rui)
+        #{}
+        (let [compat-ruis (filter #(compatible? % new-rui) @(:rui-set this))
+              merged-ruis (set (map #(merge new-rui %) compat-ruis))]
+          (alter (:rui-set this) union merged-ruis #{new-rui})
+          (conj merged-ruis new-rui))))))
+
+(defn make-linear-rui-set
+  []
+  (LinearRUISet. (ref #{})))

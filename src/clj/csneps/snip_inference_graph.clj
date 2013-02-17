@@ -444,7 +444,7 @@
           (doseq [[ch msg] result] 
             (submit-to-channel ch msg))))
       (do
-        (let [neg-term (ct/asserted? (build/build (list 'not term) :Entity {}) (ct/currentContext))]
+        (let [neg-term (build/build (list 'not term) :Entity {})]
           (dosync (alter (:support neg-term) conj (:support-set message)))
           (when-not (ct/asserted? neg-term (ct/currentContext))
             (if print-intermediate-results
@@ -478,22 +478,11 @@
 ;;; RUI Handling ;;;
 
 (defn create-rui-structure
-  "If no RUI structure exists for a rule node, create one. For now,
+  "Create the RUI structure for a rule node. For now,
    we always create an empty set. In the future, we'll create P-Trees
    and S-Indexes as necessary."
-  [rulenode]
-  (dosync (ref-set (:ruis rulenode) #{})))
-
-(defn get-rule-use-info
-  "Makes a call to the appropriate structure to get the rule use info 
-   derived based on new-rui. For now, only calls the linear version."
-  [struct-ref new-rui]
-  (get-rule-use-info-linear struct-ref new-rui))
-
-(defn derived-ruis
-  [rui-set-ref new-rui pos neg]
-  (let [ruis (get-rule-use-info rui-set-ref new-rui)]
-    (filter #(and (>= (:pos %) pos) (>= (:neg %) neg)) ruis)))
+  [syntype dcs]
+  (make-linear-rui-set))
 
 (build/fix-fn-defs submit-to-channel new-message create-rui-structure)
 

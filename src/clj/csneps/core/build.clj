@@ -166,7 +166,8 @@
                                                         :caseframe cf
                                                         :down-cableset dcs-sets
                                                         :min (if (nil? min) 0 min)
-                                                        :max (if (nil? max) 0 max)})]
+                                                        :max (if (nil? max) 0 max)
+                                                        :ruis (create-rui-structure syntype dcs-sets)})]
                  (initialize-syntype wft)
                  (dosync 
                    (alter TERMS assoc (:name wft) wft)
@@ -305,9 +306,7 @@
   (doseq [c cqs :let [ch (build-channel rnode c nil nil)]]
     (dosync 
       (alter (:y-channels rnode) conj ch)
-      (alter (:ant-in-channels c) conj ch)))
-  ;; Build the RUI structure
-  (create-rui-structure rnode))
+      (alter (:ant-in-channels c) conj ch))))
 
 (defn build-channels
   [rnode]
