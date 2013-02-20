@@ -24,7 +24,9 @@
                  [org.freehep/freehep-graphicsio-svg "2.1.1"]
                  [org.freehep/freehep-graphicsio-swf "2.1.1"]
                  [org.freehep/freehep-xml "2.1.1"]
-                 [jpedal/jpedal "4.45-b-105"]]
+                 [jpedal/jpedal "4.45-b-105"]
+                 [org.swinglabs/swingx "1.6.1"]
+                 [net.xeon/jspf.core "1.0.2"]]
   :dev [[org/clojure/tools.namespace "0.1.2"]]
   :repositories {"FreeHEP" "http://java.freehep.org/maven2"
                  "jpedal" "http://maven.geomajas.org"

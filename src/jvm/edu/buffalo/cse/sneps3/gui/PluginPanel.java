@@ -16,8 +16,8 @@ import java.awt.Component;
 import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import org.jdesktop.swingx.MultiSplitLayout;
-import org.jdesktop.swingx.MultiSplitPane; 
+import org.jdesktop.swingx.MultiSplitLayout; 
+import org.jdesktop.swingx.JXMultiSplitPane;
 
 /**
  *
@@ -34,7 +34,7 @@ public class PluginPanel extends javax.swing.JPanel {
     RDockComponent context;
     ContextsPanel ctPanel;
 
-    MultiSplitPane multiSplitPane = new MultiSplitPane();
+    JXMultiSplitPane multiSplitPane = new JXMultiSplitPane();
     ArrayList<Component> components = new ArrayList<Component>();
 
     /** Creates new form PluginPanel */
@@ -97,7 +97,7 @@ public class PluginPanel extends javax.swing.JPanel {
             for(int i = 0 ; i < components.size(); i++) layoutDef += "c"+i+" ";
             layoutDef += ")";
             MultiSplitLayout.Node modelRoot = MultiSplitLayout.parseModel(layoutDef);
-            multiSplitPane = new MultiSplitPane();
+            multiSplitPane = new JXMultiSplitPane();
             multiSplitPane.getMultiSplitLayout().setModel(modelRoot);
             for(int i = 0 ; i < components.size(); i++){
                 multiSplitPane.add(components.get(i), "c"+i);

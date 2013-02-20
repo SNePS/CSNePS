@@ -19,8 +19,9 @@ import java.awt.event.ComponentListener;
 import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JPanel;
+
+import org.jdesktop.swingx.JXMultiSplitPane;
 import org.jdesktop.swingx.MultiSplitLayout;
-import org.jdesktop.swingx.MultiSplitPane;
 
 import edu.buffalo.cse.sneps3.gui.dataaccess.Model;
 
@@ -45,7 +46,7 @@ public class RDockPanel extends javax.swing.JPanel implements ComponentListener{
     int componentCt = 0;
     ArrayList<RDockComponent> components = new ArrayList<RDockComponent>();
 
-    MultiSplitPane mp = new MultiSplitPane();
+    JXMultiSplitPane mp = new JXMultiSplitPane();
 
 
     /** Creates new form RDockPanel */
@@ -159,7 +160,7 @@ public class RDockPanel extends javax.swing.JPanel implements ComponentListener{
         for(int i = 0 ; i < components.size(); i++) layoutDef += "c"+i+" ";
         layoutDef += ")";
         MultiSplitLayout.Node modelRoot = MultiSplitLayout.parseModel(layoutDef);
-        mp = new MultiSplitPane();
+        mp = new JXMultiSplitPane();
         mp.getMultiSplitLayout().setModel(modelRoot);
         for(int i = 0 ; i < components.size(); i++){
             mp.add(components.get(i), "c"+i);

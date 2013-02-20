@@ -55,7 +55,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2012.10.24";
+	public static final String version = "2013.2.20";
 	
     public static final boolean DEBUG = true;
 
