@@ -22,8 +22,10 @@ public class Context implements Comparable{
 
 	private static HashMap<String,Context> contexts = new HashMap<String,Context>();
 	
-	private static Keyword hyps_key = Keyword.intern("hyps");
-	private static Keyword ders_key = Keyword.intern("ders");
+	private static Keyword true_hyps_key = Keyword.intern("true-hyps");
+	private static Keyword true_ders_key = Keyword.intern("true-ders");
+	private static Keyword false_hyps_key = Keyword.intern("false-hyps");
+	private static Keyword false_ders_key = Keyword.intern("false-ders");
 	private static Keyword name_key = Keyword.intern("name");
 	private static Keyword parents_key = Keyword.intern("parents");
 	
@@ -95,7 +97,7 @@ public class Context implements Comparable{
     //TODO: We're calling this really often. Maybe some efficiency changes can happen.
     public HashSet<Term> getHyps(){
     	HashSet<Term> hyps = new HashSet<Term>();
-    	APersistentSet cljhyps = (APersistentSet)((Ref)context.valAt(hyps_key)).deref();
+    	APersistentSet cljhyps = (APersistentSet)((Ref)context.valAt(true_hyps_key)).deref();
     	//System.out.println(cljhyps);
     	for (Iterator<IPersistentMap> itr = cljhyps.iterator(); itr.hasNext(); ){
     		hyps.add(Term.create(itr.next())); 
@@ -105,7 +107,7 @@ public class Context implements Comparable{
     
     public HashSet<Term> getDers(){
     	HashSet<Term> ders = new HashSet<Term>();
-    	APersistentSet cljders = (APersistentSet)((Ref)context.valAt(ders_key)).deref();
+    	APersistentSet cljders = (APersistentSet)((Ref)context.valAt(true_ders_key)).deref();
     	for (Iterator<IPersistentMap> itr = cljders.iterator(); itr.hasNext(); ){
     		ders.add(Term.create(itr.next()));
     	}

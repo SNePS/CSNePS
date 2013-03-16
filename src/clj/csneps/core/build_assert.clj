@@ -69,10 +69,10 @@
     (if (not (ct/asserted? expr ct))
       (case origintag
         :hyp (dosync 
-               (alter (:hyps ct) conj expr)
+               (alter (:true-hyps ct) conj expr)
                (alter hcontext-set assoc expr ct)) ;;TODO: BUG - Can only be in 1 context!
               ; (dosync (ref-set hcontext-set (assoc @hcontext-set expr ct)))) ;;BUG - Can only be in 1 context!
-        :der (dosync (commute (:ders ct) conj expr)))))
+        :der (dosync (commute (:true-ders ct) conj expr)))))
   expr)
 
 (defmethod assert
@@ -82,10 +82,10 @@
     (if (not (ct/asserted? expr ct))
       (case origintag
         :hyp (dosync 
-               (alter (:hyps ct) conj expr)
+               (alter (:true-hyps ct) conj expr)
                (alter hcontext-set assoc expr ct)) ;;TODO: BUG - Can only be in 1 context!
               ; (dosync (ref-set hcontext-set (assoc @hcontext-set expr ct)))) ;;BUG - Can only be in 1 context!
-        :der (dosync (commute (:ders ct) conj expr)))))
+        :der (dosync (commute (:true-ders ct) conj expr)))))
   expr)
 
 (defn unassert
@@ -106,4 +106,4 @@
   "Adds the term to the context's hyps."
   [term ctx]
   (dosync
-    (alter (:hyps ctx) conj (build term :Proposition {}))))
+    (alter (:true-hyps ctx) conj (build term :Proposition {}))))
