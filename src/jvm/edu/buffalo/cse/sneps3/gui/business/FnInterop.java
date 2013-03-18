@@ -42,6 +42,7 @@ public class FnInterop {
 	public static Term assertTerm(String expr){
 		return Term.create(Controller.snuser_assert((PersistentList)RT.readString(expr)));
 	}
+
 	
 	public static Term assertETerm(String expr){
 		// Not implemented in CSNePS.
@@ -167,6 +168,10 @@ public class FnInterop {
 		}
 		
 		return results;
+	}
+	
+	public static void unassertTerm(Term term){
+		Controller.build_unassert(term.getClojureTerm());
 	}
 	
 	//////////////////////

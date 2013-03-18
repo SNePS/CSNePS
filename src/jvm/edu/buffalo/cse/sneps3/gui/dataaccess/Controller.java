@@ -25,6 +25,7 @@ public class Controller {
 	private static Var sneps3_define_type_fn;
 	private static Var build_add_to_context_fn;
 	private static Var build_find_fn;
+	private static Var build_unassert_fn;
 	private static Var caseframes_caseframe_name_fn;
 	private static Var caseframes_quotedpp_qmark_fn;
 	private static Var contexts_define_context_fn;
@@ -40,6 +41,14 @@ public class Controller {
 			return (IPersistentMap)build_find_fn.invoke(pattern);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+	
+	public static void build_unassert(IPersistentMap term){
+		if (build_unassert_fn == null)
+			build_unassert_fn = RT.var("csneps.core.build", "unassert");
+		try{
+			build_unassert_fn.invoke(term);
+		} catch (Exception e) {e.printStackTrace();}
 	}
 	
 	public static void build_add_to_context(IPersistentMap context, IPersistentMap term){

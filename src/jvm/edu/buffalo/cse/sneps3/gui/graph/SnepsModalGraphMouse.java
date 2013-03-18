@@ -171,11 +171,20 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                         //JungGraphPanel.instance.hideNode(node);
                     }
                 });
-                if (node.getTerm().isMolecular() && !node.getTerm().isAsserted()) {
+                if (!node.getTerm().isAsserted()) {
                     popup.add(new AbstractAction("Assert") {
 
                         public void actionPerformed(ActionEvent e) {
                         	FnInterop.addToContext(node.getTerm(), Context.getCurrentContext());
+                        	GUI2.getInstance().getGraphPanel().getVV().repaint();
+                        }
+                    });
+                }
+                if(node.getTerm().isAsserted()){
+                	popup.add(new AbstractAction("Unassert") {
+
+                        public void actionPerformed(ActionEvent e) {
+                        	FnInterop.unassertTerm(node.getTerm());
                         	GUI2.getInstance().getGraphPanel().getVV().repaint();
                         }
                     });
