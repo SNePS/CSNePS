@@ -40,8 +40,8 @@
                                                                                 (set/difference newvalue oldvalue)))
           currentcontextchangefn (fn [ref key oldvalue newvalue] (.currentContextChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
                                                                                 newvalue)
-                                   (remove-watch (:true-hyps oldvalue) :currhyps)
-                                   (add-watch (:true-hyps newvalue) :currhyps currentcontexthypschangefn))
+                                   (remove-watch (:hyps oldvalue) :currhyps)
+                                   (add-watch (:hyps newvalue) :currhyps currentcontexthypschangefn))
           ] 
       (add-watch csneps/semantic-type-hierarchy :types typechangefn)
       (add-watch csneps/TERMS :terms termchangefn)
@@ -51,7 +51,7 @@
       (add-watch cf/FN2CF :fsyms fsymbolchangefn)
       (add-watch ct/CONTEXTS :cts contextchangefn)
       (add-watch ct/*CurrentContext* :currct currentcontextchangefn)
-      (add-watch (:true-hyps (ct/currentContext)) :currhyps currentcontexthypschangefn)
+      (add-watch (:hyps (ct/currentContext)) :currhyps currentcontexthypschangefn)
       
       )))
 

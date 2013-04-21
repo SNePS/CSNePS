@@ -302,13 +302,13 @@
     (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n(in-ns 'snuser)\n")
     (doall (map 
       #(do
-         (doseq [hyp @(:true-hyps %)]
+         (doseq [hyp @(:hyps %)]
            (.write w  "(csneps.core.build/assert '")
            (if (= (:type hyp) :csneps.core/Atom)
              (.write w (str (print-atom hyp)))
              (.write w (str (print-unnamed-molecular-term hyp))))
            (.write w (str " '" (:name %) " :hyp)\n")))
-         (doseq [der @(:true-ders %)]
+         (doseq [der @(:ders %)]
            (.write w "(csneps.core.build/assert '")
            (if (= (:type der) :csneps.core/Atom)
              (.write w (str (print-atom der)))

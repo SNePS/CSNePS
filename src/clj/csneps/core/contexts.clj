@@ -15,10 +15,8 @@
         ^clojure.lang.Symbol name
         ^String docstring
         ^clojure.lang.PersistentList parents
-        ^clojure.lang.PersistentHashSet true-hyps
-        ^clojure.lang.PersistentHashSet false-hyps
-        ^clojure.lang.PersistentHashSet true-ders
-        ^clojure.lang.PersistentHashSet false-ders
+        ^clojure.lang.PersistentHashSet hyps
+        ^clojure.lang.PersistentHashSet ders
         ^java.lang.Boolean kinconsistent])
 
 
@@ -60,10 +58,7 @@
     (dosync (ref-set CONTEXTS (assoc @CONTEXTS name (Context. name docstring 
                                                               (doall (map #(find-context %) parents)) 
                                                               (ref (set (map #(csneps/get-term %) hyps))) 
-                                                              (ref (hash-set))
-                                                              (ref (hash-set))
-                                                              (ref (hash-set))
-                                                              false)))))
+                                                              (ref (hash-set)) false)))))
   (find-context name))
 
 (defn currentContext
@@ -84,16 +79,16 @@
   "Removes the term from the context (ctx) hyps or ders."
   [term ctx]
   (dosync
-    (alter (:true-hyps ctx) disj term)
-    (alter (:true-ders ctx) disj term)))
+    (alter (:hyps ctx) disj term)
+    (alter (:ders ctx) disj term)))
 
 (defn asserted?
   ""
   [p ct]
   (let [context (find-context ct)]
     (cond 
-      (or (@(:true-hyps context) p)
-          (@(:true-ders context) p))
+      (or (contains? @(:hyps context) p)
+          (contains? @(:ders context) p))
       context
       ;; check parents
       :else (some #(asserted? p %) (:parents context)))))
