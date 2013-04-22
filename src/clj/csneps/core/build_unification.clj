@@ -478,19 +478,3 @@
 
 (defn print-all-trees []
   (doseq [d @DistNodes] (print-tree d))) 
-
-;(defn test []
-;  (addTermToUnificationTree (snuser/assert '(Isa (every x) Animal)))
-;  (getUnifiers (snuser/defineTerm '(Isa Glacier Animal))))
-
-;(defn test2[]
-;  (snuser/clearkb true)
-;  (snuser/defineSlot entity :type Entity :docstring "General slot for holding entities.")
-;  (snuser/defineSlot entity1 :type Entity :docstring "General slot for holding entities.")
-;  (snuser/defineSlot entity2 :type Entity :docstring "General slot for holding entities.")
-;  (snuser/defineCaseframe 'Proposition '('SameSpecies entity entity1 entity2))
-;  (snuser/defineCaseframe 'Proposition '('caregiver entity1))
-;  (snuser/defineCaseframe 'Proposition '('friend entity2))
-;  (addTermToUnificationTree (snuser/assert '(SameSpecies (caregiver (every x)) (friend (caregiver (every w))) w)))
-;  (getUnifiers (snuser/defineTerm '(SameSpecies (every x) (friend x) Alex))))
-
