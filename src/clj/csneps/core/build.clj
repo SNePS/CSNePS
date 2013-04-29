@@ -589,7 +589,7 @@
   ;[clojure.lang.Cons] [expr semtype substitution]
   [clojure.lang.PersistentVector] [expr semtype substitution]
   (let [fcn (first expr)]
-    ;(println "Building: " expr)
+    ;(println "Building: " expr fcn)
     ;(println "Subs:" substitution)
     (case fcn
       ;; Only functions with special syntax
@@ -910,7 +910,7 @@
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
   ;(println "Aspec: " assertion-spec " Arbs: " @arb-rsts)
-  (if (seqable? assertion-spec)
+  (if (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
       (= (first assertion-spec) 'some)
       (let [rsts (rest (get @ind-deps-rsts (second assertion-spec)))]
@@ -948,7 +948,7 @@
                       the same variable."))
           :else
           (do
-            (println rsts assertion-spec)
+            ;(println rsts assertion-spec)
             (dosync (alter qvar-rsts assoc 
                            (first assertion-spec)
                            (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)))
