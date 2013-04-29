@@ -1,0 +1,47 @@
+;;; Demonstration of a variable in function position
+;;; Use the definition of a transitive relation
+;;; Stuart C. Shapiro
+;;; April 23, 2013
+
+(in-ns 'csneps.core.snuser)
+
+(clearkb true)
+
+(defineType Relation (Thing)
+  "The class of relations.")
+
+(defineType UnaryRelation (Relation)
+  "The class of unary relations.")
+
+(defineType BinaryRelation (Relation)
+  "The class of binary relations.")
+
+(defineType MetaRelation (UnaryRelation)
+  "The class of properties of relations.")
+
+(defineSlot brel :type BinaryRelation :posadjust reduce :negadjust reduce
+            :docstring "Fillers are binary relations")
+
+(defineSlot arg1 :type Entity :posadjust reduce :negadjust reduce
+            :docstring "Fillers are entities in the first position of a relation")
+
+(defineSlot arg2 :type Entity :posadjust reduce :negadjust reduce
+            :docstring "Fillers are entities in the second position of a relation")
+
+(defineCaseframe 'Proposition '('Transitive brel)
+  :docstring "[brel] is transitive")
+
+(defineCaseframe 'Proposition '(brel arg1 arg2)
+  :docstring "[arg1] has the relation [brel] to [arg2]"
+  :fsymbols '(R Bigger))
+
+;;; The definition of transitivity
+;;; (all R (if (Transitive R) (all (x z) (if (some (y) (and (R x y) (R y z))) (R x z)))))
+(assert '((every R (Transitive R))
+          (every x (R x (some y (R x z) (R x y) (R y (every z (Isa z Entity))))))
+          z))
+
+(assert '(Transitive Bigger))
+
+(assert '(Bigger Clyde Trigger))
+(assert '(Bigger Trigger Lassie))
