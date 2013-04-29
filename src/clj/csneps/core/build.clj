@@ -862,7 +862,7 @@
       (ref-set (:restriction-set-printable var) rst-set-printable))
 
     (when (and (= quant 'some) (not (nil? dependencies)))
-      (let [deps-printable (clojure.string/join "" (map str dependencies))]
+      (let [deps-printable (clojure.string/join " " (map str dependencies))]
         (dosync
           (alter (:dependencies var) clojure.set/union
                  (doall (map #(substitution %) dependencies)))

@@ -74,7 +74,7 @@
   (str
     (condp = (type-of term)
       :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
-      :csneps.core/Indefinite (str "(some " (:var-label term) "(" @(:dependencies-printable term) ") ")
+      :csneps.core/Indefinite (str "(some " (:var-label term) " (" @(:dependencies-printable term) ") ")
       :csneps.core/QueryVariable (str "(" (:var-label term) " "))
     @(:restriction-set-printable term) ")"))
 
