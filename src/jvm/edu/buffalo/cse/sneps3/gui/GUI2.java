@@ -55,7 +55,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2013.2.20";
+	public static final String version = "2013.04.30";
 	
     public static final boolean DEBUG = true;
 
@@ -99,7 +99,7 @@ public class GUI2 extends javax.swing.JFrame{
     //boolean hideFind = true;
 
 
-
+    ExportDialog export = new ExportDialog();
     boolean doingSave = false;
 
     //static ArrayList<Caseframe> hide_cf_list = new ArrayList<Caseframe>();
@@ -148,7 +148,7 @@ public class GUI2 extends javax.swing.JFrame{
                         parent = parent.getParent();
                     }
 
-                    ExportDialog export = new ExportDialog();
+                    //ExportDialog export = new ExportDialog();
                     export.showExportDialog(parent, "Take Screenshot...", parent, "guiscr");
                     doingSave = false;
                     return true;
@@ -1269,7 +1269,6 @@ public class GUI2 extends javax.swing.JFrame{
     }//GEN-LAST:event_jMenuItem9ActionPerformed
 
     private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem10ActionPerformed
-        ExportDialog export = new ExportDialog();
         export.showExportDialog(this, "Export graph as...", jungGraphPanel1.getVV(), "propgraph");
         if(jCheckBoxMenuItem_antialias.isSelected()){
             jungGraphPanel1.getVV().getRenderingHints().put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
