@@ -12,7 +12,9 @@
         [csneps.util]
         [clojure.java.io]))
 
-(declare print-term)
+(def PRINTED-VARIABLES (atom (hash-set)))
+
+(declare print-term print-set)
 
 (defn print-atom
   [term]
@@ -70,13 +72,18 @@
 
 (defn print-unnamed-variable-term
   [term]
-  ;(println "Printing var")
   (str
-    (condp = (type-of term)
-      :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
-      :csneps.core/Indefinite (str "(some " (:var-label term) " (" @(:dependencies-printable term) ") ")
-      :csneps.core/QueryVariable (str "(" (:var-label term) " "))
-    @(:restriction-set-printable term) ")"))
+    (cond
+      (and @PRINTED-VARIABLES (@PRINTED-VARIABLES term)) (:var-label term)
+      :true
+      (do 
+        (swap! PRINTED-VARIABLES conj term)
+        (str 
+          (condp = (type-of term)
+            :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
+            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set @(:dependencies term) false) ") ")
+            :csneps.core/QueryVariable (str "(" (:var-label term) " "))
+          (print-set @(:restriction-set term) false) ")")))))
 
 (defn print-unnamed-molecular-term
   [term]
@@ -121,17 +128,15 @@
     csneps.core.Categorization (print-molecular x *out*)
     (pprint x *out*)))
 
-
-
-(defn print-named-molecular-term
-  "Prints to the stream
-        the molecular term preceded by its wft name
-        and an indication of its assert status."
-  [term stream]
-  (cl-format stream "~@<~W~:[~*~;~:[?~;!~]~]: ~W~:>"
-	  (:name term)
-	  (= (csneps/semantic-type-of term) :Proposition)
-	  (ct/asserted? term (ct/currentContext)) term))
+;(defn print-named-molecular-term
+;  "Prints to the stream
+;        the molecular term preceded by its wft name
+;        and an indication of its assert status."
+;  [term stream]
+;  (cl-format stream "~@<~W~:[~*~;~:[?~;!~]~]: ~W~:>"
+;	  (:name term)
+;	  (= (csneps/semantic-type-of term) :Proposition)
+;	  (ct/asserted? term (ct/currentContext)) term))
 
 (defn print-named-variable-term
   [term]
@@ -141,24 +146,25 @@
 ;(defmethod print-method csneps.core.Categorization [o w]
 ;  (print-named-molecular-term o w))
 
-(defn print-slot
-  [slotset]
+(defn print-set
+  [slotset show-setof?]
   (if (= (count slotset) 1)
     (print-term (first slotset))
-    (str "(setof " (apply str (interpose " " (for [n slotset] (print-term n)))) ")")))
+    (if show-setof?
+      (str "#{" (apply str (interpose " " (for [n slotset] (print-term n)))) "}")
+      (str (apply str (interpose " " (for [n slotset] (print-term n))))))))
 
 (defn print-term
   [term]
   ;(println "Term: " term)
   (condp = (type-of term)
-    clojure.lang.PersistentHashSet
-      (print-slot term)
-    :csneps.core/Atom
-      (print-atom term)
+    clojure.lang.PersistentHashSet (print-set term true)
+    :csneps.core/Atom (print-atom term)
     (print-unnamed-molecular-term term)))
 
 (defn term-printer
   [term]
+  (reset! PRINTED-VARIABLES (hash-set))
   (cond
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Variable)
       (str (print-named-variable-term term))

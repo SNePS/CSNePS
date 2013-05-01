@@ -853,20 +853,16 @@
   
 ;  (println (map #(print-str %) rsts))
   
-  (let [var (substitution var-label)
-        rst-set-printable (clojure.string/join " " (map #(seq %) rsts))]
-
+  (let [var (substitution var-label)]
     (dosync 
       (alter (:restriction-set var) clojure.set/union 
-             (set (map #(build % :Proposition substitution) rsts)))
-      (ref-set (:restriction-set-printable var) rst-set-printable))
+             (set (map #(build % :Proposition substitution) rsts))))
 
     (when (and (= quant 'some) (not (nil? dependencies)))
-      (let [deps-printable (clojure.string/join " " (map str dependencies))]
-        (dosync
-          (alter (:dependencies var) clojure.set/union
-                 (doall (map #(substitution %) dependencies)))
-          (ref-set (:dependencies-printable var) deps-printable))))
+      (doall (map #(clojure.pprint/cl-format true "~A" %) dependencies))
+      (dosync
+        (alter (:dependencies var) clojure.set/union
+               (doall (map #(substitution %) dependencies)))))
     
     (dosync 
       (alter TERMS assoc (:name var) var)

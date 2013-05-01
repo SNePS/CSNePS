@@ -157,7 +157,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   restriction-set-printable (ref "()")
    syntype 'variable
    type ::Variable])
 
@@ -176,10 +175,8 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   restriction-set-printable (ref "()")
    ;;Additions for Indefinite
    dependencies (ref (hash-set))
-   dependencies-printable (ref "")
    syntype 'indefinite
    type ::Indefinite])
 
@@ -198,7 +195,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   restriction-set-printable (ref "()")
    syntype 'arbitrary
    type ::Arbitrary])
 
@@ -217,7 +213,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   restriction-set-printable (ref "()")
    syntype 'queryvariable
    type ::QueryVariable])
 
