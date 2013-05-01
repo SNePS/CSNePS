@@ -48,26 +48,28 @@
 
 (defn print-molecular
   [cf cs]
-  ;(println "Pattern: " pattern " Slots: " slots " cs " cs)
-  (if (cf/hasOneArgumentSlot cf)
-    (let [fsym (first (:print-pattern cf))]
-      (if (and (seq? fsym)
-                     (= 'quote (first fsym)))
-              (cons (second fsym) (if (set? (first cs)) 
-                                    (map #(print-term %) (first cs)) 
-                                    (list (print-term (first cs)))))
-              (cons (print-term (first cs)) (if (set? (second cs)) 
-                                              (map #(print-term %) (second cs)) 
-                                              (list (print-term (second cs)))))))
-    (seq
-      (for [p (:print-pattern cf)]
-        (cond
-          (and (seq? p) (= (first p) 'quote))
-          (second p)
-          (symbol? p)
-          (print-term (nth cs (first (positions #(= % p) (map #(:name %) (:slots cf))))))
-          :else 
-          (error "Bad pattern part "p" in the pattern "(:print-pattern cf)"."))))))
+  (str "(" 
+         (apply str 
+                (interpose " " 
+                           (if (cf/hasOneArgumentSlot cf)
+                             (let [fsym (first (:print-pattern cf))]
+                               (if (and (seq? fsym)
+                                        (= 'quote (first fsym)))
+                                 (cons (second fsym) (if (set? (first cs)) 
+                                                       (map #(print-term %) (first cs)) 
+                                                       (list (print-term (first cs)))))
+                                 (cons (print-term (first cs)) (if (set? (second cs)) 
+                                                                 (map #(print-term %) (second cs)) 
+                                                                 (list (print-term (second cs)))))))
+                             (for [p (:print-pattern cf)]
+                               (cond
+                                 (and (seq? p) (= (first p) 'quote))
+                                 (second p)
+                                 (symbol? p)
+                                 (print-term (nth cs (first (positions #(= % p) (map #(:name %) (:slots cf))))))
+                                 :else 
+                                 (error "Bad pattern part "p" in the pattern "(:print-pattern cf)"."))))))
+         ")"))
 
 
 (defn print-unnamed-variable-term
