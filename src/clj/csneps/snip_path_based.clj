@@ -109,11 +109,11 @@
   "Given a nodeset and a function, return the nodeset that results 
     from repeately applying the function to the nodeset one or more times"
   [nodeset fun]
-  (println "f+" nodeset )
+  ;(println "f+" nodeset )
   (loop
     [res (set (fun nodeset))
      retval #{}]
-    (println "res:" res)
+    ;(println "res:" res)
     (if (empty? res) 
       retval
       (recur (difference (set (fun res)) retval) (union retval res)))))
@@ -122,7 +122,7 @@
   "Given a nodeset and a function, return the nodeset that results 
   from repeately applying the function to the nodeset zero or more times"
   [nodeset fun]
-  (println "f*" nodeset)
+  ;(println "f*" nodeset)
   (union nodeset (f+ nodeset fun)))
 
 (defn memberOrVar
