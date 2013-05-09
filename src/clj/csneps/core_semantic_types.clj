@@ -58,12 +58,12 @@
       ;;nodes set.
       (when (subtypep newtypekey :Proposition)
           (dosync
-            (ref-set support-set (assoc @support-set termname (ref (hash-set))))
-            (ref-set supported-nodes-set (assoc @supported-nodes-set termname (ref (hash-set))))))
+            (alter support-set assoc termname (ref (hash-set)))
+            (alter supported-nodes-set assoc termname (ref (hash-set)))))
       ;;If the type is an Act or Action, it has a nil primaction to start.
       (when (or (subtypep newtypekey :Act) (isa? @semantic-type-hierarchy newtypekey :Action))
         (dosync
-          (ref-set primaction (assoc @primaction termname nil))))
+          (alter primaction assoc termname nil)))
       newtypekey))
 
 (defn semantic-type-of
