@@ -68,10 +68,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (if (not (ct/asserted? expr ct))
       (case origintag
-        :hyp (dosync 
-               (alter (:hyps ct) conj expr)
-               (alter hcontext-set assoc expr ct)) ;;TODO: BUG - Can only be in 1 context!
-              ; (dosync (ref-set hcontext-set (assoc @hcontext-set expr ct)))) ;;BUG - Can only be in 1 context!
+        :hyp (dosync (alter (:hyps ct) conj expr))
         :der (dosync (commute (:ders ct) conj expr)))))
   expr)
 
@@ -81,10 +78,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (if (not (ct/asserted? expr ct))
       (case origintag
-        :hyp (dosync 
-               (alter (:hyps ct) conj expr)
-               (alter hcontext-set assoc expr ct)) ;;TODO: BUG - Can only be in 1 context!
-              ; (dosync (ref-set hcontext-set (assoc @hcontext-set expr ct)))) ;;BUG - Can only be in 1 context!
+        :hyp (dosync (alter (:hyps ct) conj expr))
         :der (dosync (commute (:ders ct) conj expr)))))
   expr)
 

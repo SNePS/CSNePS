@@ -10,9 +10,6 @@
 ;;Maps the term name to it's support set
 (defvar support-set (ref (hash-map)))
 
-;;Maps the term name to the set of contexts its a hyp in.
-(defvar hcontext-set (ref (hash-map)))
-
 ;;Maps the term name to its supported node set.
 (defvar supported-nodes-set (ref (hash-map)))
 
@@ -20,7 +17,7 @@
 (defvar primaction (ref (hash-map)))
 
 ;;; There are really (structurally) only 3 different types - Entity, Proposition, Act(ion).
-;;; Proposition is an Entity with a support-set, hcontext-set, and supported-nodes-set
+;;; Proposition is an Entity with a support-set, and supported-nodes-set
 ;;; Act/Action is an Entity/Thing with a primaction
 
 (declare type-of subtypep)
@@ -62,7 +59,6 @@
       (when (subtypep newtypekey :Proposition)
           (dosync
             (ref-set support-set (assoc @support-set termname (ref (hash-set))))
-            (ref-set hcontext-set (assoc @hcontext-set termname (ref (hash-set))))
             (ref-set supported-nodes-set (assoc @supported-nodes-set termname (ref (hash-set))))))
       ;;If the type is an Act or Action, it has a nil primaction to start.
       (when (or (subtypep newtypekey :Act) (isa? @semantic-type-hierarchy newtypekey :Action))

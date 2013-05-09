@@ -26,7 +26,6 @@
       (dosync
         (ref-set csneps/type-map (hash-map))
         (ref-set csneps/support-set (hash-map))
-        (ref-set csneps/hcontext-set (hash-map))
         (ref-set csneps/supported-nodes-set (hash-map))
         (ref-set csneps/primaction (hash-map)))
 
