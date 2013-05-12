@@ -12,6 +12,12 @@
 (def print-intermediate-results false)
 (def async-assert false)
 
+;; Incremented whenever a message is submitted, and decremented once inference
+;; on a message is complete, this variable allows us to determine if inference
+;; is in progress, and attach a watch function for the purpose of notifying the
+;; user, or for benchmarking.
+(def to-infer (agent 0))
+
 (declare initiate-node-task create-rui-structure get-rule-use-info open-valve)
 
 (defn priority-partial
@@ -55,7 +61,8 @@
                          cpus-to-use
                          cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
-  (.prestartAllCoreThreads ^ThreadPoolExecutor executorService))
+  (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
+  (def to-infer (agent 0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Channel Maniupulation ;;;
@@ -64,6 +71,7 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "Submitting" message))))
+  (send to-infer inc)
   (when (:fwd-infer? message)
     (open-valve channel))
   (if (build/valve-open? channel)
@@ -164,6 +172,7 @@
    through the graph."
   [term]
   ;; We need to pretend that a Y-INFER message came in to this node.
+  (send to-infer inc)
   (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task term 
                                               (new-message {:origin nil, :support-set #{}, :type 'Y-INFER, :fwd-infer? true}))))
 
@@ -472,7 +481,8 @@
             (send screenprinter (fn [_] (println "> " (build/assert (list 'not term) (ct/currentContext) :der))))
             (build/assert (list 'not term) (ct/currentContext) :der)))
         (doseq [[ch msg] result] 
-          (submit-to-channel ch msg))))))
+          (submit-to-channel ch msg)))))
+  (send to-infer dec))
           
   
 ;;; RUI Handling ;;;
