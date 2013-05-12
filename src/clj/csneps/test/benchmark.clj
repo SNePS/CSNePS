@@ -8,10 +8,67 @@
             [clojure.set :as set]
             [csneps.core.snuser :as snuser]))
 
-(def ^:dynamic start-time nil)
-(def ^:dynamic end-time nil)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Time and Statistics Variables + Functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(declare benchmark-impl statistics)
+(def runtime (atom 0))
+(def iterations 10)
+(def iterations-left (atom iterations))
+
+(defn log-elapsed
+  [start-time]
+  (swap! runtime + (/ (- (. java.lang.System (clojure.core/nanoTime)) start-time) 1000000.0)))
+
+(defn reset-benchmark
+  []
+  (def runtime (atom 0))
+  (def iterations-left (atom iterations))
+  (remove-watch csneps.snip/to-infer :to-infer))
+
+(defn print-time
+  []
+  (println "Run Time: " @runtime))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Graph Construction ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Entailments ;;;
+
+;; General function to generate entailments automatically. entailsym can be things like
+;; =v> or if. 
+(defn generate-entailment
+  [entailsym & {:keys [antset antcount cqset cqcount assert?]}]
+  (let [ants (if antset antset (set (map gensym (repeat antcount "ant"))))
+        cqs (if cqset cqset (set (map gensym (repeat cqcount "cq"))))]
+    (if assert?
+      [ants cqs (snuser/assert (list entailsym ants cqs))]
+      [ants cqs (snuser/defineTerm (list entailsym ants cqs))])))
+
+(defn generate-entailment-chain-cqroot
+  [entailsym branching-factor maxdepth]
+  (loop [depth 0
+         cqset '#{cq}]
+    (if (< depth maxdepth)
+      (recur (inc depth)
+             (apply clojure.set/union
+                    (map first
+                         (map #(generate-entailment entailsym :antcount branching-factor :cqset #{%} :assert? true) cqset))))
+      (doall (map #(snuser/assert %) cqset)))))
+
+(defn generate-entailment-chain-antroot
+  [entailsym branching-factor maxdepth]
+  (loop [depth 0
+         antset '#{ant}]
+    (if (< depth maxdepth)
+      (recur (inc depth)
+             (apply clojure.set/union
+                    (map second 
+                         (map #(generate-entailment entailsym :antset #{%} :cqcount branching-factor :assert? true) antset))))
+      antset)))
+
+;;; And ;;;
 
 (defn generate-and
   [assert? ant-ct]
@@ -32,6 +89,8 @@
         (doall (map #(snuser/assert %) ant-syms))
         (:name (snuser/defineTerm (list* 'and ant-syms)))))))
 
+;;; Andor ;;;
+
 (defn generate-andor
   [assert? ant-ct]
   (let [min-ct (int (inc (rand ant-ct)))
@@ -43,143 +102,46 @@
                (snuser/defineTerm (list* 'andor (list min-ct max-ct) (concat true-ants false-ants))))]
     [true-ants false-ants term]))
 
-(defn generate-implication
-  [assert? ant-ct cqset or?]
-  (let [ants (set (map gensym (repeat ant-ct "ant")))]
-    (if assert?
-      [ants (snuser/assert (list (if or? '=v> 'if) ants cqset))]
-      [ants (snuser/defineTerm (list (if or? '=v> 'if) ants cqset))])))
+;;;;;;;;;;;;;;;;;;
+;;; Benchmarks ;;;
+;;;;;;;;;;;;;;;;;;
 
-(defn generate-implication-chain
-  [branching-factor maxdepth or?]
-  (loop [depth 0
-         cqset '#{cq}]
-    (if (< depth maxdepth)
-      (recur (inc depth)
-             (apply clojure.set/union
-                    (map first 
-                         (map #(generate-implication true branching-factor % or?) cqset))))
-      (doall (map #(snuser/assert %) cqset)))))
-
-(def totaltime (atom 0))
-(def iterations (atom 10))
-
-(defn log-elapsed
-  [start-time]
-  (swap! totaltime + (/ (- (. java.lang.System (clojure.core/nanoTime)) start-time) 1000000.0)))
-
-
-(defn print-elapsed
-  [start-time]
-  (println "Elapsed:"
-           (/ (- (. java.lang.System (clojure.core/nanoTime)) start-time) 1000000.0) "ms"))
-
-
-(defn benchmark-done?
-  [bench start-time ref key oldvalue newvalue]
-  (when (and (newvalue (snuser/find-term 'cq))
-             (not (oldvalue (snuser/find-term 'cq))))
+(defn to-infer-update
+  [benchfn start-time ref key oldvalue newvalue]
+  (when (and (= newvalue 0) (not= oldvalue 0))
     (log-elapsed start-time)
-    (println "Done." @iterations)
-    (statistics)
-    (remove-watch (:ders (ct/currentContext)) :ders)
-    (if (> (swap! iterations dec) 0)
-      (bench)
-      (println "Total Time:" @totaltime)
-    )))
+    (print-time)
+    ;(println (count (filter #(ct/asserted? % (ct/currentContext)) (vals @csneps/TERMS))))
+    (when (> (swap! iterations-left dec) 0)
+      (remove-watch csneps.snip/to-infer :to-infer)
+      (benchfn))))
 
-(defn benchmark-impl
-  []
-  (snuser/clearkb false)
-  (generate-implication-chain 2 10 false)
+(defn benchmark-fwd-1
+  [buildgraphfn]
+  (snuser/clearkb true)
+  (send snip/to-infer (fn [_] 0))
+  (buildgraphfn)
   (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-    (add-watch (:ders (ct/currentContext)) :ders (partial benchmark-done? benchmark-impl start-time))
+    (add-watch csneps.snip/to-infer :to-infer (partial to-infer-update #(benchmark-fwd-1 buildgraphfn) start-time))
+    (snuser/assert! 'ant)))
+
+(defn benchmark-fwd
+  [entailsym bf depth]
+  (reset-benchmark)
+  (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth)]
+    (benchmark-fwd-1 buildgraphfn)))
+
+(defn benchmark-bwd-1
+  [buildgraphfn]
+  (snuser/clearkb true)
+  (send snip/to-infer (fn [_] 0))
+  (buildgraphfn)
+  (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+    (add-watch csneps.snip/to-infer :to-infer (partial to-infer-update #(benchmark-bwd-1 buildgraphfn) start-time))
     (snip/backward-infer (snuser/find-term 'cq))))
 
-(defn benchmark
-  []
-  (def totaltime (atom 0))
-  (def iterations (atom 10))
-  (benchmark-impl))
-
-(defn benchmark-done-s?
-  [start-time ref key oldvalue newvalue]
-  (when (and (newvalue (snuser/find-term 'cq))
-             (not (oldvalue (snuser/find-term 'cq))))
-    (log-elapsed start-time)
-    ;(println "Total Time:" @totaltime)
-    ;(println "Done.")
-    ;(statistics)
-    (remove-watch (:ders (ct/currentContext)) :ders)))
-    (if (> (swap! iterations dec) 0)
-      (println "Total Time:" @totaltime)
-    )
-
-  (def iterations (atom 100))
-    
-(defn benchmark-test
-  [bench iters]
-  (def totaltime (atom 0))
-  (def iterations (atom iters))
-  (bench))
-  
-(defn fwd-inf-chain
-  []
-  ;(def totaltime (atom 0))
-  (snuser/clearkb)
-  (snuser/assert '(=v> (setof ant1 ant2) ant3))
-  (snuser/assert '(=v> (setof ant3 ant4) ant5))
-  (snuser/assert '(=v> (setof ant5 ant6) ant7))
-  (snuser/assert '(=v> (setof ant7 ant9) ant9))
-  (snuser/assert '(=v> (setof ant9 ant2) ant11))
-  (snuser/assert '(=v> (setof ant11 ant2) ant13))
-  (snuser/assert '(=v> (setof ant13 ant2) ant15))
-  (snuser/assert '(=v> (setof ant15 ant2) ant17))
-  (snuser/assert '(=v> (setof ant17 ant2) ant19))
-  (snuser/assert '(=v> (setof ant19 ant2) cq))
-  (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-    (add-watch (:ders (ct/currentContext)) :ders (partial benchmark-done? fwd-inf-chain start-time))
-    (snuser/assert! 'ant1)))
-
-
-(defn generate-next-level
-  [true-cqs false-cqs]
-  
-  
-  
-  )
-
-
-
-
-
-
-
-(defn statistics
-  []
-  (let [molterms (filter csneps/molecularTerm? (vals @csneps/TERMS))
-        inferredin (filter #(not (empty? @(:rui-set (:ruis %)))) molterms)]
-    (println "Molecular Terms:" (count molterms))
-    (println "Terms Inferred In:" (count inferredin))))
-
-(defn generate-graph
-  [depth order]
-  
-  
-  )
-
-    
-    
-    
-
-  
-  (defn ttassert
-  []
-  (snuser/clearkb true)
-  (let [nums (range 1 1023)
-        ants (map #(str "ant" %) nums)]
-    (doall (map #(snuser/defineTerm %) ants))
-    (time (doall (map #(build/assert % (ct/currentContext) :hyp) ants)))
-    nil))
-  
-
+(defn benchmark-bwd
+  [entailsym bf depth]
+  (reset-benchmark)
+  (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth)]
+    (benchmark-bwd-1 buildgraphfn)))
