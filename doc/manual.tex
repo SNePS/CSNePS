@@ -204,7 +204,7 @@ wft &=& atomicwft\\
   atomicname$^+$ , `)')) ,}\\
 && ~~~~~\textcolor{red}{wft , `)'}\\
 && $\mid$ `(', `every' , atomicname , wft$^\ast$ , `)'\\
-&& $\mid$ `(', `some' , atomicname , `(' , wft$^\ast$ , `)' ,
+&& $\mid$ `(', `some' , atomicname , `(' , atomicname , `)' ,
  wft$^\ast$ , `)'\\ 
 && $\mid$ \textcolor{red}{`(', `?'$\not b$ atomicname , wft$^\ast$ , `)'}\\
 && $\mid$ \textcolor{red}{\textit{Generalized quantifiers to replace nexists}} ;\\
@@ -222,7 +222,7 @@ param2op &=& `andor' $\mid$ `thresh' ;\\
 atomicwft &=& atomicname $\mid$ \textit{Lisp string} $\mid$
 \textit{Lisp number} ;\\
 [2ex]
-atomicname &=& \textit{Lisp symbol other than} \texttt{wft}$i$ ;\\
+atomicname &=& \textit{Clojure symbol other than} \texttt{wft}$i$ ;\\
 [2ex]
 function &=& wft // other than reservedWord ;\\
 [2ex]
@@ -243,27 +243,26 @@ user command \texttt{(list-terms)}\indexct{list-terms}.  The user expression
 assigned \texttt{wft\textit{i}} as its wft-name.  If no \texttt{wft} has yet
 been assigned that wft-name, \texttt{wft\textit{i}} is syntactically illegal.
 
-%%% Paths aren't there yet... Eventually... [DRS]
 
-%\section{Syntax of Paths}\label{sec:pathsyntax}
-%In this section is presented the syntax of path expressions used in
-%\texttt{definePath}\indexct{definePath} and
-%\texttt{defineSlot}\indexct{defineSlot}.
+\section{Syntax of Paths}\label{sec:pathsyntax}
+In this section is presented the syntax of path expressions used in
+\texttt{definePath}\indexct{definePath} and
+\texttt{defineSlot}\indexct{defineSlot}.
 
-%\texttt{\begin{tabular}{lcl}
-%path &=& \textit{slotname}\\
-%&& $\mid$ \textit{slotname} $\not b$ `-'\\
-%&& $\mid$ `!'\\
-%&& $\mid$ `(' , `converse' , path , `)'\\
-%&& $\mid$ `(' , `kplus' , path , `)'\\
-%&& $\mid$ `(' , `kstar' , path , `)'\\
-%&& $\mid$ `(' , `compose' , path$^*$ , `)'\\
-%&& $\mid$ `(' , `or' , path$^*$ , `)'\\
-%&& $\mid$ `(' , `and' , path$^*$ , `)'\\
-%&& $\mid$ `(' , `irreflexive-restrict' , path , `)'\\
-%&& $\mid$ \textcolor{red}{`(' , `domain-restrict' , `(' , path , wft , `)' , path , `)'}\\
-%&& $\mid$ \textcolor{red}{`(' , `range-restrict' , path , `(' , path , wft , `)' , `)'} ;
-%\end{tabular}}
+\texttt{\begin{tabular}{lcl}
+path &=& \textit{slotname}\\
+&& $\mid$ \textit{slotname} $\not b$ `-'\\
+&& $\mid$ `!'\\
+&& $\mid$ `(' , `converse' , path , `)'\\
+&& $\mid$ `(' , `kplus' , path , `)'\\
+&& $\mid$ `(' , `kstar' , path , `)'\\
+&& $\mid$ `(' , `compose' , path$^*$ , `)'\\
+&& $\mid$ `(' , `or' , path$^*$ , `)'\\
+&& $\mid$ `(' , `and' , path$^*$ , `)'\\
+&& $\mid$ `(' , `irreflexive-restrict' , path , `)'\\
+&& $\mid$ \textcolor{red}{`(' , `domain-restrict' , `(' , path , wft , `)' , path , `)'}\\
+&& $\mid$ \textcolor{red}{`(' , `range-restrict' , path , `(' , path , wft , `)' , `)'} ;
+\end{tabular}}
 
 \chapter{Running SNePS 3}
 SNePS 3 is implemented in the Clojure programming language, a recently developed 
@@ -452,9 +451,9 @@ the empty set if there are none.
 \docfun{assert}{\textit{expr}}
 Asserts the term expressed by \cv{expr} in the current context.
 
-%\docfun{assert!}{\textit{expr}}\indexct{assert"!}
-%Asserts the term expressed by \cv{expr} in the current context, and triggers
-%forward inference.
+\docfun{assert!}{\textit{expr}}\indexct{assert"!}
+Asserts the term expressed by \cv{expr} in the current context, and triggers
+forward inference.
 
 %\docfun{attachPrimaction}{\textit{term primfun}}
 %Puts the function named \texttt{\textit{primfun}} in the
@@ -489,10 +488,10 @@ the empty string.  If \cv{parents} is omitted, it defaults to
 \texttt{'(BaseCT)}.  If \cv{hyps} is omitted, it defaults to the
 empty list.
 
-%\docfun{definePath}{\textit{slotname path}} Given a slot name, \cv{slotname},
-%and a path expression, \cv{path} (\textit{see} \S\ref{sec:pathsyntax}), generate
-%the functions that will compute that path and its converse, and store them in
-%the slot named \cv{slotname}.
+\docfun{definePath}{\textit{slotname path}} Given a slot name, \cv{slotname},
+and a path expression, \cv{path} (\textit{see} \S\ref{sec:pathsyntax}), generate
+the functions that will compute that path and its converse, and store them in
+the slot named \cv{slotname}.
 
 %\docmacro{definePrimaction}{\textit{primactionfun vars} \&body
 %  \textit{forms}} Creates the primitive action function named
@@ -546,11 +545,11 @@ types listed in the list \cv{supers}.  If \cv{docstring} is given, it
 is set as the documentation string of the new type.  Returns a
 string-message, either of success or what the problem was.
 
-%\docfun{demo}{\&key file pause}
-%Echoes and evaluates the forms in the \cv{file}.  If \cv{pause} is
-%non-\texttt{nil} (the default is \texttt{nil}), will pause after
-%echoing each form, but before evaluating it.  If the \cv{file} is
-%omitted, a menu will be presented of available demos.
+\docfun{demo}{\&key file pause}
+Echoes and evaluates the forms in the \cv{file}.  If \cv{pause} is
+non-\texttt{nil} (the default is \texttt{nil}), will pause after
+echoing each form, but before evaluating it.  If the \cv{file} is
+omitted, a menu will be presented of available demos.
 
 %\docmacro{describe-terms}{\&rest \textit{ftnames}}
 %Prints a description of all the given terms.
@@ -560,11 +559,10 @@ string-message, either of success or what the problem was.
 %the term if successful, nil if there are dependencies that prevent the 
 %term from being erased.
 
-%\docfun{find}{\textit{exprpat}}
-%Returns two values: a set of instances of \textit{exprpat} that are in the
-%knowledge base; and a set of substitutions, which when applied to
-%\textit{exprpat} would give those instances.  \textit{exprpat} may be any wft
-%with variables, symbols starting with a ``?'', in the place of any subterms.
+\docfun{find}{\textit{exprpat}}
+Returns a list of vector pairs. In each pair, the first element is an instance of  \textit{exprpat} in the knowledge base, and the second is a substitution, which when applied to
+\textit{exprpat} would give that instance. \textit{exprpat} may be any wft
+with variables, symbols starting with a ``?'', in the place of any subterms.
 
 \docfun{findTerm}{\textit{name}}
 Returns the term named \texttt{\textit{name}}, or \texttt{nil} if
@@ -601,25 +599,25 @@ Prints the current context and all propositions asserted in it.
 %\docfun{noshowproofs}{}
 %Turns off the effects of \texttt{showproofs}.
 
-%\docfun{pathsfrom}{\textit{terms path}}
-%Returns the set of terms at the end of the given \cv{path} (\textit{see}
-%\S\ref{sec:pathsyntax}) from \cv{terms}, which must be a term, the name of a
-%term, a list of terms or names of terms, or a set of terms.
+\docfun{pathsfrom}{\textit{terms path}}
+Returns the set of terms at the end of the given \cv{path} (\textit{see}
+\S\ref{sec:pathsyntax}) from \cv{terms}, which must be a term, the name of a
+term, a list of terms or names of terms, or a set of terms.
 
 %\docfun{perform}{\textit{actform}}
 %Performs the \texttt{Act} expressed by the form \texttt{\textit{actform}}.
 
-%\docvar{PRECISION}
-%A positive integer: a floating point number will be rounded to this
-%number of decimal places before being converted to a term.
+\docvar{PRECISION}
+A positive integer: a floating point number will be rounded to this
+number of decimal places before being converted to a term.
 
 \docfun{remove-from-context}{\textit{term} \textit{ctx}}
 Removes the provided \textit{term} from the context \textit{ctx}. The term will 
 still be asserted in contexts it isn't removed from. 
 
-%\docfun{sameFrame}{\textit{newf oldf}}
-%Associates the same frame associated with the function symbol
-%\cv{oldf} with the symbol, or list of symbols, \cv{newf}.
+\docfun{sameFrame}{\textit{newf oldf}}
+Associates the same frame associated with the function symbol
+\cv{oldf} with the symbol, or list of symbols, \cv{newf}.
 
 \docfun{setCurrentContext}{\textit{ctx}}
 If \cv{ctx} is a context name, makes the context named \cv{ctx} the
@@ -633,19 +631,19 @@ context.  Else raises an error.
 %rule fires.  If \texttt{goal} is \texttt{nil} (default) a message is
 %printed only when a rule fires, thus printing a proof.
 
-%\docfun{showTypes}{}
-%Graphically displays all the defined semantic types.
+\docfun{showTypes}{}
+Graphically displays all the defined semantic types.
 
-%\docmacro{startGUI}{\&rest \textit{terms}} 
-%  Starts the SNePS 3 GUI. Takes a variable number of \texttt{\textit{terms}} to
-%  display on the graph. Each term is either found or defined using
-%  \texttt{defineTerm}. If no terms are given, the entire graph will be
-%  displayed.
+\docmacro{startGUI}{\&rest \textit{terms}} 
+  Starts the SNePS 3 GUI. Takes a variable number of \texttt{\textit{terms}} to
+  display on the graph. Each term is either found or defined using
+  \texttt{defineTerm}. If no terms are given, the entire graph will be
+  displayed.
 
-%\docfun{unassert}{\textit{prop} \&optional (\textit{cntxt} (currentContext))}
-%Unasserts the proposition \cv{prop} in the given context and all ancestor
-%contexts.  Currently there is no belief revision, so propositions derived using
-%\cv{prop} might still be asserted, and prop, itself, might be rederivable.
+\docfun{unassert}{\textit{prop} \&optional (\textit{cntxt} (currentContext))}
+Unasserts the proposition \cv{prop} in the given context and all ancestor
+contexts.  Currently there is no belief revision, so propositions derived using
+\cv{prop} might still be asserted, and prop, itself, might be rederivable.
 
 
 %\docmacro{withInstances}{(\textit{variables} of \textit{pattern} \&body \textit{forms}}
@@ -669,11 +667,11 @@ context.  Else raises an error.
 %      (assert `(Isa ,?x ,?z))))
 %\end{verbatim}
 
-%\docfun{writeKBToTextFile}{\textit{file} \&optional \textit{headerfile}}
-%Writes the KB to the given text \cv{file}, so that when that file is loaded, all
-%the propositions asserted in the current KB will be asserted in the new KB.  If
-%the \cv{headerfile} is included, a load of that file will be written before any
-%of the asserts.
+\docfun{writeKBToTextFile}{\textit{file} \&optional \textit{headerfile}}
+Writes the KB to the given text \cv{file}, so that when that file is loaded, all
+the propositions asserted in the current KB will be asserted in the new KB.  If
+the \cv{headerfile} is included, a load of that file will be written before any
+of the asserts.
 
 \backmatter
 \appendix
