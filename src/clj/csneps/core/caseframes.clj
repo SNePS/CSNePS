@@ -82,22 +82,22 @@
   [srcframe tgtframe]
   (or (= srcframe tgtframe)
       (let [srcslots  (:slots srcframe)
-	    tgtslots  (:slots tgtframe)]
-	;; CF <C_src,R_src> is pos-adjustable to case frame <C_tgt,R_tgt> iff:
-	(and
-	 ;; 1) C_src is the same as, or a subtype of, C_tgt
-	 (csneps.core/subtypep (csneps.core/type-of (:type srcframe))
-		          (csneps.core/type-of (:type tgtframe)))
-	 ;; 2) Every slot in R_src - R_tgt is posadjust reducible and has min = 0
-	 (every? #(or   (find % tgtslots)
-			(and (= (:min %) 0)
-			     (= (:posadjust %) 'reduce)))
-		srcslots)
-	 ;; 3) Every slot in R_tgt - R_src is posadjust expandable and has min = 0
-	 (every? #(or    (find % srcslots)
-			 (and (= (:min %) 0)
-			      (= (:posadjust %) 'expand)))
-		tgtslots)))))
+            tgtslots  (:slots tgtframe)]
+        ;; CF <C_src,R_src> is pos-adjustable to case frame <C_tgt,R_tgt> iff:
+        (and
+          ;; 1) C_src is the same as, or a subtype of, C_tgt
+          (csneps.core/subtypep (csneps.core/type-of (:type srcframe))
+                                (csneps.core/type-of (:type tgtframe)))
+          ;; 2) Every slot in R_src - R_tgt is posadjust reducible and has min = 0
+          (every? #(or   (find % tgtslots)
+                         (and (= (:min %) 0)
+                              (= (:posadjust %) 'reduce)))
+                  srcslots)
+          ;; 3) Every slot in R_tgt - R_src is posadjust expandable and has min = 0
+          (every? #(or    (find % srcslots)
+                          (and (= (:min %) 0)
+                               (= (:posadjust %) 'expand)))
+                  tgtslots)))))
 
 (defn neg-adj
   "Returns t if srcframe is a caseframe
@@ -105,24 +105,24 @@
   [srcframe tgtframe]
   (or (= srcframe tgtframe)
       (let [srcslots  (:slots srcframe)
-	    tgtslots  (:slots tgtframe)]
-	;; Case frame <C_src,R_src> is neg-adjustable to case frame <C_tgt,R_tgt> iff:
-	(and
-	 ;; 1) C_src is the same as, or a subtype of, C_tgt
-	 (csneps.core/subtypep (csneps.core/type-of  (:type srcframe))
-		   (csneps.core/type-of  (:type tgtframe)))
-	 ;; 2) Every slot in R_src - R_tgt is negadjust reducible and has min = 0
-	 (every? #(or (find % tgtslots)
-			(and (= (:min %) 0)
-			     (= (:negadjust %)
-				 'reduce)))
-		srcslots)
-	 ;; 3) Every slot in R_tgt - R_src is nrgadjust expandable and has min = 0
-	 (every? #(or (find % srcslots)
-			(and (= (:min %) 0)
-			     (=  (:negadjust %)
-				  'expand)))
-		tgtslots)))))
+            tgtslots  (:slots tgtframe)]
+        ;; Case frame <C_src,R_src> is neg-adjustable to case frame <C_tgt,R_tgt> iff:
+        (and
+          ;; 1) C_src is the same as, or a subtype of, C_tgt
+          (csneps.core/subtypep (csneps.core/type-of  (:type srcframe))
+                                (csneps.core/type-of  (:type tgtframe)))
+          ;; 2) Every slot in R_src - R_tgt is negadjust reducible and has min = 0
+          (every? #(or (find % tgtslots)
+                       (and (= (:min %) 0)
+                            (= (:negadjust %)
+                               'reduce)))
+                  srcslots)
+          ;; 3) Every slot in R_tgt - R_src is nrgadjust expandable and has min = 0
+          (every? #(or (find % srcslots)
+                       (and (= (:min %) 0)
+                            (=  (:negadjust %)
+                                'expand)))
+                  tgtslots)))))
 
 (defn pseudo-adjustable
   "Returns t if srcframe is 'pseudo-adjustable' to tgtframe.
@@ -146,9 +146,9 @@
     Adds target to the list of frames source is adjustable to, and
     Adds source to the list of frames target is adjustable from."
   [source target]
-  ;(println "adj")
-  (dosync (ref-set (:adj-to source) (conj @(:adj-to source) target)))
-  (dosync (ref-set (:adj-from target) (conj @(:adj-from target) source))))
+  (dosync
+    (alter (:adj-to source) conj target)
+    (alter (:adj-from target) conj source)))
 
 (defn check-new-caseframe
   "If there is already a caseframe with the given typename
@@ -264,7 +264,7 @@
               (when (and (find-frame fname)
                       (not (= (find-frame fname) cf)))
                 (println fname " being redefined from " (find-frame fname)))
-              (dosync (ref-set FN2CF (assoc @FN2CF fname cf))))
+              (dosync (alter FN2CF assoc fname cf)))
           (when fsymbols
             (println "Function symbols " fsymbols " being ignored because the print-pattern
                 starts with a quoted symbol.")))
@@ -280,15 +280,13 @@
          (add-adj-to cf cf2))
        (when (adjustable? cf2 cf)
          (add-adj-to cf2 cf))))
-
-    (dosync (ref-set CASEFRAMES (conj @CASEFRAMES cf)))
-  cf))
-
+   (dosync (alter CASEFRAMES conj cf))
+   cf))
 
 (defn list-caseframes
   "Print all the caseframes."
   []
-  (doseq [s (seq @CASEFRAMES)]
+  (doseq [s @CASEFRAMES]
     (println s)))
 
 (defn add-caseframe-term
@@ -296,8 +294,7 @@
    If the caseframe cf is given, add the term to that caseframe.
    Else, add the term to the caseframe that term uses."
   [term & {:keys [cf]}]
-  (let [cfterms (:terms (if cf cf (:caseframe term)))]
-    (dosync (ref-set cfterms (conj @cfterms term)))))
+  (dosync (alter (:terms (if cf cf (:caseframe term))) conj term)))
 
 (defn quotedpp?
   "Returns True if the caseframe cf

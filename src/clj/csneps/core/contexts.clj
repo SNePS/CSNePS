@@ -1,16 +1,14 @@
 (ns csneps.core.contexts
-;  (:require [sneps3-substitution :as subs])
   (:require [csneps.core :as csneps])
   (:use [csneps.util]))
 
 (defvar CONTEXTS (ref (hash-map))
   "A map from context name to context.")
 
-;;;PORTNOTE clj has no defparameter, which this used to be.
 (defvar ^:dynamic *CurrentContext* (ref nil)
   "The current context.")
 
-;;;PORTNOTE Missing the documentation string.. Also kinconsistent isnt typed (weird?)
+;;; "A SNePS 3 Context"
 (defrecord Context [
         ^clojure.lang.Symbol name
         ^String docstring
@@ -18,10 +16,6 @@
         ^clojure.lang.PersistentHashSet hyps
         ^clojure.lang.PersistentHashSet ders
         ^java.lang.Boolean kinconsistent])
-
-
-
-
 
 (defn find-context
   "If ctx is a context, returns it.
@@ -55,10 +49,10 @@
   (assert (or (seq? hyps) (set? hyps)))
   (if (find-context name)
     (println "A context named" name "already exists.")
-    (dosync (ref-set CONTEXTS (assoc @CONTEXTS name (Context. name docstring 
-                                                              (doall (map #(find-context %) parents)) 
-                                                              (ref (set (map #(csneps/get-term %) hyps))) 
-                                                              (ref (hash-set)) false)))))
+    (dosync (alter CONTEXTS assoc name (Context. name docstring 
+                                                 (doall (map #(find-context %) parents)) 
+                                                 (ref (set (map #(csneps/get-term %) hyps))) 
+                                                 (ref (hash-set)) false))))
   (find-context name))
 
 (defn currentContext
@@ -69,11 +63,8 @@
 (defn listContexts
   "Prints a list of all the contexts."
   []
-  (loop [x 0]
-    (if (< x (count @CONTEXTS)) 
-      (do (println (nth (keys @CONTEXTS) x))
-          (recur (+ 1 x)))
-      nil)))
+  (doseq [n (keys @CONTEXTS)]
+    (println n)))
 
 (defn remove-from-context
   "Removes the term from the context (ctx) hyps or ders."
