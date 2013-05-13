@@ -71,12 +71,12 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "Submitting" message))))
-  (send to-infer inc)
   (when (:fwd-infer? message)
     (open-valve channel))
   (if (build/valve-open? channel)
     ;; Process as usual.
     (do 
+      (send to-infer inc)
       (when debug (send screenprinter (fn [_]  (println "DEBUG: Received " message))))
       (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
       nil)
@@ -112,9 +112,9 @@
   ;; Start by opening the channel. Anything new should go right to the executor pool.
   (dosync (ref-set (:valve-open channel) true))
   ;; Add the waiting messages to the executor pool.
-  (doall (map 
-           #(.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) %))
-           @(:waiting-msgs channel)))
+  (doseq [msg @(:waiting-msgs channel)]
+    (send to-infer inc)
+    (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) msg)))
   ;; Clear the waiting messages list.
   (dosync (alter (:waiting-msgs channel) empty)))
 
@@ -143,13 +143,15 @@
     (let [msg (new-message {:type 'BACKWARD-INFER, :priority depth})]
       (doseq [ch @(:ant-in-channels term)]
         (when-not (visited term)
+          (send to-infer inc)
           (.execute ^ThreadPoolExecutor executorService (priority-partial -10 backward-infer ch msg depth (conj visited term)))))))
   ([channel message depth visited]
     (when (= (:type message) 'BACKWARD-INFER)
       (when-not (build/valve-open? channel)
         (when debug (send screenprinter (fn [_]  (println "DEBUG: Backward Infer " depth " - opening valve on channel" channel))))
         (open-valve channel))
-      (backward-infer (:originator channel) (dec (:priority message)) visited))))
+      (backward-infer (:originator channel) (dec (:priority message)) visited))
+    (send to-infer dec)))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
@@ -243,6 +245,7 @@
                             %)
                          new-ruis)]
     (when match-ruis 
+      (cancel-infer node)
       (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))))
 
