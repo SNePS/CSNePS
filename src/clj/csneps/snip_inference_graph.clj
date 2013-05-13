@@ -243,7 +243,7 @@
                             %)
                          new-ruis)]
     (when match-ruis 
-      (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true true))
+      (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))))
 
 (defn numericalentailment-introduction
@@ -296,12 +296,12 @@
       (when pos-match
         (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
                                                (not (negated? (:destination %))))
-                                      [% (RUI->message pos-match node 'Y-INFER false true)])
+                                      [% (RUI->message pos-match node 'Y-INFER false (:fwd-infer? message))])
                                    @(:y-channels node)))))
       (when neg-match
         (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
                                                (not (ct/asserted? (:destination %) (ct/currentContext))))
-                                      [% (RUI->message neg-match node 'Y-INFER true true)])
+                                      [% (RUI->message neg-match node 'Y-INFER true (:fwd-infer? message))])
                                    @(:y-channels node))))))))
 
 ;     Inference can terminate
@@ -362,11 +362,11 @@
                                           new-ruis)]
     (or (when more-than-min-true-match
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
-                                        [% (RUI->message more-than-min-true-match node 'Y-INFER true true)])
+                                        [% (RUI->message more-than-min-true-match node 'Y-INFER true (:fwd-infer? message))])
                                      @(:y-channels node)))))
         (when less-than-max-true-match
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
-                                        [% (RUI->message less-than-max-true-match node 'Y-INFER false true)])
+                                        [% (RUI->message less-than-max-true-match node 'Y-INFER false (:fwd-infer? message))])
                                      @(:y-channels node))))))))
 
 (defn elimination-infer
