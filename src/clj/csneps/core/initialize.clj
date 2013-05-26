@@ -41,6 +41,10 @@
       ;; Initialize the set of indefinites.
       (dosync (ref-set csneps/INDEFINITES #{}))
       (dosync (ref-set csneps/INDCOUNT 0))
+      
+      ;; Initialize the set of question mark variables.
+      (dosync (ref-set csneps/QVARS #{}))
+      (dosync (ref-set csneps/QVARCOUNT 0))
 
       ;; Reinitialize unification tree.
       (dosync (ref-set build/DistNodes {}))
@@ -77,25 +81,25 @@
             
               ;; Slots for Rules
             ;; ===================
-              (defineSlot and :type Proposition
+              (defineSlot and :type Sentential
                 :docstring "Fillers are arguments of a conjunction."
                 :min 2 :posadjust reduce :negadjust expand)
-              (defineSlot nor :type Proposition
+              (defineSlot nor :type Sentential
                 :docstring "Fillers are arguments of a nor."
                 :min 1 :posadjust reduce :negadjust expand)
-              (defineSlot andorargs :type Proposition
+              (defineSlot andorargs :type Sentential
                 :docstring "Fillers are arguments of an andor."
                 :min 2 :posadjust none :negadjust none)
-              (defineSlot threshargs :type Proposition
+              (defineSlot threshargs :type Sentential
                 :docstring "Fillers are arguments of a thresh."
                 :min 1 :posadjust none :negadjust none)
-              (defineSlot thnor :type Proposition
+              (defineSlot thnor :type Sentential
                 :docstring "Fillers are arguments of a thnor."
                 :min 1 :posadjust reduce :negadjust reduce)
-              (defineSlot ant :type Proposition
+              (defineSlot ant :type Sentential
                 :docstring "antecedent for a set."
                 :min 1 :posadjust expand :negadjust reduce)
-              (defineSlot cq :type Proposition
+              (defineSlot cq :type Sentential
                 :docstring "consequent for a set."
                 :min 1 :posadjust reduce :negadjust expand)
               
@@ -110,19 +114,19 @@
               (ref-set cf/CASEFRAMES (hash-set))
               (ref-set cf/FN2CF (hash-map))
               (ref-set cf/NoviceCaseframes (hash-map))
-              (defineCaseframe 'Proposition  '('Isa member class)
+              (defineCaseframe 'Sentential  '('Isa member class)
                 :docstring "[member] is a [class]")
-              (defineCaseframe 'Proposition '('Equiv equiv)
+              (defineCaseframe 'Sentential '('Equiv equiv)
                 :docstring "[equiv] are all co-referential")
-              (defineCaseframe 'Proposition '('and and)
+              (defineCaseframe 'Sentential '('and and)
                 :docstring "it is the case that [and]")
-              (defineCaseframe 'Proposition '('nor nor)
+              (defineCaseframe 'Sentential '('nor nor)
                 :docstring "it is not the case that [nor]")
-              (defineCaseframe 'Proposition '('thnor thnor)
+              (defineCaseframe 'Sentential '('thnor thnor)
                 :docstring "I don't know that it is the case that [thnor]")
-              (defineCaseframe 'Proposition '('andor andorargs))
-              (defineCaseframe 'Proposition '('thresh threshargs))
-              (defineCaseframe 'Proposition '('if ant cq)
+              (defineCaseframe 'Sentential '('andor andorargs))
+              (defineCaseframe 'Sentential '('thresh threshargs))
+              (defineCaseframe 'Sentential '('if ant cq)
                 :docstring "if [ant] then [cq]"))
       ))
 

@@ -74,12 +74,14 @@
 
 (defn initialize-default-hierarchy []
   (dosync (ref-set semantic-type-hierarchy (make-hierarchy))
-  (define-type :Proposition '(:Entity))
-  (define-type :Act '(:Entity))
-  (define-type :Policy '(:Entity))
-  (define-type :Thing '(:Entity))
-  (define-type :Category '(:Thing))
-  (define-type :Action '(:Thing))))
+	  (define-type :Sentential '(:Entity))
+	  (define-type :WhQuestion '(:Sentential))
+	  (define-type :Proposition '(:Sentential))
+	  (define-type :Act '(:Entity))
+	  (define-type :Policy '(:Entity))
+	  (define-type :Thing '(:Entity))
+	  (define-type :Category '(:Thing))
+	  (define-type :Action '(:Thing))))
 
 (defn subtypep
   "Checks if type1 is a descendent of type2"

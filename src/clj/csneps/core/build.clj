@@ -119,7 +119,7 @@
               (dosync (alter type-map assoc (:name term) gcsubchoice))
               (error "No semantic type for " term ".")))
           (dosync (alter type-map assoc (:name term) (first @gcsub))))
-      :else (error "Type error")))
+      :else (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
 ;  (println "Done Adjusting")
   term)
 
@@ -789,30 +789,25 @@
    have a resriction set slot filled in already if they existed in the KB
    previously. Otherwise, resrtiction sets still need to be built."
   [quant var-label rsts & {:keys [arb-rsts ind-rsts]}]
-  ;(println "Building..." var-label rsts)
   (doseq [rst rsts
             :when (not (some #{var-label} rst))]
       (error
 	  (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
-  ;(println "rsts:" rsts "arb-rsts" arb-rsts "ind-rsts" ind-rsts)
-  (or (and (= quant 'every) (find-old-arb-node var-label rsts arb-rsts ind-rsts))
+  (or (and (= quant :every) (find-old-arb-node var-label rsts arb-rsts ind-rsts))
     (let [name (case quant
-                 every (symbol (str "arb" (arb-counter)))
-                 some (symbol (str "ind" (ind-counter)))
-                 qvar (symbol (str "qvar" (qvar-counter))))
-                 
-                 ;(= quant 'every) (symbol (str "arb" (arb-counter))) (symbol (str "ind" (ind-counter))))
+                 :every (symbol (str "arb" (arb-counter)))
+                 :some (symbol (str "ind" (ind-counter)))
+                 :qvar (symbol (str "qvar" (qvar-counter))))
           varterm (case quant
-                    every (new-arbitrary {:name name :var-label var-label})
-                    some (new-indefinite {:name name :var-label var-label})
-                    qvar (new-query-variable {:name name :var-label var-label}))]
+                    :every (new-arbitrary {:name name :var-label var-label})
+                    :some (new-indefinite {:name name :var-label var-label})
+                    :qvar (new-query-variable {:name name :var-label var-label}))]
       (case quant 
-        every (inc-arb-counter)
-        some (inc-ind-counter)
-        qvar (inc-qvar-counter))
+        :every (inc-arb-counter)
+        :some (inc-ind-counter)
+        :qvar (inc-qvar-counter))
       (instantiate-sem-type (:name varterm) :Entity)
-      ;(println "Varterm: " varterm)
       varterm)))
 
 
@@ -821,26 +816,13 @@
    structure, but not the restriction sets. The same is done for the
    indefinite objects."
   [arb-rsts ind-dep-rsts qvar-rsts]
-  ;(println "Arb rsts" arb-rsts)
   (into {}
         (concat (for [k (seq (keys arb-rsts))]
-                  [k (pre-build-var 'every k (get arb-rsts k) :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)])
+                  [k (pre-build-var :every k (get arb-rsts k) :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var 'some k (second (get arb-rsts k)))])
+                  [k (pre-build-var :some k (second (get arb-rsts k)))])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var 'qvar k (second (get arb-rsts k)))]))))
-  
-  
-;  (doseq [k (seq (keys arb-rsts))]
-;    (subs/add-var-term-pair
-;	    k
-;	    (pre-build-var 'every k (get arb-rsts k) :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)
-;	    substitution))
-;  (doseq [k (seq (keys ind-dep-rsts))]
-;    (subs/add-var-term-pair
-;	    k
-;	    (pre-build-var 'some k (second (get arb-rsts k)))
-;	    substitution)))
+                  [k (pre-build-var :qvar k (second (get arb-rsts k)))]))))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and
@@ -848,18 +830,16 @@
    that should be needed to build the restrictions. Dependencies is only
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
-  ;(println "Building var " var-label)
-;  (println rsts)
-  
-;  (println (map #(print-str %) rsts))
-  
   (let [var (substitution var-label)]
-    (dosync 
-      (alter (:restriction-set var) clojure.set/union 
-             (set (map #(build % :Proposition substitution) rsts))))
+    (if (= quant :qvar)
+      (dosync 
+        (alter (:restriction-set var) clojure.set/union 
+               (set (map #(build % :WhQuestion substitution) rsts))))
+      (dosync 
+        (alter (:restriction-set var) clojure.set/union 
+               (set (map #(build % :Proposition substitution) rsts)))))
 
-    (when (and (= quant 'some) (not (nil? dependencies)))
-      (doall (map #(clojure.pprint/cl-format true "~A" %) dependencies))
+    (when (and (= quant :some) (not (nil? dependencies)))
       (dosync
         (alter (:dependencies var) clojure.set/union
                (doall (map #(substitution %) dependencies)))))
@@ -867,10 +847,9 @@
     (dosync 
       (alter TERMS assoc (:name var) var)
       (case quant
-        every (alter ARBITRARIES conj var)
-        some  (alter INDEFINITES conj var)
-        qvar  (alter QVARS conj var)))
-    
+        :every (alter ARBITRARIES conj var)
+        :some  (alter INDEFINITES conj var)
+        :qvar  (alter QVARS conj var)))
     var))
 
 (defn build-vars
@@ -881,12 +860,12 @@
   (set 
     (concat
       (for [k (keys arb-rsts)]
-        (build-var 'every k (get arb-rsts k) substitution))
+        (build-var :every k (get arb-rsts k) substitution))
       (for [k (keys ind-dep-rsts)]
-        (build-var 'some k (second (get ind-dep-rsts k)) substitution 
+        (build-var :some k (second (get ind-dep-rsts k)) substitution 
                    :dependencies (first (get ind-dep-rsts k))))
       (for [k (keys qvar-rsts)]
-        (build-var 'qvar k (get qvar-rsts k) substitution)))))
+        (build-var :qvar k (get qvar-rsts k) substitution)))))
 
 (defn parse-vars-and-rsts
   "Helper function: assertion-spec is a specifier for building a proposition
@@ -955,13 +934,13 @@
 
 (defn check-and-build-variables
   "Given a top-level build expression, checks that expression for
-variable terms syntax (e.g., every, some). These terms are built and
-a new build expression is created with just the variable-labels
-(e.g., x in (every x ...)). This and a substitution between
-variable-labels and the AI and IO is provided to build.
-Returns three values. The first is the new build expression, the
-second the the built nodes, and the third the substitution between
-var-labels and the AI/IO nodes."
+   variable terms syntax (e.g., every, some). These terms are built and
+   a new build expression is created with just the variable-labels
+   (e.g., x in (every x ...)). This and a substitution between
+   variable-labels and the AI and IO is provided to build.
+   Returns three values. The first is the new build expression, the
+   second the the built nodes, and the third the substitution between
+   var-labels and the AI/IO nodes."
   [expr]
     (let [arb-rsts (ref (hash-map))
           ind-dep-rsts (ref (hash-map))
@@ -977,5 +956,3 @@ var-labels and the AI/IO nodes."
       ;(dosync (ref-set built-vars (build-vars @arb-rsts @ind-dep-rsts substitution)))
       ;(println "Built" built-vars)
       [new-expr built-vars substitution]))
-
-;(load "assert")

@@ -116,7 +116,6 @@
    that existing node is returned.
    Otherwise nil is returned."
   [var-label restrictions arb-rsts ind-dep-rsts]
-
   (let [distinctres (distinct restrictions)
         var-list (concat (keys arb-rsts) (keys ind-dep-rsts))]
     ;; If the arbitrary contains new terms which haven't yet been built,
