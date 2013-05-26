@@ -25,13 +25,6 @@
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (first vars)))
 
-;(defn type-or-sem-type
-;  [expr]
-;  (if (keyword? expr) expr (type expr))) ;;TODO: Fix this.
-
-;(defn assert [expr context]
-;  (assert expr context :hyp))
-
 (defmulti assert
   (fn [expr context origintag] [(type-of expr)]))
 
