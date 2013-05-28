@@ -74,9 +74,9 @@
 
 (defn initialize-default-hierarchy []
   (dosync (ref-set semantic-type-hierarchy (make-hierarchy))
-	  (define-type :Sentential '(:Entity))
-	  (define-type :WhQuestion '(:Sentential))
-	  (define-type :Proposition '(:Sentential))
+	  (define-type :Propositional '(:Entity))
+	  (define-type :WhQuestion '(:Propositional))
+	  (define-type :Proposition '(:Propositional))
 	  (define-type :Act '(:Entity))
 	  (define-type :Policy '(:Entity))
 	  (define-type :Thing '(:Entity))

@@ -105,7 +105,7 @@
                          (= (first term) 'every)))
     (build/build-variable term)
     (seq? term)
-    (build/variable-parse-and-build term)
+    (build/variable-parse-and-build term :Propositional)
     :else
     (build/build term (or semtype :Entity) {})))
 

@@ -7,13 +7,12 @@
    (e.g., x in (every x ...)). This and a substitution between
    variable-labels and the AI and IO is provided to build. Also asserts into
    the Base KB the restriction sets. Returns the built expression."
-  [expr]
+  [expr type]
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
         (assert rst (ct/find-context 'BaseCT) :hyp)))
-    ;(println "Substitution: " substitution)
-    (build new-expr :Proposition substitution)))
+    (build new-expr type substitution)))
 
 (defn build-variable 
   "This function should only be called when a single variable needs to be built
@@ -46,15 +45,15 @@
 
 (defmethod assert
   [clojure.lang.PersistentList] [expr context origintag]
-  (assert (variable-parse-and-build expr) context origintag))
+  (assert (variable-parse-and-build expr :Proposition) context origintag))
 
 (defmethod assert
   [clojure.lang.Cons] [expr context origintag]
-  (assert (variable-parse-and-build (seq expr)) context origintag))
+  (assert (variable-parse-and-build (seq expr) :Proposition) context origintag))
 
 (defmethod assert
   [clojure.lang.PersistentVector] [expr context origintag]
-  (assert (variable-parse-and-build (seq expr)) context origintag))
+  (assert (variable-parse-and-build (seq expr) :Proposition) context origintag))
 
 (defn assert-term
   [expr context origintag]

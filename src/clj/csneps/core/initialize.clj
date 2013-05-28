@@ -81,25 +81,25 @@
             
               ;; Slots for Rules
             ;; ===================
-              (defineSlot and :type Sentential
+              (defineSlot and :type Propositional
                 :docstring "Fillers are arguments of a conjunction."
                 :min 2 :posadjust reduce :negadjust expand)
-              (defineSlot nor :type Sentential
+              (defineSlot nor :type Propositional
                 :docstring "Fillers are arguments of a nor."
                 :min 1 :posadjust reduce :negadjust expand)
-              (defineSlot andorargs :type Sentential
+              (defineSlot andorargs :type Propositional
                 :docstring "Fillers are arguments of an andor."
                 :min 2 :posadjust none :negadjust none)
-              (defineSlot threshargs :type Sentential
+              (defineSlot threshargs :type Propositional
                 :docstring "Fillers are arguments of a thresh."
                 :min 1 :posadjust none :negadjust none)
-              (defineSlot thnor :type Sentential
+              (defineSlot thnor :type Propositional
                 :docstring "Fillers are arguments of a thnor."
                 :min 1 :posadjust reduce :negadjust reduce)
-              (defineSlot ant :type Sentential
+              (defineSlot ant :type Propositional
                 :docstring "antecedent for a set."
                 :min 1 :posadjust expand :negadjust reduce)
-              (defineSlot cq :type Sentential
+              (defineSlot cq :type Propositional
                 :docstring "consequent for a set."
                 :min 1 :posadjust reduce :negadjust expand)
               
@@ -114,19 +114,19 @@
               (ref-set cf/CASEFRAMES (hash-set))
               (ref-set cf/FN2CF (hash-map))
               (ref-set cf/NoviceCaseframes (hash-map))
-              (defineCaseframe 'Sentential  '('Isa member class)
+              (defineCaseframe 'Propositional  '('Isa member class)
                 :docstring "[member] is a [class]")
-              (defineCaseframe 'Sentential '('Equiv equiv)
+              (defineCaseframe 'Propositional '('Equiv equiv)
                 :docstring "[equiv] are all co-referential")
-              (defineCaseframe 'Sentential '('and and)
+              (defineCaseframe 'Propositional '('and and)
                 :docstring "it is the case that [and]")
-              (defineCaseframe 'Sentential '('nor nor)
+              (defineCaseframe 'Propositional '('nor nor)
                 :docstring "it is not the case that [nor]")
-              (defineCaseframe 'Sentential '('thnor thnor)
+              (defineCaseframe 'Propositional '('thnor thnor)
                 :docstring "I don't know that it is the case that [thnor]")
-              (defineCaseframe 'Sentential '('andor andorargs))
-              (defineCaseframe 'Sentential '('thresh threshargs))
-              (defineCaseframe 'Sentential '('if ant cq)
+              (defineCaseframe 'Propositional '('andor andorargs))
+              (defineCaseframe 'Propositional '('thresh threshargs))
+              (defineCaseframe 'Propositional '('if ant cq)
                 :docstring "if [ant] then [cq]"))
       ))
 
