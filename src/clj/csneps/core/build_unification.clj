@@ -436,7 +436,7 @@
   [term & {:keys [varfn] :or {varfn variable?}}]
   (let [tempdist (ref {})
         termchain (addTermToUnificationTree term :distnodes tempdist)
-        unifiers (flatten (unifyTreeWithChain @tempdist :variable? varfn))]
+        unifiers (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn)))]
     (println unifiers)
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
