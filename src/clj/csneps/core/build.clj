@@ -173,7 +173,12 @@
                    (alter TERMS assoc (:name wft) wft)
                    (alter type-map assoc (:name wft) (:type cf)))
 
-                 ;;Now that we made it, add it to the unif tree.
+                 ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
+                 (doseq [unif (getUnifiers wft)
+                         :let [ch (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]]
+                   (dosync 
+                     (alter (:y-channels (:source unif)) conj ch)
+                     (alter (:ant-in-channels (:target unif)) conj ch)))
                  (addTermToUnificationTree wft)
 
                  (cf/add-caseframe-term wft :cf cf)
