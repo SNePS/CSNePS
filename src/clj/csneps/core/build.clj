@@ -817,7 +817,7 @@
           (do
             (dosync (alter arb-rsts assoc (second assertion-spec)
                            (if (= (rest (rest assertion-spec)) '())
-                             (parse-vars-and-rsts (list (list 'Isa (second assertion-spec) 'Entity)) arb-rsts ind-deps-rsts qvar-rsts) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
+                             (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
                              (parse-vars-and-rsts (rest (rest assertion-spec))
                                                   arb-rsts ind-deps-rsts qvar-rsts))))
             (second assertion-spec))))
@@ -831,7 +831,7 @@
           (do
             (dosync (alter qvar-rsts assoc (first assertion-spec)
                            (if (= (rest assertion-spec) '())
-                             (parse-vars-and-rsts (list (list 'Isa (first assertion-spec) 'Entity)) arb-rsts ind-deps-rsts qvar-rsts)
+                             (list (list 'Isa (first assertion-spec) 'Entity))
                              (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts))))
             (first assertion-spec))))
       :else
