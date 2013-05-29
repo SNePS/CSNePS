@@ -791,7 +791,8 @@
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
   ;(println "Aspec: " assertion-spec " Arbs: " @arb-rsts)
-  (if (and (seqable? assertion-spec) (not (set? assertion-spec)))
+  (cond
+    (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
       (= (first assertion-spec) 'some)
       (let [rsts (rest (get @ind-deps-rsts (second assertion-spec)))]
@@ -814,7 +815,6 @@
                       the same variable."))
           :else
           (do
-            ;(println rsts assertion-spec)
             (dosync (alter arb-rsts assoc (second assertion-spec)
                            (if (= (rest (rest assertion-spec)) '())
                              (parse-vars-and-rsts (list (list 'Isa (second assertion-spec) 'Entity)) arb-rsts ind-deps-rsts qvar-rsts) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
@@ -836,6 +836,12 @@
             (first assertion-spec))))
       :else
       (doall (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec)))
+    ;; Build qvars which are not surrounded by parens.
+    (synvariable? assertion-spec)
+    (do 
+      (dosync (alter qvar-rsts assoc assertion-spec (list (list 'Isa assertion-spec 'Entity))))
+      assertion-spec)
+    :else
     assertion-spec))
 
 (defn check-and-build-variables
