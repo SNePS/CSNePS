@@ -236,6 +236,28 @@
    syntype 'molecular
    type ::Molecular])
 
+(defrecord2 Rule
+   [name nil
+   activation-value 0.0
+   fired nil
+   recorded-firing nil
+   activation-marker nil
+   i-channels (ref (hash-set))
+   y-channels (ref (hash-set))
+   ant-in-channels (ref (hash-set))
+   cached-terms (ref (hash-set))
+   ruis (ref nil)
+   up-cablesetw (ref (hash-map))
+   support (ref (hash-set))
+   ;;Additions for Molecular
+   caseframe nil
+   down-cableset '()
+   down-weights (ref '())
+   ;;Additions for Rule
+   rhsfn nil
+   syntype 'rule
+   type ::Rule])
+
 
 (defrecord2 Param2op
    [name nil
@@ -557,6 +579,7 @@
   (define-syn-type ::Arbitrary ::Variable)
   (define-syn-type ::QueryVariable ::Variable)
   (define-syn-type ::Molecular ::Term)
+  (define-syn-type ::Rule ::Molecular)
   (define-syn-type ::Param2op ::Molecular)
   (define-syn-type ::Andor ::Param2op)
   (define-syn-type ::Disjunction ::Andor)
