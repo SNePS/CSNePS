@@ -829,10 +829,10 @@
                       the same variable."))
           :else
           (do
-            ;(println rsts assertion-spec)
-            (dosync (alter qvar-rsts assoc 
-                           (first assertion-spec)
-                           (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)))
+            (dosync (alter qvar-rsts assoc (first assertion-spec)
+                           (if (= (rest assertion-spec) '())
+                             (parse-vars-and-rsts (list (list 'Isa (first assertion-spec) 'Entity)) arb-rsts ind-deps-rsts qvar-rsts)
+                             (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts))))
             (first assertion-spec))))
       :else
       (doall (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec)))
