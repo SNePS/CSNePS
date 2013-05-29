@@ -30,37 +30,18 @@
 (load "snip_rui")
 (load "snip_inference_graph")
 
-(defmulti askif
-  (fn [proposition context termstack] [(csneps/type-of proposition)]))
-
-;  "If the proposition expressed by pname is derivable in context,
-;        returns a singleton set of that proposition;
-;        else returns the empty set.
-;        The termstack is a stack of propositions
-;            that this goal is a subgoal of."
-(defmethod askif [clojure.lang.Symbol] [pname context termstack]
-  (askif (build/build pname :Proposition {}) context termstack))
-
-;  "If the proposition p is derivable in context,
-;        return a singleton set of that proposition;
-;        else return the empty set
-;         The termstack is a stack of propositions
-;             that this goal is a subgoal of.."
-(defmethod askif [:csneps.core/Term] [p context termstack]
-  (when GOALTRACE (cl-format true "~&I wonder if ~S~%" p))
-  (cond
-    (ct/asserted? p context)
-    (do
-      (when GOALTRACE (cl-format true "~&I know that ~S~%" p))
-      #{p})
-    :else
-    (setOr
-      (sort-based-derivable p context)
-      ;; Slot-based inference uses path-based, so don't
-      ;; waste time doing it twice.
-      ;(path-based-derivable p context)
-      (slot-based-derivable p context termstack)
-      )))
+(defn askif [prop context termstack]
+  (let [p (build/build prop :Proposition {})]
+    (when GOALTRACE (cl-format true "~&I wonder if ~S~%" p))
+    (cond
+      (ct/asserted? p context)
+      (do
+        (when GOALTRACE (cl-format true "~&I know that ~S~%" p))
+        #{p})
+      :else
+      (setOr
+        (sort-based-derivable p context)
+        (slot-based-derivable p context termstack)))))
 
 (defn assertTrace
   [rule antecedents consequent reason context]
