@@ -70,14 +70,14 @@
 
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
-  (when debug (send screenprinter (fn [_]  (println "Submitting" message))))
+  (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
   (when (:fwd-infer? message)
     (open-valve channel))
   (if (build/valve-open? channel)
     ;; Process as usual.
     (do 
       (send to-infer inc)
-      (when debug (send screenprinter (fn [_]  (println "DEBUG: Received " message))))
+      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
       (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
       nil)
     ;; Cache in the waiting-msgs
@@ -148,7 +148,7 @@
   ([channel message depth visited]
     (when (= (:type message) 'BACKWARD-INFER)
       (when-not (build/valve-open? channel)
-        (when debug (send screenprinter (fn [_]  (println "DEBUG: Backward Infer " depth " - opening valve on channel" channel))))
+        (when debug (send screenprinter (fn [_]  (println "BWMSG: Backward Infer " depth " - opening valve on channel" channel))))
         (open-valve channel))
       (backward-infer (:originator channel) (dec (:priority message)) visited))
     (send to-infer dec)))
@@ -157,15 +157,14 @@
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
   ([term] 
-    (when (> cpus-to-use 1)
-      (when debug (send screenprinter (fn [_]  (println "!!C!!"))))
+    ;(when (> cpus-to-use 1)
       (let [msg (new-message {:type 'CANCEL-INFER})]
         (doseq [ch @(:ant-in-channels term)]
-          (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE cancel-infer ch msg))))))
+          (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE cancel-infer ch msg)))));)
   ([channel message]
     (when (= (:type message) 'CANCEL-INFER)
       (when (build/valve-open? channel)
-        (when debug (send screenprinter (fn [_]  (println "DEBUG: Cancel Infer - closing valve on channel" channel))))
+        (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing valve on channel" channel))))
         (close-valve channel)
         (cancel-infer (:originator channel))))))
 
@@ -375,7 +374,7 @@
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Inferring in:" node))))
+  (when debug (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
   (case (csneps/type-of node)
     :csneps.core/Negation (negation-elimination message node)
     :csneps.core/Conjunction (conjunction-elimination message node)
@@ -393,7 +392,7 @@
 (defn introduction-infer
   ""
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Inferring in:" node))))
+  (when debug (send screenprinter (fn [_]  (println "INFER: (intro) Inferring in:" node))))
   (case (csneps/type-of node)
     :csneps.core/Negation (negation-introduction message node)
     :csneps.core/Conjunction (conjunction-introduction message node)
@@ -415,14 +414,14 @@
 
 (defn initiate-node-task
   [term message]
-  (when debug (send screenprinter (fn [_]  (println "Begin node task on message: " message "at" term))))
+  (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
   ;; ---- Elimination Rules ---- ;;
   ;; If I'm already asserted, and I just received an I-INFER message,
   ;; I should attempt to eliminate myself.
   (when (and (ct/asserted? term (ct/currentContext))
              (= (:type message) 'I-INFER))
     (when-let [result (elimination-infer message term)]
-      (when debug (send screenprinter (fn [_]  (println "Result Inferred " result))))
+      (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
       (doseq [[ch msg] result] 
         (submit-to-channel ch msg))))
   
@@ -452,7 +451,7 @@
             (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg))))
         ;; Step 3: Apply elimination rules and report results
         (when-let [result (elimination-infer message term)]
-          (when debug (send screenprinter (fn [_]  (println "Result Inferred " result))))
+          (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
           (doseq [[ch msg] result] 
             (submit-to-channel ch msg))))
       (do
@@ -474,7 +473,7 @@
           (not (ct/asserted? term (ct/currentContext)))
           (= (:type message) 'I-INFER))
     (when-let [[true? result] (introduction-infer message term)]
-      (send screenprinter (fn [_]  (println "Result Inferred " result "," true?)))
+      (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?)))
       (when result 
         (if true?
           (if print-intermediate-results
@@ -499,5 +498,12 @@
 
 (build/fix-fn-defs submit-to-channel new-message create-rui-structure)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; User-oriented functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn backward-infer-derivable [term context])
+
+(defn cancel-infer-of [term])
 
   
