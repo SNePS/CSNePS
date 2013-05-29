@@ -108,7 +108,6 @@
    cached-terms (ref (hash-set))
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
-   syntype 'term
    type ::Term])
 
 ;;;Portnote: was named "atom", Clojure doesn't like this.
@@ -124,7 +123,6 @@
    cached-terms (ref (hash-set))
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
-   syntype 'atom
    type ::Atom])
 
 (defrecord2 Base
@@ -139,7 +137,6 @@
    cached-terms (ref (hash-set))
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
-   syntype 'base
    type ::Base])
 
 (defrecord2 Variable
@@ -157,7 +154,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   syntype 'variable
    type ::Variable])
 
 (defrecord2 Indefinite
@@ -177,7 +173,6 @@
    var-label nil
    ;;Additions for Indefinite
    dependencies (ref (hash-set))
-   syntype 'indefinite
    type ::Indefinite])
 
 (defrecord2 Arbitrary
@@ -195,7 +190,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   syntype 'arbitrary
    type ::Arbitrary])
 
 (defrecord2 QueryVariable
@@ -213,7 +207,6 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
-   syntype 'queryvariable
    type ::QueryVariable])
 
 (defrecord2 Molecular
@@ -233,7 +226,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'molecular
    type ::Molecular])
 
 (defrecord2 Rule
@@ -255,7 +247,6 @@
    down-weights (ref '())
    ;;Additions for Rule
    rhsfn nil
-   syntype 'rule
    type ::Rule])
 
 
@@ -279,7 +270,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'param2op
    type ::Param2op])
 
 (defrecord2 Andor
@@ -302,7 +292,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'andor
    type ::Andor])
 
 (defrecord2 Disjunction
@@ -325,7 +314,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'disjunction
    type ::Disjunction])
 
 (defrecord2 Xor
@@ -348,7 +336,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'xor
    type ::Xor])
 
 (defrecord2 Nand
@@ -371,7 +358,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'nand
    type ::Nand])
 
 (defrecord2 Thresh
@@ -394,7 +380,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'thresh
    type ::Thresh])
 
 (defrecord2 Equivalence
@@ -417,7 +402,6 @@
    ;;Additions for Param2op
    min nil
    max nil
-   syntype 'equivalence
    type ::Equivalence])
 
 (defrecord2 Conjunction
@@ -437,12 +421,7 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'conjunction
    type ::Conjunction])
-
-;(defmethod print-method sneps3.Conjunction
-;  [o w]
-;  (.write w (term-printer o)))
 
 (defrecord2 Negation
    [name nil
@@ -461,7 +440,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'negation
    type ::Negation])
 
 (defrecord2 Negationbyfailure
@@ -481,7 +459,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'negationbyfailure
    type ::Negationbyfailure])
 
 (defrecord2 Numericalentailment
@@ -501,7 +478,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'numericalentailment
    type ::Numericalentailment])
 
 (defrecord2 Orentailment
@@ -521,7 +497,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'orentailment
    type ::Orentailment])
 
 (defrecord2 Implication
@@ -541,7 +516,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'implication
    type ::Implication])
 
 (defrecord2 Categorization
@@ -561,7 +535,6 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   syntype 'categorization
    type ::Categorization])
 
 
@@ -611,6 +584,7 @@
    ::Arbitrary (eval 'csneps.core/new-arbitrary)
    ::QueryVariable (eval 'csneps.core/new-query-variable)
    ::Molecular (eval 'csneps.core/new-molecular)
+   ::Rule (eval 'csneps.core/new-rule)
    ::Param2op (eval 'csneps.core/new-param2op)
    ::Andor (eval 'csneps.core/new-andor)
    ::Disjunction (eval 'csneps.core/new-disjunction)
