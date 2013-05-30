@@ -6,8 +6,6 @@
 
 ;; Tracking inference tasks
 (def ^:dynamic taskid 0)
-;; Maps taskid to answer list.
-(def answers (atom (hash-map)))
 
 ;; For debug:
 (def screenprinter (agent nil))
@@ -512,15 +510,25 @@
 (defn backward-infer-derivable [term context]
   (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
     (let [term (build/build term :Proposition #{})
+          answers (ref #{})
           update-answers (fn [ref key oldvalue newvalue]
                            (when (and (= newvalue 0) (not= oldvalue 0))
-                             (when (ct/asserted? term context)
-                               (swap! answers assoc taskid (list term))
-                               (println (@answers taskid)))))]
-      (add-watch csneps.snip/to-infer :to-infer update-answers)
-      (backward-infer term))))
+                             (if (ct/asserted? term context)
+                               (dosync (alter answers conj term))
+                               (dosync (ref-set answers nil)))))]
+      (add-watch to-infer :to-infer update-answers)
+      (if (not (empty? @(:ant-in-channels term)))
+        (do 
+          (backward-infer term)
+          @(future (while (and (empty? @answers) (not (nil? @answers)))
+                     (Thread/sleep 10))
+             (remove-watch to-infer :to-infer)
+             @answers))
+        #{}))))
    
-(defn backward-infer-whquestion [ques context])
+(defn backward-infer-answer
+  "Used for answering WhQuestions"
+  [ques context])
 
 (defn cancel-infer-of [term])
 
