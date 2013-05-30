@@ -4,12 +4,19 @@
 (load "snip_message")
 (load "snip_linear_rui_set")
 
+;; Tracking inference tasks
+(def ^:dynamic taskid 0)
+;; Maps taskid to answer list.
+(def answers (atom (hash-map)))
+
+;; For debug:
 (def screenprinter (agent nil))
-
-(def asserter (agent nil))
-
-(def debug false)
 (def print-intermediate-results false)
+(def print-results-on-infer false)
+(def debug false)
+
+;; Asynchronous asserter
+(def asserter (agent nil))
 (def async-assert false)
 
 ;; Incremented whenever a message is submitted, and decremented once inference
@@ -502,7 +509,18 @@
 ;;; User-oriented functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn backward-infer-derivable [term context])
+(defn backward-infer-derivable [term context]
+  (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
+    (let [term (build/build term :Proposition #{})
+          update-answers (fn [ref key oldvalue newvalue]
+                           (when (and (= newvalue 0) (not= oldvalue 0))
+                             (when (ct/asserted? term context)
+                               (swap! answers assoc taskid (list term))
+                               (println (@answers taskid)))))]
+      (add-watch csneps.snip/to-infer :to-infer update-answers)
+      (backward-infer term))))
+   
+(defn backward-infer-whquestion [ques context])
 
 (defn cancel-infer-of [term])
 
