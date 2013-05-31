@@ -358,3 +358,7 @@
   [x]
   (instance? clojure.lang.Seqable x))
 
+(defn subsat
+  [s char]
+  (subs s (.indexOf s char)))
+
