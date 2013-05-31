@@ -30,7 +30,13 @@
 (load "snip_rui")
 (load "snip_inference_graph")
 
-(defn askif [prop context termstack]
+(defn askif 
+  "If the proposition prop is derivable in context,
+      return a singleton set of that proposition;
+      else return the empty set
+        The termstack is a stack of propositions
+           that this goal is a subgoal of.."
+  [prop context termstack]
   (let [p (build/build prop :Proposition {})]
     (when GOALTRACE (cl-format true "~&I wonder if ~S~%" p))
     (cond
@@ -41,7 +47,16 @@
       :else
       (setOr
         (sort-based-derivable p context)
-        (slot-based-derivable p context termstack)))))
+        (slot-based-derivable p context termstack)
+        (backward-infer-derivable p context)))))
+
+(defn askwh [ques context]
+  "If the WhQuestion ques can be answered in context, 
+      return a list of pairs, where the first element 
+      is a satisfying term, and the second is a substitution.
+      else return the empty set."
+  (let [q (build/build ques :WhQuestion {})]
+    (backward-infer-answer q context)))
 
 (defn assertTrace
   [rule antecedents consequent reason context]
