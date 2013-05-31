@@ -380,9 +380,7 @@
   [message node]
   (send screenprinter (fn [_]  (println "Deriving answer."))
   (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))]
-    
-    )
-  )
+    )))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
