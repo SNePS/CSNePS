@@ -21,6 +21,22 @@
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
     (merge subs2 (into {} compose))))
 
+(defn compatible?
+  "Returns true if:
+   1) No variable is bound to two different terms.
+   2) No term is bound by two different variables."
+  [subs1 subs2]
+  (and 
+    ;; Verify variables aren't bound to different terms.
+    (every? #(or (= (% subs1) (% subs2))
+                 (nil? (% subs2)))
+            (keys subs1))
+    ;; Verify terms aren't bound to different variables.
+    (let [inv1 (set/map-invert subs1)
+          inv2 (set/map-invert subs2)]
+      (every? #(or (= (% inv1) (% inv2))
+                   (nil? (% inv2)))
+              (keys inv1)))))
 
 ;;;; OLD VERSION OF THINGS:
 (comment 
