@@ -376,6 +376,14 @@
                                         [% (RUI->message less-than-max-true-match node 'Y-INFER false (:fwd-infer? message))])
                                      @(:y-channels node))))))))
 
+(defn whquestion-infer 
+  [message node]
+  (send screenprinter (fn [_]  (println "Deriving answer."))
+  (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))]
+    
+    )
+  )
+
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
@@ -474,9 +482,16 @@
               (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
             )))))
   ;; ---- Introduction Rules ---- ;;
-  (when (and 
-          (not (ct/asserted? term (ct/currentContext)))
-          (= (:type message) 'I-INFER))
+  (cond 
+    ;; "Introduction" of a WhQuestion is really just collecting answers.
+    (and
+      (= (:type message) 'I-INFER)
+      (= (csneps/semantic-type-of term) :WhQuestion))
+    (whquestion-infer message term)
+    ;; Normal introduction for derivation.
+    (and 
+      (not (ct/asserted? term (ct/currentContext)))
+      (= (:type message) 'I-INFER))
     (when-let [[true? result] (introduction-infer message term)]
       (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?)))
       (when result 
@@ -528,7 +543,22 @@
    
 (defn backward-infer-answer
   "Used for answering WhQuestions"
-  [ques context])
+  [ques context]
+  (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
+    (let [ques (build/build ques :WhQuestion #{})
+          answers (ref #{})
+          update-answers (fn [ref key oldvalue newvalue]
+                           (when (and (= newvalue 0) (not= oldvalue 0))
+                             (dosync (ref-set answers nil))))]
+      (add-watch to-infer :to-infer update-answers)
+      (if (not (empty? @(:ant-in-channels ques)))
+        (do 
+          (backward-infer ques)
+          @(future (while (and (empty? @answers) (not (nil? @answers)))
+                     (Thread/sleep 10))
+             (remove-watch to-infer :to-infer)
+             @answers))
+        #{}))))
 
 (defn cancel-infer-of [term])
 
