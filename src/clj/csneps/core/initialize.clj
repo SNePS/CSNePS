@@ -3,9 +3,6 @@
 (defn clearkb
   [& clear?]
   (let [clearall (first clear?)]
-
-    ;(snip/resetExecutor)
-    
       ;; Initialize Contexts
       (dosync 
         (ref-set ct/CONTEXTS (hash-map))
