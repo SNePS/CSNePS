@@ -55,7 +55,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2013.04.30";
+	public static final String version = "2013.06.02";
 	
     public static final boolean DEBUG = true;
 
@@ -737,8 +737,7 @@ public class GUI2 extends javax.swing.JFrame{
         menuItem_sneps3manual = new javax.swing.JMenuItem();
         menuItem_guidocs = new javax.swing.JMenuItem();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Sneps 3 GUI Version 2011.11.11");
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 formKeyPressed(evt);
