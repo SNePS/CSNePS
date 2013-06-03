@@ -16,9 +16,8 @@
     (let [rg (defonce rgen (java.util.Random. 123945))
           port (+ 1000 (.nextInt ^java.util.Random rgen 9000))
           srv (start-server :port port)
-          GUI (if termset 
-                (new edu.buffalo.cse.sneps3.gui.GUI2 port termset)
-                (new edu.buffalo.cse.sneps3.gui.GUI2 port))
+          termset (set (map #(csneps/get-term %) termset))
+          GUI (new edu.buffalo.cse.sneps3.gui.GUI2 port termset)
           typechangefn (fn [ref key oldvalue newvalue] (.typesChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
                                                                       (map-difference (:parents oldvalue) (:parents newvalue))
                                                                       (if (> (count oldvalue) (count newvalue)) true false)))

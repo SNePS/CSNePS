@@ -194,7 +194,7 @@ public class GUI2 extends javax.swing.JFrame{
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
     		//rEPLPanel1.makeClojureCall("(in-ns 'snuser)");
-    		initializeModel();
+    		initializeModel(termset);
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage()); e.printStackTrace();}
     }
@@ -272,6 +272,7 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setTermsRef(RT.var("csneps.core.sneps3", "TERMS")); //Ref to Map of name -> Term.
 		model.initializeTerms(termset);
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
+		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
 	}
 
