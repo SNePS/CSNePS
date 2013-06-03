@@ -118,8 +118,8 @@
 (defmacro describe-terms
   "Prints a description of all the given terms."
   [& wftnames]
-  (doseq [tname wftnames]
-     (println (description (find-term tname)))))
+  `(doseq [tname# '~wftnames]
+     (println (description (find-term tname#)))))
 
 (defn find-term
   [term]
