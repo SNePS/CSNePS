@@ -61,6 +61,13 @@
       (substitution-composition f-or-s-sub varbinds)
       {})))
 
+(defn filter-fn
+  [subs]
+  (fn [varbinds]
+    (if varbinds
+      (subset? subs varbinds)
+      true)))
+
 (defn find-channel 
   [originator destination]
   (some #(when (= (:originator %) originator) %) @(:ant-in-channels destination)))
