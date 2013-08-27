@@ -65,6 +65,11 @@
     (currentContext)
      nil))
 
+(defn askwh
+  ""
+  [exprpat]
+  (snip/askwh exprpat (currentContext)))
+
 (defn allTerms [& {:keys [test] :or {test identity}}]
   "Returns a set of all the terms in the knowledge base."
   (set (filter test (vals @csneps/TERMS))))
