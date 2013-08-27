@@ -1,4 +1,6 @@
-(clearkb t)
+(in-ns 'csneps.core.snuser)
+
+(clearkb true)
 
 ;;; Define Types
 (defineType Agent (Thing) "Individuals that have agency")

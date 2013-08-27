@@ -31,12 +31,18 @@
     (every? #(or (= (% subs1) (% subs2))
                  (nil? (% subs2)))
             (keys subs1))
-    ;; Verify terms aren't bound to different variables.
-    (let [inv1 (set/map-invert subs1)
-          inv2 (set/map-invert subs2)]
-      (every? #(or (= (% inv1) (% inv2))
-                   (nil? (% inv2)))
-              (keys inv1)))))
+    ;; Verify terms aren't bound to different variables. (UVBR)
+;    (let [inv1 (set/map-invert subs1)
+;          inv2 (set/map-invert subs2)]
+;      (every? #(or (= (% inv1) (% inv2))
+;                   (nil? (% inv2)))
+;              (keys inv1)))
+    ))
+
+(defn subset?
+  "Returns true if subs1 is a subset of subs2"
+  [subs1 subs2]
+  (every? #(= (subs1 %) (subs2 %)) (keys subs1)))
 
 ;;;; OLD VERSION OF THINGS:
 (comment 

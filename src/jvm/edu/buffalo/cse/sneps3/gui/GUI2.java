@@ -55,7 +55,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2013.04.30";
+	public static final String version = "2013.06.02";
 	
     public static final boolean DEBUG = true;
 
@@ -194,7 +194,7 @@ public class GUI2 extends javax.swing.JFrame{
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
     		//rEPLPanel1.makeClojureCall("(in-ns 'snuser)");
-    		initializeModel();
+    		initializeModel(termset);
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage()); e.printStackTrace();}
     }
@@ -272,6 +272,7 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setTermsRef(RT.var("csneps.core.sneps3", "TERMS")); //Ref to Map of name -> Term.
 		model.initializeTerms(termset);
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
+		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
 	}
 
@@ -736,8 +737,7 @@ public class GUI2 extends javax.swing.JFrame{
         menuItem_sneps3manual = new javax.swing.JMenuItem();
         menuItem_guidocs = new javax.swing.JMenuItem();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("Sneps 3 GUI Version 2011.11.11");
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 formKeyPressed(evt);
