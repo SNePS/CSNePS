@@ -55,7 +55,8 @@
       return a list of pairs, where the first element 
       is a satisfying term, and the second is a substitution.
       else return the empty set."
-  (let [q (build/build ques :WhQuestion {})]
+  (let [q (build/variable-parse-and-build ques :WhQuestion)]
+                                          ;(build/build ques :WhQuestion {})]
     (backward-infer-answer q context)))
 
 (defn assertTrace
