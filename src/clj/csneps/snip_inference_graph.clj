@@ -560,4 +560,17 @@
 
 (defn cancel-infer-of [term])
 
-  
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; Debug Functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn- print-valve [ch]
+  (if @(:valve-open ch) "-" "/"))
+
+(defn ig-status []
+  (doseq [x @csneps.core/TERMS]
+    (doseq [y @(:i-channels (second x))]
+      (println (:originator y) "-I-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))
+    (doseq [y @(:y-channels (second x))]
+      (println (:originator y) "-U-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))))
+
