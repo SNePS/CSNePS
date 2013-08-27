@@ -177,7 +177,7 @@
                  (doseq [unif (getUnifiers wft)
                          :let [ch (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]]
                    (dosync 
-                     (alter (:y-channels (:source unif)) conj ch)
+                     (alter (:i-channels (:source unif)) conj ch) ;; [drs] changed to i from y... Not sure why it was y?
                      (alter (:ant-in-channels (:target unif)) conj ch)))
                  (addTermToUnificationTree wft)
 
@@ -795,7 +795,7 @@
   Ex. ind-deps-rsts: [y -> ((x) (Isa y Donkey))]
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
-  ;(println "Aspec: " assertion-spec " Arbs: " @arb-rsts)
+  ;(println "Aspec: " assertion-spec)
   (cond
     (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
