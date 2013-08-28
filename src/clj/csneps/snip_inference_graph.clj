@@ -76,6 +76,11 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
+  ;; Switch
+  ;; TODO: TEMPORARY IMPLEMENTATION!!!
+  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:substitution message))))))
+  (dosync (ref-set (:substitution message) ((:switch-fn channel) @(:substitution message))))
+  
   (when (:fwd-infer? message)
     (open-valve channel))
   (if (build/valve-open? channel)
@@ -378,9 +383,11 @@
 
 (defn whquestion-infer 
   [message node]
-  (send screenprinter (fn [_]  (println "Deriving answer."))
-  (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))]
-    )))
+  (send screenprinter (fn [_]  (println "Deriving answer:" @(:substitution message))))
+  ;; We don't need RUIs - the received substitutions must be complete since they
+  ;; passed unification!
+  
+  )
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
