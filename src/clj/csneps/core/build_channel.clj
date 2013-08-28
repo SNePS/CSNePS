@@ -78,8 +78,8 @@
                   (find-channel originator destination)
                   (new-channel {:originator originator
                                 :destination destination
-                                :filter (subs-fn target-binds)
-                                :switch (subs-fn source-binds)
+                                :filter-fn (subs-fn target-binds)
+                                :switch-fn (subs-fn source-binds)
                                 :valve-open (ref false)}))]
 
     ;; The following section covers the following case: 
