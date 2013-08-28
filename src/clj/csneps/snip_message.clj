@@ -12,7 +12,7 @@
 (defrecord2 Message
   [origin nil
    priority 1
-   substitution {}
+   substitution (ref {})
    support-set #{}
    type nil
    true? true
@@ -35,7 +35,7 @@
 ;                              ))]
 ;               (println a)
 ;               (str a "-"  (type a))))
-    (->Message node 1 (:subs rui) (conj (:support-set rui) node) type true? fwd-infer?)))
+    (->Message node 1 (ref (:subs rui)) (conj (:support-set rui) node) type true? fwd-infer?)))
 ;    (new-message {:origin node
 ;                  :substitution (:subs rui)
 ;                  :support-set (conj (:support-set rui) node)
@@ -48,7 +48,7 @@
   [message & {:keys [origin substitution support-set type true? fwd-infer?]}]
   (new-message {:origin (or origin (:origin message))
                 :priority (inc (:priority message))
-                :substitution (or substitution (:substitution message))
+                :substitution (or (ref substitution) (:substitution message))
                 :support-set (or support-set (:support-set message))
                 :type (or type (:type message))
                 :true? (if (nil? true?) (:true? message) true?)
