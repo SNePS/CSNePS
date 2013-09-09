@@ -15,7 +15,7 @@
 (defn rui-from-message
   "Creates an RUI from a message."
   [message]
-  (new-rui {:subst (:substitution message)
+  (new-rui {:subst @(:substitution message)
             :pos (if (:true? message) 1 0)
             :neg (if (:true? message) 0 1)
             :support-set (:support-set message)
