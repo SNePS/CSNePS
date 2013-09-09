@@ -39,6 +39,20 @@
 ;              (keys inv1)))
     ))
 
+(defn subsumption-compatible?
+  "Returns true if:
+   1) No variable is bound to two different terms.
+   2) A variable is bound by two different terms, of which one of them is
+      a variable, and they are compatible by structural subsumption."
+  [subs1 subs2]
+  (every? #(or (= (% subs1) (% subs2))
+               (nil? (% subs2))
+               (and (variable? (% subs1)) 
+                    (structurally-subsumes-varterm (% subs1) (% subs2)))
+               (and (variable? (% subs2)) 
+                    (structurally-subsumes-varterm (% subs2) (% subs1))))
+          (keys subs1)))
+
 (defn subset?
   "Returns true if subs1 is a subset of subs2"
   [subs1 subs2]
