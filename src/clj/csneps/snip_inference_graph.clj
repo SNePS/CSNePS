@@ -251,14 +251,24 @@
   "Since the implication is true, send a Y-INFER message to each
    of the consequents." 
   [message node]
-  (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
-        match-ruis (some #(when (>= (:pos %) (:min node))
-                            %)
-                         new-ruis)]
-    (when match-ruis 
-      (cancel-infer node)
-      (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
-                                 (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))))
+  ;; If the node only requires 1 antecedent to be true, any incoming positive
+  ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
+  ;; maintain the RUI structure. 
+  (let [msgrui (rui-from-message message)]
+	  (if (> (:min node) 1)
+	    (when (:true? message)
+	      (cancel-infer node)
+        (apply conj {} (doall (map #(vector % (RUI->message msgrui node 'Y-INFER true (:fwd-infer? message)))
+                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))
+   
+       (let [new-ruis (get-rule-use-info (:ruis node) msgrui)
+             match-ruis (some #(when (>= (:pos %) (:min node))
+                                 %)
+                              new-ruis)]
+         (when match-ruis 
+           (cancel-infer node)
+           (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
+                                      (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))))
 
 (defn numericalentailment-introduction
   ""
