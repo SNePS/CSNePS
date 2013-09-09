@@ -15,7 +15,7 @@
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}
 ;;     Result: {arb2: (every x (Isa x Cat)) cat!, arb1: (every x (Isa x Entity)) cat!}
-(defn substitution-composition
+(defn substitution-application
   "Apples the substitution subs2 to subs1"
   [subs1 subs2] 
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
