@@ -76,22 +76,24 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
-  ;; Switch
-  ;; TODO: TEMPORARY IMPLEMENTATION!!!
-  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:substitution message))))))
-  (dosync (ref-set (:substitution message) ((:switch-fn channel) @(:substitution message))))
   
-  (when (:fwd-infer? message)
-    (open-valve channel))
-  (if (build/valve-open? channel)
-    ;; Process as usual.
-    (do 
-      (send to-infer inc)
-      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
-      (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
-      nil)
-    ;; Cache in the waiting-msgs
-    (dosync (alter (:waiting-msgs channel) conj message))))
+  ;; Filter
+  (when ((:filter-fn channel) @(:substitution message))
+	  ;; Switch
+	  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:substitution message))))))
+	  (dosync (ref-set (:substitution message) ((:switch-fn channel) @(:substitution message))))
+	  
+	  (when (:fwd-infer? message)
+	    (open-valve channel))
+	  (if (build/valve-open? channel)
+	    ;; Process as usual.
+	    (do 
+	      (send to-infer inc)
+	      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
+	      (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
+	      nil)
+	    ;; Cache in the waiting-msgs
+	    (dosync (alter (:waiting-msgs channel) conj message)))))
 
 (defn submit-assertion-to-channels
   [term & {:keys [fwd-infer] :or {:fwd-infer false}}]
