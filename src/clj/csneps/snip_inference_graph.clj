@@ -3,6 +3,7 @@
 (load "snip_rui")
 (load "snip_message")
 (load "snip_linear_rui_set")
+(load "snip_sindex")
 
 ;; Tracking inference tasks
 (def ^:dynamic taskid 0)
