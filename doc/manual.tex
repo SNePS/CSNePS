@@ -200,9 +200,9 @@ wft &=& atomicwft\\
 && $\mid$ `(' , naryop , wft$^\ast$ , `)'\\
 && $\mid$ `(' , param2op , `(' , $i$ , $j$ , `)' wft$^+$ , `)'\\
 && $\mid$ `(' , `thresh' , `(' , $i$ , `)' wft$^+$ , `)'\\
-&& $\mid$ \textcolor{red}{`(', `close' , (atomicname $\mid$ (`(',
-  atomicname$^+$ , `)')) ,}\\
-&& ~~~~~\textcolor{red}{wft , `)'}\\
+&& $\mid$ `(', `close' , (atomicname $\mid$ (`(',
+  atomicname$^+$ , `)')) ,\\
+&& ~~~~~wft , `)'\\
 && $\mid$ `(', `every' , atomicname , wft$^\ast$ , `)'\\
 && $\mid$ `(', `some' , atomicname , `(' , atomicname , `)' ,
  wft$^\ast$ , `)'\\ 
