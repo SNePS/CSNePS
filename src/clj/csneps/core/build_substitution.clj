@@ -19,7 +19,7 @@
   "Apples the substitution subs2 to subs1"
   [subs1 subs2] 
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
-    (merge subs2 (into {} compose))))
+    (clojure.core/merge subs2 (into {} compose))))
 
 (defn compatible?
   "Returns true if:
