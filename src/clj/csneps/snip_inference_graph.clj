@@ -229,8 +229,10 @@
     (when debug (send screenprinter (fn [_]  (println "NEX" new-ruis))))
     nil
     (when-not (empty? new-ruis)
-      (zipmap ych (repeat (count ych) dermsg)))
-    ))
+      (when showproofs 
+        (doseq [y ych]
+          (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by negation-elimination")))))
+      (zipmap ych (repeat (count ych) dermsg)))))
 
 (defn negation-introduction
   "Pretty much conjunction-introduction, but with :neg instead of :pos"
@@ -245,6 +247,8 @@
         ich @(:i-channels node)]
     (when debug (send screenprinter (fn [_]  (println "N-Int" new-ruis "\n" der-rui))))
     (when der-rui
+      (when showproofs 
+        (send screenprinter (fn [_] (println "I derived: " node " by negation-introduction"))))
       (dosync (alter (:support node) conj (:support-set message)))
       [true (zipmap ich (repeat (count ich) dermsg))])))
   
@@ -260,6 +264,9 @@
 	  (if (> (:min node) 1)
 	    (when (:true? message)
 	      (cancel-infer node)
+        (when showproofs 
+           (doseq [y @(:y-channels node)]
+             (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by numericalentailment-elimination")))))
         (apply conj {} (doall (map #(vector % (RUI->message msgrui node 'Y-INFER true (:fwd-infer? message)))
                                    (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))
    
@@ -269,6 +276,9 @@
                               new-ruis)]
          (when match-ruis 
            (cancel-infer node)
+            (when showproofs 
+              (doseq [y @(:y-channels node)]
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by numericalentailment-elimination")))))
            (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
                                       (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))))
 
@@ -286,6 +296,9 @@
                                    :type 'Y-INFER)
         ych @(:y-channels node)]
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
+    (when showproofs
+      (doseq [y ych]
+         (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by conjunction-elimination")))))
     (zipmap ych (repeat (count ych) dermsg))))
 
 (defn conjunction-introduction
@@ -303,8 +316,14 @@
                                    :true? false)
         ich @(:i-channels node)]
     (cond
-      der-rui-t [true (zipmap ich (repeat (count ich) dermsg-t))]
-      der-rui-f [false (zipmap ich (repeat (count ich) dermsg-f))]
+      der-rui-t (do 
+                  [true (zipmap ich (repeat (count ich) dermsg-t))]
+                  (when showproofs
+                    (send screenprinter (fn [_] (println "I derived: " node " by conjunction-introduction")))))
+      der-rui-f (do
+                  [false (zipmap ich (repeat (count ich) dermsg-f))]
+                  (when showproofs
+                    (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction")))))
       :else nil)))
 
 (defn andor-elimination
@@ -320,11 +339,21 @@
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     (or 
       (when pos-match
+		    (when showproofs 
+          (doseq [y @(:y-channels node)]
+            (when (and (not ((:flaggedns pos-match) (:destination y)))
+                       (not (negated? (:destination y))))
+              (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by andor-elimination"))))))
         (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
                                                (not (negated? (:destination %))))
                                       [% (RUI->message pos-match node 'Y-INFER false (:fwd-infer? message))])
                                    @(:y-channels node)))))
       (when neg-match
+		    (when showproofs 
+          (doseq [y @(:y-channels node)]
+            (when (and (nil? ((:flaggedns neg-match) (:destination y)))
+                       (not (ct/asserted? (:destination y) (ct/currentContext))))
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by andor-elimination"))))))
         (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
                                                (not (ct/asserted? (:destination %) (ct/currentContext))))
                                       [% (RUI->message neg-match node 'Y-INFER true (:fwd-infer? message))])
@@ -362,10 +391,16 @@
     (when debug (send screenprinter (fn [_]  (println case1 case2))))
     (cond
       (isa? (csneps/syntactic-type-of node) :csneps.core/Andor)
-      (if case2
+      (when case2
+        (when showproofs 
+          (doseq [i ich]
+            (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
         [true (zipmap ich (repeat (count ich) dermsg-t))])
       (isa? (csneps/syntactic-type-of node) :csneps.core/Thresh)
-      (if case1
+      (when case1
+        (when showproofs 
+          (doseq [i ich]
+            (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
         [true (zipmap ich (repeat (count ich) dermsg-t))]))))
   
 (defn thresh-elimination
@@ -390,7 +425,7 @@
           (when showproofs 
             (doseq [y @(:y-channels node)]
               (when-not ((:flaggedns more-than-min-true-match) (:destination y))
-                 (send screenprinter (fn [_] (println "Derived: " (:destination y) " by thresh-elimination"))))))
+                 (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination"))))))
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% (RUI->message more-than-min-true-match node 'Y-INFER true (:fwd-infer? message))])
                                      @(:y-channels node)))))
@@ -398,7 +433,7 @@
           (when showproofs 
             (doseq [y @(:y-channels node)]
               (when-not (when (nil? ((:flaggedns less-than-max-true-match) (:destination y)))
-                 (send screenprinter (fn [_] (println "Derived: " (:destination y) " by thresh-elimination")))))))
+                 (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination")))))))
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% (RUI->message less-than-max-true-match node 'Y-INFER false (:fwd-infer? message))])
                                      @(:y-channels node))))))))
