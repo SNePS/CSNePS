@@ -75,6 +75,10 @@
               :docstring "All fillers are coreferential."
               :min 2 :negadjust reduce
               :path (compose ! equiv (kstar (compose equiv- ! equiv))))
+            (defineSlot closedvar :type Entity
+              :docstring "Points to a variable in a closure.")
+            (defineSlot proposition :type Propositional
+              :docstring "Points to a proposition.")
             
               ;; Slots for Rules
             ;; ===================
@@ -124,7 +128,9 @@
               (defineCaseframe 'Propositional '('andor andorargs))
               (defineCaseframe 'Propositional '('thresh threshargs))
               (defineCaseframe 'Propositional '('if ant cq)
-                :docstring "if [ant] then [cq]"))
+                :docstring "if [ant] then [cq]")
+              (defineCaseframe 'Propositional '('close closedvar proposition)
+                :docstring "[proposition] is closed over [closedvar]"))
       ))
 
       (if clearall

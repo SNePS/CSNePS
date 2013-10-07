@@ -678,6 +678,21 @@
       setof
       (let [set (set (for [arg (rest expr)] (build arg semtype substitution)))]
         (if (= (count set) 1) (first set) set))
+      
+      close
+      (let [vars-in-closure @(let [vars (ref #{})] 
+                               (csneps.core.build/term-prewalk (fn [x] (when (csneps.core.build/variable? x) 
+                                                                         (dosync (alter vars conj x))) 
+                                                                 x) 
+                                                               (get-term 'wft1)) 
+                               vars)
+            vars-name-map (into {} (map (fn [x] [(:var-label x) x]) vars-in-closure))
+            closed-vars (map vars-name-map (second expr))]
+	      (build-molecular-node (cf/find-frame 'close)
+	                            (list (build (set closed-vars) :Entity substitution)
+	                                  (build (third expr) :Proposition substitution))
+	                            :csneps.core/Molecular
+	                            semtype))
 
       (cond ;;Else caseframes
         (ientailsymb? fcn)
