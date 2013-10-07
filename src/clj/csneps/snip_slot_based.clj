@@ -156,7 +156,6 @@
   "Returns t if the sourcefillers can be adjusted
         via the adjust type adj to the targetfillers"
   [adj min max sourcefillers targetfillers]
-  (println sourcefillers targetfillers adj (subset? targetfillers sourcefillers))
   (when-not (or (empty? sourcefillers) (empty? targetfillers))
     (and (<= min (count targetfillers))
          (or (nil? max) (<= (count targetfillers) max))
