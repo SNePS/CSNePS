@@ -20,6 +20,7 @@
 
 (load "build_assert")
 (load "build_utils")
+(load "build_subsumption")
 (load "build_substitution")
 (load "build_unification")
 (load "build_find")
@@ -733,7 +734,7 @@
                 (for [k (seq (keys ind-dep-rsts))]
                   [k (pre-build-var :some k (second (get arb-rsts k)))])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (second (get arb-rsts k)))]))))
+                  [k (pre-build-var :qvar k (second (get qvar-rsts k)))]))))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and

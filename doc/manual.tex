@@ -264,8 +264,8 @@ path &=& \textit{slotname}\\
 && $\mid$ \textcolor{red}{`(' , `range-restrict' , path , `(' , path , wft , `)' , `)'} ;
 \end{tabular}}
 
-\chapter{Running SNePS 3}
-SNePS 3 is implemented in the Clojure programming language, a recently developed 
+\chapter{Running CSNePS}
+CSNePS is implemented in the Clojure programming language, a recently developed 
 dialect of lisp witch runs (primarily) on the Java Virtual Machine.
 
 \section{Pre-Requisites}
@@ -278,30 +278,45 @@ dialect of lisp witch runs (primarily) on the Java Virtual Machine.
   \url{https://github.com/technomancy/leiningen}.
 \end{itemize}
 
-\section{Running SNePS 3 at the Command Line}
+\section{Running CSNePS at the Command Line}\label{sec:loadcmd}
 
-The preferred method of running SNePS 3 at the command line is to use the REPL 
+The preferred method of running CSNePS at the command line is to use the REPL 
 component of Leiningen.
 
 \begin{enumerate}
-  \item At the command prompt, change directories to the Sneps3-Clojure directory. 
+  \item At the command prompt, change directories to the CSNePS directory. 
   This is the directory containing the project.clj file which Leiningen will use to 
   load the project.
   \item Type \texttt{lein repl} at the command prompt and hit enter. Any required 
   dependencies will be downloaded, Clojure will load, and you will be presented a 
-  Clojure prompt, \texttt{core=>}, indicating we have started in the 'core' namespace.
-  \item You may now load SNePS 3 by typing \texttt{(loadsneps3)} at the prompt and 
-  press enter.
-  \item SNePS 3 is now loaded, follow the directions presented and switch to the 
-  snuser namespace by typing \texttt{(in-ns 'snuser)} and pressing enter. SNePS 3 
-  is now ready to be used.
+  Clojure prompt, \texttt{csneps.core.snuser=>}, indicating that CSNePS has loaded and we are in the 'csneps.core.snuser' namespace.
 \end{enumerate}
 
-\section{Using Eclipse to Run SNePS 3}
+\section{Running the CSNePS GUI}
+
+The CSNePS GUI may be started with or without pre-loading CSNePS. If you choose to pre-load CSNePS you will also have access to the command prompt in your terminal window. This will not be available of you choose not to pre-load CNSePS. 
+
+\subsection{By Pre-Loading CSNePS}
+
+\begin{enumerate}
+  \item Follow the directions from Section~\ref{sec:loadcmd}.
+  \item Type \texttt{(startGUI)} from the prompt and press enter. This will load the CSNePS GUI.
+\end{enumerate}
+
+\subsection{Without Pre-Loading CSNePS}
+
+\begin{enumerate}
+  \item At the command prompt, change directories to the CSNePS directory. 
+  This is the directory containing the project.clj file which Leiningen will use to 
+  load the project.
+  \item Type \texttt{lein run} at the command prompt and hit enter. This will load CSNePS and its GUI.
+\end{enumerate}
+
+\section{Using Eclipse to Run CSNePS}
 
 Before getting started with Eclipse, be sure to check out the Sneps3-Clojure project, change directories to that project, and run \texttt{lein deps} to be sure the project and its dependencies are up to date.
 
-In order to run and develop SNePS 3 in Eclipse, you will require a version of Eclipse which includes Java support. The version on the CSE servers seems somehow incompatable with CounterClockwise, so I recommend installing the latest version from \url{http://www.eclipse.org} in your home directory.
+In order to run and develop CSNePS in Eclipse, you will require a version of Eclipse which includes Java support. The version on the CSE servers seems somehow incompatable with CounterClockwise, so I recommend installing the latest version from \url{http://www.eclipse.org} in your home directory.
 
 First we must install the CounterClockwise plugin, which lets us run Clojure apps from Eclipse.
 
@@ -325,7 +340,7 @@ Now we will import our project.
 
 Now the project is imported into Eclipse and we can run it. In the project explorer on the left side of the workspace, expand the SNePS3-Clojure node and then the src node, right click on core.clj, and choose to run it as a Clojure Application. Once the repl loads, run \texttt{(loadsneps3)}.
 
-\section{Using Emacs to Run SNePS 3}
+\section{Using Emacs to Run CSNePS}
 
 \subsection{Configuring Emacs}
 
@@ -424,10 +439,10 @@ lisp, but also use SLIME. We will install clojure-mode to have proper syntax hig
   %started in the 'user' package.
   %\item Open the file \texttt{Sneps3-Clojure/src/core.clj}.
   %\item Compile and load the file into the REPL, \texttt{C-c C-k}.
-  \item You may now load SNePS 3 by typing \texttt{(loadsneps3)} at the prompt and 
+  \item You may now load CSNePS by typing \texttt{(loadsneps3)} at the prompt and 
   press enter.
-  \item SNePS 3 is now loaded, follow the directions presented and switch to the 
-  snuser namespace by typing \texttt{(in-ns 'snuser)} and pressing enter. SNePS 3 
+  \item CSNePS is now loaded, follow the directions presented and switch to the 
+  snuser namespace by typing \texttt{(in-ns 'snuser)} and pressing enter. CSNePS 
   is now ready to be used.
 \end{enumerate}
 
@@ -635,7 +650,7 @@ context.  Else raises an error.
 Graphically displays all the defined semantic types.
 
 \docmacro{startGUI}{\&rest \textit{terms}} 
-  Starts the SNePS 3 GUI. Takes a variable number of \texttt{\textit{terms}} to
+  Starts the CSNePS GUI. Takes a variable number of \texttt{\textit{terms}} to
   display on the graph. Each term is either found or defined using
   \texttt{defineTerm}. If no terms are given, the entire graph will be
   displayed.
@@ -854,7 +869,7 @@ basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
 License for the specific language governing rights and limitations
 under the License.\\
 
-\noindent The Original Code is SNePS 3.\\
+\noindent The Original Code is CSNePS.\\
 
 \noindent The Initial Developer of the Original Code is Research Foundation of State University of New York, on behalf of University at Buffalo.\\
 

@@ -40,7 +40,7 @@
           (recur (rest fns1)))))))
 
 (defn merge [rui1 rui2]
-  (new-rui {:subst (build/substitution-composition (:subst rui1) (:subst rui2))
+  (new-rui {:subst (clojure.core/merge (:subst rui1) (:subst rui2))
             :pos (+ (:pos rui1) (:pos rui2))
             :neg (+ (:neg rui1) (:neg rui2))
             :support-set (union (:support-set rui1) (:support-set rui2))

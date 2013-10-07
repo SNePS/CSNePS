@@ -54,11 +54,11 @@
 
 ;; Use agents for channels? Like message passing in Erlang?
 
-(defn subs-fn
-  [f-or-s-sub] ;filter or switch substitution.
+(defn switch-fn
+  [sub]
   (fn [varbinds]
     (if varbinds 
-      (substitution-composition f-or-s-sub varbinds)
+      (substitution-application sub varbinds)
       {})))
 
 (defn filter-fn
@@ -78,8 +78,8 @@
                   (find-channel originator destination)
                   (new-channel {:originator originator
                                 :destination destination
-                                :filter-fn (subs-fn target-binds)
-                                :switch-fn (subs-fn source-binds)
+                                :filter-fn (filter-fn target-binds)
+                                :switch-fn (switch-fn source-binds)
                                 :valve-open (ref false)}))]
 
     ;; The following section covers the following case: 

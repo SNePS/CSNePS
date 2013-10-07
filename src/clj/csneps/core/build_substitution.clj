@@ -15,7 +15,7 @@
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}
 ;;     Result: {arb2: (every x (Isa x Cat)) cat!, arb1: (every x (Isa x Entity)) cat!}
-(defn substitution-composition
+(defn substitution-application
   "Apples the substitution subs2 to subs1"
   [subs1 subs2] 
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
@@ -38,6 +38,20 @@
 ;                   (nil? (% inv2)))
 ;              (keys inv1)))
     ))
+
+(defn subsumption-compatible?
+  "Returns true if:
+   1) No variable is bound to two different terms.
+   2) A variable is bound by two different terms, of which one of them is
+      a variable, and they are compatible by structural subsumption."
+  [subs1 subs2]
+  (every? #(or (= (% subs1) (% subs2))
+               (nil? (% subs2))
+               (and (variable? (% subs1)) 
+                    (structurally-subsumes-varterm (% subs1) (% subs2)))
+               (and (variable? (% subs2)) 
+                    (structurally-subsumes-varterm (% subs2) (% subs1))))
+          (keys subs1)))
 
 (defn subset?
   "Returns true if subs1 is a subset of subs2"

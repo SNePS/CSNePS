@@ -3,6 +3,7 @@
 (load "snip_rui")
 (load "snip_message")
 (load "snip_linear_rui_set")
+(load "snip_sindex")
 
 ;; Tracking inference tasks
 (def ^:dynamic taskid 0)
@@ -77,22 +78,24 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
-  ;; Switch
-  ;; TODO: TEMPORARY IMPLEMENTATION!!!
-  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:substitution message))))))
-  (dosync (ref-set (:substitution message) ((:switch-fn channel) @(:substitution message))))
   
-  (when (:fwd-infer? message)
-    (open-valve channel))
-  (if (build/valve-open? channel)
-    ;; Process as usual.
-    (do 
-      (send to-infer inc)
-      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
-      (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
-      nil)
-    ;; Cache in the waiting-msgs
-    (dosync (alter (:waiting-msgs channel) conj message))))
+  ;; Filter
+  (when ((:filter-fn channel) @(:substitution message))
+	  ;; Switch
+	  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:substitution message))))))
+	  (dosync (ref-set (:substitution message) ((:switch-fn channel) @(:substitution message))))
+	  
+	  (when (:fwd-infer? message)
+	    (open-valve channel))
+	  (if (build/valve-open? channel)
+	    ;; Process as usual.
+	    (do 
+	      (send to-infer inc)
+	      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
+	      (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
+	      nil)
+	    ;; Cache in the waiting-msgs
+	    (dosync (alter (:waiting-msgs channel) conj message)))))
 
 (defn submit-assertion-to-channels
   [term & {:keys [fwd-infer] :or {:fwd-infer false}}]
@@ -250,14 +253,24 @@
   "Since the implication is true, send a Y-INFER message to each
    of the consequents." 
   [message node]
-  (let [new-ruis (get-rule-use-info (:ruis node) (rui-from-message message))
-        match-ruis (some #(when (>= (:pos %) (:min node))
-                            %)
-                         new-ruis)]
-    (when match-ruis 
-      (cancel-infer node)
-      (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
-                                 (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))))
+  ;; If the node only requires 1 antecedent to be true, any incoming positive
+  ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
+  ;; maintain the RUI structure. 
+  (let [msgrui (rui-from-message message)]
+	  (if (> (:min node) 1)
+	    (when (:true? message)
+	      (cancel-infer node)
+        (apply conj {} (doall (map #(vector % (RUI->message msgrui node 'Y-INFER true (:fwd-infer? message)))
+                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))
+   
+       (let [new-ruis (get-rule-use-info (:ruis node) msgrui)
+             match-ruis (some #(when (>= (:pos %) (:min node))
+                                 %)
+                              new-ruis)]
+         (when match-ruis 
+           (cancel-infer node)
+           (apply conj {} (doall (map #(vector % (RUI->message match-ruis node 'Y-INFER true (:fwd-infer? message)))
+                                      (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))))
 
 (defn numericalentailment-introduction
   ""
