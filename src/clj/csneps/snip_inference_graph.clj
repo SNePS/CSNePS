@@ -381,7 +381,11 @@
         case2 (and merged-rui
                    (>= (:pos merged-rui) (:min node))
                    (>= (:neg merged-rui) (- totparam (:max node))))
-        dermsg-t (imessage-from-ymessage message node)
+        dermsg-t (derivative-message message 
+                      :origin node
+                      :support-set (conj (:support-set message) node)
+                      :type 'I-INFER
+                      :true? true)
         dermsg-f (derivative-message message 
                       :origin node
                       :support-set (conj (:support-set message) node)
