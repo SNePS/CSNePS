@@ -687,7 +687,8 @@
                                                                (get-term 'wft1)) 
                                vars)
             vars-name-map (into {} (map (fn [x] [(:var-label x) x]) vars-in-closure))
-            closed-vars (map vars-name-map (second expr))]
+            closed-var-names (if (seq? (second expr)) (second expr) (list (second expr)))
+            closed-vars (map vars-name-map closed-var-names)]
 	      (build-molecular-node (cf/find-frame 'close)
 	                            (list (build (set closed-vars) :Entity substitution)
 	                                  (build (third expr) :Proposition substitution))
