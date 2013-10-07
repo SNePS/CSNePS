@@ -12,6 +12,7 @@
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
+(def showproofs true)
 
 ;; Asynchronous asserter
 (def asserter (agent nil))
@@ -373,10 +374,18 @@
                                           %)
                                           new-ruis)]
     (or (when more-than-min-true-match
+          (when showproofs 
+            (doseq [y @(:y-channels node)]
+              (when-not ((:flaggedns more-than-min-true-match) (:destination y))
+                 (send screenprinter (fn [_] (println "Derived: " (:destination y) " by thresh-elimination"))))))
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% (RUI->message more-than-min-true-match node 'Y-INFER true (:fwd-infer? message))])
                                      @(:y-channels node)))))
         (when less-than-max-true-match
+          (when showproofs 
+            (doseq [y @(:y-channels node)]
+              (when-not (when (nil? ((:flaggedns less-than-max-true-match) (:destination y)))
+                 (send screenprinter (fn [_] (println "Derived: " (:destination y) " by thresh-elimination")))))))
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% (RUI->message less-than-max-true-match node 'Y-INFER false (:fwd-infer? message))])
                                      @(:y-channels node))))))))
@@ -386,7 +395,6 @@
   (send screenprinter (fn [_]  (println "Deriving answer:" @(:substitution message))))
   ;; We don't need RUIs - the received substitutions must be complete since they
   ;; passed unification!
-  
   )
 
 (defn elimination-infer
@@ -550,8 +558,7 @@
   "Used for answering WhQuestions"
   [ques context]
   (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
-    (let [ques (build/build ques :WhQuestion #{})
-          answers (ref #{})
+    (let [answers (ref #{})
           update-answers (fn [ref key oldvalue newvalue]
                            (when (and (= newvalue 0) (not= oldvalue 0))
                              (dosync (ref-set answers nil))))]
