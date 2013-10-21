@@ -180,21 +180,6 @@
           (priority-partial Integer/MAX_VALUE 
                             cancel-infer (:originator ch)))))))
 
-;(defn cancel-infer
-;  "Same idea as backward-infer, except it closes valves. Cancelling inference
-;   has top priority."
-;  ([term] 
-;    ;(when (> cpus-to-use 1)
-;      (let [msg (new-message {:type 'CANCEL-INFER})]
-;        (doseq [ch @(:ant-in-channels term)]
-;          (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE cancel-infer ch msg)))));)
-;  ([channel message]
-;    (when (= (:type message) 'CANCEL-INFER)
-;      (when (build/valve-open? channel)
-;        (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing valve on channel" channel))))
-;        (close-valve channel)
-;        (cancel-infer (:originator channel))))))
-
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and Y-INFER messages
    through the graph."
