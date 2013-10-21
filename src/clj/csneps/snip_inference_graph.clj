@@ -12,7 +12,7 @@
 (def screenprinter (agent nil))
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug false)
+(def debug true)
 (def showproofs true)
 
 ;; Asynchronous asserter
@@ -153,19 +153,19 @@
    backward-chaining inference. The network tries to derive term, and uses a
    set to track which nodes it has already visited."
   ([term] (backward-infer term -10 #{}))
+  ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited] 
-    (let [msg (new-message {:type 'BACKWARD-INFER, :priority depth})]
-      (doseq [ch @(:ant-in-channels term)]
-        (when (and (not (visited term)) (not (visited (:originator ch))))
-          (send to-infer inc)
-          (.execute ^ThreadPoolExecutor executorService (priority-partial -10 backward-infer ch msg depth (conj visited term)))))))
-  ([channel message depth visited]
-    (when (= (:type message) 'BACKWARD-INFER)
-      (when-not (build/valve-open? channel)
-        (when debug (send screenprinter (fn [_]  (println "BWMSG: Backward Infer " depth " - opening valve on channel" channel))))
-        (open-valve channel))
-      (backward-infer (:originator channel) (dec (:priority message)) visited))
-    (send to-infer dec)))
+    (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer - " depth " - opening in-channels for" term))))
+    (doseq [ch @(:ant-in-channels term)]
+      (when (and (not (visited term)) (not (visited (:originator ch))))
+        (open-valve ch)
+        (send to-infer inc)
+        (.execute ^ThreadPoolExecutor executorService 
+          (priority-partial depth 
+                            (fn [t d v] (backward-infer t d v) (send to-infer dec))
+                            (:originator ch)
+                            (dec depth)
+                            (conj visited term)))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
