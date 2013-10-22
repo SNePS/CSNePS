@@ -139,15 +139,6 @@
                                                         (map #(get-terms-from-find-results
                                                                 (find-in (first rst) @(:restriction-set %) var-list))
                                                              possibles))))))))
-        
-        
-        
-;        (println "Pos:" possibles "var-list" var-list "distinctres" distinctres "find" (get-terms-from-find-results (find (first rst) var-list)))
-;        (cond
-;          (empty? rst) (first possibles)
-;          (empty? possibles) nil
-;          :else (recur (rest rst)
-;                       (clojure.set/intersection possibles (get-terms-from-find-results (find (first rst) var-list))))))))
 
 (defn filter-termset
   [termset expr cf var-list]
