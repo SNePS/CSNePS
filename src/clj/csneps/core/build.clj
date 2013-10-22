@@ -716,13 +716,13 @@
    and modifies the substitution accordingly. Arbitrary individuals may
    have a resriction set slot filled in already if they existed in the KB
    previously. Otherwise, resrtiction sets still need to be built."
-  [quant var-label rsts & {:keys [arb-rsts ind-rsts]}]
+  [quant var-label rsts & {:keys [arb-rsts ind-rsts qvar-rsts]}]
   (doseq [rst rsts
             :when (not (some #{var-label} rst))]
       (error
 	  (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
-  (or (and (= quant :every) (find-old-arb-node var-label rsts arb-rsts ind-rsts))
+  (or (and (or (= quant :qvar) (= quant :every)) (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
     (let [name (case quant
                  :every (symbol (str "arb" (arb-counter)))
                  :some (symbol (str "ind" (ind-counter)))
@@ -750,7 +750,7 @@
                 (for [k (seq (keys ind-dep-rsts))]
                   [k (pre-build-var :some k (second (get arb-rsts k)))])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (second (get qvar-rsts k)))]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k))]))))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and

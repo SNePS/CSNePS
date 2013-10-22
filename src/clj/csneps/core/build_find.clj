@@ -87,7 +87,7 @@
                           true
       :else               (recur (rest arg)))))
 
-(defn arb-requires-new-term?
+(defn var-requires-new-term?
   "Returns true if resrictions contain new terms not already in the KB."
   [var-label restrictions]
   (loop [rst restrictions]
@@ -96,36 +96,40 @@
       (contains-new-term-or-cf? var-label (first rst)) true
       :else                                            (recur (rest rst)))))
 
-(defn find-arbs-of-restriction-set-size
-  "Returns all arbs in the KB which have a restriction set of size [size]."
-  [size]
-  (set (filter #(= (count @(:restriction-set %)) size) @ARBITRARIES)))
+(defn find-vars-of-restriction-set-size
+  "Returns all vars of type [quant] in the KB which have a restriction set of size [size]."
+  [size quant]
+  (set (filter #(= (count @(:restriction-set %)) size) 
+               (case quant
+                 :every @ARBITRARIES
+                 :some @INDEFINITES
+                 :qvar @QVARS))))
   
 (defn get-terms-from-find-results
   "Given results from a find operation, return all of the terms in the substitutions."
   [findres]
   (set (map #(val (first %)) (map second findres))))
 
-(defn find-old-arb-node
-  "If an existing arbitrary node can be found such that:
-      it is an arbitrary
+(defn find-old-var-node
+  "If an existing variable node can be found such that:
+      it is of the proper variable type;
       it is of the given semantic type;
       it has the given restrictions,
          where var-label stands for the variable node label in the
          restrictions;
    that existing node is returned.
    Otherwise nil is returned."
-  [var-label restrictions arb-rsts ind-dep-rsts]
+  [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant]
   (let [distinctres (distinct restrictions)
-        var-list (concat (keys arb-rsts) (keys ind-dep-rsts))]
-    ;; If the arbitrary contains new terms which haven't yet been built,
-    ;; we can quit now. Otherwise, find the arbitraries which have the 
+        var-list (concat (keys arb-rsts) (keys ind-dep-rsts) (keys qvar-rsts))]
+    ;; If the variable contains new terms which haven't yet been built,
+    ;; we can quit now. Otherwise, find the variables which have the 
     ;; same size as the one we're testing against, then intersect
     ;; that set with the terms in the substitutions resulting from 
     ;; using "find" to look for each of the restrictions of the arb.
-    (when-not (arb-requires-new-term? var-label distinctres))
+    (when-not (var-requires-new-term? var-label distinctres))
       (loop [rst distinctres
-             possibles (find-arbs-of-restriction-set-size (count distinctres))]
+             possibles (find-vars-of-restriction-set-size (count distinctres) quant)]
         (cond
           (empty? rst) (first possibles)
           (empty? possibles) nil
