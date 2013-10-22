@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare find find-helper)
+(declare find find-in find-helper)
 
 ;; Rewritten 10/12/12 [DRS]
 (defn eqfillersets
@@ -134,7 +134,20 @@
           (empty? rst) (first possibles)
           (empty? possibles) nil
           :else (recur (rest rst)
-                       (clojure.set/intersection possibles (get-terms-from-find-results (find (first rst) var-list))))))))
+                       (clojure.set/intersection possibles
+                                                 (apply clojure.set/union
+                                                        (map #(get-terms-from-find-results
+                                                                (find-in (first rst) @(:restriction-set %) var-list))
+                                                             possibles))))))))
+        
+        
+        
+;        (println "Pos:" possibles "var-list" var-list "distinctres" distinctres "find" (get-terms-from-find-results (find (first rst) var-list)))
+;        (cond
+;          (empty? rst) (first possibles)
+;          (empty? possibles) nil
+;          :else (recur (rest rst)
+;                       (clojure.set/intersection possibles (get-terms-from-find-results (find (first rst) var-list))))))))
 
 (defn filter-termset
   [termset expr cf var-list]
@@ -236,20 +249,21 @@
 
 (defn find-in
   [expr termset var-list]
-  (for [term termset]
-    (let [subs (pattern-term-match expr (:down-cableset term) var-list {})] 
-      (cond
-        (and (seq? subs) (not (empty? subs)))
-        [term subs]
-        (and (not (seq? subs)) subs)
-        [term subs]))))
+  (remove #(nil? %)
+    (for [term termset]
+      (let [subs (pattern-term-match expr (:down-cableset term) var-list {})] 
+        (cond
+          (and (seq? subs) (not (empty? subs)))
+          [term subs]
+          (and (not (seq? subs)) subs)
+          [term subs])))))
 
 
 (defn find
   [expr & [var-list]]
   (let [cf (cf/find-frame (first expr))]
     (if cf
-      (remove #(nil? %) (find-in expr (filter-termset @(:terms cf) expr cf var-list) var-list))
+      (find-in expr (filter-termset @(:terms cf) expr cf var-list) var-list)
       '())))
 
 
