@@ -66,6 +66,10 @@
              (or (= i "v")
                  (every? digit-char-p i)))))))
 
+(defn generic-term?
+  [term]
+  (= :Generic (semantic-type-of term)))
+
 (defn ientaili
   "Assuming that i=> satisfies #'ientailsymb?,
        returns the number represented by i."
@@ -510,14 +514,14 @@
       ;; All others can use the default case of buildUserTerm.
       Isa 
         (do
-          ;(println "Isa...")
-          (if (not (= (count expr) 3))
+          (when (not (= (count expr) 3))
             (error (str "Isa must take 2 arguments. It doesn't in " expr ".")))
+          (let [entity (build (second expr) :Entity substitution)
+                category (build (third expr) :Category substitution)]
             (build-molecular-node (cf/find-frame 'Isa)
-                                  (list (build (second expr) :Entity substitution)
-                                        (build (third expr) :Category substitution))
+                                  (list entity category)
                                   :csneps.core/Categorization
-                                  semtype))
+                                  (if (= (type-of entity) :csneps.core/Arbitrary) :Generic semtype))))
 
       and
         (let [cf (cf/find-frame 'and)]
