@@ -452,7 +452,7 @@
   (when debug (send screenprinter (fn [_]  (println "Deriving answer:" @(:substitution message)))))
   ;; We don't need RUIs - the received substitutions must be complete since they
   ;; passed unification! Instead, lets use cached-terms.
-  (dosync (alter (:answers node) assoc (:origin message) @(:substitution message))))
+  (dosync (alter (:instances node) assoc (:origin message) @(:substitution message))))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
@@ -626,7 +626,7 @@
           @(future (while (and (empty? @answers) (not (nil? @answers)))
                      (Thread/sleep 10))
              (remove-watch to-infer :to-infer)
-             @(:answers ques)))
+             @(:instances ques)))
         #{}))))
 
 (defn cancel-infer-of [term]
