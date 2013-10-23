@@ -23,7 +23,7 @@
 (defn wft-string
   [term]
   (str (:name term)
-      (if (= (csneps/semantic-type-of term) :Proposition)
+      (if (csneps/subtypep (csneps/semantic-type-of term) :Proposition)
         (if (ct/asserted? term (ct/currentContext)) "!" "?"))":"))
 
 (defn args-str
