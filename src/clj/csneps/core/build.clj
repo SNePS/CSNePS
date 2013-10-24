@@ -67,8 +67,26 @@
                  (every? digit-char-p i)))))))
 
 (defn generic-term?
+  "A term is a generic term if it has a semantic type which is a subtype of :Generic."
   [term]
-  (= :Generic (semantic-type-of term)))
+  (subtypep (semantic-type-of term) :Generic))
+
+(defn filler-generic?
+  "The filler of a slot is generic if:
+     1) It is a term with semantic type Generic, or
+     2) It is a term with syntactic type Arbitrary, or
+     3) It is a set of terms in which any one term satisfies 1 or 2."
+  [term-or-termset] 
+  (let [gt? (fn [term] (or (generic-term? term) (isa? (type-of term) :csneps.core/Arbitrary)))]
+    (if (set? term-or-termset)
+      (some gt? term-or-termset)
+      (gt? term-or-termset))))
+
+(defn fillers-generic?
+  "Given a list of fillers for slots, if any one of them satisfies the
+     conditions of filler-generic?, then we say they all do."
+  [fillers]
+  (some filler-generic? fillers))
 
 (defn ientaili
   "Assuming that i=> satisfies #'ientailsymb?,
@@ -382,7 +400,10 @@
                                          fixed-expr)
                                        (:slots cf))]
                     (build arg (:type rel) substitution))]
-      (build-molecular-node cf fillers :csneps.core/Molecular semtype))))
+      (build-molecular-node cf fillers :csneps.core/Molecular 
+                            (if (fillers-generic? fillers) 
+                              :Generic 
+                              semtype)))))
 
 (defmulti build
   (fn [expr semtype substitution] [(type-of expr)]))
@@ -521,7 +542,7 @@
             (build-molecular-node (cf/find-frame 'Isa)
                                   (list entity category)
                                   :csneps.core/Categorization
-                                  (if (= (type-of entity) :csneps.core/Arbitrary) :Generic semtype))))
+                                  (if (fillers-generic? (list entity category)) :Generic semtype))))
 
       and
         (let [cf (cf/find-frame 'and)]
