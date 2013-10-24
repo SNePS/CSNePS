@@ -458,8 +458,20 @@
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Generic derivation:" @(:substitution message)))))
   ;; The instance is the substitution applied to this term. 
+  ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
+  ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
   (let [instance (build/apply-sub-to-term node @(:substitution message))]
-    (dosync (alter (:instances node) assoc instance @(:substitution message)))))
+    (dosync (alter (:instances node) assoc instance @(:substitution message)))
+    (build/assert-term instance (ct/currentContext) :der)
+    (let [imsg (derivative-message message
+                                   :origin node
+                                   :support-set (conj (:support-set message) node)
+                                   :true? true
+                                   :type 'I-INFER)]
+      (doseq [cqch @(:i-channels node)] 
+        (submit-to-channel cqch imsg)
+        (when showproofs
+          (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))))))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
