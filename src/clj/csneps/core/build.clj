@@ -883,6 +883,9 @@
             (first assertion-spec))))
       :else
       (doall (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec)))
+    ;; Sets of subterms.
+    (set? assertion-spec)
+    (set (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec))
     ;; Build qvars which are not surrounded by parens.
     (synvariable? assertion-spec)
     (do 
