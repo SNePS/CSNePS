@@ -53,17 +53,18 @@
          that are derivable in the current context;
          or the empty set if there are none."
   [exprpat]
-  (snip/askif (build/build exprpat :Proposition {}) (currentContext) nil))
+  (snip/askif (build/variable-parse-and-build exprpat :Proposition)  
+              (currentContext) 
+              nil))
 
 (defn askifnot
   "Returns a set of instances of the negation of the term pattern exprpat
          that are derivable in the current context;
          or the empty set if there are none."
   [exprpat]
-  (snip/askif
-    (build/build (list 'not exprpat) :Proposition {})
-    (currentContext)
-     nil))
+  (snip/askif (build/variable-parse-and-build (list 'not exprpat) :Proposition)
+              (currentContext)
+              nil))
 
 (defn askwh
   ""
