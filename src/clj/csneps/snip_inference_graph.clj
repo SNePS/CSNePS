@@ -454,6 +454,13 @@
   ;; passed unification! Instead, lets use cached-terms.
   (dosync (alter (:instances node) assoc (:origin message) @(:substitution message))))
 
+(defn generic-infer 
+  [message node]
+  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" @(:substitution message)))))
+  ;; The instance is the substitution applied to this term. 
+  (let [instance (build/apply-sub-to-term node @(:substitution message))]
+    (dosync (alter (:instances node) assoc instance @(:substitution message)))))
+
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
@@ -558,6 +565,16 @@
       (= (:type message) 'I-INFER)
       (= (csneps/semantic-type-of term) :WhQuestion))
     (whquestion-infer message term)
+    ;; "Introduction of a Generic is the collection of instances, 
+    ;;   assertion of the instance, and forwarding the substitution
+    ;;   through i-channels. Unlike wh-question, incoming message
+    ;;   may be I-INFER or U-INFER. A message with an empty substitution
+    ;;   means the generic has been inferred, and should just be treated
+    ;;   as usual.
+    (and 
+      (= (csneps/semantic-type-of term) :Generic)
+      (not (empty? @(:substitution message))))
+    (generic-infer message term)
     ;; Normal introduction for derivation.
     (and 
       (not (ct/asserted? term (ct/currentContext)))
