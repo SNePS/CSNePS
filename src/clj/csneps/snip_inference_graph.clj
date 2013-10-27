@@ -71,6 +71,16 @@
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
   (def to-infer (agent 0)))
 
+;;; Experimental attempt at pausing inference.
+(let [waiting-queue (LinkedBlockingQueue.)]
+  (defn pause-execute 
+    []
+    (.drainTo queue waiting-queue))
+  
+  (defn resume-execute
+    []
+    (.drainTo waiting-queue queue)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Channel Maniupulation ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
