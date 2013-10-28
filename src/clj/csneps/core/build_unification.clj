@@ -397,10 +397,10 @@
   (treeUnifyVarList variable? (getWftNodesFor sourcenode) (first (getWftNodesFor targetnode)) [s t]))
 
 (defn unifyTreeWithChain
-  [target & {:keys [variable? s t source] :or {variable? variable? s {} t {} source true}}]
+  [target & {:keys [variable? s t source distnodes] :or {variable? variable?, s {}, t {}, source true, distnodes @DistNodes}}]
   (let [targetnode (second (first target))
         sourcenode (if (= (type targetnode) csneps.core.build.DistNode)
-                     (findDistNode (:name targetnode) (:arity targetnode) @DistNodes)
+                     (findDistNode (:name targetnode) (:arity targetnode) distnodes)
                      source)]
     ;(println "Source: " sourcenode "\nTarget: " targetnode)
     ;(println "Source Binding:" s "\nTarget Binding:" t)
@@ -409,19 +409,22 @@
       (and (nil? sourcenode) (nil? targetnode))       [s t]
       (distnode? sourcenode)                          (map #(unifyTreeWithChain
                                                               @(:children targetnode)
-                                                              :variable? variable? :s s :t t :source %)
+                                                              :variable? variable? :s s :t t :source %
+                                                              :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
       (= (:acceptWft sourcenode)
          (:acceptWft targetnode))                     (map #(unifyTreeWithChain
                                                               @(:children targetnode)
-                                                              :variable? variable? :s s :t t :source %)
+                                                              :variable? variable? :s s :t t :source %
+                                                              :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
       (and (molecularTerm? (:acceptWft sourcenode))
            (molecularTerm? (:acceptWft targetnode))
            (or (not-empty @(:children sourcenode))
                (not-empty @(:children targetnode))))  (map #(unifyTreeWithChain
                                                               @(:children targetnode)
-                                                              :variable? variable? :s s :t t :source %)
+                                                              :variable? variable? :s s :t t :source %
+                                                              :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
       (and (molecularTerm? (:acceptWft sourcenode))
            (molecularTerm? (:acceptWft targetnode)))      {:source (:acceptWft sourcenode) 
@@ -433,12 +436,12 @@
       :else nil)))
 
 (defn getUnifiers
-  [term & {:keys [varfn] :or {varfn variable?}}]
+  [term & {:keys [varfn distnodes] :or {varfn variable? distnodes @DistNodes}}]
   (let [tempdist (ref {})
         termchain (addTermToUnificationTree term :distnodes tempdist)
-        unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) @DistNodes)
-                   (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn))))]
-    (println unifiers)
+        unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
+                   (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
+    (when-not (empty? unifiers) (println unifiers))
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
@@ -446,12 +449,21 @@
       {:source (:source u) :target (:target u) :sourcebind subsourcebind :targetbind subtargetbind})))
 
       ;(println u))
+
+(defn unify?
+  "Returns the unifiers if term1 unifies with term2. Creates a temporary
+    term tree for term1, and then calls getUnifiers."
+  [term1 term2 & {:keys [varfn] :or {varfn variable?}}]
+  (let [term1-tempdist (ref {})
+        term1-chain (addTermToUnificationTree term1 :distnodes term1-tempdist)]
+    (getUnifiers term2 :distnodes @term1-tempdist)))
+      
       
     
     ;(if unifiers
     ;  (->> unifiers
     ;       (subst-bindings variable?)
-    ;       (try-subst-map variable?))
+    ;       (try-subst-map variable?))len
     ;  nil)
     ;unifiers))
 
