@@ -78,6 +78,7 @@
 	  (define-type :WhQuestion '(:Propositional))
 	  (define-type :Proposition '(:Propositional))
     (define-type :Generic '(:Proposition))
+    (define-type :AnalyticGeneric '(:Generic))
 	  (define-type :Act '(:Entity))
 	  (define-type :Policy '(:Entity))
 	  (define-type :Thing '(:Entity))

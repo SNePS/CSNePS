@@ -11,6 +11,7 @@
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
+        (build rst :AnalyticGeneric {})
         (assert rst (ct/find-context 'BaseCT) :hyp)))
     (build new-expr type substitution)))
 
@@ -21,6 +22,7 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq @(:restriction-set (first vars)))]
+      (build rst :AnalyticGeneric {})
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (first vars)))
 
