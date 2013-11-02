@@ -16,7 +16,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels create-rui-structure)
+(declare assert build check-and-build-variables build-channels create-rui-structure generic-term?)
 
 (load "build_assert")
 (load "build_utils")
@@ -26,7 +26,7 @@
 (load "build_find")
 (load "build_channel")
 
-(defvar KRNovice nil
+(defvar KRNovice (ref nil)
   "If the value is non-null,
       caseframes will be created automatically
         whenever the user uses a function symbol
@@ -377,7 +377,7 @@
                  (:caseframe fcn)
                  (error
                    "The function \"symbol\", "fcn", is not an acceptable function \"symbol\".")))
-             (and KRNovice
+             (and @KRNovice
                   (cf/defineNoviceCaseframe fcn expr)))]
     ;(println "Found CF: " cf)
     (when-not cf

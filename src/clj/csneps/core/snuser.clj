@@ -161,6 +161,10 @@
   (println)
   (list-terms :asserted true))
 
+(defn set-krnovice
+  [b]
+  (dosync (ref-set build/KRNovice b)))
+
 (defn startGUI
   ([] (gui/startGUI))
   ([termset] (gui/startGUI termset)))
