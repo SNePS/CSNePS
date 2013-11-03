@@ -584,14 +584,14 @@ Returns the term named \texttt{\textit{name}}, or \texttt{nil} if
 there isn't one.  The name of an atomic term is a symbol, string, or
 number.  The name of a molecular term is its wftname.
 
-%\docvar{KRNovice}
-%If set to a non-\texttt{null} value (the default value is \texttt{nil}), slots
-%and caseframes will automatically be created whenever a function symbol is used
-%that is not already associated with a caseframe.  The slots will be named
-%\texttt{fn}, \texttt{arg1}, \texttt{arg2}, \textit{etc.}, and both slots and
-%caseframes will have their default parameters.  This should only be used by
-%novices, or for very quick tests, as the careful modeling required by defining
-%types, slots, and caseframes might be ignored.
+\docfun{krnovice}{\textit{boolean}}
+If set to \texttt{true} (the default value is \texttt{false}), slots
+and caseframes will automatically be created whenever a function symbol is used
+that is not already associated with a caseframe.  The slots will be named
+\texttt{fn}, \texttt{arg1}, \texttt{arg2}, \textit{etc.}, and both slots and
+caseframes will have their default parameters.  This should only be used by
+novices, or for very quick tests, as the careful modeling required by defining
+types, slots, and caseframes might be ignored.
 
 \docfun{list-caseframes}{}
 Prints all the caseframes.
