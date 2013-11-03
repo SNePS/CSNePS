@@ -2,7 +2,7 @@
 
 (defrecord PTree
   [tree
-   pnode-ruiset-map]
+   term-to-pnode-map]
   RUIStructure
   (get-rule-use-info [this new-rui]))
 
@@ -10,7 +10,8 @@
   [parent
    data
    left
-   right])
+   right
+   ruiset])
 
 (defn merge-var-term
   [val-in-result val-in-latter]
@@ -52,10 +53,11 @@
 (defn pat-seq-to-ptree
   [patseq patlist]
   (loop [root nil
-         patseq patseq]
+         patseq patseq
+         term-to-pnode-map {}]
     (binding [*print-level* 2] (println root))
     (if (empty? patseq)
-      root
+      [root term-to-pnode-map]
       (let [n (first patseq)
             nn (second patseq)]
         (if (and
@@ -63,50 +65,39 @@
               (or (nil? nn)
                   (not (share-var? n nn))))
           ;; Combine n with previous pattern.
-          (recur
-            (let [newchild (PNode. (ref nil) n nil nil)
-                  newroot (PNode. (ref nil) (list (:data root) n) root newchild)]
-              (dosync (ref-set (:parent newchild) newroot)))
-            (rest patseq))
+          (let [newchild (PNode. (ref nil) n nil nil (ref #{}))
+                newroot (PNode. (ref nil) (list (:data root) n) root newchild (ref #{}))]
+            (dosync (ref-set (:parent newchild) newroot))
+            (recur
+              newroot
+              (rest patseq)
+              (assoc term-to-pnode-map n newchild)))
           ;; Add new pair of n, nn
-          (recur
-            (if (not (nil? root))
-              ;; New root node, one child is the node with the children n and nn.
-              (let [newleft (PNode. (ref nil) n nil nil)
-                    newright (PNode. (ref nil) nn nil nil)
-                    newchild (PNode. (ref nil) (list n nn) newleft newright)
-                    newroot (PNode. (ref nil) (list (:data root) (list n nn)) root newchild)]
-                (dosync 
-                  (ref-set (:parent newchild) newroot)
-                  (ref-set (:parent newleft) newchild)
-                  (ref-set (:parent newright) newchild))
-                newroot)
-              ;; Root is nil, so this is the root.
-              (let [newleft (PNode. (ref nil) n nil nil)
-                    newright (PNode. (ref nil) nn nil nil)
-                    newroot (PNode. (ref nil) (list n nn) newleft newright)]
-                (dosync
-                  (ref-set (:parent newleft) newroot)
-                  (ref-set (:parent newright) newroot))
-                newroot))
-            (rest (rest patseq))))))))
-
-(defn walk-list
-  [inner outer form]
-  (if (list? form) 
-    (outer (apply list (map inner form)))
-    (outer form)))
-
-(defn postwalk-list 
-  [f form]
-  (walk-list (partial postwalk-list f) f form))
-
-(defn make-pnode-ruiset-map
-  [ptree]
-  (let [m (ref {})]
-    (dosync 
-      (postwalk-list (fn [x] (alter m assoc x (ref #{})) x) ptree))
-    @m))
+          (if (not (nil? root))
+            ;; New root node, one child is the node with the children n and nn.
+            (let [newleft (PNode. (ref nil) n nil nil (ref #{}))
+                  newright (PNode. (ref nil) nn nil nil (ref #{}))
+                  newchild (PNode. (ref nil) (list n nn) newleft newright (ref #{}))
+                  newroot (PNode. (ref nil) (list (:data root) (list n nn)) root newchild (ref #{}))]
+              (dosync 
+                (ref-set (:parent newchild) newroot)
+                (ref-set (:parent newleft) newchild)
+                (ref-set (:parent newright) newchild))
+              (recur
+                newroot
+                (rest (rest patseq))
+                (assoc term-to-pnode-map n newleft nn newright)))
+            ;; Root is nil, so this is the root.
+            (let [newleft (PNode. (ref nil) n nil nil (ref #{}))
+                  newright (PNode. (ref nil) nn nil nil (ref #{}))
+                  newroot (PNode. (ref nil) (list n nn) newleft newright (ref #{}))]
+              (dosync
+                (ref-set (:parent newleft) newroot)
+                (ref-set (:parent newright) newroot))
+              (recur
+                newroot
+                (rest (rest patseq))
+                (assoc term-to-pnode-map n newleft nn newright)))))))))
 
 (defn make-ptree
   [syntype fillers]
@@ -115,9 +106,8 @@
                :csneps.core/Numericalentailment (first fillers));; Only and-entailment!
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
-        ptree (pat-seq-to-ptree adj-pat-seq ants)]
-    (PTree. ptree (make-pnode-ruiset-map ptree))
-    true))
+        [ptree tpmap] (pat-seq-to-ptree adj-pat-seq ants)]
+    (PTree. ptree tpmap)))
 
 (defn test-ptree
   []
