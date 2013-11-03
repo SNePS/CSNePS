@@ -161,7 +161,7 @@
   (println)
   (list-terms :asserted true))
 
-(defn set-krnovice
+(defn krnovice
   [b]
   (dosync (ref-set build/KRNovice b)))
 
