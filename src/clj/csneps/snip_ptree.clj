@@ -1,10 +1,31 @@
 (in-ns 'csneps.snip)
 
+(declare ruis-to-promote)
+
 (defrecord PTree
   [tree
    term-to-pnode-map]
   RUIStructure
-  (get-rule-use-info [this new-rui]))
+  (get-rule-use-info [this new-rui]
+    (let [starting-pnode ((:term-to-pnode-map this) (first (first (:flaggedns new-rui))))
+          starting-ruiset (:ruiset starting-pnode)]
+      (if (@starting-ruiset new-rui)
+        ;; If we've already seen the RUI, stop now.
+        #{}
+        ;; Otherwise, lets see how far this takes us!
+        (loop [currnode starting-pnode
+               totest #{new-rui}]
+          ;; Start by adding totest to the current node.
+          ;; TODO: Do we need to filter these to check for existing? 
+          (dosync (alter (:ruiset currnode) union totest))
+          (if (nil? @(:parent currnode))
+            totest
+            (let [promote (ruis-to-promote totest currnode)]
+              (if (empty? promote)
+                #{}
+                (recur
+                  @(:parent currnode)
+                  promote)))))))))
 
 (defrecord PNode
   [parent
@@ -12,6 +33,32 @@
    left
    right
    ruiset])
+
+(defn sibling 
+  [pnode]
+  (let [parent @(:parent pnode)
+        sibling (when parent
+                  (if (= pnode (:left parent))
+                    (:right parent)
+                    (:left parent)))]
+    sibling))
+
+(defn- promote-rui-helper
+  [new-rui sibling-ruis]
+  (let [compat-ruis (filter #(compatible? % new-rui) sibling-ruis)
+        merged-ruis (set (map #(merge new-rui %) compat-ruis))]
+    merged-ruis))
+
+(defn ruis-to-promote
+  "RUIs which should be promoted to the next level. Found by collecting 
+    successful combinations with sibling RUIs."
+  [ruis pnode]
+  (let [sibling-pnode (sibling pnode)
+        sibling-ruis (when sibling-pnode @(:ruiset sibling-pnode))]
+    (if (empty? sibling-ruis)
+      #{}
+      ;; attempt to combine each RUI with each sibling RUI. TODO
+      (apply union (map #(promote-rui-helper % sibling-ruis) ruis)))))
 
 (defn merge-var-term
   [val-in-result val-in-latter]
