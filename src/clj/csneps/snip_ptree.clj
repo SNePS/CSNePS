@@ -6,6 +6,12 @@
   RUIStructure
   (get-rule-use-info [this new-rui]))
 
+(defrecord PNode
+  [parent
+   data
+   left
+   right])
+
 (defn merge-var-term
   [val-in-result val-in-latter]
   (concat val-in-result val-in-latter))
@@ -45,25 +51,44 @@
 
 (defn pat-seq-to-ptree
   [patseq patlist]
-  (loop [ptree '()
+  (loop [root nil
          patseq patseq]
+    (binding [*print-level* 2] (println root))
     (if (empty? patseq)
-      ptree
+      root
       (let [n (first patseq)
             nn (second patseq)]
         (if (and
-              (not (empty? ptree))
+              (not (nil? root))
               (or (nil? nn)
                   (not (share-var? n nn))))
           ;; Combine n with previous pattern.
           (recur
-            (list ptree n)
+            (let [newchild (PNode. (ref nil) n nil nil)
+                  newroot (PNode. (ref nil) (list (:data root) n) root newchild)]
+              (dosync (ref-set (:parent newchild) newroot)))
             (rest patseq))
           ;; Add new pair of n, nn
           (recur
-            (if (not (empty? ptree))
-              (list ptree (list n nn))
-              (list n nn))
+            (if (not (nil? root))
+              ;; New root node, one child is the node with the children n and nn.
+              (let [newleft (PNode. (ref nil) n nil nil)
+                    newright (PNode. (ref nil) nn nil nil)
+                    newchild (PNode. (ref nil) (list n nn) newleft newright)
+                    newroot (PNode. (ref nil) (list (:data root) (list n nn)) root newchild)]
+                (dosync 
+                  (ref-set (:parent newchild) newroot)
+                  (ref-set (:parent newleft) newchild)
+                  (ref-set (:parent newright) newchild))
+                newroot)
+              ;; Root is nil, so this is the root.
+              (let [newleft (PNode. (ref nil) n nil nil)
+                    newright (PNode. (ref nil) nn nil nil)
+                    newroot (PNode. (ref nil) (list n nn) newleft newright)]
+                (dosync
+                  (ref-set (:parent newleft) newroot)
+                  (ref-set (:parent newright) newroot))
+                newroot))
             (rest (rest patseq))))))))
 
 (defn walk-list
@@ -91,7 +116,8 @@
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
         ptree (pat-seq-to-ptree adj-pat-seq ants)]
-    (PTree. ptree (make-pnode-ruiset-map ptree))))
+    (PTree. ptree (make-pnode-ruiset-map ptree))
+    true))
 
 (defn test-ptree
   []
