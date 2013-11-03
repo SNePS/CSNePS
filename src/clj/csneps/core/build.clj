@@ -233,7 +233,7 @@
       (cond
        ;; Canonical transformations
         (and (= min 0) (= max tot))
-          (build 'T semtype {})
+          (build 'True semtype {})
         (= tot min max)
           (build (list* 'and (rest args)) semtype {})
         (= 0 min max)
@@ -274,7 +274,7 @@
       (cond
        ;; Canonical transformations
         (and (= min 0) (= max tot))
-          (build 'F semtype {})
+          (build 'False semtype {})
         (and (= min 0) (= max (- tot 1)))
           (build (list* 'and (rest args)) semtype {}) 
         (= min max 0)
@@ -481,9 +481,9 @@
           (dosync 
             (alter TERMS assoc expr newatom)
             (alter type-map assoc expr semtype))
-          (when (= expr 'T)
+          (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)) :hyp)
-          (when (= expr 'F)
+          (when (= expr 'False)
             (assert (build (list 'not term) :Proposition substitution)
               (ct/find-context 'BaseCT)) :hyp)
           newatom))))
@@ -561,7 +561,7 @@
                 ;; otherwise, just build the conjunct.
                 (build (second expr) semtype substitution))
             :else
-              (build 'T :csneps.core/Proposition substitution)))
+              (build 'True :csneps.core/Proposition substitution)))
 
       or
       ;; expr is (or a1 ... an)
@@ -578,7 +578,7 @@
           (build (second expr) semtype substitution)
           :else
           ;; A disjunction with no disjuncts is the False proposition
-          (build 'F :csneps.core/Term substitution)))
+          (build 'False :csneps.core/Term substitution)))
 
       xor
       ;; expr is (xor a1 ... an)
@@ -595,7 +595,7 @@
           (build (second expr) semtype substitution)
           :else
           ;; An exclusive disjunction with no disjuncts is the False proposition
-          (build 'F :csneps.core/Term substitution)))
+          (build 'False :csneps.core/Term substitution)))
       
       nand
        ;; expr is (nand a1 ... an)
@@ -615,7 +615,7 @@
            (build (list 'not (second expr)) semtype substitution)
            :else
            ;; A negatedconjunction with no arguments is the False proposition
-           (build 'F :csneps.core/Term substitution)))
+           (build 'False :csneps.core/Term substitution)))
 
       andor
        ;; expr is (andor (i j) a1 ... an)
@@ -664,10 +664,10 @@
                   cf (rest expr) :csneps.core/Equivalence semtype
                   :fsemtype (semantic-type-of (second expr))
                   :min 1 :max (- (count (first (rest expr))) 1))))
-            (build 'T :csneps.core/Term substitution))
+            (build 'True :csneps.core/Term substitution))
           :else
           ;; A iff with no fillers is the True proposition
-          (build 'T :csneps.core/Term substitution)))
+          (build 'True :csneps.core/Term substitution)))
 
        (not nor)
        ;; expr is (nor a1 ... an) or (not a1 ... an)
@@ -684,7 +684,7 @@
            ;(rest expr)		; exactly one argument
            ;  (build-canonical-negation (second expr) semtype)
            :else			; (not) = (nor) = T
-           (build 'T :csneps.core/Term substitution)))
+           (build 'True :csneps.core/Term substitution)))
 
       (thnot thnor)
       ;; expr is (thnor a1 ... an) or (thnot a1 ... an)
@@ -697,7 +697,7 @@
               cf (list fillers) :csneps.core/Negationbyfailure semtype
               :fsemtype (semantic-type-of fillers)))
           :else			; (thnot) = (thnor) = T
-          (build 'T :csneps.core/Term substitution)))
+          (build 'True :csneps.core/Term substitution)))
 
 
       setof
