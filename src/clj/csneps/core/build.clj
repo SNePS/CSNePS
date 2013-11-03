@@ -475,18 +475,19 @@
           (adjustType term (semantic-type-of term) semtype)
           (error (str "The name " expr " is not yet associated with a term.")))
       term ;Lower its semantic type, if necessary
-	 (adjustType term (semantic-type-of term) semtype)
+	    (adjustType term (semantic-type-of term) semtype)
       :else
-        (let [newatom (new-atom {:name expr})]
+        (let [term (new-atom {:name expr})]
           (dosync 
-            (alter TERMS assoc expr newatom)
+            (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype))
           (when (= expr 'True)
-            (assert term (ct/find-context 'BaseCT)) :hyp)
+            (assert term (ct/find-context 'BaseCT) :hyp))
           (when (= expr 'False)
-            (assert (build (list 'not term) :Proposition substitution)
-              (ct/find-context 'BaseCT)) :hyp)
-          newatom))))
+            (assert 
+              (build (list 'not term) :Proposition substitution)
+              (ct/find-context 'BaseCT) :hyp))
+          term))))
 
 
 (defmethod build
