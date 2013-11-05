@@ -474,8 +474,22 @@
 ;  (addTermToUnificationTree t2)
 ;  (def t3 (snuser/assert '(Isa (every x) Animal)))
 ;  (getUnifiers t3))
-  
 
+;;;;;;;;;;;;;;;;
+;;; Generics ;;;
+;;;;;;;;;;;;;;;;
+
+(defn satisfies-quantterm?
+  "If term satisfies each restriction on
+    arb, then term satisfies arb."
+  [term arb]
+  (when (and term arb)
+    (let [rs @(:restriction-set arb)]
+      (every? #(not (nil? %)) 
+              (map #(ct/asserted? 
+                      (apply-sub-to-term % {arb term}) 
+                      (ct/currentContext)) rs)))))
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Diagnostic Tools ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;
