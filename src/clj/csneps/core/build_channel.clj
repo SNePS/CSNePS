@@ -28,7 +28,7 @@
 
 (in-ns 'csneps.core.build)
 
-(declare valve-state-changed submit-to-channel new-message create-rui-structure)
+(declare valve-state-changed submit-to-channel new-message create-message-structure)
 
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
@@ -36,7 +36,7 @@
   [stc nm crs]
   (def submit-to-channel stc)
   (def new-message nm)
-  (def create-rui-structure crs))
+  (def create-message-structure crs))
 
 (defrecord2 Channel 
   [originator    nil

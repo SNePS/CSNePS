@@ -5,7 +5,7 @@
             [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
             [csneps.core.relations :as slot])
-  (:refer-clojure :exclude [merge])
+;  (:refer-clojure :exclude [merge])
   (:use [csneps.util]
         [csneps.snip.util]
         [csneps.core.build :only (term-prewalk variable?)]
@@ -27,7 +27,7 @@
 (load "snip_sort_based")
 (load "snip_path_based")
 (load "snip_slot_based")
-(load "snip_rui")
+(load "snip_message")
 (load "snip_inference_graph")
 
 (defn askif 

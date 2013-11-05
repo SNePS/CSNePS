@@ -7,18 +7,18 @@
 
 (defrecord SIndex
   [sindex] ;;A ref to a hash-map.
-  RUIStructure
-  (get-rule-use-info [this new-rui]
-    (let [old-rui (@(:sindex this) (:subst new-rui))]
-      (if old-rui
-        (let [merged-rui (merge new-rui old-rui)]
+  MessageStructure
+  (get-rule-use-info [this new-msg]
+    (let [old-msg (@(:sindex this) @(:subst new-msg))]
+      (if old-msg
+        (let [merged-msg (merge-messages new-msg old-msg)]
           ;; I don't think we need to check compatibility - 
           ;; they can't have different bindings at this point.
-          (dosync (alter (:sindex this) assoc (:subst new-rui) merged-rui))
-          #{merged-rui})
+          (dosync (alter (:sindex this) assoc (:subst new-msg) merged-msg))
+          #{merged-msg})
         (do 
-          (dosync (alter (:sindex this) assoc (:subst new-rui) new-rui))
-          #{new-rui})))))
+          (dosync (alter (:sindex this) assoc (:subst new-msg) new-msg))
+          #{new-msg})))))
 
 (defn make-sindex
   []

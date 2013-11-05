@@ -1,26 +1,26 @@
 (in-ns 'csneps.snip)
 
-(declare ruis-to-promote)
+(declare msgs-to-promote)
 
 (defrecord PTree
   [tree
    term-to-pnode-map]
-  RUIStructure
-  (get-rule-use-info [this new-rui]
-    (let [starting-pnode ((:term-to-pnode-map this) (first (first (:flaggedns new-rui))))
-          starting-ruiset (:ruiset starting-pnode)]
-      (if (@starting-ruiset new-rui)
-        ;; If we've already seen the RUI, stop now.
+  MessageStructure
+  (get-rule-use-info [this new-msg]
+    (let [starting-pnode ((:term-to-pnode-map this) (first (first (:flaggedns new-msg))))
+          starting-msgset (:msgset starting-pnode)]
+      (if (@starting-msgset new-msg)
+        ;; If we've already seen the message, stop now.
         #{}
         ;; Otherwise, lets see how far this takes us!
         (loop [currnode starting-pnode
-               totest #{new-rui}]
+               totest #{new-msg}]
           ;; Start by adding totest to the current node.
           ;; TODO: Do we need to filter these to check for existing? 
-          (dosync (alter (:ruiset currnode) union totest))
+          (dosync (alter (:msgset currnode) union totest))
           (if (nil? @(:parent currnode))
             totest
-            (let [promote (ruis-to-promote totest currnode)]
+            (let [promote (msgs-to-promote totest currnode)]
               (if (empty? promote)
                 #{}
                 (recur
@@ -32,7 +32,7 @@
    data
    left
    right
-   ruiset])
+   msgset])
 
 (defn sibling 
   [pnode]
@@ -43,22 +43,21 @@
                     (:left parent)))]
     sibling))
 
-(defn- promote-rui-helper
-  [new-rui sibling-ruis]
-  (let [compat-ruis (filter #(compatible? % new-rui) sibling-ruis)
-        merged-ruis (set (map #(merge new-rui %) compat-ruis))]
-    merged-ruis))
+(defn- promote-msg-helper
+  [new-msg sibling-msgs]
+  (let [compat-msgs (filter #(compatible? % new-msg) sibling-msgs)
+        merged-msgs (set (map #(merge new-msg %) compat-msgs))]
+    merged-msgs))
 
-(defn ruis-to-promote
-  "RUIs which should be promoted to the next level. Found by collecting 
-    successful combinations with sibling RUIs."
-  [ruis pnode]
+(defn msgs-to-promote
+  "Messages which should be promoted to the next level. Found by collecting 
+    successful combinations with sibling messages."
+  [msgs pnode]
   (let [sibling-pnode (sibling pnode)
-        sibling-ruis (when sibling-pnode @(:ruiset sibling-pnode))]
-    (if (empty? sibling-ruis)
+        sibling-msgs (when sibling-pnode @(:msgset sibling-pnode))]
+    (if (empty? sibling-msgs)
       #{}
-      ;; attempt to combine each RUI with each sibling RUI. TODO
-      (apply union (map #(promote-rui-helper % sibling-ruis) ruis)))))
+      (apply union (map #(promote-msg-helper % sibling-msgs) msgs)))))
 
 (defn merge-var-term
   [val-in-result val-in-latter]

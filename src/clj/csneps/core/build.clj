@@ -16,7 +16,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels create-rui-structure generic-term?)
+(declare assert build check-and-build-variables build-channels create-message-structure generic-term?)
 
 (load "build_assert")
 (load "build_utils")
@@ -190,7 +190,7 @@
                                                         :down-cableset dcs-sets
                                                         :min (if (nil? min) 0 min)
                                                         :max (if (nil? max) 0 max)
-                                                        :ruis (create-rui-structure syntype dcs-sets)})]
+                                                        :msgs (create-message-structure syntype dcs-sets)})]
                  (initialize-syntype wft)
                  (dosync 
                    (alter TERMS assoc (:name wft) wft)

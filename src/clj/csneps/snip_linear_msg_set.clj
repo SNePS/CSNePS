@@ -2,19 +2,19 @@
 
 ;; This is the worst case, combinatorial algorithm. 
 
-(defrecord LinearRUISet
-  [rui-set] ;;A ref to a set.
-  RUIStructure
-  (get-rule-use-info [this new-rui]
-    ;; if new-rui isn't actually new, return empty set.
+(defrecord LinearMessageSet
+  [msg-set] ;;A ref to a set.
+  MessageStructure
+  (get-rule-use-info [this new-msg]
+    ;; if new-msg isn't actually new, return empty set.
     (dosync
-      (if (@(:rui-set this) new-rui)
+      (if (@(:msg-set this) new-msg)
         #{}
-        (let [compat-ruis (filter #(compatible? % new-rui) @(:rui-set this))
-              merged-ruis (set (map #(merge new-rui %) compat-ruis))]
-          (alter (:rui-set this) union merged-ruis #{new-rui})
-          (conj merged-ruis new-rui))))))
+        (let [compat-msgs (filter #(compatible? % new-msg) @(:msg-set this))
+              merged-msgs (set (map #(merge-messages new-msg %) compat-msgs))]
+          (alter (:msg-set this) union merged-msgs #{new-msg})
+          (conj merged-msgs new-msg))))))
 
-(defn make-linear-rui-set
+(defn make-linear-msg-set
   []
-  (LinearRUISet. (ref #{})))
+  (LinearMessageSet. (ref #{})))

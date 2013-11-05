@@ -219,7 +219,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -238,7 +238,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -260,7 +260,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -282,7 +282,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -304,7 +304,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -326,7 +326,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -348,7 +348,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -370,7 +370,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -392,7 +392,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -414,7 +414,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -433,7 +433,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -452,7 +452,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -471,7 +471,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -490,7 +490,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -509,7 +509,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
@@ -528,7 +528,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
-   ruis (ref nil)
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Molecular
