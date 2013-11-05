@@ -20,8 +20,8 @@
 
 (load "build_assert")
 (load "build_utils")
-(load "build_subsumption")
 (load "build_substitution")
+(load "build_subsumption")
 (load "build_unification")
 (load "build_find")
 (load "build_channel")

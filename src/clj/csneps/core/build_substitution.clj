@@ -2,6 +2,8 @@
 
 (in-ns 'csneps.core.build)
 
+(declare structurally-subsumes-varterm)
+
 (defn apply-sub-to-term
   "Apply a substitution to a term."
   ([term sub] (apply-sub-to-term variable? term sub))

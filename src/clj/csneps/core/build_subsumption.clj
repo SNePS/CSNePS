@@ -11,8 +11,13 @@
    children (ref '[])])
 
 (defn restriction-subset?
+  "Does term1 have a subset of the restrictins of term2?"
   [term1 term2]
-  (set/subset? @(:restriction-set term1) @(:restriction-set term2)))
+  (let [rs1 @(:restriction-set term1)]
+    (every? #(not (nil? %))
+            (map #(ct/asserted? 
+                    (apply-sub-to-term % {term1 term2}) 
+                    (ct/currentContext)) rs1))))
 
 (defn insert
   [arb]
