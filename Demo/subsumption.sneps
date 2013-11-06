@@ -1,0 +1,126 @@
+;; Subsumption examples from the old version of SNePS 3.
+
+(in-ns 'csneps.core.snuser)
+
+(clearkb true)
+
+;;; Define Types
+(defineType Agent (Thing) "Individuals that have agency")
+(defineType Action (Thing) "Actions that Agents can perform.")
+
+;;; Define Slots
+(defineSlot agent :type Agent)
+(defineSlot object :type Thing
+	    :docstring "Non-agentive objects of actions.")
+(defineSlot property :type Thing)
+(defineSlot life :type Thing)
+(defineSlot whole :type Thing)
+(defineSlot part :type Thing)
+(defineSlot group :type Thing)
+(defineSlot entity1 :type Agent)
+(defineSlot entity2 :type Agent)
+ 
+;;; Caseframes
+
+(defineCaseframe 'Proposition '('Owns agent object)
+  :docstring "[agent] owns [object]")
+
+(defineCaseframe 'Proposition '('Beats agent life)
+  :docstring "[agent] beats [object]")
+
+(defineCaseframe 'Proposition '('Property object property)
+  :docstring "[object] has property [property]")
+
+(defineCaseframe 'Proposition '('isPartOf part whole)
+  :docstring "[part] is part of [whole]")
+
+(defineCaseframe 'Proposition '(rel entity1 entity2)
+  :fsymbols '(Parent Son)
+  :docstring "[entity1] bears the relation [rel] to [entity2].")
+
+;;; Every elephant is large.
+(assert '(Property
+           (every x (Isa x Elephant))
+           Large))
+
+;;; Every albino elephant should be large.
+(ask '(Property
+        (every x (Isa x Elephant) (Property x Albino))
+        Large))
+
+;;; Every elephant has a trunk
+(assert '(isPartOf 
+	  (some y(x) (Isa y Trunk))
+	  (every x (Isa x Elephant))))
+
+;;; Albino elephants are valuable
+(assert '(Property 
+           (every x (Isa x Elephant) (Property x Albino)) 
+           Valuable))
+
+;;; A trunk of every elephant is flexible
+(assert '(Property (some y(x) (Isa y Trunk) 
+		    (isPartOf y (every x (Isa x Elephant))))
+	           Flexible))
+
+;;; Grey elephants are common
+(assert '(Property
+           (every x (Isa x Elephant) (Property x Grey))
+           Common))
+
+;;; Some grey elephant should be large.
+(ask '(Property 
+        (some x() (Isa x Elephant) (Property x Grey))
+        Large))
+
+;;; Some elephant should be valuable.
+(ask '(Property
+        (some x() (Isa x Elephant))
+        Valuable))
+
+;;; Every animal that has a trunk is an elephant.
+;;; This example involves arbitrary objects
+;;;   with indefinite objects in their restrictions
+(assert '(Isa 
+           (every x (Isa x Animal) (isPartOf (some y(x) (Isa y Trunk)) x))
+           Elephant))
+
+;;; Every animal that has a long trunk is amazing.
+(assert '(Property
+           (every x (Isa x Animal)
+                    (isPartOf (some y(x) (Isa y Trunk) 
+                                         (Property y Long))
+                     x))
+           Amazing))
+
+;;; The arbitrary animal with a long trunk should be an elephant
+;;; This requires subsumption among arbitrary objects
+;;;    with indefinite objects in their restrictions.
+(ask '(Isa 
+        (every x (Isa x Animal)
+                 (isPartOf (some y(x) (Isa y Trunk) 
+                                      (Property y Long))
+                           x))
+        Elephant))
+
+;;; Woods' example:
+;;; [person whose sons are professionals]
+;;; subsumes [woman whose sons are doctors]
+;;; For structural subsumption, a woman is a person who's female,
+;;; and a doctor is a professional who's a doctor.
+;;;
+;;; Any person whose sons are professionals is proud.
+(assert '(Property
+           (every x (Isa x Person)
+                    (Isa (every y (Son y x)) Professional))
+           Proud))
+
+;;; Any woman whose sons are doctors should be proud.
+(ask '(Property
+        (every x (Isa x Person)
+                 (Property x Female)
+                 (Isa (every y (Son y x)) Professional)
+                 (Isa y Doctor))
+        Proud))
+
+
