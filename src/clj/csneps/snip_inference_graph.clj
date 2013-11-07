@@ -692,7 +692,7 @@
         #{}))))
 
 (defn cancel-infer-of [term]
-  (cancel-infer term))
+  (cancel-infer (get-term term)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
