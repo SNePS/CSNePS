@@ -91,20 +91,19 @@
   
   ;; Filter
   (when ((:filter-fn channel) @(:subst message))
-	  ;; Switch
-	  (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:subst message))))))
-	  (dosync (ref-set (:subst message) ((:switch-fn channel) @(:subst message))))
-	  
-	  (when (:fwd-infer? message)
-	    (open-valve channel))
-	  (if (build/valve-open? channel)
-	    ;; Process as usual.
+    ;; Switch
+    (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:subst message))))))
+    (dosync (ref-set (:subst message) ((:switch-fn channel) @(:subst message))))
+    
+    (if (or (:fwd-infer? message) (build/valve-open? channel))
+	    ;; Process the message immediately. For forward infer, this ammounts to 
+      ;; ignoring the status of the valve.
 	    (do 
 	      (send to-infer inc)
 	      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
-	      (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) message))
-	      nil)
-	    ;; Cache in the waiting-msgs
+	      (.execute ^ThreadPoolExecutor executorService 
+          (priority-partial 1 initiate-node-task (:destination channel) message)))
+       ;; Cache in the waiting-msgs
 	    (dosync (alter (:waiting-msgs channel) conj message)))))
 
 (defn submit-assertion-to-channels
@@ -202,8 +201,9 @@
   [term]
   ;; We need to pretend that a Y-INFER message came in to this node.
   (send to-infer inc)
-  (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task term 
-                                              (new-message {:origin nil, :support-set #{}, :type 'Y-INFER, :fwd-infer? true}))))
+  (.execute ^ThreadPoolExecutor executorService 
+    (priority-partial 1 initiate-node-task term 
+                      (new-message {:origin nil, :support-set #{}, :type 'Y-INFER, :fwd-infer? true}))))
 
 (defn unassert
   "Move forward through the graph recursively unasserting terms which depend on this one."
@@ -692,7 +692,7 @@
         #{}))))
 
 (defn cancel-infer-of [term]
-  (cancel-infer (get-term term)))
+  (cancel-infer (csneps/get-term term)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
