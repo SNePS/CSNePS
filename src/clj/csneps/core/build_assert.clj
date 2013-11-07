@@ -26,6 +26,19 @@
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (first vars)))
 
+(defn check-contradiction
+  "Raise a warning if the newly asserted proposition, p
+   constitutes a contradiction in the given context."
+  [p context]
+  (let [negs (findfrom p (slot/find-slot 'nor))]
+    (doseq [n negs]
+      (when (ct/asserted? n context)
+        (println "Warning:" p "and" n "contradict!"))))
+  (let [negs (findto p (slot/find-slot 'nor))]
+    (doseq [n negs]
+      (when (ct/asserted? n context)
+        (println "Warning:" p "and" n "contradict!")))))
+
 (defmulti assert
   (fn [expr context origintag] [(type-of expr)]))
 
@@ -63,7 +76,8 @@
     (if (not (ct/asserted? expr ct))
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr)))))
+        :der (dosync (commute (:ders ct) conj expr))))
+    (check-contradiction expr ct))
   expr)
 
 (defmethod assert
@@ -73,7 +87,8 @@
     (if (not (ct/asserted? expr ct))
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr)))))
+        :der (dosync (commute (:ders ct) conj expr))))
+    (check-contradiction expr ct))
   expr)
 
 (defn unassert
