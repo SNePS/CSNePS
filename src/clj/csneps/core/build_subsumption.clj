@@ -77,6 +77,7 @@
   (let [parents (find-lattice-parents arb)
         node (new-tree-node {:data arb :parents (ref parents)})]
     (adjust-lattice-children node parents)
+    (dosync (ref-set (:lattice-node arb) node))
     (if (empty? parents)
       (dosync (alter subsumption-lattice conj node))
       (dosync 
