@@ -95,6 +95,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn print-lattice-contents
-  [])
+  []
+  (doseq [arb @ARBITRARIES]
+    (let [node @(:lattice-node arb)
+          print-parents (for [p @(:parents node)] (:data p))
+          print-children (for [c @(:children node)] (:data c))]
+      (println (:data node) "- Parents:" print-parents "- Children:" print-children))))
 
 
