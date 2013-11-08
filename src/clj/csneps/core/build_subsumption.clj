@@ -22,11 +22,11 @@
                     (apply-sub-to-term % {term1 term2}) 
                     (ct/currentContext)) rs1))))
 
-(defn restriction-subset-list
-  [terms term2]
-  (for [term1 terms
-        :when (restriction-subset? term1 term2)]
-    term1))
+(defn restriction-subset-nodelist
+  [nodes term2]
+  (for [node nodes
+        :when (restriction-subset? (:data node) term2)]
+    node))
 
 (defn- find-lattice-parents
   [arb]
@@ -37,13 +37,13 @@
   ;; are added to the nodes list. Since
   ;; arb can have multiple parents, we must continue until
   ;; nodes is empty. 
-  (loop [nodes (restriction-subset-list @subsumption-lattice arb)
-         parents nil] 
+  (loop [nodes (restriction-subset-nodelist @subsumption-lattice arb)
+         parents '[]] 
     (if (empty? nodes)
       parents
       (let [node (first nodes)
-            satchildren (if (:children node)
-                          (restriction-subset-list (:children node))
+            satchildren (if (not (empty? @(:children node)))
+                          (restriction-subset-nodelist @(:children node) arb)
                           '())]
         (if (empty? satchildren)
           (recur
@@ -75,8 +75,13 @@
 (defn lattice-insert 
   [arb] 
   (let [parents (find-lattice-parents arb)
-        node (new-tree-node {:data arb :parents parents})]
-    (adjust-lattice-children node parents)))
+        node (new-tree-node {:data arb :parents (ref parents)})]
+    (adjust-lattice-children node parents)
+    (if (empty? parents)
+      (dosync (alter subsumption-lattice conj node))
+      (dosync 
+        (doseq [p parents]
+          (alter (:children p) conj node))))))
 
 (defn structurally-subsumes-vars
   "var1 structurally subsumes var2 if var1 has a subset of
@@ -84,5 +89,11 @@
   [var1 var2]
   (restriction-subset? var1 var2))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Test Utility Functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn print-lattice-contents
+  [])
 
 

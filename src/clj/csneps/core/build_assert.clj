@@ -1,5 +1,7 @@
 (in-ns 'csneps.core.build)
 
+(declare lattice-insert)
+
 (defn variable-parse-and-build
   "Given a top-level build expression, checks that expression for
    variable terms syntax (e.g., every, some). These terms are built and
@@ -12,7 +14,8 @@
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
         (build rst :AnalyticGeneric {})
-        (assert rst (ct/find-context 'BaseCT) :hyp)))
+        (assert rst (ct/find-context 'BaseCT) :hyp))
+      (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
 
 (defn build-variable 
