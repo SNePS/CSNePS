@@ -78,23 +78,6 @@
         node (new-tree-node {:data arb :parents parents})]
     (adjust-lattice-children node parents)))
 
-(defn insert
-  [arb]
-  (loop [parent nil
-         nodes @subsumption-lattice]
-    (cond
-      (empty? nodes)
-      (dosync (alter (or (:children parent)
-                         subsumption-lattice)
-                     conj (new-tree-node {:data arb})))
-      (restriction-subset? (:data (first nodes)) arb)
-      (recur (first nodes)
-             @(:children (first nodes)))
-      :else
-      (recur parent
-             (rest nodes)))))
-  
-
 (defn structurally-subsumes-vars
   "var1 structurally subsumes var2 if var1 has a subset of
    var2's restrictions."
