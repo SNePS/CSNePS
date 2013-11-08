@@ -441,7 +441,7 @@
         termchain (addTermToUnificationTree term :distnodes tempdist)
         unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
                    (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
-    (when-not (empty? unifiers) (println unifiers))
+    ;(when-not (empty? unifiers) (println unifiers))
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
