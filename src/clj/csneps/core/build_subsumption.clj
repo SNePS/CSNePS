@@ -1,88 +1,150 @@
 (in-ns 'csneps.core.build)
 
-;;; There are many issues still to be worked out. 
+(declare omega)
 
-;;; In my formulatuon of the lattice, there may be multiple roots.
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Lattice Structure ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;;; I don't believe there can be cycles, but I'm not sure. 
-;;; Some TBox implementations in DL do allow for cycles - I'm not sure we want/need that.
-;;; There is no "most general term" or "most specific term" shared by all terms.
-(def subsumption-lattice(ref '[]))
-
-(defrecord2 TreeNode 
+;;; Some TBox implementations in DL do allow for cycles -
+;;; I'm not sure we want/need that.
+(defrecord2 LatticeNode 
   [data nil 
-   parents (ref '[])
-   children (ref '[])])
+   parents (ref #{})
+   children (ref #{})])
+
+;;; omega is subsumed by every term - it is more specific than
+;;; every thing else, by definition.
+(def omega (new-lattice-node {:data 'OMEGA}))
+
+;;; In my formulatuon of the lattice, there may be multiple roots, 
+;;; there is no 'most general term'.
+(def subsumption-lattice (ref [omega]))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;; Implementation ;;;
+;;;;;;;;;;;;;;;;;;;;;;
 
 (defn restriction-subset?
   "Does term1 have a subset of the restrictins of term2?"
   [term1 term2]
-  (let [rs1 @(:restriction-set term1)]
-    (every? #(not (nil? %))
-            (map #(ct/asserted? 
-                    (apply-sub-to-term % {term1 term2}) 
-                    (ct/currentContext)) rs1))))
+  (cond 
+    (= term2 'OMEGA)
+    true
+    (= term1 'OMEGA)
+    false
+    :else
+    (let [rs1 @(:restriction-set term1)]
+      (every? #(not (nil? %))
+              (map #(ct/asserted? 
+                      (apply-sub-to-term % {term1 term2}) 
+                      (ct/currentContext)) rs1)))))
 
-(defn restriction-subset-nodelist
+(defn restriction-nodelist-subset
   [nodes term2]
   (for [node nodes
         :when (restriction-subset? (:data node) term2)]
     node))
 
-(defn- find-lattice-parents
+(defn restriction-subset-nodelist
+  [term1 nodes]
+  (for [node nodes
+        :when (restriction-subset? term1 (:data node))]
+    node))
+
+(defn- find-lattice-children
   [arb]
-  ;; Explore the children of each item in nodes recursively.
-  ;; If an item in nodes does not have any children that 
-  ;; subsume arb, then the item is a parent of arb. If the
-  ;; item in nodes does have children that subsume arb, those
+  ;; Explore the parents of omega recursively.
+  ;; If an item in nodes does not have any parents that 
+  ;; subsume arb, then the item is a child of arb. If the
+  ;; item in nodes does have parents that subsume arb, those
   ;; are added to the nodes list. Since
-  ;; arb can have multiple parents, we must continue until
+  ;; arb can have multiple children, we must continue until
   ;; nodes is empty. 
-  (loop [nodes (restriction-subset-nodelist @subsumption-lattice arb)
-         parents '[]] 
-    (if (empty? nodes)
-      parents
+  (loop [nodes (restriction-subset-nodelist arb @(:parents omega))
+         children '#{}]
+    (if (empty? nodes) 
+      children
       (let [node (first nodes)
-            satchildren (if (not (empty? @(:children node)))
-                          (restriction-subset-nodelist @(:children node) arb)
-                          '())]
-        (if (empty? satchildren)
+            satparents (if (not (empty @(:parents node)))
+                         (restriction-subset-nodelist arb @(:parents node))
+                         '())]
+        (if (empty? satparents)
           (recur
             (rest nodes)
-            (conj parents node))
+            (conj children node))
           (recur
-            (concat (rest nodes) satchildren)
-            parents))))))
+            (concat (rest nodes) satparents)
+            children))))))
 
-(defn- adjust-lattice-children-helper
-  [node parent]
-  (let [pchildren @(:children parent)]
-    (doseq [pchild pchildren]
-      (when (restriction-subset? (:data node) (:data pchild))
-        (dosync 
-          (ref-set (:parents pchild)
-                   (-> 
-                     (->> @(:parents pchild) (remove #{parent}))
-                     (conj node)))
-          (alter (:children node) conj pchild))))))
-
-(defn adjust-lattice-children
-  [node parents] 
-  ;; Move the children of each item in parents
-  ;; which is now the child of node, by determining
-  ;; if (:data node) subsumes each child of the parent.
-  (map #(adjust-lattice-children-helper node %) parents))
+(defn- adjust-lattice-parents-helper
+  "Given a to-be-child of node, determine which of its
+   parents subsume node, and update the relationships between
+   those parents and node."
+  [node child]
+  (let [cparents @(:parents child)]
+    ;; If cparents are empty, then node is the new parent. 
+    (if (empty? cparents)
+      (dosync 
+        (ref-set subsumption-lattice
+                 (-> 
+                   (->> @subsumption-lattice (remove #{child}))
+                   (conj node)))
+        (alter (:parents child) conj node))
+      (doseq [cparent cparents]
+        ;; When this matches, cparent is now a parent of node.
+        ;; So, cparent needs to be removed as a parent of child,
+        ;; and added as a parent of node.
+        (println (:data cparent) ":" (:data node))
+        (when (restriction-subset? (:data cparent) (:data node))
+          (dosync 
+            (ref-set (:parents child)
+                     (->
+                       (->> @(:parents child) (remove #{cparent}))
+                       (conj node)))
+            (ref-set (:children cparent)
+                     (->
+                       (->> @(:children cparent) (remove #{child}))
+                       (conj node)))
+            (alter (:parents node) conj cparent)))))))
+  
+(defn adjust-lattice-parents
+  [node children] 
+  ;; Move the parents of each item in children
+  ;; which is now the parent of node
+  (doseq [c children]
+    (adjust-lattice-parents-helper node c)))
 
 (defn lattice-insert 
   [arb] 
-  (let [parents (find-lattice-parents arb)
-        node (new-tree-node {:data arb :parents (ref parents)})]
-    (adjust-lattice-children node parents)
+  (let [children (find-lattice-children arb)
+        node (new-lattice-node {:data arb :children (ref children)})]
+    (doseq [c children] (println "Child:" (:data c)))
     (dosync (ref-set (:lattice-node arb) node))
-    (if (empty? parents)
-      (dosync (alter subsumption-lattice conj node))
-      (dosync 
-        (doseq [p parents]
-          (alter (:children p) conj node))))))
+    (if (empty? children)
+      ;; From the parents of omega, determine if 
+      ;; any of them subsume this node.
+      (let [parents (restriction-nodelist-subset @(:parents omega) arb)]
+        (dosync 
+          (ref-set (:children node) #{omega})
+          (alter (:parents omega) conj node))
+        ;(println parents)
+        (if (empty? parents)
+          (dosync (alter subsumption-lattice conj node))
+          (doseq [p parents]
+            (dosync 
+              (ref-set (:children p) #{node})
+              (alter (:parents node) conj p)
+              (ref-set (:parents omega) (remove #{p} @(:parents omega)))))))
+      ;; Children need updating.
+      (do 
+        ;; 
+        (adjust-lattice-parents node children)
+        ;; Node is now the parent of each child.
+        (dosync
+          (doseq [c children]
+            (alter (:children node) conj c)))))))
 
 (defn structurally-subsumes-vars
   "var1 structurally subsumes var2 if var1 has a subset of
@@ -101,5 +163,4 @@
           print-parents (for [p @(:parents node)] (:data p))
           print-children (for [c @(:children node)] (:data c))]
       (println (:data node) "- Parents:" print-parents "- Children:" print-children))))
-
 
