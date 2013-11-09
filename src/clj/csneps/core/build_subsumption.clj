@@ -78,73 +78,54 @@
             (concat (rest nodes) satparents)
             children))))))
 
-(defn- adjust-lattice-parents-helper
-  "Given a to-be-child of node, determine which of its
-   parents subsume node, and update the relationships between
-   those parents and node."
-  [node child]
-  (let [cparents @(:parents child)]
-    ;; If cparents are empty, then node is the new parent. 
-    (if (empty? cparents)
-      (dosync 
-        (ref-set subsumption-lattice
-                 (-> 
-                   (->> @subsumption-lattice (remove #{child}))
-                   (conj node)))
-        (alter (:parents child) conj node))
-      (doseq [cparent cparents]
-        ;; When this matches, cparent is now a parent of node.
-        ;; So, cparent needs to be removed as a parent of child,
-        ;; and added as a parent of node.
-        (println (:data cparent) ":" (:data node))
-        (when (restriction-subset? (:data cparent) (:data node))
-          (dosync 
-            (ref-set (:parents child)
-                     (->
-                       (->> @(:parents child) (remove #{cparent}))
-                       (conj node)))
-            (ref-set (:children cparent)
-                     (->
-                       (->> @(:children cparent) (remove #{child}))
-                       (conj node)))
-            (alter (:parents node) conj cparent)))))))
-  
-(defn adjust-lattice-parents
-  [node children] 
-  ;; Move the parents of each item in children
-  ;; which is now the parent of node
-  (doseq [c children]
-    (adjust-lattice-parents-helper node c)))
+
+(defn- find-lattice-parents
+  [arb]
+  ;; Explore the children of each item in nodes recursively.
+  ;; If an item in nodes does not have any children that 
+  ;; subsume arb, then the item is a parent of arb. If the
+  ;; item in nodes does have children that subsume arb, those
+  ;; are added to the nodes list. Since
+  ;; arb can have multiple parents, we must continue until
+  ;; nodes is empty. 
+  (loop [nodes (restriction-nodelist-subset @subsumption-lattice arb)
+         parents '#{}] 
+    (if (empty? nodes)
+      parents
+      (let [node (first nodes)
+            satchildren (if (not (empty? @(:children node)))
+                          (restriction-nodelist-subset @(:children node) arb)
+                          '())]
+        (if (empty? satchildren)
+          (recur
+            (rest nodes)
+            (conj parents node))
+          (recur
+            (concat (rest nodes) satchildren)
+            parents))))))
 
 (defn lattice-insert 
   [arb] 
-  (let [children (find-lattice-children arb)
-        node (new-lattice-node {:data arb :children (ref children)})]
-    (doseq [c children] (println "Child:" (:data c)))
+  (let [parents (find-lattice-parents arb)
+        children (find-lattice-children arb)
+        node (new-lattice-node {:data arb 
+                                :parents (ref parents)
+                                :children (ref (if (empty? children)
+                                                 #{omega}
+                                                 children))})]
     (dosync (ref-set (:lattice-node arb) node))
+    (if (empty? parents)
+      (dosync (alter subsumption-lattice conj node))
+      (dosync
+        (doseq [p parents]
+          (ref-set (:children p) 
+                   (conj (remove (conj children omega) @(:children p)) node)))))
     (if (empty? children)
-      ;; From the parents of omega, determine if 
-      ;; any of them subsume this node.
-      (let [parents (restriction-nodelist-subset @(:parents omega) arb)]
-        (dosync 
-          (ref-set (:children node) #{omega})
-          (alter (:parents omega) conj node))
-        ;(println parents)
-        (if (empty? parents)
-          (dosync (alter subsumption-lattice conj node))
-          (doseq [p parents]
-            (dosync 
-              (ref-set (:children p) #{node})
-              (alter (:parents node) conj p)
-              (ref-set (:parents omega) (remove #{p} @(:parents omega)))))))
-      ;; Children need updating.
-      (do 
-        ;; 
-        (adjust-lattice-parents node children)
-        ;; Node is now the parent of each child.
-        (dosync
-          (doseq [c children]
-            (alter (:children node) conj c)))))))
+      (dosync (alter (:parents omega) conj node))
+      (dosync
+        (doseq [c children]
+          (ref-set (:parents c)
+                   (conj (remove parents @(:parents c)) node)))))))
 
 (defn structurally-subsumes-vars
   "var1 structurally subsumes var2 if var1 has a subset of
