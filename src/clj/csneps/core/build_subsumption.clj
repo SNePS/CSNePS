@@ -127,11 +127,30 @@
           (ref-set (:parents c)
                    (conj (remove parents @(:parents c)) node)))))))
 
-(defn structurally-subsumes-vars
-  "var1 structurally subsumes var2 if var1 has a subset of
-   var2's restrictions."
-  [var1 var2]
-  (restriction-subset? var1 var2))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Subsumption Functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; Returns true if term1 subsumes term2.
+(defmulti subsumes?
+  (fn [term1 term2] [(syntactic-type-of term1) (syntactic-type-of term2)]))
+
+(defmethod subsumes?
+  [:csneps.core/Arbitrary :csneps.core/Arbitrary] [term1 term2]
+  (restriction-subset? term1 term2))
+
+(defmethod subsumes?
+  [:csneps.core/Indefinite :csneps.core/Indefinite] [term1 term2]
+  (restriction-subset? term1 term2))
+
+(defmethod subsumes? 
+  [:csneps.core/Arbitrary :csneps.core/Indefinite] [term1 term2]
+  ;; Any elephant subsumes some albino elephant.
+  (or 
+    ;; Any elephant subsumes some albino elephant.
+    (restriction-subset? term1 term2)
+    ;; Any albino elephant subsumes some elephant.
+    (restriction-subset? term2 term1)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Test Utility Functions ;;;
