@@ -82,7 +82,9 @@
 ;;; This example involves arbitrary objects
 ;;;   with indefinite objects in their restrictions
 (assert '(Isa 
-           (every x (Isa x Animal) (isPartOf (some y(x) (Isa y Trunk)) x))
+           (every x (Isa x Animal) 
+                    (isPartOf (some y(x) (Isa y Trunk)) 
+                              x))
            Elephant))
 
 ;;; Every animal that has a long trunk is amazing.
@@ -90,7 +92,7 @@
            (every x (Isa x Animal)
                     (isPartOf (some y(x) (Isa y Trunk) 
                                          (Property y Long))
-                     x))
+                              x))
            Amazing))
 
 ;;; The arbitrary animal with a long trunk should be an elephant
