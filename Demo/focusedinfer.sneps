@@ -1,0 +1,15 @@
+;;; focusedinfer.sneps
+;;; Demos for Focused Inference
+;;; By: Daniel R. Schlegel
+;;; Created: 11/7/2013
+;;; Modified: 11/7/2013
+
+(clearkb true)
+
+;;; Simple example.
+(assert '(if p q))
+(assert '(xor q r s))
+;; Ask question which can't be answered, but opens channels.
+(ask 'r)
+;; Assert information to flow forward.
+(assert 'p)
