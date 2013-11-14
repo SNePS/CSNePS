@@ -16,7 +16,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels create-message-structure generic-term?)
+(declare assert build check-and-build-variables build-channels build-unifier-channels create-message-structure generic-term?)
 
 (load "build_assert")
 (load "build_utils")
@@ -87,6 +87,15 @@
      conditions of filler-generic?, then we say they all do."
   [fillers]
   (some filler-generic? fillers))
+
+(defn generic-fillers
+  "Returns the generic fillers in term-or-termset"
+  [term-or-termset]
+  (let [gt (fn [term] (when (or (generic-term? term) (isa? (type-of term) :csneps.core/Arbitrary))
+                         term))]
+    (if (set? term-or-termset)
+      (remove nil? (doall (map gt term-or-termset)))
+      (remove nil? (list (gt term-or-termset))))))
 
 (defn ientaili
   "Assuming that i=> satisfies #'ientailsymb?,
@@ -197,11 +206,8 @@
                    (alter type-map assoc (:name wft) (:type cf)))
 
                  ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
-                 (doseq [unif (getUnifiers wft)
-                         :let [ch (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]]
-                   (dosync 
-                     (alter (:i-channels (:source unif)) conj ch) ;; [drs] changed to i from y... Not sure why it was y?
-                     (alter (:ant-in-channels (:target unif)) conj ch)))
+                 (doseq [unif (getUnifiers wft)]
+                   (build-unifier-channels unif))
                  (addTermToUnificationTree wft)
 
                  (cf/add-caseframe-term wft :cf cf)
@@ -323,6 +329,35 @@
                          :fsemtype semtype :min i))]
             term)))))
 
+(defn build-quantterm-channels
+  "Channels are built from each restriction, to the quantified term."
+  [quantterm]
+  (doseq [r @(:restriction-set quantterm)
+          :let [ch (build-channel r quantterm nil nil)]]
+    (dosync
+      (alter (:i-channels r) conj ch)
+      (alter (:ant-in-channels quantterm) conj ch))))
+
+(defn build-unifier-channels
+  "Channels built between unifiable terms."
+  [unif]
+  (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))
+        t->s (build-channel (:target unif) (:source unif) (:targetbind unif) (:sourcebind unif))]
+    (cond
+      (or (= (semantic-type-of (:source unif)) :AnalyticGeneric)
+          (= (semantic-type-of (:target unif)) :AnalyticGeneric))
+      (dosync 
+        (alter (:i-channels (:source unif)) conj s->t)
+        (alter (:i-channels (:target unif)) conj t->s)
+        (alter (:ant-in-channels (:target unif)) conj s->t)
+        (alter (:ant-in-channels (:source unif)) conj t->s))
+      :else ;; This case still needs to be worked out.
+      (dosync 
+        (alter (:i-channels (:source unif)) conj s->t)
+        (alter (:ant-in-channels (:target unif)) conj s->t)))))
+  
+  
+
 (defn build-internal-channels
   [rnode ants cqs]
   ;; Build the i-channels
@@ -399,11 +434,15 @@
                                          (rest fixed-expr)
                                          fixed-expr)
                                        (:slots cf))]
-                    (build arg (:type rel) substitution))]
-      (build-molecular-node cf fillers :csneps.core/Molecular 
-                            (if (fillers-generic? fillers) 
-                              :Generic 
-                              semtype)))))
+                    (build arg (:type rel) substitution))
+          genfills (generic-fillers (set fillers))
+          molnode (build-molecular-node cf fillers :csneps.core/Molecular 
+                                        (if (not (empty? genfills))
+                                          :Generic
+                                          semtype))]
+      (when (not (empty? genfills))
+        (build-internal-channels molnode genfills))
+      molnode)))
 
 (defmulti build
   (fn [expr semtype substitution] [(type-of expr)]))
@@ -539,12 +578,18 @@
           (when (not (= (count expr) 3))
             (error (str "Isa must take 2 arguments. It doesn't in " expr ".")))
           (let [entity (build (second expr) :Entity substitution)
-                category (build (third expr) :Category substitution)]
-            (build-molecular-node (cf/find-frame 'Isa)
-                                  (list entity category)
-                                  :csneps.core/Categorization
-                                  (if (fillers-generic? (list entity category)) :Generic semtype))))
-
+                category (build (third expr) :Category substitution)
+                genfils (generic-fillers #{entity category})
+                molnode (build-molecular-node (cf/find-frame 'Isa)
+                                              (list entity category)
+                                              :csneps.core/Categorization
+                                              (if (not (empty? genfils))
+                                                :Generic
+                                                semtype))]
+            (when (not (empty? genfils))
+              (build-internal-channels molnode genfils '()))
+            molnode))
+              
       and
         (let [cf (cf/find-frame 'and)]
           (when-not cf (error "There is no frame associated with and."))
@@ -911,6 +956,7 @@
           new-expr (parse-vars-and-rsts expr arb-rsts ind-dep-rsts qvar-rsts)
           substitution (pre-build-vars @arb-rsts @ind-dep-rsts @qvar-rsts)
           built-vars (build-vars @arb-rsts @ind-dep-rsts @qvar-rsts substitution)]
+      (doseq [v built-vars] (build-quantterm-channels v))
       ;(println qvar-rsts)
       ;(println substitution)
       ;(println "NX: " new-expr)
