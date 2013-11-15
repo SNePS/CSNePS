@@ -513,8 +513,15 @@
 
 (defn arbitrary-instantiation
   [message node]
-  (println message)
-  (println "Here."))
+  (let [new-ruis (get-rule-use-info (:msgs node) message)
+        resct (count @(:restriction-set node))
+        der-rui-t (filter #(= (:pos %) resct) new-ruis)
+        new-msgs (map #(derivative-message % :origin node) der-rui-t)
+        ich @(:i-channels node)]
+    (when (not (empty? der-rui-t))
+      [true (for [msg new-msgs
+                  ch ich]
+              [ch msg])])))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
@@ -608,7 +615,6 @@
       (= (:type message) 'I-INFER)
       (= (csneps/semantic-type-of term) :AnalyticGeneric))
     (let [imsg (derivative-message message :origin term)]
-      (println message)
       (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and

@@ -799,9 +799,15 @@
                  :some (symbol (str "ind" (ind-counter)))
                  :qvar (symbol (str "qvar" (qvar-counter))))
           varterm (case quant
-                    :every (new-arbitrary {:name name :var-label var-label})
-                    :some (new-indefinite {:name name :var-label var-label})
-                    :qvar (new-query-variable {:name name :var-label var-label}))]
+                    :every (new-arbitrary {:name name 
+                                           :var-label var-label
+                                           :msgs (create-message-structure :csneps.core/Arbitrary nil)})
+                    :some (new-indefinite {:name name 
+                                           :var-label var-label
+                                           :msgs (create-message-structure :csneps.core/Indefinite nil)})
+                    :qvar (new-query-variable {:name name 
+                                               :var-label var-label
+                                               :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
       (case quant 
         :every (inc-arb-counter)
         :some (inc-ind-counter)
