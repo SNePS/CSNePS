@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare lattice-insert)
+(declare lattice-insert submit-assertion-to-channels)
 
 (defn variable-parse-and-build
   "Given a top-level build expression, checks that expression for
@@ -92,7 +92,8 @@
     (if (not (ct/asserted? expr ct))
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr))))
+        :der (dosync (commute (:ders ct) conj expr)))
+      (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
 

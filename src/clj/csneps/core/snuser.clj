@@ -27,9 +27,7 @@
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
-    (let [assertion (build/assert expr (currentContext) :hyp)]
-      (snip/submit-assertion-to-channels assertion)
-      assertion)))
+    (build/assert expr (currentContext) :hyp)))
 
 (defn assert! [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]

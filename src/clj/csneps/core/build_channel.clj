@@ -33,8 +33,9 @@
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc nm crs]
+  [stc satc nm crs]
   (def submit-to-channel stc)
+  (def submit-assertion-to-channel satc)
   (def new-message nm)
   (def create-message-structure crs))
 

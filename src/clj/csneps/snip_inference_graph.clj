@@ -648,7 +648,7 @@
   [syntype dcs]
   (make-linear-msg-set))
 
-(build/fix-fn-defs submit-to-channel new-message create-message-structure)
+(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; User-oriented functions ;;;
