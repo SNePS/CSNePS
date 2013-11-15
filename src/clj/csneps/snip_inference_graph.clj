@@ -512,6 +512,10 @@
         (when showproofs
           (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))))))
 
+(defn arbitrary-instantiation
+  [message node]
+  (println "Here."))
+
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
@@ -545,12 +549,17 @@
      :csneps.core/Nand
      :csneps.core/Thresh
      :csneps.core/Equivalence)  (param2op-introduction message node)
+    (:csneps.core/Arbitrary) (arbitrary-instantiation message node)
     nil))
 
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Elimination Rules ---- ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
   ;; If I'm already asserted, and I just received an I-INFER message,
   ;; I should attempt to eliminate myself.
   (when (and (ct/asserted? term (ct/currentContext))
@@ -563,47 +572,35 @@
   ;; If I have just received a Y-INFER message, I must make myself
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
-  (when (or (= (:type message) 'Y-INFER)
-            ;(backward-infer term) ;; Sure this goes here?
-            )
-    (if (:true? message) 
-      ;; Step 2a: Since I am supposed to be asserted, if I'm not,
-      ;; make the assertion and let my i-channels know I am now
-      ;; true.
-      (do
-        (dosync (alter (:support term) conj (:support-set message)))
-        (when-not (ct/asserted? term (ct/currentContext))
-          (if print-intermediate-results
-            (send screenprinter (fn [_]  (println "> " (build/assert-term term (ct/currentContext) :der))))
-            (if async-assert 
-              (send asserter (fn [_] (build/assert-term term (ct/currentContext) :der)))
-              (build/assert-term term (ct/currentContext) :der)))
-          (let [imsg (derivative-message message
+  (when (= (:type message) 'Y-INFER)
+    ;; Assert myself appropriately.
+    (let [assert-term (if (:true? message) 
+                        term 
+                        (build/build (list 'not term) :Entity {}))]
+      (dosync (alter (:support assert-term) conj (:support-set message)))
+      (when-not (ct/asserted? assert-term (ct/currentContext))
+        (if async-assert 
+          (send asserter (fn [_] (build/assert-term assert-term (ct/currentContext) :der)))
+          (build/assert-term assert-term (ct/currentContext) :der))
+        (when print-intermediate-results
+          (send screenprinter (fn [_]  (println "> " assert-term))))
+        ;; Create and send derivative messages.
+        (let [imsg (derivative-message message
                                    :origin term
                                    :support-set (conj (:support-set message) term)
-                                   :true? true
                                    :type 'I-INFER)]
             (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg))))
-        ;; Step 3: Apply elimination rules and report results
+      (when (:true? message)
+        ;; Apply elimination rules and report results
         (when-let [result (elimination-infer message term)]
           (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
           (doseq [[ch msg] result] 
-            (submit-to-channel ch msg))))
-      (do
-        (let [neg-term (build/build (list 'not term) :Entity {})]
-          (dosync (alter (:support neg-term) conj (:support-set message)))
-          (when-not (ct/asserted? neg-term (ct/currentContext))
-            (if print-intermediate-results
-              (send screenprinter (fn [_]  (println "> " (build/assert-term neg-term (ct/currentContext) :der))))
-              (build/assert-term neg-term (ct/currentContext) :der))
-            (let [imsg (derivative-message message
-                                           :origin term
-                                           :support-set (conj (:support-set message) term)
-                                           :true? false
-                                           :type 'I-INFER)]
-              (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
-            )))))
+            (submit-to-channel ch msg))))))
+    
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Introduction Rules ---- ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
   (cond 
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and
@@ -639,7 +636,7 @@
   (send to-infer dec))
           
   
-;;; RUI Handling ;;;
+;;; Message Handling ;;;
 
 (defn create-message-structure
   "Create the RUI structure for a rule node. For now,
