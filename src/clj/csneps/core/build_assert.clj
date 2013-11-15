@@ -13,7 +13,7 @@
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
-        (when-not (isa? (syntactic-type-of v) :csneps.core/QueryVariable) 
+        (when-not (subtypep (semantic-type-of rst) :WhQuestion)
           (build rst :AnalyticGeneric {}))
         (assert rst (ct/find-context 'BaseCT) :hyp))
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
@@ -26,7 +26,7 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq @(:restriction-set (first vars)))]
-      (when-not (isa? (syntactic-type-of (first vars)) :csneps.core/QueryVariable) 
+      (when-not (subtypep (semantic-type-of rst) :WhQuestion)
         (build rst :AnalyticGeneric {}))
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (first vars)))
@@ -78,10 +78,11 @@
 (defn assert-term
   [expr context origintag]
   (let [ct (csneps.core.contexts/find-context context)]
-    (if (not (ct/asserted? expr ct))
+    (when-not (ct/asserted? expr ct)
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr))))
+        :der (dosync (commute (:ders ct) conj expr)))
+      (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
 
@@ -89,7 +90,7 @@
   ;[:Proposition] [expr context origintag]
   [:csneps.core/Term] [expr context origintag]
   (let [ct (csneps.core.contexts/find-context context)]
-    (if (not (ct/asserted? expr ct))
+    (when-not (ct/asserted? expr ct)
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
         :der (dosync (commute (:ders ct) conj expr)))
