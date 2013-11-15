@@ -63,7 +63,8 @@
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
     (assoc :pos (or pos (if true? 1 0)))
     (assoc :neg (or neg (if true? 0 1)))
-    (assoc :flaggedns (or flaggedns {(or origin (:origin message)) true?}))))
+    (assoc :flaggedns (or flaggedns 
+                          {(or origin (:origin message)) (if (nil? true?) (:true? message) true?)}))))
 
 (defn imessage-from-ymessage
   [message node]
