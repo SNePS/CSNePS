@@ -13,7 +13,8 @@
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
-        (build rst :AnalyticGeneric {})
+        (when-not (isa? (syntactic-type-of v) :csneps.core/QueryVariable) 
+          (build rst :AnalyticGeneric {}))
         (assert rst (ct/find-context 'BaseCT) :hyp))
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
@@ -25,7 +26,8 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq @(:restriction-set (first vars)))]
-      (build rst :AnalyticGeneric {})
+      (when-not (isa? (syntactic-type-of (first vars)) :csneps.core/QueryVariable) 
+        (build rst :AnalyticGeneric {}))
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (first vars)))
 
