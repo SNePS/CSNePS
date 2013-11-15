@@ -9,7 +9,7 @@
   [sindex] ;;A ref to a hash-map.
   MessageStructure
   (get-rule-use-info [this new-msg]
-    (let [old-msg (@(:sindex this) @(:subst new-msg))]
+    (let [old-msg (@(:sindex this) (:subst new-msg))]
       (if old-msg
         (let [merged-msg (merge-messages new-msg old-msg)]
           ;; I don't think we need to check compatibility - 

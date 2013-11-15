@@ -15,7 +15,7 @@
 (defrecord2 Message
   [origin nil
    priority 1
-   subst (ref {})
+   subst {}
    support-set #{}
    type nil
    true? true
@@ -25,7 +25,7 @@
    flaggedns {}])
 
 (defn message-key [msg]
-  (set (keys @(:subst msg))))
+  (set (keys (:subst msg))))
 
 (defn compatible? [msg1 msg2]
   "Returns true if the two Messages do not have contradictory 
@@ -42,7 +42,7 @@
           (recur (rest fns1)))))))
 
 (defn merge-messages [msg1 msg2]
-  (new-message {:subst (ref (merge @(:subst msg1) @(:subst msg2)))
+  (new-message {:subst (merge (:subst msg1) (:subst msg2))
                 :pos (+ (:pos msg1) (:pos msg2))
                 :neg (+ (:neg msg1) (:neg msg2))
                 :support-set (union (:support-set msg1) (:support-set msg2))
@@ -52,11 +52,11 @@
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
-  [message & {:keys [origin substitution support-set type true? fwd-infer? pos neg flaggedns]}]
+  [message & {:keys [origin subst support-set type true? fwd-infer? pos neg flaggedns]}]
   (-> message 
     (assoc :origin (or origin (:origin message)))
     (assoc :priority (inc (:priority message)))
-    (assoc :subst (or (ref substitution) (:subst message)))
+    (assoc :subst (or subst (:subst message)))
     (assoc :support-set (or support-set (:support-set message)))
     (assoc :type (or type (:type message)))
     (assoc :true? (if (nil? true?) (:true? message) true?))

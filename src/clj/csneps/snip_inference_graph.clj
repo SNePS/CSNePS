@@ -90,21 +90,20 @@
   (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
   
   ;; Filter
-  (when ((:filter-fn channel) @(:subst message))
+  (when ((:filter-fn channel) (:subst message))
     ;; Switch
-    (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) @(:subst message))))))
-    (dosync (ref-set (:subst message) ((:switch-fn channel) @(:subst message))))
-    
-    (if (or (:fwd-infer? message) (build/valve-open? channel))
-	    ;; Process the message immediately. For forward infer, this ammounts to 
-      ;; ignoring the status of the valve.
-	    (do 
-	      (send to-infer inc)
-	      (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
-	      (.execute ^ThreadPoolExecutor executorService 
-          (priority-partial 1 initiate-node-task (:destination channel) message)))
-       ;; Cache in the waiting-msgs
-	    (dosync (alter (:waiting-msgs channel) conj message)))))
+    (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) (:subst message))))))
+    (let [message (derivative-message message :subst ((:switch-fn channel) (:subst message)))]
+      (if (or (:fwd-infer? message) (build/valve-open? channel))
+        ;; Process the message immediately. For forward infer, this ammounts to 
+        ;; ignoring the status of the valve.
+        (do 
+          (send to-infer inc)
+          (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
+          (.execute ^ThreadPoolExecutor executorService 
+            (priority-partial 1 initiate-node-task (:destination channel) message)))
+        ;; Cache in the waiting-msgs
+        (dosync (alter (:waiting-msgs channel) conj message))))))
 
 (defn submit-assertion-to-channels
   [term & {:keys [fwd-infer] :or {:fwd-infer false}}]
@@ -488,19 +487,19 @@
 
 (defn whquestion-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Deriving answer:" @(:subst message)))))
+  (when debug (send screenprinter (fn [_]  (println "Deriving answer:" (:subst message)))))
   ;; We don't need RUIs - the received substitutions must be complete since they
   ;; passed unification! Instead, lets use cached-terms.
-  (dosync (alter (:instances node) assoc (:origin message) @(:subst message))))
+  (dosync (alter (:instances node) assoc (:origin message) (:subst message))))
 
 (defn generic-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" @(:subst message)))))
+  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message)))))
   ;; The instance is the substitution applied to this term. 
   ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
   ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
-  (let [instance (build/apply-sub-to-term node @(:subst message))]
-    (dosync (alter (:instances node) assoc instance @(:subst message)))
+  (let [instance (build/apply-sub-to-term node (:subst message))]
+    (dosync (alter (:instances node) assoc instance (:subst message)))
     (build/assert-term instance (ct/currentContext) :der)
     (let [imsg (derivative-message message
                                    :origin node
@@ -514,6 +513,7 @@
 
 (defn arbitrary-instantiation
   [message node]
+  (println message)
   (println "Here."))
 
 (defn elimination-infer
@@ -608,6 +608,7 @@
       (= (:type message) 'I-INFER)
       (= (csneps/semantic-type-of term) :AnalyticGeneric))
     (let [imsg (derivative-message message :origin term)]
+      (println message)
       (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and
@@ -622,7 +623,7 @@
     ;;   as usual.
     (and 
       (= (csneps/semantic-type-of term) :Generic)
-      (not (empty? @(:subst message))))
+      (not (empty? (:subst message))))
     (generic-infer message term)
     ;; Normal introduction for derivation.
     (and 
