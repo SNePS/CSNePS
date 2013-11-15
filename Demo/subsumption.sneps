@@ -59,8 +59,8 @@
            Valuable))
 
 ;;; A trunk of every elephant is flexible
-(assert '(Property (some y(x) (Isa y Trunk) 
-		    (isPartOf y (every x (Isa x Elephant))))
+(assert '(Property (some y(x) (Isa y Trunk)
+		              (isPartOf y (every x (Isa x Elephant))))
 	           Flexible))
 
 ;;; Grey elephants are common
