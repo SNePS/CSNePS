@@ -602,6 +602,13 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   (cond 
+    ;; AnalyticGeneric terms need to just forward the messages
+    ;; on towards the variable term.
+    (and
+      (= (:type message) 'I-INFER)
+      (= (csneps/semantic-type-of term) :AnalyticGeneric))
+    (let [imsg (derivative-message message :origin term)]
+      (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and
       (= (:type message) 'I-INFER)
