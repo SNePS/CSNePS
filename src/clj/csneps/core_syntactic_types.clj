@@ -149,6 +149,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Variable
@@ -166,6 +167,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Variable
@@ -185,6 +187,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;; Arbitrary specific:
@@ -204,6 +207,7 @@
    y-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
+   msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
    ;;Additions for Variable
