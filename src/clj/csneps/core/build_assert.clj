@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare lattice-insert submit-assertion-to-channels)
+(declare lattice-insert submit-assertion-to-channels build-quantterm-channels)
 
 (defn variable-parse-and-build
   "Given a top-level build expression, checks that expression for
@@ -16,6 +16,7 @@
         (when-not (subtypep (semantic-type-of rst) :WhQuestion)
           (build rst :AnalyticGeneric {}))
         (assert rst (ct/find-context 'BaseCT) :hyp))
+      (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
 
@@ -29,6 +30,7 @@
       (when-not (subtypep (semantic-type-of rst) :WhQuestion)
         (build rst :AnalyticGeneric {}))
       (assert rst (ct/find-context 'BaseCT) :hyp))
+    (build-quantterm-channels (first vars))
     (first vars)))
 
 (defn check-contradiction

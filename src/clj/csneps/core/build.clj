@@ -343,20 +343,22 @@
   [unif]
   (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))
         t->s (build-channel (:target unif) (:source unif) (:targetbind unif) (:sourcebind unif))]
-    (cond
-      (or (= (semantic-type-of (:source unif)) :AnalyticGeneric)
-          (= (semantic-type-of (:target unif)) :AnalyticGeneric))
+    (cond 
+      ;; Since an :AnalyticGeneric is "meaningless", it doesn't 
+      ;; ever result in new instances, so we don't need i-channels
+      ;; in both directions.
+      (= (semantic-type-of (:source unif)) :AnalyticGeneric)
+      (dosync 
+        (alter (:i-channels (:target unif)) conj t->s)
+        (alter (:ant-in-channels (:source unif)) conj t->s))
+      (= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (dosync 
         (alter (:i-channels (:source unif)) conj s->t)
-        (alter (:i-channels (:target unif)) conj t->s)
-        (alter (:ant-in-channels (:target unif)) conj s->t)
-        (alter (:ant-in-channels (:source unif)) conj t->s))
+        (alter (:ant-in-channels (:target unif)) conj s->t))
       :else ;; This case still needs to be worked out.
       (dosync 
         (alter (:i-channels (:source unif)) conj s->t)
         (alter (:ant-in-channels (:target unif)) conj s->t)))))
-  
-  
 
 (defn build-internal-channels
   [rnode ants cqs]
@@ -962,7 +964,6 @@
           new-expr (parse-vars-and-rsts expr arb-rsts ind-dep-rsts qvar-rsts)
           substitution (pre-build-vars @arb-rsts @ind-dep-rsts @qvar-rsts)
           built-vars (build-vars @arb-rsts @ind-dep-rsts @qvar-rsts substitution)]
-      (doseq [v built-vars] (build-quantterm-channels v))
       ;(println qvar-rsts)
       ;(println substitution)
       ;(println "NX: " new-expr)
