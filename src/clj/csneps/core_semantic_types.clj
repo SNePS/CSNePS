@@ -28,7 +28,7 @@
 (defn list-types
   []
   "Lists all the semantic types."
-  (when (not (nil? @semantic-type-hierarchy)) (println TOP-SEMANTIC-TYPE))
+  (when-not (nil? @semantic-type-hierarchy) (println TOP-SEMANTIC-TYPE))
   (doseq [x (vec (descendants @semantic-type-hierarchy TOP-SEMANTIC-TYPE))]
     (println x))
   nil)
@@ -93,7 +93,7 @@
 (defn proper-subtypep
   "Checks if type1 is a proper subtype of type2"
   [type1 type2]
-  (and (not (= type1 type2)) (subtypep type1 type2)))
+  (and (not= type1 type2) (subtypep type1 type2)))
 
 (defn gcsubtype
   [type1 type2]

@@ -110,9 +110,8 @@
         p (build prop :Proposition {})]
     (loop [context (ct/asserted? p cntx)]
       (when context
-        (do 
-          (ct/remove-from-context p context)
-          (recur (ct/asserted? p cntx)))))))
+        (ct/remove-from-context p context)
+        (recur (ct/asserted? p cntx))))))
 
 (defn add-to-context
   "Adds the term to the context's hyps."

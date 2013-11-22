@@ -83,8 +83,8 @@
       otherwise, return nil"
   [sym]
   (let [s (str sym)]
-    (when (= (.substring s (- (count s) 1)) "-")
-      (symbol (.substring s 0 (- (count s) 1))))))
+    (when (= (.substring s (dec (count s))) "-")
+      (symbol (.substring s 0 (dec (count s)))))))
 
 (defn converse
   "Given a path expression, returns its converse"

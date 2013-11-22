@@ -7,7 +7,8 @@
             [clojure.math.numeric-tower :as math]
             [clojure.math.combinatorics :as cb]
             [clojure.zip :as zip]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [clojure.string])
   ;(:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.util]
@@ -62,7 +63,7 @@
       (and (> len 2)
            (= (first fname) \=)
            (= (last fname) \>)
-           (let [i (subs fname 1 (- len 1))]
+           (let [i (subs fname 1 (dec len))]
              (or (= i "v")
                  (every? digit-char-p i)))))))
 
@@ -103,7 +104,7 @@
   [=i>]
   (let* [fname (str =i>)
 	 len (.length fname)
-	 i (.substring fname 1 (- len 1))]
+	 i (.substring fname 1 (dec len))]
     (if (= i "v") 1 (Integer/parseInt i))))
 
 (defn roundf
@@ -124,7 +125,7 @@
 	    (if (cf/quotedpp? cf) 1 0))]
     (when-not (= (count expr) correctlength)
       (error fn " is used with incorrect arity in " expr ".\n
-                         It should be given " (- correctlength 1) " arguments instead of " (- (count expr) 1) "."))))
+                         It should be given " (dec correctlength) " arguments instead of " (dec (count expr)) "."))))
 
 (defn adjustType
   "Adjusts the type of term, if possible,
@@ -225,7 +226,7 @@
     (when-not cf (error "There is no frame associated with andor."))
     (when-not (seqable? (first args))
       (error "andor must be followed by a list, (i j) in " (list* 'andor args) "."))
-    (let [min (first (first args))
+    (let [min (ffirst args)
           max (second (first args))
           tot (count (rest args))]
       (when-not (and (integer? min) (<= 0 min tot))
@@ -238,13 +239,13 @@
               between " min " and " tot ", in " (list* 'andor args) "."))
       (cond
        ;; Canonical transformations
-        (and (= min 0) (= max tot))
+        (and (zero? min) (= max tot))
           (build 'True semtype {})
         (= tot min max)
           (build (list* 'and (rest args)) semtype {})
         (= 0 min max)
           (build (list* 'nor (rest args)) semtype {})
-        (and (= min 0) (= max (- tot 1)))
+        (and (zero? min) (= max (dec tot)))
           (build (list* 'nand (rest args)) semtype {})
         :else
           (let [fillers (build (list* 'setof (rest args)) semtype {})
@@ -265,9 +266,9 @@
       (error
        "thresh must be followed by a list, (i) or (i j), in "
          (list* 'thresh args) "."))
-    (let [min (first (first args))
+    (let [min (ffirst args)
           tot (count (rest args))
-          tot-1 (- tot 1)
+          tot-1 (dec tot)
           max (or (second (first args)) tot-1)]
       (when-not (and (integer? min) (<= 0 min tot))
         (error
@@ -279,9 +280,9 @@
               between " min " and " tot ", in " (list* 'thresh args) "."))
       (cond
        ;; Canonical transformations
-        (and (= min 0) (= max tot))
+        (and (zero? min) (= max tot))
           (build 'False semtype {})
-        (and (= min 0) (= max (- tot 1)))
+        (and (zero? min) (= max (dec tot)))
           (build (list* 'and (rest args)) semtype {}) 
         (= min max 0)
           (build (list* 'or (rest args)) semtype {})
@@ -319,7 +320,7 @@
                 and the number of antecedents, "(count ant)", in ("i"=> "ant" "cq")."))
       (cond
         ;; Canonical transformations
-        (= i 0)
+        (zero? i)
           (build (list 'and (build cq semtype)) semtype {})
         :else 
           (let [term (build-channels
@@ -400,7 +401,7 @@
   [fn expr semtype substitution]
   ;(println "Building User Term... ")
   ;; fn = (first expr)
-  (let [fcn (if (not (atom? fn)) (build fn :Thing substitution) fn)
+  (let [fcn (if-not (atom? fn) (build fn :Thing substitution) fn)
         cf (or
              (cf/find-frame
                (condp = (type-of fcn)
@@ -439,10 +440,10 @@
                     (build arg (:type rel) substitution))
           genfills (generic-fillers (set fillers))
           molnode (build-molecular-node cf fillers :csneps.core/Molecular 
-                                        (if (not (empty? genfills))
+                                        (if-not (empty? genfills)
                                           :Generic
                                           semtype))]
-      (when (not (empty? genfills))
+      (when-not (empty? genfills)
         (build-internal-channels molnode genfills))
       molnode)))
 
@@ -577,7 +578,7 @@
       ;; All others can use the default case of buildUserTerm.
       Isa 
         (do
-          (when (not (= (count expr) 3))
+          (when-not (= (count expr) 3)
             (error (str "Isa must take 2 arguments. It doesn't in " expr ".")))
           (let [entity (build (second expr) :Entity substitution)
                 category (build (third expr) :Category substitution)
@@ -585,10 +586,10 @@
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
-                                              (if (not (empty? genfils))
+                                              (if-not (empty? genfils)
                                                 :Generic
                                                 semtype))]
-            (when (not (empty? genfils))
+            (when-not (empty? genfils)
               (build-internal-channels molnode genfils '()))
             molnode))
               
@@ -657,7 +658,7 @@
            (let [fillers (build (set (rest expr)) semtype substitution)]
              (build-channels 
                (build-molecular-node cf (list fillers) :csneps.core/Nand semtype :fsemtype (semantic-type-of fillers)
-                                     :min 0 :max (- (count fillers) 1))))
+                                     :min 0 :max (dec (count fillers)))))
            (= (count expr) 2)
            ;; If only one argument, build the negation of the argument.
            (build (list 'not (second expr)) semtype substitution)
@@ -698,7 +699,7 @@
               (build-molecular-node
                 cf (list fillers) :csneps.core/Equivalence semtype
                 :fsemtype (semantic-type-of fillers)
-                :min 1 :max (- (count fillers) 1))))
+                :min 1 :max (dec (count fillers)))))
           (rest expr)
           ;; If only one filler,
           (if (set? (second expr))
@@ -711,7 +712,7 @@
                 (build-molecular-node
                   cf (rest expr) :csneps.core/Equivalence semtype
                   :fsemtype (semantic-type-of (second expr))
-                  :min 1 :max (- (count (first (rest expr))) 1))))
+                  :min 1 :max (dec (count (first (rest expr)))))))
             (build 'True :csneps.core/Term substitution))
           :else
           ;; A iff with no fillers is the True proposition

@@ -82,10 +82,10 @@
 ;;and inside the {} but the key/val for table if needed.
 
 (defmethod print-method csneps.core.build.Substitution [o w]
-  (.write w (str "{" (apply str
-                       (interpose ", "
-                         (for [subs @(:table o)]
-                           (str (second subs) "/" (first subs))))) "}")))
+  (.write w (str "{" (clojure.string/join
+                       ", "
+                       (for [subs @(:table o)] (str (second subs) "/" (first subs))))
+                 "}")))
 
 (defn add-var-term-pair
   [var term subs]
@@ -118,7 +118,7 @@
 
 (defn empty?
   [subs]
-  (= (count @(:table subs)) 0))
+  (zero? (count @(:table subs))))
 
 (defn var-to-term
   [var subs]
@@ -134,7 +134,7 @@
   "Determines if two substitutions bind the same term,
    regardless of variable. Returns nil if they don't."
   [first second]
-  (> (count (clojure.set/intersection (set (vals @(:table first))) (set (vals @(:table second))))) 0))
+  (pos? (count (clojure.set/intersection (set (vals @(:table first))) (set (vals @(:table second)))))))
 
 ;; New more efficient implementation [DRS 2/19/12]
 (defn copy-substitution

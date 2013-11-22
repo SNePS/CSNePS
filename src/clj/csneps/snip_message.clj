@@ -35,10 +35,9 @@
       true
       (let [fn1p (second fns1)
             fn2p (get (:flaggedns msg2) (first fns1))]
-        (if (or 
-              (and (false? fn2p) (true? fn1p))
-              (and (true? fn2p) (false? fn1p)))
-          nil
+        (when-not (or 
+                    (and (false? fn2p) (true? fn1p))
+                    (and (true? fn2p) (false? fn1p)))
           (recur (rest fns1)))))))
 
 (defn merge-messages [msg1 msg2]

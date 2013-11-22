@@ -100,7 +100,7 @@
 
 (defmethod slot-based-entails 
   [:csneps.core/Negation :csneps.core/Negation] [negsource negtarget]
-  (when (not (= negsource negtarget))
+  (when (not= negsource negtarget)
     (let [sourceset (find-utils/findto negsource 'nor)
           targetset (find-utils/findto negtarget 'nor)]
       ;; If the source and target sets are singletons, perform normal slot-based inference
@@ -172,8 +172,8 @@
      Else, returns nil."
   [term target context termstack]
   (and
-    (not (= term target))
-    (not (some (hash-set term) termstack))
+    (not= term target)
+    (not-any? (hash-set term) termstack)
     (slot-based-entails term target)
     (not (empty? (askif term context (cons target termstack))))))
 
@@ -218,9 +218,7 @@
                            (assertTrace (first terms) nil target "Slot-Based inference" context)
                            (hash-set (list target)))
                          :else (recur (rest terms)))))]
-	          (if
-	            (nil? cf)
-	            nil
+	          (when-not (nil? cf)
 	            (recur (rest cfs)))))
 	      (hash-set)))
     (hash-set)))

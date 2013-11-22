@@ -27,11 +27,11 @@
 
 (def QVARCOUNT (ref 0))
 
-(defn ind-counter [] (+ 1 @INDCOUNT))
+(defn ind-counter [] (inc @INDCOUNT))
 
-(defn arb-counter [] (+ 1 @ARBCOUNT))
+(defn arb-counter [] (inc @ARBCOUNT))
 
-(defn qvar-counter [] (+ 1 @QVARCOUNT))
+(defn qvar-counter [] (inc @QVARCOUNT))
 
 (defn wft-counter [] @WFTCOUNT)
 
@@ -612,7 +612,7 @@
 (defn install-in-upcset
   "Installs n in the up-cableset of m for relation r."
   [n r m]
-    (when (not (contains? @(:up-cablesetw m) r))
+    (when-not (contains? @(:up-cablesetw m) r)
       (dosync (alter (:up-cablesetw m) assoc r (ref (hash-set)))))
     (dosync (alter (second (find @(:up-cablesetw m) r)) conj n)))
 

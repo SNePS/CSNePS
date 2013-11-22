@@ -3,6 +3,7 @@
   (:require [csneps.core.relations :as slot]
             [csneps.core]
             [clojure.pprint :as pprint]
+            [clojure.string :as string]
             [csneps.core.find-utils]))
 
 (def CASEFRAMES 
@@ -40,7 +41,7 @@
 (defmethod print-method csneps.core.caseframes.Caseframe [o w]
   (.write ^java.io.Writer w (str "caseframe: " (caseframe-name o)
                                  "\n\ttype: " (:type o)
-                                 "\n\tslots: " (apply str (for [s (:slots o)] (str "\t" (:name s) "\n\t"))))))
+                                 "\n\tslots: " (string/join (for [s (:slots o)] (str "\t" (:name s) "\n\t"))))))
 
 (defn find-frame
   [fname]
@@ -59,7 +60,7 @@
      case-frame arcs."
   [desc-string]
   (let [arcstrs (re-seq #"\[.*?\]" desc-string)
-        arc-list (map #(slot/find-slot (symbol (.substring ^String % 1 (- (.length ^String %) 1)))) arcstrs)
+        arc-list (map #(slot/find-slot (symbol (.substring ^String % 1 (dec (.length ^String %))))) arcstrs)
         newdescstr (clojure.string/replace desc-string #"\[.*?\]" "~A")]
     (fn [n]
         (apply clojure.pprint/cl-format nil newdescstr
@@ -90,12 +91,12 @@
                                 (csneps.core/type-of (:type tgtframe)))
           ;; 2) Every slot in R_src - R_tgt is posadjust reducible and has min = 0
           (every? #(or   (find % tgtslots)
-                         (and (= (:min %) 0)
+                         (and (zero? (:min %))
                               (= (:posadjust %) 'reduce)))
                   srcslots)
           ;; 3) Every slot in R_tgt - R_src is posadjust expandable and has min = 0
           (every? #(or    (find % srcslots)
-                          (and (= (:min %) 0)
+                          (and (zero? (:min %))
                                (= (:posadjust %) 'expand)))
                   tgtslots)))))
 
@@ -113,13 +114,13 @@
                                 (csneps.core/type-of  (:type tgtframe)))
           ;; 2) Every slot in R_src - R_tgt is negadjust reducible and has min = 0
           (every? #(or (find % tgtslots)
-                       (and (= (:min %) 0)
+                       (and (zero? (:min %))
                             (= (:negadjust %)
                                'reduce)))
                   srcslots)
           ;; 3) Every slot in R_tgt - R_src is nrgadjust expandable and has min = 0
           (every? #(or (find % srcslots)
-                       (and (= (:min %) 0)
+                       (and (zero? (:min %))
                             (=  (:negadjust %)
                                 'expand)))
                   tgtslots)))))
@@ -258,11 +259,11 @@
                            :print-pattern print-pattern
                            :slots (map #(slot/find-slot %) slots)})] ;;Missing error handling.
     (cond
-      (and (seq? (first print-pattern)) (= (first (first print-pattern)) 'quote))
+      (and (seq? (first print-pattern)) (= (ffirst print-pattern) 'quote))
         (do
             (let [fname (first (rest (first print-pattern)))] ;;cadar
               (when (and (find-frame fname)
-                      (not (= (find-frame fname) cf)))
+                         (not= (find-frame fname) cf))
                 (println fname " being redefined from " (find-frame fname)))
               (dosync (alter FN2CF assoc fname cf)))
           (when fsymbols
@@ -302,7 +303,7 @@
      False otherwise."
   [cf]
   (and (seq? (first (:print-pattern cf)))
-       (= (first (first (:print-pattern cf))) 'quote)))
+       (= (ffirst (:print-pattern cf)) 'quote)))
 
 (defn sameFrame 
   "Associates the same frame associated with the function symbol oldf

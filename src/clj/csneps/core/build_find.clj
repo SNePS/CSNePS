@@ -71,7 +71,7 @@
                                               (= max (:max n)))
                                           (eqfillersets (:down-cableset n) dcs))]
                   n)]
-        (when (> (count ret) 0) (first ret))))))
+        (when (pos? (count ret)) (first ret))))))
 
 ;;; Rewritten 6/21/2012 [DRS]
 (defn contains-new-term-or-cf?

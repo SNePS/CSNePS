@@ -151,11 +151,10 @@
      (unify variable? x y (garner-unifiers variable? x y)))
   ([variable? x y binds]
 ;    (println "Unifying: " x " and " y)
-    (if binds
+    (when binds
       (->> binds
            (subst-bindings variable?)
-           (try-subst-map variable?))
-      nil)))
+           (try-subst-map variable?)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -180,7 +179,7 @@
 
 (defn reduction [binds permutation]
   (reduce
-    #(unify-variable variable? (first (first %2)) (second (first %2)) %1)
+    #(unify-variable variable? (ffirst %2) (second (first %2)) %1)
     binds
     permutation))
 
@@ -233,9 +232,9 @@
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
           (reduce
-            #(if (= idx 0)
-               (unify-variable varfn (first (first (first %2))) (second (first (first %2))) %1 idx)
-               (unify-variable varfn (second (first (first %2))) (first (first (first %2))) %1 idx))
+            #(if (zero? idx)
+               (unify-variable varfn (ffirst (first %2)) (second (ffirst %2)) %1 idx)
+               (unify-variable varfn (second (ffirst %2)) (ffirst (first %2)) %1 idx))
             binds
             permutation))]
     ;(println "Set Unifiers " (first (first unifiers)))
@@ -243,15 +242,13 @@
     (remove nil? 
       (flatten
         (for [p unifpermute] ;; Begin step 3
-          (do
             ;(println "Permutation: " p)
             (for [sub (map #(extract-permutation p %) (cb/permutations (range (count p))))]
               ;(let [subs (map #(extract-permutation p2 %) (cb/permutations (range (count perms))))]
-              (do
                 ;(println "EXTRACTED: " sub)
                 (when-not (some nil? sub)
                   ;(println "Calling reduction with substitutions: " sub)
-                  (reduction sub)))))))))) ;Step 4
+                  (reduction sub)))))))) ;Step 4
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -318,8 +315,8 @@
   (if (isa? (syntactic-type-of term) :csneps.core/Molecular)
     (let [termid (term-predicate term)
           termpp (:print-pattern (:caseframe term))
-          nofsyms (and (seq? (first termpp)) (= (first (first termpp)) 'quote))
-          arity (- (count (:print-pattern (:caseframe term))) 1)
+          nofsyms (and (seq? (first termpp)) (= (first termpp) 'quote))
+          arity (dec (count (:print-pattern (:caseframe term))))
           newparent (buildUnificationTreeNode termid arity :parent parent :distnodes distnodes)] ; ;Builds the node for the predicate symbol
       (loop [p newparent
              dcs (if nofsyms
@@ -330,7 +327,7 @@
             (buildUnificationTreeNode termid arity :parent p :wft term :distnodes distnodes) ;; Builds the node for the wft
             (recur (addTermToUnificationTree
                      (if (= 1 (count (first dcs))) ;;Singleton sets shouldn't be added as sets.
-                       (first (first dcs)) 
+                       (ffirst dcs)
                        (first dcs))
                      :parent p)
                    (rest dcs)))))
@@ -352,13 +349,13 @@
   (= (type node) csneps.core.build.DistNode))
 
 (defn atomwftnode? [node]
-  (= (:acceptArity node) 0))
+  (zero? (:acceptArity node)))
 
 (defn molwftnode? [node]
   (molecularTerm? (:acceptWft node)))
 
 (defn labelnode? [node]
-  (= (:acceptWft node) nil))
+  (nil? (:acceptWft node)))
 
 (defn- collectWftNodes
   [currnode & {:keys [depth] :or {depth 0}}]

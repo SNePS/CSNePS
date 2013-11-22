@@ -199,7 +199,7 @@
 
 (defn error
   [& strs]
-  (throw (Exception. (apply str strs))))
+  (throw (Exception. (clojure.string/join strs))))
 
 (defn make-set-if-not-set
   "Returns the argument if it is a set, and the set containing only that argument otherwise"
@@ -207,7 +207,7 @@
   (if (set? element)
     element
     (set
-      (if (not (seq? element))
+      (if-not (seq? element)
         (list element)
 	      element))))
 
@@ -268,7 +268,7 @@
 ;;Detect enclojure by examining classpaths.
 (defn with-enclojure?
   []
-  (.contains ^String (apply str (seq (.getURLs ^java.lang.ClassLoader (java.lang.ClassLoader/getSystemClassLoader)))) "enclojure-repl"))
+  (.contains ^String (clojure.string/join (seq (.getURLs ^java.lang.ClassLoader (java.lang.ClassLoader/getSystemClassLoader)))) "enclojure-repl"))
 
 ;;; Currently have the problem that enclojure doesn't capture stdin. We'll need
 ;;; to write a GUI version of this at some point for that case.
@@ -284,9 +284,9 @@
   (let [len (count choices)]
     (cl-format true "~%~A~2%" msgString)
     (doseq [n (range len)]
-      (cl-format true "~&~D. ~A~%" (+ 1 n) (nth choices n)))
-    (cl-format true "~&~D. ~A~2%" (+ 1 len) "Cancel")
-    (- (Integer/parseInt (read-line)) 1)))
+      (cl-format true "~&~D. ~A~%" (inc 1) (nth choices n)))
+    (cl-format true "~&~D. ~A~2%" (inc len) "Cancel")
+    (dec (Integer/parseInt (read-line)))))
 
 (defn menuChooseFromList
   "Uses menuChoice to present the msgString and the choices.

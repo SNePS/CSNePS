@@ -92,7 +92,7 @@
       type
       (cond
         (and (seq? frame) (symbol? (first frame)))   (seq frame)
-        (and (seq? (first frame)) (= (first (first frame)) 'quote))  (seq (rest frame))
+        (and (seq? (first frame)) (= (ffirst frame) 'quote))  (seq (rest frame))
         :else (error "The frame, ~S, must be a list of slot names or ~
                                     a list containing a quoted atomic constant followed by slot names."))
       :docstring docstring

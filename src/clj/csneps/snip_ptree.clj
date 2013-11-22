@@ -7,7 +7,7 @@
    term-to-pnode-map]
   MessageStructure
   (get-rule-use-info [this new-msg]
-    (let [starting-pnode ((:term-to-pnode-map this) (first (first (:flaggedns new-msg))))
+    (let [starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns new-msg)))
           starting-msgset (:msgset starting-pnode)]
       (if (@starting-msgset new-msg)
         ;; If we've already seen the message, stop now.
@@ -68,7 +68,7 @@
   [term]
   (loop [dcs (:down-cableset term)
          vars #{}]
-    (if (not (empty? dcs))
+    (if-not (empty? dcs)
       (recur (rest dcs)
              (union vars (set (filter csneps/arbitraryTerm? (first dcs)))))
       vars)))

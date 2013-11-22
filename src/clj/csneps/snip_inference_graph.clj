@@ -330,7 +330,7 @@
   [message node]
   (let [new-ruis (get-rule-use-info (:msgs node) message)
         der-rui-t (some #(= (:pos %) (count @(:y-channels node))) new-ruis)
-        der-rui-f (some #(> (:neg %) 0) new-ruis)
+        der-rui-f (some #(pos? (:neg %)) new-ruis)
         dermsg-t (imessage-from-ymessage message node)
         dermsg-f (derivative-message message 
                                    :origin node
@@ -455,7 +455,7 @@
         ;; Therefore the minimum must be true. If enough of them are already, the rest
         ;; are false.
         less-than-max-true-match (some #(when (and (>= (:neg %) (- totparam (:max node)))
-                                                   (= (:pos %) (- (:min node) 1)))
+                                                   (= (:pos %) (dec (:min node))))
                                           %)
                                           new-ruis)]
     (or (when more-than-min-true-match
@@ -518,7 +518,7 @@
         der-rui-t (filter #(= (:pos %) resct) new-ruis)
         new-msgs (map #(derivative-message % :origin node) der-rui-t)
         ich @(:i-channels node)]
-    (when (not (empty? der-rui-t))
+    (when-not (empty? der-rui-t)
       [true (for [msg new-msgs
                   ch ich]
               [ch msg])])))
@@ -670,7 +670,7 @@
     (let [term (build/build term :Proposition #{})
           answers (ref #{})
           update-answers (fn [ref key oldvalue newvalue]
-                           (when (and (= newvalue 0) (not= oldvalue 0))
+                           (when (and (zero? newvalue) (not= oldvalue 0))
                              (if (ct/asserted? term context)
                                (dosync (alter answers conj term))
                                (dosync (ref-set answers nil)))))]

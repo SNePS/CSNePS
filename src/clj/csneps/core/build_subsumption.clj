@@ -67,7 +67,7 @@
     (if (empty? nodes) 
       children
       (let [node (first nodes)
-            satparents (if (not (empty @(:parents node)))
+            satparents (if-not (empty @(:parents node))
                          (restriction-subset-nodelist arb @(:parents node))
                          '())]
         (if (empty? satparents)
@@ -93,7 +93,7 @@
     (if (empty? nodes)
       parents
       (let [node (first nodes)
-            satchildren (if (not (empty? @(:children node)))
+            satchildren (if-not (empty? @(:children node))
                           (restriction-nodelist-subset @(:children node) arb)
                           '())]
         (if (empty? satchildren)
