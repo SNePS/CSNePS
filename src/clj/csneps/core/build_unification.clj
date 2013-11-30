@@ -35,12 +35,12 @@
     (some #{var} (flatten term)))
 
 (defn- bind-phase
-  [binds variable expr index]
+  [[source target] variable expr index]
   (if (ignore-variable? variable)
-    binds
+    [source target]
     (if (zero? index)
-      [(assoc (binds 0) variable expr) (binds 1)]
-      [(binds 0) (assoc (binds 1) variable expr)])))
+      [(assoc source variable expr) target]
+      [source (assoc target variable expr)])))
 
 (defn- determine-occursness [want-occurs? variable? v expr binds]
   (if want-occurs?
@@ -62,6 +62,7 @@
 
 (defn- unify-variable
   [varp v expr binds index]
+  (println (unify-variable-1binds varp v expr binds index))
   ;(println "v: " v "expr: " expr "binds: " binds "index: " index)
   (if (seq? binds)
     (remove nil?
@@ -315,22 +316,23 @@
   (if (isa? (syntactic-type-of term) :csneps.core/Molecular)
     (let [termid (term-predicate term)
           termpp (:print-pattern (:caseframe term))
-          nofsyms (and (seq? (first termpp)) (= (first termpp) 'quote))
+          nofsyms (and (seq? (first termpp)) (= (ffirst termpp) 'quote))
           arity (dec (count (:print-pattern (:caseframe term))))
           newparent (buildUnificationTreeNode termid arity :parent parent :distnodes distnodes)] ; ;Builds the node for the predicate symbol
       (loop [p newparent
              dcs (if nofsyms
                    (:down-cableset term)
                    (rest (:down-cableset term)))]
-        ;(println p "\n" dcs)
-          (if (= dcs '())
-            (buildUnificationTreeNode termid arity :parent p :wft term :distnodes distnodes) ;; Builds the node for the wft
-            (recur (addTermToUnificationTree
-                     (if (= 1 (count (first dcs))) ;;Singleton sets shouldn't be added as sets.
-                       (ffirst dcs)
-                       (first dcs))
-                     :parent p)
-                   (rest dcs)))))
+        ;(binding [*print-level* 4] 
+        ;  (println p "\n" dcs))
+        (if (= dcs '())
+          (buildUnificationTreeNode termid arity :parent p :wft term :distnodes distnodes) ;; Builds the node for the wft
+          (recur (addTermToUnificationTree
+                   (if (= 1 (count (first dcs))) ;;Singleton sets shouldn't be added as sets.
+                     (ffirst dcs)
+                     (first dcs))
+                   :parent p)
+                 (rest dcs)))))
     (let [termid (or (:name term) (str term)) ;;Handling sets.
           arity 0
           newparent (buildUnificationTreeNode termid arity :parent parent :wft term :distnodes distnodes)]
@@ -399,8 +401,9 @@
         sourcenode (if (= (type targetnode) csneps.core.build.DistNode)
                      (findDistNode (:name targetnode) (:arity targetnode) distnodes)
                      source)]
-    ;(println "Source: " sourcenode "\nTarget: " targetnode)
-    ;(println "Source Binding:" s "\nTarget Binding:" t)
+    ;(binding [*print-level* 4] 
+    ;  (println "Source: " sourcenode "\nTarget: " targetnode)
+    ;  (println "Source Binding:" s "\nTarget Binding:" t))
     (cond
       (not (and s t))                                 [nil nil]
       (and (nil? sourcenode) (nil? targetnode))       [s t]
@@ -428,6 +431,15 @@
                                                        :target (:acceptWft targetnode) 
                                                        :sourcebind s 
                                                        :targetbind t}
+      ;; Subsumption case.
+      ;; TODO: Right now this just fails unification when targetnode doesn't subsume sourcenode.
+      ;;       we need to check it the other way as well, and make the source/target work out
+      ;;       appropriately if that works. 
+      (and (variable? (:acceptWft sourcenode))        ;; Target must subsume source.
+           (variable? (:acceptWft targetnode)))       (when (subsumes? (:acceptWft targetnode)
+                                                                       (:acceptWft sourcenode))
+                                                        (unifyVarTree variable? sourcenode targetnode [s t]))
+      ;; Single variable.
       (variable? (:acceptWft sourcenode))             (unifyVarTree variable? sourcenode targetnode [s t])
       (variable? (:acceptWft targetnode))             (unifyVarTree variable? sourcenode targetnode [s t])
       :else nil)))
