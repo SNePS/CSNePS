@@ -62,7 +62,7 @@
 
 (defn- unify-variable
   [varp v expr binds index]
-  (println (unify-variable-1binds varp v expr binds index))
+  ;(println (unify-variable-1binds varp v expr binds index))
   ;(println "v: " v "expr: " expr "binds: " binds "index: " index)
   (if (seq? binds)
     (remove nil?
