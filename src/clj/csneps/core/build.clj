@@ -932,7 +932,6 @@
   Ex. ind-deps-rsts: [y -> ((x) (Isa y Donkey))]
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
-  (println arb-rsts)
   (cond
     (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
