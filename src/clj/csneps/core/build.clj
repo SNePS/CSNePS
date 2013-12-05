@@ -1023,5 +1023,5 @@
   [expr]
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
-          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]\
+          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
       [new-expr built-vars substitution]))
