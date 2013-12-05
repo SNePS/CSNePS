@@ -139,10 +139,11 @@
     (cond
       ;; Types are already the same
       (= (type-of term) (type-of newtype)) nil
-      ;; Arbitrary terms shouldn't be adjusted down.
-      (and (arbitraryTerm? term)
-           (not (subtypep oldtype newtype)))
-      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
+      ;; Arbitrary terms can be adjusted down only while they're being built.
+      ;; They can't ever be adjusted down below their highest-level restriction.
+;      (and (arbitraryTerm? term)
+;           (not (subtypep oldtype newtype)))
+;      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
       ;; Newtype is a subtype of oldtype
       (subtypep newtype oldtype)
         (dosync (alter type-map assoc (:name term) newtype))
@@ -448,7 +449,7 @@
                                           :Generic
                                           semtype))]
       (when-not (empty? genfills)
-        (build-internal-channels molnode genfills))
+        (build-internal-channels molnode genfills '()))
       molnode)))
 
 (defmulti build
@@ -909,7 +910,7 @@
         (build-var :qvar k (get qvar-rsts k) substitution)))))
 
 (defn parse-vars-and-rsts
-  "Helper function: assertion-spec is a specifier for building a proposition
+   "Helper function: assertion-spec is a specifier for building a proposition
    in SNePS 3 (e.g., '(Isa (every x (Dog x) (Black x)) Mammal)). This
    function loops through assertion-spec and returns the expression
    with variable specifiers replaced with the variable label
@@ -925,62 +926,84 @@
   Ex. ind-deps-rsts: [y -> ((x) (Isa y Donkey))]
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
-  ;(println "Aspec: " assertion-spec)
   (cond
     (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
       (= (first assertion-spec) 'some)
-      (let [rsts (rest (get @ind-deps-rsts (second assertion-spec)))]
+      (let [rsts (rest (ind-deps-rsts (second assertion-spec)))]
         (cond
           (and rsts (not (clojure.set/difference rsts (rest (rest (rest assertion-spec))))))
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else 
-          (do
-            (dosync (alter ind-deps-rsts assoc (second assertion-spec)
-                           (list (nth assertion-spec 2)
-                                 (parse-vars-and-rsts (rest (rest (rest assertion-spec)))
-                                                      arb-rsts ind-deps-rsts qvar-rsts))))
-            (second assertion-spec))))
+          (let [ind-deps-rsts (assoc ind-deps-rsts 
+                                     (second assertion-spec) 
+                                     (list (nth assertion-spec 2)
+                                           (first (parse-vars-and-rsts (rest (rest (rest assertion-spec)))
+                                                                       arb-rsts ind-deps-rsts qvar-rsts))))]
+            [(second assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
       (or (= (first assertion-spec) 'every)) ;;qvar: (synvariable? (first assertion-spec)))
-      (let [rsts (second (get @arb-rsts (second assertion-spec)))]
+      (let [rsts (second (arb-rsts (second assertion-spec)))]
         (cond
           (and rsts (not (clojure.set/difference rsts (rest (rest assertion-spec)))))
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else
-          (do
-            (dosync (alter arb-rsts assoc (second assertion-spec)
-                           (if (= (rest (rest assertion-spec)) '())
-                             (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
-                             (parse-vars-and-rsts (rest (rest assertion-spec))
-                                                  arb-rsts ind-deps-rsts qvar-rsts))))
-            (second assertion-spec))))
+          (let [arb-rsts (assoc arb-rsts 
+                                (second assertion-spec)
+                                (if (= (rest (rest assertion-spec)) '())
+                                  (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
+                                  (first (parse-vars-and-rsts (rest (rest assertion-spec))
+                                                              arb-rsts ind-deps-rsts qvar-rsts))))]
+            [(second assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
       (synvariable? (first assertion-spec))
-      (let [rsts (second (get @qvar-rsts (first assertion-spec)))]
+      (let [rsts (second (qvar-rsts (first assertion-spec)))]
         (cond
           (and rsts (not (clojure.set/difference rsts (rest assertion-spec))))
           (error (str "Restriction sets: " rsts " and " (rest assertion-spec) " cannot be applied to
                       the same variable."))
           :else
-          (do
-            (dosync (alter qvar-rsts assoc (first assertion-spec)
-                           (if (= (rest assertion-spec) '())
-                             (list (list 'Isa (first assertion-spec) 'Entity))
-                             (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts))))
-            (first assertion-spec))))
+          (let [qvar-rsts (assoc qvar-rsts
+                                 (first assertion-spec)
+                                 (if (= (rest assertion-spec) '())
+                                   (list (list 'Isa (first assertion-spec) 'Entity))
+                                   (first (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts))))]
+                [(first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
       :else
-      (doall (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec)))
-    ;; Sets of subterms.
+      (loop [assertion-spec assertion-spec
+             new-expr []
+             arb-rsts arb-rsts
+             ind-deps-rsts ind-deps-rsts
+             qvar-rsts qvar-rsts]
+        (if (empty? assertion-spec)
+          [new-expr arb-rsts ind-deps-rsts qvar-rsts]
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)]
+            (recur
+              (rest assertion-spec)
+              (conj new-expr aspec)
+              (clojure.set/union arb-rsts ar)
+              (clojure.set/union ind-deps-rsts idr)
+              (clojure.set/union qvar-rsts qvr))))))
     (set? assertion-spec)
-    (set (map #(parse-vars-and-rsts % arb-rsts ind-deps-rsts qvar-rsts) assertion-spec))
-    ;; Build qvars which are not surrounded by parens.
+    (loop [assertion-spec assertion-spec
+             new-expr #{}
+             arb-rsts arb-rsts
+             ind-deps-rsts ind-deps-rsts
+             qvar-rsts qvar-rsts]
+        (if (empty? assertion-spec)
+          [new-expr arb-rsts ind-deps-rsts qvar-rsts]
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)]
+            (recur
+              (rest assertion-spec)
+              (conj new-expr aspec)
+              (clojure.set/union arb-rsts ar)
+              (clojure.set/union ind-deps-rsts idr)
+              (clojure.set/union qvar-rsts qvr)))))
     (synvariable? assertion-spec)
-    (do 
-      (dosync (alter qvar-rsts assoc assertion-spec (list (list 'Isa assertion-spec 'Entity))))
-      assertion-spec)
-    :else
-    assertion-spec))
+    (let [qvar-rsts (assoc qvar-rsts assertion-spec (list (list 'Isa assertion-spec 'Entity)))]
+      [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts])
+    :else 
+    [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts]))
 
 (defn check-and-build-variables
   "Given a top-level build expression, checks that expression for
@@ -992,12 +1015,9 @@
    second the the built nodes, and the third the substitution between
    var-labels and the AI/IO nodes."
   [expr]
-    (let [arb-rsts (ref (hash-map))
-          ind-dep-rsts (ref (hash-map))
-          qvar-rsts (ref (hash-map))
-          new-expr (parse-vars-and-rsts expr arb-rsts ind-dep-rsts qvar-rsts)
-          substitution (pre-build-vars @arb-rsts @ind-dep-rsts @qvar-rsts)
-          built-vars (build-vars @arb-rsts @ind-dep-rsts @qvar-rsts substitution)]
+    (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
+          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
+          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
       ;(println qvar-rsts)
       ;(println substitution)
       ;(println "NX: " new-expr)
