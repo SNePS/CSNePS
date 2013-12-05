@@ -95,6 +95,11 @@
   [type1 type2]
   (and (not= type1 type2) (subtypep type1 type2)))
 
+(defn semtype?
+  "Checks if a keyword is a semtype"
+  [kw]
+  ((conj (descendants @semantic-type-hierarchy :Entity) :Entity) kw))
+
 (defn gcsubtype
   [type1 type2]
   "Returns a set of the greatest common subtypes of type1 and type2"
