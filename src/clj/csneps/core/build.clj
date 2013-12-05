@@ -134,7 +134,7 @@
        while keeping its syntactic type, syntype,
     and return the term."
   [term oldtype newtype]
-  ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
+  (println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
   (let [gcsub (ref nil)]
     (cond
       ;; Types are already the same
@@ -142,7 +142,7 @@
       ;; Arbitrary terms shouldn't be adjusted down.
       (and (arbitraryTerm? term)
            (not (subtypep oldtype newtype)))
-      (error "Cannot adjust an arbitrary term " (:name term) "from type " oldtype "to more specific type " newtype ".")
+      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
       ;; Newtype is a subtype of oldtype
       (subtypep newtype oldtype)
         (dosync (alter type-map assoc (:name term) newtype))
@@ -815,11 +815,7 @@
                     :qvar (new-query-variable {:name name 
                                                :var-label var-label
                                                :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
-      (case quant 
-        :every (inc-arb-counter)
-        :some (inc-ind-counter)
-        :qvar (inc-qvar-counter))
-      (instantiate-sem-type (:name varterm) :Entity)
+      ;(instantiate-sem-type (:name varterm) :Entity)
       varterm)))
 
 
@@ -836,6 +832,34 @@
                 (for [k (seq (keys qvar-rsts))]
                   [k (pre-build-var :qvar k (get qvar-rsts k))]))))
 
+(defn highest-restricted-type
+  ""
+  [var]
+  (let [res @(:restriction-set var)
+        categorizations (filter #(isa? (syntactic-type-of %) :csneps.core/Categorization) res)
+        categories (apply clojure.set/union (map #(second (:down-cableset %)) categorizations))
+        semcats (filter semtype? (map #(keyword (:name %)) categories))]
+    (if (empty? semcats)
+      :Entity
+      (loop [semcats semcats
+             hightype nil]
+          (cond 
+            (and (empty? semcats)
+                 (nil? hightype))
+            :Entity
+            (empty? semcats)
+            hightype
+            :else
+            (if (or 
+                  (nil? hightype)
+                  (subtypep hightype (first semcats)))
+              (recur
+                (rest semcats)
+                (first semcats))
+              (recur
+                (rest semcats)
+                hightype)))))))
+
 (defn build-var
   "Build a variable node of type quant with label var-label and
    restrictions rsts. Substitution contains all the variable nodes
@@ -843,26 +867,31 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
   (let [var (substitution var-label)]
-    (if (= quant :qvar)
-      (dosync 
-        (alter (:restriction-set var) clojure.set/union 
-               (set (map #(build % :WhQuestion substitution) rsts))))
-      (dosync 
-        (alter (:restriction-set var) clojure.set/union 
-               (set (map #(build % :Proposition substitution) rsts)))))
-
-    (when (and (= quant :some) (not (nil? dependencies)))
-      (dosync
-        (alter (:dependencies var) clojure.set/union
-               (doall (map #(substitution %) dependencies)))))
-    
     (dosync 
+      (alter TERMS assoc (:name var) var)
+      (case quant
+        :every (inc-arb-counter)
+        :some  (inc-ind-counter)
+        :qvar  (inc-qvar-counter))
+      (instantiate-sem-type (:name var) :Entity)
+    
+      (if (= quant :qvar)
+          (alter (:restriction-set var) clojure.set/union 
+                 (set (map #(build % :WhQuestion substitution) rsts)))
+          (alter (:restriction-set var) clojure.set/union 
+                 (set (map #(build % :Proposition substitution) rsts))))
+
+      (when (and (= quant :some) (not (nil? dependencies)))
+          (alter (:dependencies var) clojure.set/union
+                 (doall (map #(substitution %) dependencies))))
+    
       (alter TERMS assoc (:name var) var)
       (case quant
         :every (alter ARBITRARIES conj var)
         :some  (alter INDEFINITES conj var)
-        :qvar  (alter QVARS conj var)))
-    var))
+        :qvar  (alter QVARS conj var))
+    
+    var)))
 
 (defn build-vars
   "Loops through the arbs and inds. and builds their restriction
