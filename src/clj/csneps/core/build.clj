@@ -137,9 +137,13 @@
   ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
   (let [gcsub (ref nil)]
     (cond
-      ;;Types are already the same
+      ;; Types are already the same
       (= (type-of term) (type-of newtype)) nil
-      ;;Newtype is a subtype of oldtype
+      ;; Arbitrary terms shouldn't be adjusted down.
+      (and (arbitraryTerm? term)
+           (not (subtypep oldtype newtype)))
+      (error "Cannot adjust an arbitrary term " (:name term) "from type " oldtype "to more specific type " newtype ".")
+      ;; Newtype is a subtype of oldtype
       (subtypep newtype oldtype)
         (dosync (alter type-map assoc (:name term) newtype))
       ;; If new type and oldtype have a common subtype,
