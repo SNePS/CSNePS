@@ -134,7 +134,7 @@
        while keeping its syntactic type, syntype,
     and return the term."
   [term oldtype newtype]
-  (println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
+  ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
   (let [gcsub (ref nil)]
     (cond
       ;; Types are already the same
@@ -909,6 +909,12 @@
       (for [k (keys qvar-rsts)]
         (build-var :qvar k (get qvar-rsts k) substitution)))))
 
+(defn- merge-error
+  [fir lat]
+  (when (not= fir lat)
+    (error "Duplicate variable use!"))
+  fir)
+
 (defn parse-vars-and-rsts
    "Helper function: assertion-spec is a specifier for building a proposition
    in SNePS 3 (e.g., '(Isa (every x (Dog x) (Black x)) Mammal)). This
@@ -926,6 +932,7 @@
   Ex. ind-deps-rsts: [y -> ((x) (Isa y Donkey))]
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
+  (println arb-rsts)
   (cond
     (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
@@ -981,9 +988,9 @@
             (recur
               (rest assertion-spec)
               (conj new-expr aspec)
-              (clojure.set/union arb-rsts ar)
-              (clojure.set/union ind-deps-rsts idr)
-              (clojure.set/union qvar-rsts qvr))))))
+              (merge-with merge-error arb-rsts ar)
+              (merge-with merge-error ind-deps-rsts idr)
+              (merge-with merge-error qvar-rsts qvr))))))
     (set? assertion-spec)
     (loop [assertion-spec assertion-spec
              new-expr #{}
@@ -996,9 +1003,9 @@
             (recur
               (rest assertion-spec)
               (conj new-expr aspec)
-              (clojure.set/union arb-rsts ar)
-              (clojure.set/union ind-deps-rsts idr)
-              (clojure.set/union qvar-rsts qvr)))))
+              (merge-with merge-error arb-rsts ar)
+              (merge-with merge-error ind-deps-rsts idr)
+              (merge-with merge-error qvar-rsts qvr)))))
     (synvariable? assertion-spec)
     (let [qvar-rsts (assoc qvar-rsts assertion-spec (list (list 'Isa assertion-spec 'Entity)))]
       [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts])
@@ -1017,12 +1024,5 @@
   [expr]
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
-          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
-      ;(println qvar-rsts)
-      ;(println substitution)
-      ;(println "NX: " new-expr)
-      ;(println arb-rsts)
-      ;(pre-build-vars @arb-rsts @ind-dep-rsts substitution)
-      ;(dosync (ref-set built-vars (build-vars @arb-rsts @ind-dep-rsts substitution)))
-      ;(println "Built" built-vars)
+          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]\
       [new-expr built-vars substitution]))
