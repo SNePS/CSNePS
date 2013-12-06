@@ -16,9 +16,6 @@
         :parents '(BaseCT))
       (ct/setCurrentContext 'DefaultCT)
 
-      ;;Initialize the Semantic Type hierarchy
-      (csneps/initialize-default-hierarchy)
-
       ;;Remove term-type maps from semantic types.
       (ref-set csneps/type-map (hash-map))
       (ref-set csneps/support-set (hash-map))
@@ -53,7 +50,10 @@
         (ref-set (:terms cf) (hash-set)))
 
       ;; Reset slots/frames
-      (when clearall           
+      (when clearall         
+        ;;Initialize the Semantic Type hierarchy
+        (csneps/initialize-default-hierarchy)
+        
         ;; Reinitialize slots
         (ref-set slot/SLOTS (hash-map))
         
