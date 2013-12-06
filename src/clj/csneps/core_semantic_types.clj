@@ -52,7 +52,7 @@
 
 (defn instantiate-sem-type
   [termname type]
-  (let [newtypekey (if (keyword? type) type (keyword type))]
+  (let [newtypekey (keyword type)]
     (dosync (alter type-map assoc termname newtypekey))
     ;;If the type is a descendent of Proposition it has a support set, hcontext set, and supported
       ;;nodes set.
