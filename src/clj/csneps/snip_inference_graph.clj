@@ -221,7 +221,7 @@
         (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin (:origin message) :type 'UNASSERT}) true)))
       (let [oscont (map #(contains? % (:origin message)) @(:support node))]
         (and ych?
-             (not (empty? oscont))
+             (seq oscont)
              (every? true? oscont)))
       (unassert node))))
 
@@ -241,7 +241,7 @@
         ych @(:y-channels node)]
     (when debug (send screenprinter (fn [_]  (println "NEX" new-ruis))))
     nil
-    (when-not (empty? new-ruis)
+    (when (seq new-ruis)
       (when showproofs 
         (doseq [y ych]
           (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by negation-elimination")))))
@@ -518,7 +518,7 @@
         der-rui-t (filter #(= (:pos %) resct) new-ruis)
         new-msgs (map #(derivative-message % :origin node) der-rui-t)
         ich @(:i-channels node)]
-    (when-not (empty? der-rui-t)
+    (when (seq der-rui-t)
       [true (for [msg new-msgs
                   ch ich]
               [ch msg])])))
@@ -629,7 +629,7 @@
     ;;   as usual.
     (and 
       (= (csneps/semantic-type-of term) :Generic)
-      (not (empty? (:subst message))))
+      (seq (:subst message)))
     (generic-infer message term)
     ;; Normal introduction for derivation.
     (and 
@@ -675,7 +675,7 @@
                                (dosync (alter answers conj term))
                                (dosync (ref-set answers nil)))))]
       (add-watch to-infer :to-infer update-answers)
-      (if (not (empty? @(:ant-in-channels term)))
+      (if (seq @(:ant-in-channels term))
         (do 
           (backward-infer term)
           @(future (while (and (empty? @answers) (not (nil? @answers)))
@@ -693,7 +693,7 @@
                            (when (and (= newvalue 0) (not= oldvalue 0))
                              (dosync (ref-set answers nil))))]
       (add-watch to-infer :to-infer update-answers)
-      (if (not (empty? @(:ant-in-channels ques)))
+      (if (seq @(:ant-in-channels ques))
         (do 
           (backward-infer ques)
           @(future (while (and (empty? @answers) (not (nil? @answers)))

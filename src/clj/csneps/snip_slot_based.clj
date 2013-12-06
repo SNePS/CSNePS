@@ -175,7 +175,7 @@
     (not= term target)
     (not-any? (hash-set term) termstack)
     (slot-based-entails term target)
-    (not (empty? (askif term context (cons target termstack))))))
+    (seq (askif term context (cons target termstack)))))
 
 (defn slot-based-derivable
   "If the term [target] is entailed in the given context

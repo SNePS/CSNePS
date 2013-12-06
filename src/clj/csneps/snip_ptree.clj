@@ -68,7 +68,7 @@
   [term]
   (loop [dcs (:down-cableset term)
          vars #{}]
-    (if-not (empty? dcs)
+    (if (seq dcs)
       (recur (rest dcs)
              (union vars (set (filter csneps/arbitraryTerm? (first dcs)))))
       vars)))

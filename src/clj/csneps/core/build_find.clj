@@ -242,9 +242,10 @@
   [expr termset var-list]
   (remove #(nil? %)
     (for [term termset]
-      (let [subs (pattern-term-match expr (:down-cableset term) var-list {})] 
+      (let [subs (pattern-term-match expr (:down-cableset term) var-list {})]
+        ;; TODO: Why is this like this? Very odd...
         (cond
-          (and (seq? subs) (not (empty? subs)))
+          (seq subs) ;; non-empty sequence.
           [term subs]
           (and (not (seq? subs)) subs)
           [term subs])))))

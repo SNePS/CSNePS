@@ -8,7 +8,7 @@
   [term]
   (loop [dcs #{term}
          vars #{}]
-    (if (not (empty? dcs))
+    (if (seq dcs)
       (if (build/variable? (first dcs))
         (recur (set (rest dcs)) (conj vars (first dcs)))
         (recur (apply set/union (set (rest dcs)) (:down-cableset (first dcs))) vars))

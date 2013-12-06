@@ -140,7 +140,8 @@
       (= (type-of term) (type-of newtype)) nil
       ;; Arbitrary terms can be adjusted down only while they're being built.
       ;; They can't ever be adjusted down below their highest-level restriction.
-;      (and (arbitraryTerm? term)
+;      (and (arbitraryTerm? term) 
+;           (not (empty? @(:restriction-set term)))
 ;           (not (subtypep oldtype newtype)))
 ;      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
       ;; Newtype is a subtype of oldtype
@@ -444,10 +445,10 @@
                     (build arg (:type rel) substitution))
           genfills (generic-fillers (set fillers))
           molnode (build-molecular-node cf fillers :csneps.core/Molecular 
-                                        (if-not (empty? genfills)
+                                        (if (seq genfills)
                                           :Generic
                                           semtype))]
-      (when-not (empty? genfills)
+      (when (seq genfills)
         (build-internal-channels molnode genfills '()))
       molnode)))
 
@@ -511,7 +512,7 @@
   [clojure.lang.Symbol] [expr semtype substitution]
   ;(println "Building symbol: " expr)
   (let [term (or 
-               (and (not (empty? substitution))
+               (and (seq substitution)
                     (substitution expr))
                (get-term expr))]
     (cond
@@ -590,10 +591,10 @@
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
-                                              (if-not (empty? genfils)
+                                              (if (seq genfils)
                                                 :Generic
                                                 semtype))]
-            (when-not (empty? genfils)
+            (when (seq genfils)
               (build-internal-channels molnode genfils '()))
             molnode))
               

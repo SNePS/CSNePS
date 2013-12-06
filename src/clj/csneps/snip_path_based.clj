@@ -50,7 +50,7 @@
       result
       (let [n     (first nodeset)
             froms (find-utils/findfrom n slotname)]
-        (if (and froms (not (empty? froms)))
+        (if (seq froms)
           (recur (rest nodeset) (concat result froms))
           (recur (rest nodeset) result))))))
 
@@ -65,7 +65,7 @@
       result
       (let [n   (first nodeset)
             tos (find-utils/findto n slotname)]
-        (if (and tos (not (empty? tos)))
+        (if (seq tos)
           (recur (rest nodeset) (concat result tos))
           (recur (rest nodeset) result))))))
 
@@ -131,7 +131,7 @@
   [symbol termSet]
   (or (and (symbol? symbol)
 	         (= symbol '?)
-	         (not (empty? termSet)))
+	         (seq termSet))
       (get termSet (csneps/get-term symbol))))
 
 (defn build-path-fn
@@ -217,7 +217,7 @@
                                              (map (fn [[slot fillers]]
                                                     (map #(pb-findfroms % slot) fillers))
                                                   (cf/dcsRelationTermsetMap p))))))]
-      (if (and (not (empty? results))
+      (if (and (seq results)
                (some #(build/eqfillersets (:down-cableset %) dcs) results))
         (do 
           (assertTrace nil (seq results) p "Path-Based inference" context)
