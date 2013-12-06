@@ -232,12 +232,12 @@
   (let [unifiers (findSetUnifiers set1 set2) ;; Step 1.
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
-          (reduce
-            #(if (zero? idx)
-               (unify-variable varfn (ffirst (first %2)) (second (ffirst %2)) %1 idx)
-               (unify-variable varfn (second (ffirst %2)) (ffirst (first %2)) %1 idx))
-            binds
-            permutation))]
+                    (reduce
+                      #(if (zero? idx)
+                         (unify-variable varfn (ffirst (first %2)) (second (ffirst %2)) %1 idx)
+                         (unify-variable varfn (second (ffirst %2)) (ffirst (first %2)) %1 idx))
+                      binds
+                      permutation))]
     ;(println "Set Unifiers " (first (first unifiers)))
     ;(println "Permuted subset unifiers: \n" unifpermute)
     (remove nil? 

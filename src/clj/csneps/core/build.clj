@@ -802,22 +802,22 @@
 	  (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
   (or (and (or (= quant :qvar) (= quant :every)) (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
-    (let [name (case quant
-                 :every (symbol (str "arb" (arb-counter)))
-                 :some (symbol (str "ind" (ind-counter)))
-                 :qvar (symbol (str "qvar" (qvar-counter))))
-          varterm (case quant
-                    :every (new-arbitrary {:name name 
-                                           :var-label var-label
-                                           :msgs (create-message-structure :csneps.core/Arbitrary nil)})
-                    :some (new-indefinite {:name name 
-                                           :var-label var-label
-                                           :msgs (create-message-structure :csneps.core/Indefinite nil)})
-                    :qvar (new-query-variable {:name name 
-                                               :var-label var-label
-                                               :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
-      ;(instantiate-sem-type (:name varterm) :Entity)
-      varterm)))
+      (let [name (case quant
+                   :every (symbol (str "arb" (arb-counter)))
+                   :some (symbol (str "ind" (ind-counter)))
+                   :qvar (symbol (str "qvar" (qvar-counter))))
+            varterm (case quant
+                      :every (new-arbitrary {:name name 
+                                             :var-label var-label
+                                             :msgs (create-message-structure :csneps.core/Arbitrary nil)})
+                      :some (new-indefinite {:name name 
+                                             :var-label var-label
+                                             :msgs (create-message-structure :csneps.core/Indefinite nil)})
+                      :qvar (new-query-variable {:name name 
+                                                 :var-label var-label
+                                                 :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
+        ;(instantiate-sem-type (:name varterm) :Entity)
+        varterm)))
 
 
 (defn pre-build-vars
@@ -912,7 +912,7 @@
 (defn- merge-error
   [fir lat]
   (when (not= fir lat)
-    (error "Duplicate variable use!"))
+    (error "Duplicate variable label use!"))
   fir)
 
 (defn parse-vars-and-rsts
