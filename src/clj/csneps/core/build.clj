@@ -103,8 +103,7 @@
        returns the number represented by i."
   [=i>]
   (let* [fname (str =i>)
-	 len (.length fname)
-	 i (.substring fname 1 (dec len))]
+         i (.substring fname 1 (dec (.length fname)))]
     (if (= i "v") 1 (Integer/parseInt i))))
 
 (defn roundf
@@ -583,8 +582,8 @@
       ;; All others can use the default case of buildUserTerm.
       Isa 
         (do
-          (when-not (= (count expr) 3)
-            (error (str "Isa must take 2 arguments. It doesn't in " expr ".")))
+          (clojure.core/assert (= (count expr) 3)
+                               (str "Isa must take 2 arguments. It doesn't in " expr "."))
           (let [entity (build (second expr) :Entity substitution)
                 category (build (third expr) :Category substitution)
                 genfils (generic-fillers #{entity category})
