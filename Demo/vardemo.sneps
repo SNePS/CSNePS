@@ -40,39 +40,39 @@
 
 
 ;;; Every man is mortal
-(assert '(Property (every x (Isa x Man)) Mortal))
+(assert '(Property (every x (Isa x Man) (Isa x Agent)) Mortal))
 
 
 ;;; Albino elephants are valuable
 
-(assert '(Property (every x (Isa x Elephant) (Property x Albino)) Valuable))
+(assert '(Property (every x (Isa x Elephant) (Property x Albino) (Isa x Agent)) Valuable))
 
 
 
 ;;; Every elephant has a trunk
 (assert '(isPartOf 
 	  (some y(x) (Isa y Trunk))
-	  (every x (Isa x Elephant))))
+	  (every x (Isa x Elephant) (Isa x Agent))))
 
 
 ;;; Every man is human
-(assert '(Isa (every x (Isa x Man)) Human))
+(assert '(Isa (every x (Isa x Man) (Isa x Agent)) Human))
 
 ;;; Albino Elephants are white
-(assert '(Property  (every x (Isa x Elephant) (Property x Albino)) White))
+(assert '(Property  (every x (Isa x Elephant) (Property x Albino) (Isa x Agent)) White))
 
 ;;; Every elephant is large
-(assert '(Property (every x (Isa x Elephant)) Large))
+(assert '(Property (every x (Isa x Elephant) (Isa x Agent)) Large))
 
 ;;; Every farmer that owns a donkey beats it
-(assert '(Beats (every x (Isa x Farmer) 
-		 (Owns x (some y(x) (Isa y Donkey))))
+(assert '(Beats (every x (Isa x Farmer) (Isa x Agent)
+		 (Owns x (some y(x) (Isa y Donkey) (Isa x Agent))))
 	  y))
 
 
 ;;; A trunk of every elephant is flexible
-(assert '(Property (some y(x) (Isa y Trunk) 
-		    (isPartOf y (every x (Isa x Elephant))))
+(assert '(Property (some y(x) (Isa y Trunk) (Isa y Thing)
+		    (isPartOf y (every x (Isa x Elephant) (Isa x Agent))))
 	           Flexible))
 			
 
