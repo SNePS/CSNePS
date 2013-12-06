@@ -139,10 +139,10 @@
     (= (type-of term) (type-of newtype)) nil
     ;; Arbitrary terms can be adjusted down only while they're being built.
     ;; They can't ever be adjusted down below their highest-level restriction.
-;      (and (arbitraryTerm? term) 
-;           (not (empty? @(:restriction-set term)))
-;           (not (subtypep oldtype newtype)))
-;      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
+      (and (arbitraryTerm? term) 
+           @(:fully-built term)
+           (not (subtypep oldtype newtype)))
+      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
     ;; Newtype is a subtype of oldtype
     (subtypep newtype oldtype)
     (dosync (alter type-map assoc (:name term) newtype))
@@ -839,33 +839,13 @@
                 (for [k (seq (keys qvar-rsts))]
                   [k (pre-build-var :qvar k (get qvar-rsts k))]))))
 
-(defn highest-restricted-type
-  ""
+(defn internal-restrict
   [var]
   (let [res @(:restriction-set var)
         categorizations (filter #(isa? (syntactic-type-of %) :csneps.core/Categorization) res)
         categories (apply clojure.set/union (map #(second (:down-cableset %)) categorizations))
         semcats (filter semtype? (map #(keyword (:name %)) categories))]
-    (if (empty? semcats)
-      :Entity
-      (loop [semcats semcats
-             hightype nil]
-          (cond 
-            (and (empty? semcats)
-                 (nil? hightype))
-            :Entity
-            (empty? semcats)
-            hightype
-            :else
-            (if (or 
-                  (nil? hightype)
-                  (subtypep hightype (first semcats)))
-              (recur
-                (rest semcats)
-                (first semcats))
-              (recur
-                (rest semcats)
-                hightype)))))))
+    (doall (map #(adjustType var (semantic-type-of var) %) semcats))))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and
@@ -874,7 +854,6 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
   (let [var (substitution var-label)]
-    (println quant var-label rsts substitution)
     (dosync 
       (alter TERMS assoc (:name var) var)
       
@@ -888,11 +867,17 @@
           (alter (:dependencies var) clojure.set/union
                  (doall (map #(substitution %) dependencies))))
     
+      (internal-restrict var)
+      
       (alter TERMS assoc (:name var) var)
       (case quant
-        :every (alter ARBITRARIES conj var)
+        :every (do 
+                 (alter ARBITRARIES conj var)
+                 (ref-set (:fully-built var) true))
         :some  (alter INDEFINITES conj var)
-        :qvar  (alter QVARS conj var))
+        :qvar  (do 
+                 (alter QVARS conj var)
+                 (ref-set (:fully-built var) true)))
     
     var)))
 
