@@ -113,26 +113,28 @@
 
 (defn lattice-insert 
   [arb] 
-  (let [parents (find-lattice-parents arb)
-        children (find-lattice-children arb)
-        node (new-lattice-node {:data arb 
-                                :parents (ref parents)
-                                :children (ref (if (empty? children)
-                                                 #{omega}
-                                                 children))})]
-    (dosync (ref-set (:lattice-node arb) node))
-    (if (empty? parents)
-      (dosync (alter subsumption-lattice conj node))
-      (dosync
-        (doseq [p parents]
-          (ref-set (:children p) 
-                   (conj (remove (conj children omega) @(:children p)) node)))))
-    (if (empty? children)
-      (dosync (alter (:parents omega) conj node))
-      (dosync
-        (doseq [c children]
-          (ref-set (:parents c)
-                   (conj (remove parents @(:parents c)) node)))))))
+  (if (nil? @(:lattice-node arb))
+    (let [parents (find-lattice-parents arb)
+          children (find-lattice-children arb)
+          node (new-lattice-node {:data arb 
+                                  :parents (ref parents)
+                                  :children (ref (if (empty? children)
+                                                   #{omega}
+                                                   children))})]
+      (dosync (ref-set (:lattice-node arb) node))
+      (if (empty? parents)
+        (dosync (alter subsumption-lattice conj node))
+        (dosync
+          (doseq [p parents]
+            (ref-set (:children p) 
+                     (conj (remove (conj children omega) @(:children p)) node)))))
+      (if (empty? children)
+        (dosync (alter (:parents omega) conj node))
+        (dosync
+          (doseq [c children]
+            (ref-set (:parents c)
+                     (conj (remove parents @(:parents c)) node))))))
+    nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Subsumption Functions ;;;
