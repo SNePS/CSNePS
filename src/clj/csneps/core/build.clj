@@ -194,7 +194,7 @@
   [cf dcs syntype semtype & {:keys [fsemtype min max]}]
   ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
   (let [dcs-sets (map make-set-if-not-set dcs)
-        tests (doall (map #(check-min-max %1 %2) dcs-sets (:slots cf)))
+        tests (doall (map check-min-max dcs-sets (:slots cf)))
         term (or
                (cond 
                  max (find-exact syntype cf dcs-sets :min min :max max)
@@ -437,7 +437,7 @@
                        (list (first expr) (set (rest expr)))
                        :else expr)
           check (checkArity fcn fixed-expr cf)
-          fillers (for [[arg rel] (map #(vector %1 %2) 
+          fillers (for [[arg rel] (map vector
                                        (if (cf/quotedpp? cf)
                                          (rest fixed-expr)
                                          fixed-expr)
@@ -817,7 +817,13 @@
                       :qvar (new-query-variable {:name name 
                                                  :var-label var-label
                                                  :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
-        ;(instantiate-sem-type (:name varterm) :Entity)
+        (dosync 
+          (case quant
+            :every (inc-arb-counter)
+            :some  (inc-ind-counter)
+            :qvar  (inc-qvar-counter)))
+          (instantiate-sem-type (:name varterm) :Entity)
+        
         varterm)))
 
 
@@ -869,14 +875,10 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
   (let [var (substitution var-label)]
+    (println quant var-label rsts substitution)
     (dosync 
       (alter TERMS assoc (:name var) var)
-      (case quant
-        :every (inc-arb-counter)
-        :some  (inc-ind-counter)
-        :qvar  (inc-qvar-counter))
-      (instantiate-sem-type (:name var) :Entity)
-    
+      
       (if (= quant :qvar)
           (alter (:restriction-set var) clojure.set/union 
                  (set (map #(build % :WhQuestion substitution) rsts)))
@@ -943,12 +945,13 @@
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else 
-          (let [ind-deps-rsts (assoc ind-deps-rsts 
-                                     (second assertion-spec) 
-                                     (list (nth assertion-spec 2)
-                                           (first (parse-vars-and-rsts (rest (rest (rest assertion-spec)))
-                                                                       arb-rsts ind-deps-rsts qvar-rsts))))]
-            [(second assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest (rest (rest assertion-spec)))
+                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                idr (assoc idr
+                           (second assertion-spec) 
+                           (list (nth assertion-spec 2) aspec))]
+            (println idr)
+            [(second assertion-spec) ar idr qvr])))
       (or (= (first assertion-spec) 'every)) ;;qvar: (synvariable? (first assertion-spec)))
       (let [rsts (second (arb-rsts (second assertion-spec)))]
         (cond
@@ -956,13 +959,14 @@
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else
-          (let [arb-rsts (assoc arb-rsts 
-                                (second assertion-spec)
-                                (if (= (rest (rest assertion-spec)) '())
-                                  (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
-                                  (first (parse-vars-and-rsts (rest (rest assertion-spec))
-                                                              arb-rsts ind-deps-rsts qvar-rsts))))]
-            [(second assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest (rest assertion-spec))
+                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                ar (assoc ar
+                          (second assertion-spec)
+                          (if (= (rest (rest assertion-spec)) '())
+                            (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
+                            aspec))]
+            [(second assertion-spec) ar idr qvr])))
       (synvariable? (first assertion-spec))
       (let [rsts (second (qvar-rsts (first assertion-spec)))]
         (cond
@@ -970,12 +974,14 @@
           (error (str "Restriction sets: " rsts " and " (rest assertion-spec) " cannot be applied to
                       the same variable."))
           :else
-          (let [qvar-rsts (assoc qvar-rsts
-                                 (first assertion-spec)
-                                 (if (= (rest assertion-spec) '())
-                                   (list (list 'Isa (first assertion-spec) 'Entity))
-                                   (first (parse-vars-and-rsts (rest assertion-spec) arb-rsts ind-deps-rsts qvar-rsts))))]
-                [(first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts])))
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest assertion-spec) 
+                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                qvr (assoc qvar-rsts
+                           (first assertion-spec)
+                           (if (= (rest assertion-spec) '())
+                             (list (list 'Isa (first assertion-spec) 'Entity))
+                             aspec))]
+                [(first assertion-spec) ar idr qvr])))
       :else
       (loop [assertion-spec assertion-spec
              new-expr []
@@ -1025,4 +1031,5 @@
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
+      (println ind-dep-rsts new-expr)
       [new-expr built-vars substitution]))
