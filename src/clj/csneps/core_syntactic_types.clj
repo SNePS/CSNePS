@@ -192,6 +192,7 @@
    support (ref (hash-set))
    ;; Arbitrary specific:
    lattice-node (ref nil)
+   fully-built (ref false)
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
@@ -210,6 +211,8 @@
    msgs (ref nil)
    up-cablesetw (ref (hash-map))
    support (ref (hash-set))
+   ;; QueryVariable Specific
+   fully-built (ref false)
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
