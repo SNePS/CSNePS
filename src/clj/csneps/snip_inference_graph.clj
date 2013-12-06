@@ -125,9 +125,9 @@
   ;; Negations:
   ;; When the assertion makes terms negated, the negated terms need to send out
   ;; on their i-channels that they are now negated.
-  (let [msg (new-message {:origin term, :support-set #{term}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})
-        dcs-map (cf/dcsRelationTermsetMap term)
-        nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))]
+  (let [dcs-map (cf/dcsRelationTermsetMap term)
+        nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))
+        msg (when nor-dcs (new-message {:origin term, :support-set #{term}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer}))]
     (when nor-dcs
       (doseq [negterm nor-dcs]
         (doall (map #(submit-to-channel 

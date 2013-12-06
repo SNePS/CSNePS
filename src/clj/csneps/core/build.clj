@@ -134,31 +134,30 @@
     and return the term."
   [term oldtype newtype]
   ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
-  (let [gcsub (ref nil)]
-    (cond
-      ;; Types are already the same
-      (= (type-of term) (type-of newtype)) nil
-      ;; Arbitrary terms can be adjusted down only while they're being built.
-      ;; They can't ever be adjusted down below their highest-level restriction.
+  (cond
+    ;; Types are already the same
+    (= (type-of term) (type-of newtype)) nil
+    ;; Arbitrary terms can be adjusted down only while they're being built.
+    ;; They can't ever be adjusted down below their highest-level restriction.
 ;      (and (arbitraryTerm? term) 
 ;           (not (empty? @(:restriction-set term)))
 ;           (not (subtypep oldtype newtype)))
 ;      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
-      ;; Newtype is a subtype of oldtype
-      (subtypep newtype oldtype)
-        (dosync (alter type-map assoc (:name term) newtype))
-      ;; If new type and oldtype have a common subtype,
-      ;;    change the type to be the greatest common subtype
-      ;; Could there be more than 1 greatest common subtype?
-      (dosync (ref-set gcsub (gcsubtype newtype oldtype)))
-        (if (> (count @gcsub) 1)
-          (let [gcsubchoice (menuChooseFromList (str "Choose a type for " term ".") @gcsub)]
-            (if gcsubchoice
-              (dosync (alter type-map assoc (:name term) gcsubchoice))
-              (error "No semantic type for " term ".")))
-          (dosync (alter type-map assoc (:name term) (first @gcsub))))
-      :else (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
-;  (println "Done Adjusting")
+    ;; Newtype is a subtype of oldtype
+    (subtypep newtype oldtype)
+    (dosync (alter type-map assoc (:name term) newtype))
+    ;; If new type and oldtype have a common subtype,
+    ;;    change the type to be the greatest common subtype
+    ;; Could there be more than 1 greatest common subtype?
+    :else
+    (if-let [gcsub (gcsubtype newtype oldtype)]
+      (if (> (count gcsub) 1)
+        (let [gcsubchoice (menuChooseFromList (str "Choose a type for " term ".") gcsub)]
+          (if gcsubchoice
+            (dosync (alter type-map assoc (:name term) gcsubchoice))
+            (error "No semantic type for " term ".")))
+        (dosync (alter type-map assoc (:name term) (first gcsub))))
+      (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   term)
 
 (defn check-min-max
@@ -950,7 +949,6 @@
                 idr (assoc idr
                            (second assertion-spec) 
                            (list (nth assertion-spec 2) aspec))]
-            (println idr)
             [(second assertion-spec) ar idr qvr])))
       (or (= (first assertion-spec) 'every)) ;;qvar: (synvariable? (first assertion-spec)))
       (let [rsts (second (arb-rsts (second assertion-spec)))]
@@ -1031,5 +1029,4 @@
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
-      (println ind-dep-rsts new-expr)
       [new-expr built-vars substitution]))
