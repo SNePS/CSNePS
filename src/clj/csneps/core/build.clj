@@ -599,8 +599,7 @@
             molnode))
               
       and
-        (let [cf (cf/find-frame 'and)]
-          (when-not cf (error "There is no frame associated with and."))
+        (if-let [cf (cf/find-frame 'and)]
           (cond
             (rest (rest expr)) ;;>1 conjunct
               (let [fillers (build (set (rest expr)) semtype substitution)]
@@ -615,12 +614,12 @@
                 ;; otherwise, just build the conjunct.
                 (build (second expr) semtype substitution))
             :else
-              (build 'True :csneps.core/Proposition substitution)))
+              (build 'True :csneps.core/Proposition substitution))
+          (error "There is no frame associated with and."))
 
       or
       ;; expr is (or a1 ... an)
-      (let [cf (cf/find-frame 'andor)]
-        (when-not cf (error "There is no frame associated with or"))
+      (if-let [cf (cf/find-frame 'andor)]
         (cond
           (rest (rest expr))
           (let [fillers (build (set (rest expr)) semtype substitution)]
@@ -632,12 +631,12 @@
           (build (second expr) semtype substitution)
           :else
           ;; A disjunction with no disjuncts is the False proposition
-          (build 'False :csneps.core/Term substitution)))
+          (build 'False :csneps.core/Term substitution))
+        (error "There is no frame associated with or"))
 
       xor
       ;; expr is (xor a1 ... an)
-      (let [cf (cf/find-frame 'andor)]
-        (when-not cf (error "There is no frame associated with xor"))
+      (if-let [cf (cf/find-frame 'andor)]
         (cond
           (rest (rest expr))
           (let [fillers (build (set (rest expr)) semtype substitution)]
@@ -649,12 +648,12 @@
           (build (second expr) semtype substitution)
           :else
           ;; An exclusive disjunction with no disjuncts is the False proposition
-          (build 'False :csneps.core/Term substitution)))
+          (build 'False :csneps.core/Term substitution))
+        (error "There is no frame associated with xor"))
       
       nand
        ;; expr is (nand a1 ... an)
-       (let [cf (cf/find-frame 'andor)]
-         (when-not cf (error "There is no frame associated with nand"))
+       (if-let [cf (cf/find-frame 'andor)]
          (cond
            (or 
              (> (count expr) 2)
@@ -669,7 +668,8 @@
            (build (list 'not (second expr)) semtype substitution)
            :else
            ;; A negatedconjunction with no arguments is the False proposition
-           (build 'False :csneps.core/Term substitution)))
+           (build 'False :csneps.core/Term substitution))
+         (error "There is no frame associated with nand"))
 
       andor
        ;; expr is (andor (i j) a1 ... an)
@@ -681,22 +681,22 @@
       
       if
         ;; expr is (if a1 a2)
-      (let [cf (cf/find-frame 'if)]
-        (when-not cf (error "There is no frame associated with if"))
-        (checkArity 'if expr cf)
-        (let [fillers1 (build (second expr) semtype substitution)
-              fillers2 (build (nth expr 2) semtype substitution)]
-          (build-channels 
-            (build-molecular-node
-              cf (list fillers1 fillers2) :csneps.core/Implication semtype
-              :fsemtype semtype :min (if (set? fillers1)
-                                       (count fillers1)
-                                       1)))))
+      (if-let [cf (cf/find-frame 'if)]
+        (do
+          (checkArity 'if expr cf)
+          (let [fillers1 (build (second expr) semtype substitution)
+                fillers2 (build (nth expr 2) semtype substitution)]
+            (build-channels 
+              (build-molecular-node
+                cf (list fillers1 fillers2) :csneps.core/Implication semtype
+                :fsemtype semtype :min (if (set? fillers1)
+                                         (count fillers1)
+                                         1)))))
+        (error "There is no frame associated with if"))
 
       iff
        ;; expr is (iff a1 ... an)
-      (let [cf (cf/find-frame 'thresh)]
-        (when-not cf (error "There is no frame associated with iff."))
+      (if-let [cf (cf/find-frame 'thresh)]
         (cond
           (rest (rest expr))
           (let [fillers (build (set (rest expr)) semtype substitution)]
@@ -721,12 +721,12 @@
             (build 'True :csneps.core/Term substitution))
           :else
           ;; A iff with no fillers is the True proposition
-          (build 'True :csneps.core/Term substitution)))
+          (build 'True :csneps.core/Term substitution))
+        (error "There is no frame associated with iff."))
 
        (not nor)
        ;; expr is (nor a1 ... an) or (not a1 ... an)
-       (let [cf (cf/find-frame 'nor)]
-         (when-not cf (error "There is no frame associated with nor."))
+       (if-let [cf (cf/find-frame 'nor)]
          (cond
            ;(third expr)		; at least two arguments
            (rest expr) ;;1 or more args
@@ -738,12 +738,12 @@
            ;(rest expr)		; exactly one argument
            ;  (build-canonical-negation (second expr) semtype)
            :else			; (not) = (nor) = T
-           (build 'True :csneps.core/Term substitution)))
+           (build 'True :csneps.core/Term substitution))
+         (error "There is no frame associated with nor."))
 
       (thnot thnor)
       ;; expr is (thnor a1 ... an) or (thnot a1 ... an)
-      (let [cf (cf/find-frame 'thnor)]
-        (when-not cf (error "There is no frame associated with thnor."))
+      (if-let [cf (cf/find-frame 'thnor)]
         (cond
           (rest expr)		; at least one argument
           (let [fillers (build (set (rest expr)) semtype substitution)]
@@ -751,7 +751,8 @@
               cf (list fillers) :csneps.core/Negationbyfailure semtype
               :fsemtype (semantic-type-of fillers)))
           :else			; (thnot) = (thnor) = T
-          (build 'True :csneps.core/Term substitution)))
+          (build 'True :csneps.core/Term substitution))
+        (error "There is no frame associated with thnor."))
 
 
       setof
