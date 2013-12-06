@@ -22,6 +22,13 @@
 ;;; there is no 'most general term'.
 (def subsumption-lattice (ref [omega]))
 
+(defn reset-lattice
+  []
+  (dosync 
+    (ref-set (:parents omega) #{})
+    (ref-set (:children omega) #{})
+    (ref-set subsumption-lattice [omega])))
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; Implementation ;;;
 ;;;;;;;;;;;;;;;;;;;;;;

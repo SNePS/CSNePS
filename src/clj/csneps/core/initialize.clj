@@ -44,6 +44,9 @@
 
       ;; Reinitialize unification tree.
       (ref-set build/DistNodes {})
+      
+      ;; Clear the subsumption lattice
+      (build/reset-lattice)      
 
       ;; Remove terms from frames.
       (doseq [cf (seq @cf/CASEFRAMES)]
