@@ -211,7 +211,7 @@
                    (alter type-map assoc (:name wft) (:type cf)))
 
                  ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
-                 (doseq [unif (getUnifiers wft)]
+                 (doseq [unif (match wft)]
                    (build-unifier-channels unif))
                  (addTermToUnificationTree wft)
 

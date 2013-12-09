@@ -1,0 +1,39 @@
+;;; Demo of match, using unification, type checking, and subsumption.
+;;; Daniel R. Schlegel
+;;; Created 12/9/2013
+
+(in-ns 'csneps.core.snuser)
+
+(defineType Animal (Thing))
+(defineType Mammal (Animal))
+(defineType Dog (Mammal))
+(defineType Cat (Mammal))
+(defineType Fish (Animal))
+(defineType Pike (Fish))
+(defineType Bass (Fish))
+
+(defineSlot child :type Animal)
+(defineSlot parent :type Animal)
+(defineSlot mother :type Animal)
+(defineSlot father :type Animal)
+
+(defineSlot dog :type Dog)
+
+(defineCaseframe 'Proposition '('Parent parent child))
+(defineCaseframe 'Proposition '('Mother mother child))
+(defineCaseframe 'Proposition '('Father father child))
+
+(defineCaseframe 'Proposition '('Dog dog))
+
+;; Easy case.
+(assert '(Dog #{Fido Lassie}))
+
+(assert '(Parent Fido (every x (Father x Fido)))) ;; wft3
+
+(assert '(Parent Fido Lassie)) ;; wft4
+
+;; An i-channel should be created from wft3 -> wft4
+;; and another from wft4 -> wft3.  
+(snip/ig-status)
+
+

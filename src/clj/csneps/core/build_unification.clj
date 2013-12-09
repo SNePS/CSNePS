@@ -431,14 +431,6 @@
                                                        :target (:acceptWft targetnode) 
                                                        :sourcebind s 
                                                        :targetbind t}
-      ;; Subsumption case.
-      ;; TODO: Right now this just fails unification when targetnode doesn't subsume sourcenode.
-      ;;       we need to check it the other way as well, and make the source/target work out
-      ;;       appropriately if that works. 
-      (and (variable? (:acceptWft sourcenode))        ;; Target must subsume source.
-           (variable? (:acceptWft targetnode)))       (when (subsumes? (:acceptWft targetnode)
-                                                                       (:acceptWft sourcenode))
-                                                        (unifyVarTree variable? sourcenode targetnode [s t]))
       ;; Single variable.
       (variable? (:acceptWft sourcenode))             (unifyVarTree variable? sourcenode targetnode [s t])
       (variable? (:acceptWft targetnode))             (unifyVarTree variable? sourcenode targetnode [s t])
@@ -456,8 +448,44 @@
                                                 (subst-bindings variable?)
                                                 (try-subst-map variable?))]]
       {:source (:source u) :target (:target u) :sourcebind subsourcebind :targetbind subtargetbind})))
+      
+(defn- check-binding-matches
+  "The actual check that t1 is a subtype (or equal type) of v1, and that if t1 is a 
+   variable, that it is subsumed by v1"
+  [[v1 t1]]
+  (if (subtypep (semantic-type-of t1) (semantic-type-of v1))
+    (if (variable? t1)
+      (subsumes? v1 t1)
+      true)
+    nil))
+  
+(defn- match-single-unifier
+  ""
+  [unifier]
+  (let [sourcebind (:sourcebind unifier)
+        targetbind (:targetbind unifier)
+        sbok (every? check-binding-matches sourcebind)
+        tbok (every? check-binding-matches targetbind)]
+    (cond
+      (and sbok tbok) (list unifier {:source (:target unifier)
+                                     :target (:source unifier)
+                                     :sourcebind targetbind
+                                     :targetbind sourcebind})
+      sbok (list unifier)
+      tbok (list {:source (:target unifier)
+                  :target (:source unifier)
+                  :sourcebind targetbind
+                  :targetbind sourcebind})
+      :else nil)))
 
-      ;(println u))
+(defn match
+  "Given a term, matches the term against the unificationt tree, and returns
+   the set of unifiers along with bindings which unify, satisfy type constraints,
+   and satisfy subsumption constraints. If term may be both the source and target
+   of a unified term, both versions are returned."
+  [term]
+  (let [unifiers (getUnifiers term)]
+    (apply concat (map match-single-unifier unifiers))))
 
 (defn unify?
   "Returns the unifiers if term1 unifies with term2. Creates a temporary
