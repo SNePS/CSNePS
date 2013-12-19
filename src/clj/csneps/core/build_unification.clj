@@ -377,7 +377,7 @@
 
 (defn- treeUnifyVar
   [variable? sourcenode targetnode [s t]]
-  ;(println "Unifying: " (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t]))
+  (println "Unifying: " (:acceptWft sourcenode) [s t] (:acceptWft targetnode) (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t]))
   [sourcenode targetnode (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t])])
 
 (defn- treeUnifyVarList
@@ -442,30 +442,45 @@
         termchain (addTermToUnificationTree term :distnodes tempdist)
         unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
                    (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
-    ;(when-not (empty? unifiers) (println unifiers))
+    (when-not (empty? unifiers) (println unifiers))
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
                                                 (try-subst-map variable?))]]
       {:source (:source u) :target (:target u) :sourcebind subsourcebind :targetbind subtargetbind})))
-      
+
+(defn- vvbindreverse
+  [[t1 t2]]
+  (when (and (variable? t1) (variable? t2))
+    [t2 t1]))
+
+(defn- fix-binds
+  [unifier]
+  (let [sbinds (into (:sourcebind unifier) (map vvbindreverse (:targetbind unifier)))
+        tbinds (into (:targetbind unifier) (map vvbindreverse (:sourcebind unifier)))]
+    (-> unifier (assoc :sourcebind sbinds) (assoc :targetbind tbinds))))
+
 (defn- check-binding-matches
-  "The actual check that t1 is a subtype (or equal type) of v1, and that if t1 is a 
-   variable, that it is subsumed by v1"
+  "The actual check that v1 is a subtype (or equal type) of t1, and that if t1 is a 
+   variable, that it subsumes v1"
   [[v1 t1]]
-  (if (subtypep (semantic-type-of t1) (semantic-type-of v1))
+  ;; check that t1 can replace v1 legally. That is, all v1's are t1's.
+  (if (subtypep (semantic-type-of v1) (semantic-type-of t1))
     (if (variable? t1)
-      (subsumes? v1 t1)
+      (subsumes? t1 v1)
       true)
     nil))
   
 (defn- match-single-unifier
   ""
   [unifier]
-  (let [sourcebind (:sourcebind unifier)
+  (let [unifier (fix-binds unifier)
+        sourcebind (:sourcebind unifier)
         targetbind (:targetbind unifier)
         sbok (every? check-binding-matches sourcebind)
         tbok (every? check-binding-matches targetbind)]
+    (println unifier)
+    (println sourcebind "\n" targetbind "\n" sbok tbok)
     (cond
       (and sbok tbok) (list unifier {:source (:target unifier)
                                      :target (:source unifier)
