@@ -168,16 +168,21 @@
   [term]
   (reset! PRINTED-VARIABLES (hash-set))
   (cond
+    ;; Variable
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Variable)
-      (str (print-named-variable-term term))
+    (str (print-named-variable-term term))
+    ;; Molecular
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Molecular)
-      (str (wft-string term) (print-term term))
+    (str (wft-string term) (print-term term))
+    ;; Term Set
+    (set? term)
+    (print-set term true)
     :else
-      (str (print-atom term)
-        (if
-          (and (= (csneps.core/semantic-type-of term) :Proposition)
-	       (ct/asserted? term (ct/currentContext)))
-          "!" ""))))
+    (str (print-atom term)
+      (if
+        (and (= (csneps.core/semantic-type-of term) :Proposition)
+	     (ct/asserted? term (ct/currentContext)))
+        "!" ""))))
 
 (defn sneps-printer
   [object]
