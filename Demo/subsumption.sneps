@@ -51,26 +51,26 @@
 ;;; Every elephant has a trunk
 (assert '(isPartOf 
 	  (some y(x) (Isa y Trunk))
-	  (every x (Isa x Elephant))))
+	  (every x (Isa x Elephant) (Isa x Agent))))
 
 ;;; Albino elephants are valuable
 (assert '(Property 
-           (every x (Isa x Elephant) (Property x Albino)) 
+           (every x (Isa x Elephant) (Property x Albino) (Isa x Agent)) 
            Valuable))
 
 ;;; A trunk of every elephant is flexible
 (assert '(Property (some y(x) (Isa y Trunk)
-		              (isPartOf y (every x (Isa x Elephant))))
+		              (isPartOf y (every x (Isa x Elephant) (Isa x Agent))))
 	           Flexible))
 
 ;;; Grey elephants are common
 (assert '(Property
-           (every x (Isa x Elephant) (Property x Grey))
+           (every x (Isa x Elephant) (Property x Grey) (Isa x Agent))
            Common))
 
 ;;; Some grey elephant should be large.
 (ask '(Property 
-        (some x() (Isa x Elephant) (Property x Grey))
+        (some x() (Isa x Elephant) (Property x Grey) (Isa x Agent))
         Large))
 
 ;;; Some elephant should be valuable.
@@ -82,14 +82,14 @@
 ;;; This example involves arbitrary objects
 ;;;   with indefinite objects in their restrictions
 (assert '(Isa 
-           (every x (Isa x Animal) 
+           (every x (Isa x Animal) (Isa x Agent)
                     (isPartOf (some y(x) (Isa y Trunk)) 
                               x))
            Elephant))
 
 ;;; Every animal that has a long trunk is amazing.
 (assert '(Property
-           (every x (Isa x Animal)
+           (every x (Isa x Animal) (Isa x Agent)
                     (isPartOf (some y(x) (Isa y Trunk) 
                                          (Property y Long))
                               x))
@@ -99,7 +99,7 @@
 ;;; This requires subsumption among arbitrary objects
 ;;;    with indefinite objects in their restrictions.
 (ask '(Isa 
-        (every x (Isa x Animal)
+        (every x (Isa x Animal) (Isa x Agent)
                  (isPartOf (some y(x) (Isa y Trunk) 
                                       (Property y Long))
                            x))
@@ -113,13 +113,13 @@
 ;;;
 ;;; Any person whose sons are professionals is proud.
 (assert '(Property
-           (every x (Isa x Person)
+           (every x (Isa x Person) (Isa x Agent)
                     (Isa (every y (Son y x)) Professional))
            Proud))
 
 ;;; Any woman whose sons are doctors should be proud.
 (ask '(Property
-        (every x (Isa x Person)
+        (every x (Isa x Person) (Isa x Agent)
                  (Property x Female)
                  (Isa (every y (Son y x)) Professional)
                  (Isa y Doctor))
