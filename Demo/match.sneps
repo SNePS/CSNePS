@@ -4,6 +4,8 @@
 
 (in-ns 'csneps.core.snuser)
 
+(clearkb true)
+
 (defineType Animal (Thing))
 (defineType Mammal (Animal))
 (defineType Dog (Mammal))
@@ -19,6 +21,13 @@
 
 (defineSlot dog :type Dog)
 
+(defineSlot object :type Thing
+	    :docstring "Non-agentive objects of actions.")
+(defineSlot property :type Thing)
+
+(defineCaseframe 'Proposition '('Property object property)
+  :docstring "[object] has property [property]")
+
 (defineCaseframe 'Proposition '('Parent parent child))
 (defineCaseframe 'Proposition '('Mother mother child))
 (defineCaseframe 'Proposition '('Father father child))
@@ -26,14 +35,30 @@
 (defineCaseframe 'Proposition '('Dog dog))
 
 ;; Easy case.
-(assert '(Dog #{Fido Lassie}))
+; TODO: Fix bug in unifying this set with the arb!
+;(assert '(Dog #{Fido Lassie}))
+(assert '(Dog Fido))
+(assert '(Dog Lassie))
 
-(assert '(Parent Fido (every x (Father x Fido)))) ;; wft3
+(assert '(Parent Fido (every x (Father x Fido) (Dog x)))) ;; wft3
 
 (assert '(Parent Fido Lassie)) ;; wft4
 
+(list-terms :types true)
+
 ;; An i-channel should be created from wft3 -> wft4
-;; and another from wft4 -> wft3.  
+;; and another from wft4 -> wft3.
 (snip/ig-status)
 
+;; Subsumption case.
+(clearkb)
 
+(assert '(Property
+           (every x (Isa x Elephant) (Isa x Animal))
+           Large))
+          
+(assert '(Property
+           (every x (Isa x Elephant) (Property x Albino) (Isa x Animal))
+           Large)) 
+
+(snip/ig-status)
