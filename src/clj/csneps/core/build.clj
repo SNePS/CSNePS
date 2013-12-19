@@ -346,16 +346,16 @@
 (defn build-unifier-channels
   "Channels built between unifiable terms."
   [unif]
-  (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))
-        t->s (build-channel (:target unif) (:source unif) (:targetbind unif) (:sourcebind unif))]
+  (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
+        ;t->s (build-channel (:target unif) (:source unif) (:targetbind unif) (:sourcebind unif))]
     (cond 
       ;; Since an :AnalyticGeneric is "meaningless", it doesn't 
       ;; ever result in new instances, so we don't need i-channels
       ;; in both directions.
-      (= (semantic-type-of (:source unif)) :AnalyticGeneric)
-      (dosync 
-        (alter (:i-channels (:target unif)) conj t->s)
-        (alter (:ant-in-channels (:source unif)) conj t->s))
+      ;(= (semantic-type-of (:source unif)) :AnalyticGeneric)
+      ;(dosync 
+      ;  (alter (:i-channels (:target unif)) conj t->s)
+      ;  (alter (:ant-in-channels (:source unif)) conj t->s))
       (= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (dosync 
         (alter (:i-channels (:source unif)) conj s->t)
