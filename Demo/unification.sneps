@@ -1,0 +1,21 @@
+;;; Demo of unification, including on sets.
+;;; Daniel R. Schlegel
+;;; Created 12/20/2013
+
+;; Simple test of sets in substitutions. 
+;; The result should be a single substitution with the
+;; source binding empty, and the target binding containing
+;; #{Lassie Fido} substituted for arb1.
+(clearkb true)
+(assert '(Isa #{Lassie Fido} Dog)) ;; wft1
+(assert '(Isa (every x) Dog)) ;; wft3
+(build/unify? (find-term 'wft1) (find-term 'wft3))
+
+;; A case where sets should not be used in substitutions,
+;; namely, where the variable portion is a set. 
+;; Two substitutions should be returned - one substituting 
+;; Lassie for arb1, and the other Lassie for arb2.
+(clearkb true)
+(assert '(Isa Lassie Pet)) ;; wft1
+(assert '(Isa #{(every x (Isa x Dog)) (every y (Isa y Cat))} Pet)) ;; wft6
+(build/unify? (find-term 'wft1) (find-term 'wft6))
