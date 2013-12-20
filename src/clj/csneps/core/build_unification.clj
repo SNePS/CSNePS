@@ -63,8 +63,8 @@
 (defn- unify-variable
   [varp v expr binds index]
   ;(println (unify-variable-1binds varp v expr binds index))
-  ;(println "v: " v "expr: " expr "binds: " binds "index: " index)
-  (if (seq? binds)
+  ;(println "v: " v "expr: " expr "binds: " (apply str binds) "index: " index)
+  (if (list? binds)
     (remove nil?
       (for [b binds]
         (unify-variable-1binds varp v expr b index)))
@@ -83,8 +83,10 @@
      (cond
        (not (and source target)) [nil nil]
        (= s t)                   [source target]
-       (set? s)                  (unifySets s (if (set? t) t (hash-set t)) [source target] 0)
-       (set? t)                  (unifySets t (if (set? s) s (hash-set s)) [source target] 1)
+       (set? s)                  (do ;(println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
+                                   (unifySets s (if (set? t) t #{t}) [source target] 0))
+       (set? t)                  (do ;(println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
+                                   (unifySets t (if (set? s) s #{s}) [source target] 1))
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
        (every? seq? [s t]) (garner-unifiers variable?
@@ -119,6 +121,7 @@
 (defn- subst-bindings
   ([binds] (subst-bindings variable? binds))
   ([variable? binds]
+    ;(println "SB" binds)
     (if (seq? binds)
       (for [b binds]
         (subst-bindings-1bind variable? b))
@@ -178,11 +181,11 @@
           (vec (for [y set2]
                  (garner-unifiers x y))))))
 
-(defn reduction [binds permutation]
-  (reduce
-    #(unify-variable variable? (ffirst %2) (second (first %2)) %1)
-    binds
-    permutation))
+;(defn reduction [binds permutation]
+;  (reduce
+;    #(unify-variable variable? (ffirst %2) (second (first %2)) %1)
+;    binds
+;    permutation))
 
 (defn extract-permutation [rows perm]
   "Takes a list of rows, and a permutation value, and returns the proper items
@@ -191,6 +194,14 @@
     ({?x Alex} {?z (caregiver ?y)})"
   (for [p (map #(vector %1 %2) perm rows)]
     (nth (second p) (first p))))
+
+;; [[{} {arb1: (every x ) Lassie}]]
+;; to:
+;; [{arb1: (every x ) Lassie}
+;; with idx = 1
+(defn getbinds
+  [unifier idx]
+  (vec (map #(nth % idx) unifier)))
 
 ;;; The Set-Based Unification Process
 ;;; Illustrated with the example: #{'?x '?y '(caregiver ?y)} (source) unified with #{'?z 'Alex} (target)
@@ -232,24 +243,59 @@
   (let [unifiers (findSetUnifiers set1 set2) ;; Step 1.
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
-                    (reduce
-                      #(if (zero? idx)
-                         (unify-variable varfn (ffirst (first %2)) (second (ffirst %2)) %1 idx)
-                         (unify-variable varfn (second (ffirst %2)) (ffirst (first %2)) %1 idx))
-                      binds
-                      permutation))]
-    ;(println "Set Unifiers " (first (first unifiers)))
-    ;(println "Permuted subset unifiers: \n" unifpermute)
+                    ;(println "!!!" (ffirst permutation) (second (first permutation)))
+                    (let [binds (if (seq (ffirst permutation))
+                                  (reduce 
+                                    #(unify-variable varfn (first (ffirst %2)) (second (ffirst %2)) %1 0)
+                                    binds
+                                    permutation)
+                                  binds)]
+                      (if (seq (second (first permutation)))
+                        (reduce 
+                          #(unify-variable varfn (ffirst (second %2)) (second (first (second %2))) %1 1)
+                          binds
+                          permutation)
+                        binds)))]
+                    
+                    
+                    ;(reduce
+                    ;  #(if (zero? idx)
+                    ;     (unify-variable varfn (first (ffirst %2)) (second (ffirst %2)) %1 idx)
+                    ;     (unify-variable varfn (second (ffirst %2)) (first (ffirst %2)) %1 idx))
+                    ;  binds
+                    ;  permutation))]
+    ;(binding [*print-level* 6] 
+    ;  (println "Set Unifiers " unifiers)
+    ;  (println "Permutations" unifpermute)) 
     (remove nil? 
-      (flatten
-        (for [p unifpermute] ;; Begin step 3
-            ;(println "Permutation: " p)
-            (for [sub (map #(extract-permutation p %) (cb/permutations (range (count p))))]
-              ;(let [subs (map #(extract-permutation p2 %) (cb/permutations (range (count perms))))]
-                ;(println "EXTRACTED: " sub)
-                (when-not (some nil? sub)
-                  ;(println "Calling reduction with substitutions: " sub)
-                  (reduction sub)))))))) ;Step 4
+            (loop [unifpermute unifpermute
+                   sub (map #(extract-permutation (first unifpermute) %) 
+                            (cb/permutations (range (count (first unifpermute)))))
+                   result []]
+              (cond 
+                (and (empty? sub)
+                     (<= (count unifpermute) 1)) result
+                (empty? sub) (recur (rest unifpermute)
+                                    (map #(extract-permutation (first (rest unifpermute)) %) 
+                                         (cb/permutations (range (count (first (rest unifpermute))))))
+                                    result)
+                (not (some nil? sub)) (recur unifpermute
+                                             (rest sub)
+                                             (conj result (reduction (first sub))))
+                :else (recur unifpermute
+                             (rest sub)
+                             result))))))
+              
+            
+            
+;      (flatten
+;        (for [p unifpermute] ;; Begin step 3
+;            (for [sub (map #(extract-permutation p %) (cb/permutations (range (count p))))]
+;                (when-not (some nil? sub)
+                  ;(binding [*print-level* 4] 
+                    ;(println "EXTRACTED: " sub)
+                    ;(println "Result: " (reduction sub)))
+;                  (reduction sub)))))))) ;Step 4
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -377,7 +423,7 @@
 
 (defn- treeUnifyVar
   [variable? sourcenode targetnode [s t]]
-  (println "Unifying: " (:acceptWft sourcenode) [s t] (:acceptWft targetnode) (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t]))
+  ;(println "Unifying: " (:acceptWft sourcenode) [s t] (:acceptWft targetnode) (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t]))
   [sourcenode targetnode (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t])])
 
 (defn- treeUnifyVarList
@@ -387,6 +433,8 @@
   [variable? sourcenodelist targetnode [s t]]
   ;(println "Unify var list..." (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t])))
   (let [unifiers (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t]))]
+    ;(binding [*print-level* 4] 
+    ;  (println unifiers))
     (doall 
       (for [[sn tn [sb tb]] unifiers] 
         (map #(unifyTreeWithChain @(:children tn) :variable? variable? :s sb :t tb :source %) (vals @(:children sn)))))))
@@ -431,7 +479,7 @@
                                                        :target (:acceptWft targetnode) 
                                                        :sourcebind s 
                                                        :targetbind t}
-      ;; Single variable.
+      ;; Variables.
       (variable? (:acceptWft sourcenode))             (unifyVarTree variable? sourcenode targetnode [s t])
       (variable? (:acceptWft targetnode))             (unifyVarTree variable? sourcenode targetnode [s t])
       :else nil)))
@@ -442,7 +490,7 @@
         termchain (addTermToUnificationTree term :distnodes tempdist)
         unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
                    (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
-    (when-not (empty? unifiers) (println unifiers))
+    ;(when-not (empty? unifiers) (println unifiers))
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
@@ -479,8 +527,8 @@
         targetbind (:targetbind unifier)
         sbok (every? check-binding-matches sourcebind)
         tbok (every? check-binding-matches targetbind)]
-    (println unifier)
-    (println sourcebind "\n" targetbind "\n" sbok tbok)
+    ;(println unifier)
+    ;(println sourcebind "\n" targetbind "\n" sbok tbok)
     (cond
       (and sbok tbok) (list unifier {:source (:target unifier)
                                      :target (:source unifier)
