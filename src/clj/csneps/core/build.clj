@@ -816,11 +816,11 @@
                       :qvar (new-query-variable {:name name 
                                                  :var-label var-label
                                                  :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
-        (dosync 
-          (case quant
-            :every (inc-arb-counter)
-            :some  (inc-ind-counter)
-            :qvar  (inc-qvar-counter)))
+        ;(dosync 
+         (case quant
+           :every (inc-arb-counter)
+           :some  (inc-ind-counter)
+           :qvar  (inc-qvar-counter))
           (instantiate-sem-type (:name varterm) :Entity)
         
         varterm)))
@@ -854,7 +854,7 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
   (let [var (substitution var-label)]
-    (dosync 
+    ;(dosync 
       (alter TERMS assoc (:name var) var)
       
       (if (= quant :qvar)
@@ -879,7 +879,7 @@
                  (alter QVARS conj var)
                  (ref-set (:fully-built var) true)))
     
-    var)))
+    var))
 
 (defn build-vars
   "Loops through the arbs and inds. and builds their restriction
@@ -1011,7 +1011,8 @@
    second the the built nodes, and the third the substitution between
    var-labels and the AI/IO nodes."
   [expr]
+  (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
-      [new-expr built-vars substitution]))
+      [new-expr built-vars substitution])))
