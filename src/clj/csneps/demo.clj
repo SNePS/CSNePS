@@ -12,7 +12,7 @@
    exception will halt the demo.
      If the file is omitted, a menu will be presented of available demos."
   [& {:keys [file pause failonerror] :or {file nil, pause nil, failonerror nil}}]
-  (when file
+  (if file
     (with-open [r (java.io.PushbackReader.
                   (clojure.java.io/reader file))]
       (binding [*read-eval* false]
@@ -50,4 +50,5 @@
             (if failonerror
               (println "output:" (eval form))
               (println "output:" (try (eval form) (catch Exception e (.getMessage e))))) ;; We watch to catch errors, print them, and move on sometimes.
-            (recur (read r false nil) keep-pausing continue)))))))
+            (recur (read r false nil) keep-pausing continue)))))
+    "Please use :file. Listing not yet implemented."))
