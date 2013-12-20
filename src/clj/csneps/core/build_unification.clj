@@ -83,9 +83,9 @@
      (cond
        (not (and source target)) [nil nil]
        (= s t)                   [source target]
-       (set? s)                  (do (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
+       (set? s)                  (do ;(println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
                                    (unifySets s (if (set? t) t #{t}) [source target] 0))
-       (set? t)                  (do (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
+       (set? t)                  (do ;(println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
                                    (unifySets t (if (set? s) s #{s}) [source target] 1))
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
@@ -256,14 +256,6 @@
                           binds
                           permutation)
                         binds)))]
-                    
-                    
-                    ;(reduce
-                    ;  #(if (zero? idx)
-                    ;     (unify-variable varfn (first (ffirst %2)) (second (ffirst %2)) %1 idx)
-                    ;     (unify-variable varfn (second (ffirst %2)) (first (ffirst %2)) %1 idx))
-                    ;  binds
-                    ;  permutation))]
     ;(binding [*print-level* 6] 
     ;  (println "Set Unifiers " unifiers)
     ;  (println "Permutations" unifpermute)) 
@@ -285,18 +277,6 @@
                 :else (recur unifpermute
                              (rest sub)
                              result))))))
-              
-            
-            
-;      (flatten
-;        (for [p unifpermute] ;; Begin step 3
-;            (for [sub (map #(extract-permutation p %) (cb/permutations (range (count p))))]
-;                (when-not (some nil? sub)
-                  ;(binding [*print-level* 4] 
-                    ;(println "EXTRACTED: " sub)
-                    ;(println "Result: " (reduction sub)))
-;                  (reduction sub)))))))) ;Step 4
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Unification Tree Structure ;;;
@@ -437,8 +417,8 @@
   [variable? sourcenodelist targetnode [s t]]
   ;(println "Unify var list..." (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t])))
   (let [unifiers (apply concat (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t])))]
-    (binding [*print-level* 4] 
-      (println unifiers))
+    ;(binding [*print-level* 4] 
+    ;  (println unifiers))
     (doall 
       (for [[sn tn [sb tb]] unifiers] 
         (map #(unifyTreeWithChain @(:children tn) :variable? variable? :s sb :t tb :source %) (vals @(:children sn)))))))
