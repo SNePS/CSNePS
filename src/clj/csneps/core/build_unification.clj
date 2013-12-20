@@ -83,9 +83,9 @@
      (cond
        (not (and source target)) [nil nil]
        (= s t)                   [source target]
-       (set? s)                  (do ;(println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
+       (set? s)                  (do (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
                                    (unifySets s (if (set? t) t #{t}) [source target] 0))
-       (set? t)                  (do ;(println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
+       (set? t)                  (do (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
                                    (unifySets t (if (set? s) s #{s}) [source target] 1))
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
@@ -424,7 +424,11 @@
 (defn- treeUnifyVar
   [variable? sourcenode targetnode [s t]]
   ;(println "Unifying: " (:acceptWft sourcenode) [s t] (:acceptWft targetnode) (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t]))
-  [sourcenode targetnode (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t])])
+  (let [unifiers (garner-unifiers variable? (:acceptWft sourcenode) (:acceptWft targetnode) [s t])]
+    (if (seq? unifiers)
+      (for [u unifiers]
+        [sourcenode targetnode u])
+      (list [sourcenode targetnode unifiers]))))
 
 (defn- treeUnifyVarList
   "Takes a variable wft and a list of nodes representing wfts to unify the variable
@@ -432,9 +436,9 @@
    whether or not the result goes in the source or target. 0 = variable is source, 1 = x is source "
   [variable? sourcenodelist targetnode [s t]]
   ;(println "Unify var list..." (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t])))
-  (let [unifiers (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t]))]
-    ;(binding [*print-level* 4] 
-    ;  (println unifiers))
+  (let [unifiers (apply concat (for [sn sourcenodelist] (treeUnifyVar variable? sn targetnode [s t])))]
+    (binding [*print-level* 4] 
+      (println unifiers))
     (doall 
       (for [[sn tn [sb tb]] unifiers] 
         (map #(unifyTreeWithChain @(:children tn) :variable? variable? :s sb :t tb :source %) (vals @(:children sn)))))))
