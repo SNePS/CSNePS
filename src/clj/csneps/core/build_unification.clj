@@ -79,13 +79,13 @@
   ([variable? s t] (garner-unifiers variable? s t [{} {}]))
   ([variable? s t binds] (garner-unifiers unify-variable variable? s t binds))
   ([uv-fn variable? s t [source target]]
-    ;(println "Source:" s "Source Bindings:" source "\nTarget:" t "Target Bindings:" target)
+    (println "#U# Source:" s "Source Bindings:" source "Target:" t "Target Bindings:" target)
      (cond
        (not (and source target)) [nil nil]
        (= s t)                   [source target]
-       (set? s)                  (do ;(println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
+       (set? s)                  (do (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
                                    (unifySets s (if (set? t) t #{t}) [source target] 0))
-       (set? t)                  (do ;(println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
+       (set? t)                  (do (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
                                    (unifySets t (if (set? s) s #{s}) [source target] 1))
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
@@ -239,7 +239,7 @@
 ;;; Note that the resolution of variables in these is handled later.
 
 (defn unifySets [set1 set2 binds idx & {:keys [varfn] :or {varfn variable?}}]
-  ;(println "Unifying sets: " set1 "\nand: " set2) 
+  (println "Unifying sets: " set1 "\nand: \n" set2) 
   (let [unifiers (findSetUnifiers set1 set2) ;; Step 1.
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
@@ -256,9 +256,9 @@
                           binds
                           permutation)
                         binds)))]
-    ;(binding [*print-level* 6] 
-    ;  (println "Set Unifiers " unifiers)
-    ;  (println "Permutations" unifpermute)) 
+    (binding [*print-level* 6] 
+      (println "Set Unifiers " unifiers)
+      (println "Permutations" unifpermute)) 
     (remove nil? 
             (loop [unifpermute unifpermute
                    sub (map #(extract-permutation (first unifpermute) %) 
@@ -464,8 +464,25 @@
                                                        :sourcebind s 
                                                        :targetbind t}
       ;; Variables.
-      (variable? (:acceptWft sourcenode))             (unifyVarTree variable? sourcenode targetnode [s t])
-      (variable? (:acceptWft targetnode))             (unifyVarTree variable? sourcenode targetnode [s t])
+      (or 
+        (variable? (:acceptWft sourcenode))           
+        (variable? (:acceptWft targetnode)))          (unifyVarTree variable? sourcenode targetnode [s t])
+      (or 
+        (set? (:acceptWft sourcenode))
+        (set? (:acceptWft targetnode)))               (let [setunifres (unifySets 
+                                                                         (if (set? (:acceptWft sourcenode))
+                                                                           (:acceptWft sourcenode)
+                                                                           #{(:acceptWft sourcenode)})
+                                                                         (if (set? (:acceptWft targetnode))
+                                                                           (:acceptWft targetnode)
+                                                                           #{(:acceptWft targetnode)})
+                                                                         [s t] 0)]
+                                                        (for [[sb tb] setunifres
+                                                              source (vals @(:children sourcenode))]
+                                                          (unifyTreeWithChain
+                                                            @(:children targetnode)
+                                                            :variable variable? :s sb :t tb :source source
+                                                            :distnodes distnodes)))
       :else nil)))
 
 (defn getUnifiers
