@@ -39,8 +39,8 @@
                                          (doall (map inner (:down-cableset termpart))))
                                        :Proposition 
                                        {}))
-    (atomicTerm? termpart) (do (println (outer termpart)) (outer termpart))
-    (set? termpart) (do (println (set (doall (map inner termpart)))) (set (doall (map inner termpart))))
+    (atomicTerm? termpart) (outer termpart)
+    (set? termpart) (set (doall (map inner termpart)))
     :else (error (str "Term contains unknown parts (" termpart ")"))))
 
 (defn term-recur
