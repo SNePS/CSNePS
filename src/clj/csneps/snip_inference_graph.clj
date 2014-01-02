@@ -12,7 +12,7 @@
 (def screenprinter (agent nil))
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug false)
+(def debug true)
 (def showproofs true)
 
 ;; Asynchronous asserter
@@ -494,7 +494,7 @@
 
 (defn generic-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message)))))
+  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node))))
   ;; The instance is the substitution applied to this term. 
   ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
   ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
@@ -569,7 +569,8 @@
   
   ;; If I'm already asserted, and I just received an I-INFER message,
   ;; I should attempt to eliminate myself.
-  (when (and (ct/asserted? term (ct/currentContext))
+  (when (and (not (isa? (csneps/syntactic-type-of term) :csneps.core/Variable))
+             (ct/asserted? term (ct/currentContext))
              (= (:type message) 'I-INFER))
     (when-let [result (elimination-infer message term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
