@@ -797,9 +797,13 @@
    previously. Otherwise, resrtiction sets still need to be built."
   [quant var-label rsts & {:keys [arb-rsts ind-rsts qvar-rsts]}]
   (doseq [rst rsts
-            :when (not (some #{var-label} rst))]
-      (error
-	  (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
+            :when (not (some #{var-label} (flatten (prewalk (fn [x] 
+                                                              (if (set? x) 
+                                                                (seq x) 
+                                                                x)) 
+                                                            rst))))]
+    (error
+      (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
   (or (and (or (= quant :qvar) (= quant :every)) (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
       (let [name (case quant
