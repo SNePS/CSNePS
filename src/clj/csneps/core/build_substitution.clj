@@ -9,8 +9,8 @@
   ([term sub] (apply-sub-to-term variable? term sub))
   ([variable? term sub]
    (term-prewalk (fn [x]
-                         (if (variable? x)
-                           (or (sub x) x)
+                         (if (sub x)
+                           (sub x)
                            x))
                         term)))
 
