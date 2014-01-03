@@ -29,16 +29,18 @@
 
 (defn compatible? [msg1 msg2]
   "Returns true if the two Messages do not have contradictory 
-   flagged node sets."
-  (loop [fns1 (:flaggedns msg1)]
-    (if (empty? fns1) 
-      true
-      (let [fn1p (second fns1)
-            fn2p (get (:flaggedns msg2) (first fns1))]
-        (when-not (or 
-                    (and (false? fn2p) (true? fn1p))
-                    (and (true? fn2p) (false? fn1p)))
-          (recur (rest fns1)))))))
+   flagged node sets, and their substitutions are compatible."
+  (and 
+    (build/compatible-substitutions? (:subst msg1) (:subst msg2))
+    (loop [fns1 (:flaggedns msg1)]
+      (if (empty? fns1) 
+        true
+        (let [fn1p (second fns1)
+              fn2p (get (:flaggedns msg2) (first fns1))]
+          (when-not (or 
+                      (and (false? fn2p) (true? fn1p))
+                      (and (true? fn2p) (false? fn1p)))
+            (recur (rest fns1))))))))
 
 (defn merge-messages [msg1 msg2]
   (let [new-flaggedns (clojure.core/merge (:flaggedns msg1) (:flaggedns msg2))]
