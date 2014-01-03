@@ -21,4 +21,4 @@
 (assert '(Isa Fido Dog))
 (assert '(Isa Lassie Dog))
 (assert '(Scare Fido))
-(askwh '(Carry ?x))
+(askwh '(Carry (?x (Isa ?x Dog))))
