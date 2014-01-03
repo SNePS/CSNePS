@@ -514,17 +514,18 @@
 (defn arbitrary-instantiation
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
-  (let [new-ruis (get-rule-use-info (:msgs node) message)
-        resct (count @(:restriction-set node))
-        der-rui-t (filter #(= (:pos %) resct) new-ruis)
-        new-msgs (map #(derivative-message % :origin node) der-rui-t)
-        ich @(:i-channels node)]
-    (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
-    (when (seq der-rui-t)
-      (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
-      [true (for [msg new-msgs
-                  ch ich]
-              [ch msg])])))
+  (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
+    (let [new-ruis (get-rule-use-info (:msgs node) message)
+          resct (count @(:restriction-set node))
+          der-rui-t (filter #(= (:pos %) resct) new-ruis)
+          new-msgs (map #(derivative-message % :origin node) der-rui-t)
+          ich @(:i-channels node)]
+      (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
+      (when (seq der-rui-t)
+        (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
+        [true (for [msg new-msgs
+                    ch ich]
+                [ch msg])]))))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
