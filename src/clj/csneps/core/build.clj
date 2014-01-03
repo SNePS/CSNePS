@@ -825,7 +825,7 @@
            :every (inc-arb-counter)
            :some  (inc-ind-counter)
            :qvar  (inc-qvar-counter))
-          (instantiate-sem-type (:name varterm) :Entity)
+         (instantiate-sem-type (:name varterm) :Entity)
         
         varterm)))
 
@@ -922,7 +922,8 @@
 
   Ex. ind-deps-rsts: [y -> ((x) (Isa y Donkey))]
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
-  [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]
+  [assertion-spec arb-rsts ind-deps-rsts qvar-rsts & {:keys [buildingqvar] :or {buildingqvar #{}}}]
+  (println "ASPEC:" assertion-spec)
   (cond
     (and (seqable? assertion-spec) (not (set? assertion-spec)))
     (cond
@@ -934,12 +935,13 @@
                       the same variable."))
           :else 
           (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest (rest (rest assertion-spec)))
-                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                                                        arb-rsts ind-deps-rsts qvar-rsts
+                                                        :buildingqvar buildingqvar)
                 idr (assoc idr
                            (second assertion-spec) 
                            (list (nth assertion-spec 2) aspec))]
             [(second assertion-spec) ar idr qvr])))
-      (or (= (first assertion-spec) 'every)) ;;qvar: (synvariable? (first assertion-spec)))
+      (= (first assertion-spec) 'every)
       (let [rsts (second (arb-rsts (second assertion-spec)))]
         (cond
           (and rsts (not (clojure.set/difference rsts (rest (rest assertion-spec)))))
@@ -947,7 +949,8 @@
                       the same variable."))
           :else
           (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest (rest assertion-spec))
-                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                                                        arb-rsts ind-deps-rsts qvar-rsts
+                                                        :buildingqvar buildingqvar)
                 ar (assoc ar
                           (second assertion-spec)
                           (if (= (rest (rest assertion-spec)) '())
@@ -962,7 +965,8 @@
                       the same variable."))
           :else
           (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest assertion-spec) 
-                                                        arb-rsts ind-deps-rsts qvar-rsts)
+                                                        arb-rsts ind-deps-rsts qvar-rsts
+                                                        :buildingqvar (conj buildingqvar (first assertion-spec)))
                 qvr (assoc qvar-rsts
                            (first assertion-spec)
                            (if (= (rest assertion-spec) '())
@@ -977,7 +981,7 @@
              qvar-rsts qvar-rsts]
         (if (empty? assertion-spec)
           [new-expr arb-rsts ind-deps-rsts qvar-rsts]
-          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)]
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts :buildingqvar buildingqvar)]
             (recur
               (rest assertion-spec)
               (conj new-expr aspec)
@@ -992,14 +996,15 @@
              qvar-rsts qvar-rsts]
         (if (empty? assertion-spec)
           [new-expr arb-rsts ind-deps-rsts qvar-rsts]
-          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts)]
+          (let [[aspec ar idr qvr] (parse-vars-and-rsts (first assertion-spec) arb-rsts ind-deps-rsts qvar-rsts :buildingqvar buildingqvar)]
             (recur
               (rest assertion-spec)
               (conj new-expr aspec)
               (merge-with merge-error arb-rsts ar)
               (merge-with merge-error ind-deps-rsts idr)
               (merge-with merge-error qvar-rsts qvr)))))
-    (synvariable? assertion-spec)
+    (and (synvariable? assertion-spec)
+         (not (buildingqvar assertion-spec))) ;; Don't add the Entity restriction later! 
     (let [qvar-rsts (assoc qvar-rsts assertion-spec (list (list 'Isa assertion-spec 'Entity)))]
       [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts])
     :else 
