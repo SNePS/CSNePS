@@ -149,6 +149,14 @@
   (restriction-subset? term1 term2))
 
 (defmethod subsumes?
+  [:csneps.core/QueryVariable :csneps.core/Arbitrary] [term1 term2]
+  (restriction-subset? term1 term2)) ;; ??? I'm not sure.
+
+(defmethod subsumes?
+  [:csneps.core/Arbitrary :csneps.core/QueryVariable] [term1 term2]
+  (restriction-subset? term1 term2)) ;; ??? I'm not sure.
+
+(defmethod subsumes?
   [:csneps.core/Indefinite :csneps.core/Indefinite] [term1 term2]
   (restriction-subset? term1 term2))
 

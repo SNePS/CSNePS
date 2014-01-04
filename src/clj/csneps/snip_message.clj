@@ -29,25 +29,28 @@
 
 (defn compatible? [msg1 msg2]
   "Returns true if the two Messages do not have contradictory 
-   flagged node sets."
-  (loop [fns1 (:flaggedns msg1)]
-    (if (empty? fns1) 
-      true
-      (let [fn1p (second fns1)
-            fn2p (get (:flaggedns msg2) (first fns1))]
-        (when-not (or 
-                    (and (false? fn2p) (true? fn1p))
-                    (and (true? fn2p) (false? fn1p)))
-          (recur (rest fns1)))))))
+   flagged node sets, and their substitutions are compatible."
+  (and 
+    (build/compatible-substitutions? (:subst msg1) (:subst msg2))
+    (loop [fns1 (:flaggedns msg1)]
+      (if (empty? fns1) 
+        true
+        (let [fn1p (second fns1)
+              fn2p (get (:flaggedns msg2) (first fns1))]
+          (when-not (or 
+                      (and (false? fn2p) (true? fn1p))
+                      (and (true? fn2p) (false? fn1p)))
+            (recur (rest fns1))))))))
 
 (defn merge-messages [msg1 msg2]
-  (new-message {:subst (merge (:subst msg1) (:subst msg2))
-                :pos (+ (:pos msg1) (:pos msg2))
-                :neg (+ (:neg msg1) (:neg msg2))
-                :support-set (union (:support-set msg1) (:support-set msg2))
-                :flaggedns (clojure.core/merge (:flaggedns msg1) (:flaggedns msg2))
-                :priority (max (:priority msg1) (:priority msg2))
-                :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))}))
+  (let [new-flaggedns (clojure.core/merge (:flaggedns msg1) (:flaggedns msg2))]
+    (new-message {:subst (merge (:subst msg1) (:subst msg2))
+                  :pos (count (filter true? (vals new-flaggedns)))
+                  :neg (count (filter false? (vals new-flaggedns)))
+                  :support-set (union (:support-set msg1) (:support-set msg2))
+                  :flaggedns new-flaggedns
+                  :priority (max (:priority msg1) (:priority msg2))
+                  :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))})))
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"

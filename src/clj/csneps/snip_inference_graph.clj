@@ -12,7 +12,7 @@
 (def screenprinter (agent nil))
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug false)
+(def debug true)
 (def showproofs true)
 
 ;; Asynchronous asserter
@@ -99,7 +99,7 @@
         ;; ignoring the status of the valve.
         (do 
           (send to-infer inc)
-          (when debug (send screenprinter (fn [_]  (println "MSGRX: " message))))
+          (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
         ;; Cache in the waiting-msgs
@@ -494,7 +494,7 @@
 
 (defn generic-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message)))))
+  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node))))
   ;; The instance is the substitution applied to this term. 
   ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
   ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
@@ -513,15 +513,19 @@
 
 (defn arbitrary-instantiation
   [message node]
-  (let [new-ruis (get-rule-use-info (:msgs node) message)
-        resct (count @(:restriction-set node))
-        der-rui-t (filter #(= (:pos %) resct) new-ruis)
-        new-msgs (map #(derivative-message % :origin node) der-rui-t)
-        ich @(:i-channels node)]
-    (when (seq der-rui-t)
-      [true (for [msg new-msgs
-                  ch ich]
-              [ch msg])])))
+  (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
+  (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
+    (let [new-ruis (get-rule-use-info (:msgs node) message)
+          resct (count @(:restriction-set node))
+          der-rui-t (filter #(= (:pos %) resct) new-ruis)
+          new-msgs (map #(derivative-message % :origin node) der-rui-t)
+          ich @(:i-channels node)]
+      (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
+      (when (seq der-rui-t)
+        (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
+        [true (for [msg new-msgs
+                    ch ich]
+                [ch msg])]))))
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
@@ -569,7 +573,8 @@
   
   ;; If I'm already asserted, and I just received an I-INFER message,
   ;; I should attempt to eliminate myself.
-  (when (and (ct/asserted? term (ct/currentContext))
+  (when (and (not (isa? (csneps/syntactic-type-of term) :csneps.core/Variable))
+             (ct/asserted? term (ct/currentContext))
              (= (:type message) 'I-INFER))
     (when-let [result (elimination-infer message term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
@@ -615,6 +620,7 @@
       (= (:type message) 'I-INFER)
       (= (csneps/semantic-type-of term) :AnalyticGeneric))
     (let [imsg (derivative-message message :origin term)]
+      (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
       (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and
@@ -633,7 +639,8 @@
     (generic-infer message term)
     ;; Normal introduction for derivation.
     (and 
-      (not (ct/asserted? term (ct/currentContext)))
+      (or (csneps/arbitraryTerm? term)
+          (not (ct/asserted? term (ct/currentContext))))
       (= (:type message) 'I-INFER))
     (when-let [[true? result] (introduction-infer message term)]
       (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?)))
