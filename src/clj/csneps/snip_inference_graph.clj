@@ -542,28 +542,6 @@
               (when showproofs
                 (send screenprinter (fn [_] (println "Since" node ", I confirmed restriction match for:" new-expected-instance "by generic-instantiation"))))))
         (dosync (alter (:expected-instances node) assoc new-expected-instance (:subst message)))))))
-  
-  
-  
-  ;; Outgoing i-channels should be to a parent generic. 
-  
-  
-  
-  ;; The instance is the substitution applied to this term. 
-  ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
-  ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
-;  (let [instance (build/apply-sub-to-term node (:subst message))]
-;    (dosync (alter (:instances node) assoc instance (:subst message)))
-;    (build/assert-term instance (ct/currentContext) :der)
-;    (let [imsg (derivative-message message
-;                                   :origin node
-;                                   :support-set (conj (:support-set message) node)
-;                                   :true? true
-;                                   :type 'I-INFER)]
-;      (doseq [cqch @(:i-channels node)] 
-;        (submit-to-channel cqch imsg)
-;        (when showproofs
-;          (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))))))
 
 (defn arbitrary-instantiation
   [message node]
