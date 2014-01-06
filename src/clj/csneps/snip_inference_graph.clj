@@ -495,21 +495,53 @@
 (defn generic-infer 
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node))))
-  ;; The instance is the substitution applied to this term. 
-  ;; TODO: What's the rule on whether or not it is inferred? Generic terms can be instantiated even if they aren't 
-  ;; asserted, but only sometimes. Maybe has to do with if it's also an arb? 
-  (let [instance (build/apply-sub-to-term node (:subst message))]
-    (dosync (alter (:instances node) assoc instance (:subst message)))
-    (build/assert-term instance (ct/currentContext) :der)
-    (let [imsg (derivative-message message
-                                   :origin node
-                                   :support-set (conj (:support-set message) node)
-                                   :true? true
-                                   :type 'I-INFER)]
-      (doseq [cqch @(:i-channels node)] 
-        (submit-to-channel cqch imsg)
-        (when showproofs
-          (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))))))
+  ;; A genernic does two things, always:
+  ;; 1) Collect messages from its incoming generics/arbitraries and managing their substitutions
+  ;; 2) Collect messages from its incoming instances and comparing their substitutions with those from 1.
+  (if (or (csneps/arbitraryTerm? (:origin message))
+          (build/generic-term? (:origin message)))
+    ;; Step 1:
+    (let [new-combined-messages (get-rule-use-info (:msgs node) message)
+          total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
+                                                    (build/generic-term? (:originator %)))
+                                               @(:ant-in-channels node)))
+          rel-combined-messages (when new-combined-messages
+                                  (filter #(= (:pos %) total-parent-generics) new-combined-messages))
+          generic-out-ichannels (when new-combined-messages 
+                                  (filter #(or (csneps/arbitraryTerm? (:originator %))
+                                               (build/generic-term? (:originator %)))
+                                          @(:i-channels node)))]
+      (doseq [rcm rel-combined-messages]
+        (let [instance (build/apply-sub-to-term node (:subst rcm))]
+          (dosync (alter (:instances node) assoc instance (:subst rcm)))
+          ;; Only assert the instance if this node is asserted. Important for nested generics.
+          (when (or (ct/asserted? node (ct/currentContext))
+                    (@(:expected-instances node) instance)) 
+            (build/assert-term instance (ct/currentContext) :der))
+          (let [imsg (derivative-message rcm
+                                         :origin node
+                                         :support-set (conj (:support-set rcm) node)
+                                         :true? true
+                                         :type 'I-INFER)]
+            (doseq [cqch (if (or (ct/asserted? node (ct/currentContext))
+                                 (@(:expected-instances node) instance))
+                           @(:i-channels node)
+                           generic-out-ichannels)] ;; If this node is not asserted, only inform other generics of this new message.
+              (submit-to-channel cqch imsg)
+              (when showproofs
+                (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation")))))))))
+    (let [new-expected-instance (:origin message)]
+      (if (@(:instances node) new-expected-instance)
+        (let [imsg (derivative-message message
+                                         :origin node
+                                         :support-set (conj (:support-set message) node)
+                                         :true? true
+                                         :type 'I-INFER)]
+            (doseq [cqch @(:i-channels node)]
+              (submit-to-channel cqch imsg)
+              (when showproofs
+                (send screenprinter (fn [_] (println "Since" node ", I confirmed restriction match for:" new-expected-instance "by generic-instantiation"))))))
+        (dosync (alter (:expected-instances node) assoc new-expected-instance (:subst message)))))))
 
 (defn arbitrary-instantiation
   [message node]
@@ -587,8 +619,8 @@
   (when (= (:type message) 'Y-INFER)
     ;; Assert myself appropriately.
     (let [assert-term (if (:true? message) 
-                        term 
-                        (build/build (list 'not term) :Entity {}))]
+                        (build/apply-sub-to-term term (:subst message))
+                        (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
       (dosync (alter (:support assert-term) conj (:support-set message)))
       (when-not (ct/asserted? assert-term (ct/currentContext))
         (if async-assert 
