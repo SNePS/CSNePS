@@ -102,7 +102,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
 
     protected void perfomOK(){
 
-        for(Object o : jList1.getSelectedValues()){
+        for(Object o : jList1.getSelectedValuesList()){
             result.add((Caseframe)o);
         }
         
