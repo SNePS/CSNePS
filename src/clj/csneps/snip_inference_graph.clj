@@ -507,10 +507,8 @@
                                                @(:ant-in-channels node)))
           rel-combined-messages (when new-combined-messages
                                   (filter #(= (:pos %) total-parent-generics) new-combined-messages))
-          generic-out-ichannels (when new-combined-messages 
-                                  (filter #(or (csneps/arbitraryTerm? (:originator %))
-                                               (build/generic-term? (:originator %)))
-                                          @(:i-channels node)))]
+          gch (when new-combined-messages 
+                @(:g-channels node))]
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))]
           (dosync (alter (:instances node) assoc instance (:subst rcm)))
@@ -526,7 +524,7 @@
             (doseq [cqch (if (or (ct/asserted? node (ct/currentContext))
                                  (@(:expected-instances node) instance))
                            @(:i-channels node)
-                           generic-out-ichannels)] ;; If this node is not asserted, only inform other generics of this new message.
+                           gch)] ;; If this node is not asserted, only inform other generics of this new message.
               (submit-to-channel cqch imsg)
               (when showproofs
                 (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation")))))))))
@@ -552,12 +550,12 @@
           resct (count @(:restriction-set node))
           der-rui-t (filter #(= (:pos %) resct) new-ruis)
           new-msgs (map #(derivative-message % :origin node) der-rui-t)
-          ich @(:i-channels node)]
+          gch @(:g-channels node)]
       (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
       (when (seq der-rui-t)
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
-                    ch ich]
+                    ch gch]
                 [ch msg])]))))
 
 (defn elimination-infer
@@ -754,8 +752,10 @@
 
 (defn ig-status []
   (doseq [x @csneps.core/TERMS]
-    (doseq [y @(:i-channels (second x))]
-      (println (:originator y) "-I-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))
-    (doseq [y @(:u-channels (second x))]
-      (println (:originator y) "-U-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))))
+    (doseq [i @(:i-channels (second x))]
+      (println (:originator i) "-I-" (count @(:waiting-msgs i)) (print-valve i) "->" (:destination i)))
+    (doseq [u @(:u-channels (second x))]
+      (println (:originator u) "-U-" (count @(:waiting-msgs u)) (print-valve u) "->" (:destination u)))
+    (doseq [g @(:g-channels (second x))]
+      (println (:originator g) "-G-" (count @(:waiting-msgs g)) (print-valve g) "->" (:destination g)))))
 

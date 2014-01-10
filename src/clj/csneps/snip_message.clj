@@ -6,8 +6,9 @@
   (get-rule-use-info [this new-msg]))
 
 ;; Type options:
-;; Y-INFER
+;; U-INFER
 ;; I-INFER
+;; G-INFER
 ;; BACKWARD-INFER
 ;; CANCEL-INFER
 ;; UNASSERT

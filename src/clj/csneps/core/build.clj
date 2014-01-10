@@ -378,6 +378,15 @@
       (alter (:u-channels rnode) conj ch)
       (alter (:ant-in-channels c) conj ch))))
 
+(defn build-generic-channels
+  [gnode ants]
+  ;; Build the g-channels
+  (doseq [a ants :let [ch (build-channel a gnode nil nil)]] 
+    (dosync 
+      (alter (:g-channels a) conj ch)
+      (alter (:ant-in-channels gnode) conj ch))))
+  
+
 (defn build-channels
   [rnode]
   (let [slot-map (cf/dcsRelationTermsetMap rnode)]
@@ -448,7 +457,7 @@
                                           :Generic
                                           semtype))]
       (when (seq genfills)
-        (build-internal-channels molnode genfills '()))
+        (build-generic-channels molnode genfills))
       molnode)))
 
 (defmulti build
@@ -594,7 +603,7 @@
                                                 :Generic
                                                 semtype))]
             (when (seq genfils)
-              (build-internal-channels molnode genfils '()))
+              (build-generic-channels molnode genfils))
             molnode))
               
       and
