@@ -28,7 +28,8 @@ public class Term {
 	private static Keyword downcableset_key = Keyword.intern("down-cableset");
 	private static Keyword activation_key = Keyword.intern("activation-value");
 	private static Keyword i_channels_key = Keyword.intern("i-channels");
-	private static Keyword y_channels_key = Keyword.intern("y-channels");
+	private static Keyword u_channels_key = Keyword.intern("u-channels");
+	private static Keyword g_channels_key = Keyword.intern("g-channels");
 	
 	private IPersistentMap term;
 	
@@ -37,7 +38,8 @@ public class Term {
 	private HashMap<Slot, Set<Term>> upcableset;
 	private HashMap<Slot, Set<Term>> downcableset;
 	private ArrayList<Channel> ichannels = new ArrayList<Channel>();
-	private ArrayList<Channel> ychannels = new ArrayList<Channel>();
+	private ArrayList<Channel> uchannels = new ArrayList<Channel>();
+	private ArrayList<Channel> gchannels = new ArrayList<Channel>();
 	
 	
 	private String termstring;
@@ -187,19 +189,34 @@ public class Term {
 		return ichannels;
 	}
 	
-	//The number of y-channels can increase. Compare arity of cache with the one in the term
+	//The number of u-channels can increase. Compare arity of cache with the one in the term
 	//to determine if we have to do real work.
-	public ArrayList<Channel> getYChannels(){
-		APersistentSet y = (APersistentSet)((Ref)term.valAt(y_channels_key)).deref();
-		if(y.count() == ychannels.size()) return ychannels;
+	public ArrayList<Channel> getUChannels(){
+		APersistentSet u = (APersistentSet)((Ref)term.valAt(u_channels_key)).deref();
+		if(u.count() == uchannels.size()) return uchannels;
 		
 		//Do the real work.
-		for (Iterator<IPersistentMap> iter = y.iterator(); iter.hasNext(); ){
+		for (Iterator<IPersistentMap> iter = u.iterator(); iter.hasNext(); ){
 			Channel c = Channel.create(iter.next());
-			if(ychannels.contains(c)) continue;
-			ychannels.add(c);
+			if(uchannels.contains(c)) continue;
+			uchannels.add(c);
 		}
-		return ychannels;
+		return uchannels;
+	}
+	
+	//The number of u-channels can increase. Compare arity of cache with the one in the term
+	//to determine if we have to do real work.
+	public ArrayList<Channel> getGChannels(){
+		APersistentSet g = (APersistentSet)((Ref)term.valAt(g_channels_key)).deref();
+		if(g.count() == gchannels.size()) return gchannels;
+		
+		//Do the real work.
+		for (Iterator<IPersistentMap> iter = g.iterator(); iter.hasNext(); ){
+			Channel c = Channel.create(iter.next());
+			if(gchannels.contains(c)) continue;
+			gchannels.add(c);
+		}
+		return gchannels;
 	}
 	
 	public Boolean isMolecular(){
