@@ -118,10 +118,10 @@
                           :flaggedns {term true}})]
     (doall (map #(submit-to-channel % msg) @(:i-channels term))))
   ;; Conjunctions:
-  ;; Conjunctions have no antecedents if they are true, so the Y-INFER messages must be passed on here
+  ;; Conjunctions have no antecedents if they are true, so the U-INFER messages must be passed on here
   (when (= (csneps/type-of term) :csneps.core/Conjunction)
-    (let [msg (new-message {:origin term, :support-set #{term}, :type 'Y-INFER, :fwd-infer? fwd-infer})]
-      (doall (map #(submit-to-channel % msg) @(:y-channels term)))))
+    (let [msg (new-message {:origin term, :support-set #{term}, :type 'U-INFER, :fwd-infer? fwd-infer})]
+      (doall (map #(submit-to-channel % msg) @(:u-channels term)))))
   ;; Negations:
   ;; When the assertion makes terms negated, the negated terms need to send out
   ;; on their i-channels that they are now negated.
@@ -186,7 +186,7 @@
    has top priority."
   ([term] 
     (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
-               (every? #(not @(:valve-open %)) @(:y-channels term)))
+               (every? #(not @(:valve-open %)) @(:u-channels term)))
       (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
       (doseq [ch @(:ant-in-channels term)]
         (close-valve ch)
@@ -195,14 +195,14 @@
                             cancel-infer (:originator ch)))))))
 
 (defn forward-infer
-  "Begins inference in term. Ignores the state of valves in sending I-INFER and Y-INFER messages
+  "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
    through the graph."
   [term]
-  ;; We need to pretend that a Y-INFER message came in to this node.
+  ;; We need to pretend that a U-INFER message came in to this node.
   (send to-infer inc)
   (.execute ^ThreadPoolExecutor executorService 
     (priority-partial 1 initiate-node-task term 
-                      (new-message {:origin nil, :support-set #{}, :type 'Y-INFER, :fwd-infer? true}))))
+                      (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true}))))
 
 (defn unassert
   "Move forward through the graph recursively unasserting terms which depend on this one."
@@ -210,17 +210,17 @@
     (build/unassert term)
     (doseq [ch @(:i-channels term)]
       (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin term :type 'UNASSERT}) false)))
-    (doseq [ch @(:y-channels term)]
+    (doseq [ch @(:u-channels term)]
       (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin term :type 'UNASSERT}) true))))
-  ([node message ych?]
+  ([node message uch?]
     (when debug (send screenprinter (fn [_]  (println "Unassert: " message "at" node))))
     (cond 
-      (and (not ych?)
+      (and (not uch?)
            (= (type node) csneps.core.Implication))
-      (doseq [ch @(:y-channels node)]
+      (doseq [ch @(:u-channels node)]
         (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin (:origin message) :type 'UNASSERT}) true)))
       (let [oscont (map #(contains? % (:origin message)) @(:support node))]
-        (and ych?
+        (and uch?
              (seq oscont)
              (every? true? oscont)))
       (unassert node))))
@@ -237,21 +237,21 @@
                                    :origin node
                                    :support-set (conj (:support-set message) node)
                                    :true? false
-                                   :type 'Y-INFER)
-        ych @(:y-channels node)]
+                                   :type 'U-INFER)
+        uch @(:u-channels node)]
     (when debug (send screenprinter (fn [_]  (println "NEX" new-ruis))))
     nil
     (when (seq new-ruis)
       (when showproofs 
-        (doseq [y ych]
+        (doseq [y uch]
           (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by negation-elimination")))))
-      (zipmap ych (repeat (count ych) dermsg)))))
+      (zipmap uch (repeat (count uch) dermsg)))))
 
 (defn negation-introduction
   "Pretty much conjunction-introduction, but with :neg instead of :pos"
   [message node]
   (let [new-ruis (get-rule-use-info (:msgs node) message)
-        der-rui (some #(= (:neg %) (count @(:y-channels node))) new-ruis)
+        der-rui (some #(= (:neg %) (count @(:u-channels node))) new-ruis)
         dermsg (derivative-message message
                                    :origin node
                                    :support-set (conj (:support-set message) node)
@@ -267,7 +267,7 @@
   
 
 (defn numericalentailment-elimination
-  "Since the implication is true, send a Y-INFER message to each
+  "Since the implication is true, send a U-INFER message to each
    of the consequents." 
   [message node]
   ;; If the node only requires 1 antecedent to be true, any incoming positive
@@ -277,15 +277,15 @@
     (when (:true? message)
       (cancel-infer node)
       (when showproofs 
-        (doseq [y @(:y-channels node)]
-          (when (build/valve-open? y)
-            (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by numericalentailment-elimination"))))))
+        (doseq [u @(:u-channels node)]
+          (when (build/valve-open? u)
+            (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination u) " by numericalentailment-elimination"))))))
       (apply conj {} (doall (map #(vector % (derivative-message 
                                               message 
                                               :origin node 
-                                              :type 'Y-INFER 
+                                              :type 'U-INFER 
                                               :true? true))
-                                 (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node))))))
+                                 (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node))))))
     ;; msg false
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           match-msg (some #(when (>= (:pos %) (:min node))
@@ -294,42 +294,42 @@
       (when match-msg 
         (cancel-infer node)
         (when showproofs 
-          (doseq [y @(:y-channels node)]
+          (doseq [y @(:u-channels node)]
             (when (build/valve-open? y)
               (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by numericalentailment-elimination"))))))
         (apply conj {} (doall (map #(vector % (derivative-message match-msg 
                                                                   :origin node 
-                                                                  :type 'Y-INFER 
+                                                                  :type 'U-INFER 
                                                                   :true? true 
                                                                   :fwd-infer? (:fwd-infer? message)))
-                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:y-channels node)))))))))
+                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))))
 
 (defn numericalentailment-introduction
   ""
   [message node])
 
 (defn conjunction-elimination
-  "Since the and is true, send a Y-INFER message to each of the
+  "Since the and is true, send a U-INFER message to each of the
    consequents."
   [message node]
   (let [dermsg (derivative-message message 
                                    :origin node
                                    :support-set (conj (:support-set message) node)
-                                   :type 'Y-INFER)
-        ych @(:y-channels node)]
+                                   :type 'U-INFER)
+        uch @(:u-channels node)]
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
     (when showproofs
-      (doseq [y ych]
-        (when (build/valve-open? y)
-          (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by conjunction-elimination"))))))
-    (zipmap ych (repeat (count ych) dermsg))))
+      (doseq [u uch]
+        (when (build/valve-open? u)
+          (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination u) " by conjunction-elimination"))))))
+    (zipmap uch (repeat (count uch) dermsg))))
 
 (defn conjunction-introduction
   "We are in an unasserted 'and' node, and would like to know if we now
    can say it is true based on message."
   [message node]
   (let [new-ruis (get-rule-use-info (:msgs node) message)
-        der-rui-t (some #(= (:pos %) (count @(:y-channels node))) new-ruis)
+        der-rui-t (some #(= (:pos %) (count @(:u-channels node))) new-ruis)
         der-rui-f (some #(pos? (:neg %)) new-ruis)
         dermsg-t (imessage-from-ymessage message node)
         dermsg-f (derivative-message message 
@@ -363,7 +363,7 @@
     (or 
       (when pos-match
 		    (when showproofs 
-          (doseq [y @(:y-channels node)]
+          (doseq [y @(:u-channels node)]
             (when (and (not ((:flaggedns pos-match) (:destination y)))
                        (not (negated? (:destination y)))
                        (build/valve-open? y))
@@ -372,13 +372,13 @@
                                                (not (negated? (:destination %))))
                                       [% (derivative-message pos-match 
                                                              :origin node 
-                                                             :type 'Y-INFER 
+                                                             :type 'U-INFER 
                                                              :true? false 
                                                              :fwd-infer? (:fwd-infer? message))])
-                                   @(:y-channels node)))))
+                                   @(:u-channels node)))))
       (when neg-match
 		    (when showproofs 
-          (doseq [y @(:y-channels node)]
+          (doseq [y @(:u-channels node)]
             (when (and (nil? ((:flaggedns neg-match) (:destination y)))
                        (not (ct/asserted? (:destination y) (ct/currentContext)))
                        (build/valve-open? y))
@@ -387,10 +387,10 @@
                                                (not (ct/asserted? (:destination %) (ct/currentContext))))
                                       [% (derivative-message neg-match 
                                                              :origin node 
-                                                             :type 'Y-INFER 
+                                                             :type 'U-INFER 
                                                              :true? true 
                                                              :fwd-infer? (:fwd-infer? message))])
-                                   @(:y-channels node))))))))
+                                   @(:u-channels node))))))))
 
 ;     Inference can terminate
 ;        as soon as one of the following is determined to hold:
@@ -460,30 +460,30 @@
                                           new-ruis)]
     (or (when more-than-min-true-match
           (when showproofs 
-            (doseq [y @(:y-channels node)]
+            (doseq [y @(:u-channels node)]
               (when-not ((:flaggedns more-than-min-true-match) (:destination y))
                 (when (build/valve-open? y)
                   (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination")))))))
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% (derivative-message more-than-min-true-match 
                                                                :origin node 
-                                                               :type 'Y-INFER 
+                                                               :type 'U-INFER 
                                                                :true? true 
                                                                :fwd-infer? (:fwd-infer? message))])
-                                     @(:y-channels node)))))
+                                     @(:u-channels node)))))
         (when less-than-max-true-match
           (when showproofs 
-            (doseq [y @(:y-channels node)]
+            (doseq [y @(:u-channels node)]
               (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination y)))
                          (build/valve-open? y))
                  (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination"))))))
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% (derivative-message less-than-max-true-match 
                                                                :origin node 
-                                                               :type 'Y-INFER 
+                                                               :type 'U-INFER 
                                                                :true? false 
                                                                :fwd-infer? (:fwd-infer? message))])
-                                     @(:y-channels node))))))))
+                                     @(:u-channels node))))))))
 
 (defn whquestion-infer 
   [message node]
@@ -494,12 +494,12 @@
 
 (defn generic-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node))))
+  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node "from" (:origin message)))))
   ;; A genernic does two things, always:
   ;; 1) Collect messages from its incoming generics/arbitraries and managing their substitutions
   ;; 2) Collect messages from its incoming instances and comparing their substitutions with those from 1.
-  (if (or (csneps/arbitraryTerm? (:origin message))
-          (build/generic-term? (:origin message)))
+  (if (or (csneps/arbitraryTerm? (:origin message)) ;; This doesn't work. Has to have come on a G-Channel,
+          (build/generic-term? (:origin message)))  ;; and be sent out a G-Channel.
     ;; Step 1:
     (let [new-combined-messages (get-rule-use-info (:msgs node) message)
           total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
@@ -530,6 +530,7 @@
               (submit-to-channel cqch imsg)
               (when showproofs
                 (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation")))))))))
+    ;; Step 2:
     (let [new-expected-instance (:origin message)]
       (if (@(:instances node) new-expected-instance)
         (let [imsg (derivative-message message
@@ -537,10 +538,10 @@
                                          :support-set (conj (:support-set message) node)
                                          :true? true
                                          :type 'I-INFER)]
-            (doseq [cqch @(:i-channels node)]
-              (submit-to-channel cqch imsg)
-              (when showproofs
-                (send screenprinter (fn [_] (println "Since" node ", I confirmed restriction match for:" new-expected-instance "by generic-instantiation"))))))
+          (when showproofs
+            (send screenprinter (fn [_] (println "Since" node ", I confirmed restriction match for:" new-expected-instance "by generic-instantiation"))))
+          (doseq [cqch @(:i-channels node)]
+            (submit-to-channel cqch imsg)))
         (dosync (alter (:expected-instances node) assoc new-expected-instance (:subst message)))))))
 
 (defn arbitrary-instantiation
@@ -613,10 +614,10 @@
       (doseq [[ch msg] result] 
         (submit-to-channel ch msg))))
   
-  ;; If I have just received a Y-INFER message, I must make myself
+  ;; If I have just received a U-INFER message, I must make myself
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
-  (when (= (:type message) 'Y-INFER)
+  (when (= (:type message) 'U-INFER)
     ;; Assert myself appropriately.
     (let [assert-term (if (:true? message) 
                         (build/apply-sub-to-term term (:subst message))
@@ -755,6 +756,6 @@
   (doseq [x @csneps.core/TERMS]
     (doseq [y @(:i-channels (second x))]
       (println (:originator y) "-I-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))
-    (doseq [y @(:y-channels (second x))]
+    (doseq [y @(:u-channels (second x))]
       (println (:originator y) "-U-" (count @(:waiting-msgs y)) (print-valve y) "->" (:destination y)))))
 

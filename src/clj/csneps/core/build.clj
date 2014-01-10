@@ -372,10 +372,10 @@
     (dosync 
       (alter (:i-channels a) conj ch)
       (alter (:ant-in-channels rnode) conj ch)))
-  ;; Build the y-channels
+  ;; Build the u-channels
   (doseq [c cqs :let [ch (build-channel rnode c nil nil)]]
     (dosync 
-      (alter (:y-channels rnode) conj ch)
+      (alter (:u-channels rnode) conj ch)
       (alter (:ant-in-channels c) conj ch))))
 
 (defn build-channels

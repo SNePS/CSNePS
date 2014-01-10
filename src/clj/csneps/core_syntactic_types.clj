@@ -103,7 +103,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -119,7 +120,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -134,7 +136,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -149,7 +152,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -168,7 +172,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -189,7 +194,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -211,7 +217,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -232,7 +239,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -252,7 +260,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -275,7 +284,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -298,7 +308,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -321,7 +332,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -344,7 +356,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -367,7 +380,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -390,7 +404,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -413,7 +428,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -436,7 +452,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -456,7 +473,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -476,7 +494,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -496,7 +515,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -516,7 +536,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -536,7 +557,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
@@ -556,7 +578,8 @@
    recorded-firing nil
    activation-marker nil
    i-channels (ref (hash-set))
-   y-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
    ant-in-channels (ref (hash-set))
    instances (ref (hash-map))
    expected-instances (ref (hash-map))
