@@ -72,14 +72,14 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
 
     static GlobalGraphFilter instance;
 
-    DefaultListModel listModel;
+    DefaultListModel<Caseframe> listModel;
 
     ArrayList<Caseframe> result = new ArrayList<Caseframe>();
 
     /** Creates new form GlobalGraphFilter */
     public CaseframeBasedShowHide(ArrayList<Caseframe> cflist) {
         initComponents();
-        listModel = new DefaultListModel();
+        listModel = new DefaultListModel<Caseframe>();
         jList1.setSelectionModel(new CBListSelectionModel());
 
         for(Caseframe cf : cflist)
@@ -120,7 +120,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
         jButton_cancel = new javax.swing.JButton();
         jButton_ok = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList();
+        jList1 = new javax.swing.JList<Caseframe>();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
 
@@ -179,7 +179,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton_cancel;
     private javax.swing.JButton jButton_ok;
-    private javax.swing.JList jList1;
+    private javax.swing.JList<Caseframe> jList1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextArea jTextArea1;
