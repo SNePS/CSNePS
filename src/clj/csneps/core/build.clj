@@ -335,13 +335,20 @@
             term)))))
 
 (defn build-quantterm-channels
-  "Channels are built from each restriction, to the quantified term."
+  "Channels are built from each restriction, to the quantified term,
+   and in each indefinite, from each dep."
   [quantterm]
-  (doseq [r @(:restriction-set quantterm)
-          :let [ch (build-channel r quantterm nil nil)]]
-    (dosync
-      (alter (:i-channels r) conj ch)
-      (alter (:ant-in-channels quantterm) conj ch))))
+  (if (variable? quantterm)
+    (doseq [r @(:restriction-set quantterm)
+            :let [ch (build-channel r quantterm nil nil)]]
+      (dosync
+        (alter (:i-channels r) conj ch)
+        (alter (:ant-in-channels quantterm) conj ch)))
+    (doseq [d @(:dependencies quantterm)
+            :let [ch (build-channel d quantterm nil nil)]]
+      (dosync
+        (alter (:g-channels d) conj ch)
+        (alter (:ant-in-channels quantterm) conj ch)))))
 
 (defn build-unifier-channels
   "Channels built between unifiable terms."

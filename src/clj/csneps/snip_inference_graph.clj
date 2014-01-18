@@ -12,7 +12,7 @@
 (def screenprinter (agent nil))
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug true)
+(def debug false)
 (def showproofs true)
 
 ;; Asynchronous asserter
@@ -558,6 +558,50 @@
                     ch gch]
                 [ch msg])]))))
 
+(defn instantiate-indefinite
+  "Takes an indefinite and substitution, and returns a new
+   indefinite which has as its restrictions:
+   1) applies subst to every restriction of ind
+   2) applies subst to every restriction of each of ind's deps
+   and no dependencies."
+  [ind subst]
+  (let [new-rsts (loop [new-rsts (map #(build/apply-sub-to-term % subst) @(:restriction-set ind))
+                        deps @(:dependencies ind)]
+                   (if (empty? deps)
+                     new-rsts
+                     (recur 
+                       (concat new-rsts (map #(build/apply-sub-to-term % subst) @(:restriction-set (first deps))))
+                       (rest deps))))
+        new-ind (csneps/new-indefinite :name (symbol (str "ind" (csneps/ind-counter)))
+                                       :var-label (:var-label ind)
+                                       :msgs (create-message-structure :csneps.core/Indefinite nil)
+                                       :restriction-set (ref (set new-rsts)))]
+    (csneps/inc-ind-counter)
+    (csneps/instantiate-sem-type (:name new-ind) (csneps/semantic-type-of ind))
+    new-ind))
+
+(defn indefinite-instantiation
+  [message node]
+  ;; Only do something if this came from a dep of the ind.
+  (when (and (@(:dependencies node) (:origin message))
+             (seq (:subst message)))
+    (let [new-ruis (get-rule-use-info (:msgs node) message)
+          depct (count @(:dependencies node))
+          der-rui-t (filter #(= (:pos %) depct) new-ruis)
+          new-msgs (map #(derivative-message 
+                           % 
+                           :origin node 
+                           :subst (assoc 
+                                    (:subst message) 
+                                    node 
+                                    (instantiate-indefinite node (:subst message)))) der-rui-t)
+          gch @(:g-channels node)]
+      (when (seq der-rui-t)
+        (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
+        [true (for [msg new-msgs
+                    ch gch]
+                [ch msg])]))))
+
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
@@ -592,6 +636,7 @@
      :csneps.core/Thresh
      :csneps.core/Equivalence)  (param2op-introduction message node)
     (:csneps.core/Arbitrary) (arbitrary-instantiation message node)
+    (:csneps.core/Indefinite) (indefinite-instantiation message node)
     nil))
 
 (defn initiate-node-task
