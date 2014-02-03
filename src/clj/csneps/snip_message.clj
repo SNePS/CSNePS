@@ -23,7 +23,8 @@
    fwd-infer? false
    pos 0
    neg 0
-   flaggedns {}])
+   flaggedns {}
+   invoke-set #{}])
 
 (defn message-key [msg]
   (set (keys (:subst msg))))
@@ -51,11 +52,12 @@
                   :support-set (union (:support-set msg1) (:support-set msg2))
                   :flaggedns new-flaggedns
                   :priority (max (:priority msg1) (:priority msg2))
-                  :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))})))
+                  :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))
+                  :invoke-set (union (:invoke-set msg1) (:invoke-set msg2))})))
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
-  [message & {:keys [origin subst support-set type true? fwd-infer? pos neg flaggedns]}]
+  [message & {:keys [origin subst support-set type true? fwd-infer? invoke-set pos neg flaggedns]}]
   (-> message 
     (assoc :origin (or origin (:origin message)))
     (assoc :priority (inc (:priority message)))
@@ -64,6 +66,9 @@
     (assoc :type (or type (:type message)))
     (assoc :true? (if (nil? true?) (:true? message) true?))
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
+    (assoc :invoke-set (or invoke-set (if origin
+                                        @(:future-fw-infer origin)
+                                        @(:future-fw-infer (:origin message)))))
     (assoc :pos (or pos (if (if (nil? true?) (:true? message) true?) 1 0)))
     (assoc :neg (or neg (if (if (nil? true?) (:true? message) true?) 0 1)))
     (assoc :flaggedns (or flaggedns 

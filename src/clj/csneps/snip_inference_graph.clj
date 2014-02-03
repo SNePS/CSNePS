@@ -209,7 +209,17 @@
   (send to-infer inc)
   (.execute ^ThreadPoolExecutor executorService 
     (priority-partial 1 initiate-node-task term 
-                      (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true}))))
+                      (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term}}))))
+
+(defn cancel-forward-infer
+  ([term] (cancel-infer term term))
+  ([term cancel-for-term]
+    (when cancel-for-term
+      (dosync (alter (:future-fw-infer term) disj cancel-for-term)))
+    (doseq [ch (concat @(:i-channels term) @(:u-channels term) @(:g-channels term))]
+      (.execute ^ThreadPoolExecutor executorService 
+        (priority-partial Integer/MAX_VALUE 
+                          cancel-forward-infer (:destination ch) cancel-for-term)))))
 
 (defn unassert
   "Move forward through the graph recursively unasserting terms which depend on this one."
@@ -649,6 +659,9 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
+  
+  (when (:fwd-infer? message)
+    (dosync (alter (:future-fw-infer term) union (:invoke-set message))))
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Elimination Rules ---- ;;
@@ -673,7 +686,7 @@
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
       (dosync (alter (:support assert-term) conj (:support-set message)))
-      (when-not (ct/asserted? assert-term (ct/currentContext))
+      (when (or (not (ct/asserted? assert-term (ct/currentContext))) (:fwd-infer? message))
         (if async-assert 
           (send asserter (fn [_] (build/assert-term assert-term (ct/currentContext) :der)))
           (build/assert-term assert-term (ct/currentContext) :der))
@@ -749,7 +762,7 @@
   [syntype dcs]
   (make-linear-msg-set))
 
-(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer)
+(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer forward-infer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; User-oriented functions ;;;
@@ -795,6 +808,9 @@
 (defn cancel-infer-of [term]
   (cancel-infer (csneps/get-term term) (csneps/get-term term)))
 
+(defn cancel-infer-from [term]
+  (cancel-forward-infer (csneps/get-term term) (csneps/get-term term)))
+  
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;

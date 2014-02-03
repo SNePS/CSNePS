@@ -33,12 +33,13 @@
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc satc nm crs bwi]
+  [stc satc nm crs bwi fwi]
   (def submit-to-channel stc)
   (def submit-assertion-to-channels satc)
   (def new-message nm)
   (def create-message-structure crs)
-  (def backward-infer bwi))
+  (def backward-infer bwi)
+  (def forward-infer fwi))
 
 (defrecord2 Channel 
   [originator    nil
@@ -83,8 +84,10 @@
       :g-channel (alter (:g-channels orig) conj ch))
     (alter (:ant-in-channels dest) conj ch))
   ;; Focused forward-in-backward, extension for new in-channels.
-  (if (seq @(:future-bw-infer dest))
-    (backward-infer dest @(:future-bw-infer dest))))
+  (when (seq @(:future-bw-infer dest))
+    (backward-infer dest @(:future-bw-infer dest)))
+  (when (seq @(:future-fw-infer orig))
+    (forward-infer orig)))
 
 (defn build-channel
   [originator destination target-binds source-binds]
