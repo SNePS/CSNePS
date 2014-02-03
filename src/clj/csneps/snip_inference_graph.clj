@@ -166,20 +166,23 @@
   "Spawns tasks recursively to open valves in channels and begin performing
    backward-chaining inference. The network tries to derive term, and uses a
    set to track which nodes it has already visited."
-  ([term] (backward-infer term -10 #{}))
+  ([term] (backward-infer term -10 #{} #{term}))
+  ([term invoketermset] (backward-infer term -10 #{} invoketermset))
   ;; Opens appropriate in-channels, sends messages to their originators.
-  ([term depth visited] 
+  ([term depth visited invoketermset] 
     (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer - " depth " - opening in-channels for" term))))
+    (dosync (alter (:future-bw-infer term) union invoketermset))
     (doseq [ch @(:ant-in-channels term)]
       (when (and (not (visited term)) (not (visited (:originator ch))))
         (open-valve ch)
         (send to-infer inc)
         (.execute ^ThreadPoolExecutor executorService 
           (priority-partial depth 
-                            (fn [t d v] (backward-infer t d v) (send to-infer dec))
+                            (fn [t d v i] (backward-infer t d v i) (send to-infer dec))
                             (:originator ch)
                             (dec depth)
-                            (conj visited term)))))))
+                            (conj visited term)
+                            invoketermset))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
@@ -742,7 +745,7 @@
   [syntype dcs]
   (make-linear-msg-set))
 
-(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure)
+(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; User-oriented functions ;;;

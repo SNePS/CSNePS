@@ -341,58 +341,35 @@
   (if (variable? quantterm)
     (doseq [r @(:restriction-set quantterm)
             :let [ch (build-channel r quantterm nil nil)]]
-      (dosync
-        (alter (:i-channels r) conj ch)
-        (alter (:ant-in-channels quantterm) conj ch)))
+      (install-channel ch r quantterm :i-channel))
     (doseq [d @(:dependencies quantterm)
             :let [ch (build-channel d quantterm nil nil)]]
-      (dosync
-        (alter (:g-channels d) conj ch)
-        (alter (:ant-in-channels quantterm) conj ch)))))
+      (install-channel ch d quantterm :g-channel))))
 
 (defn build-unifier-channels
   "Channels built between unifiable terms."
   [unif]
   (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
-        ;t->s (build-channel (:target unif) (:source unif) (:targetbind unif) (:sourcebind unif))]
     (cond 
-      ;; Since an :AnalyticGeneric is "meaningless", it doesn't 
-      ;; ever result in new instances, so we don't need i-channels
-      ;; in both directions.
-      ;(= (semantic-type-of (:source unif)) :AnalyticGeneric)
-      ;(dosync 
-      ;  (alter (:i-channels (:target unif)) conj t->s)
-      ;  (alter (:ant-in-channels (:source unif)) conj t->s))
       (= (semantic-type-of (:target unif)) :AnalyticGeneric)
-      (dosync 
-        (alter (:i-channels (:source unif)) conj s->t)
-        (alter (:ant-in-channels (:target unif)) conj s->t))
+      (install-channel s->t (:source unif) (:target unif) :i-channel)
       :else ;; This case still needs to be worked out.
-      (dosync 
-        (alter (:i-channels (:source unif)) conj s->t)
-        (alter (:ant-in-channels (:target unif)) conj s->t)))))
+      (install-channel s->t (:source unif) (:target unif) :i-channel))))
 
 (defn build-internal-channels
   [rnode ants cqs]
   ;; Build the i-channels
   (doseq [a ants :let [ch (build-channel a rnode nil nil)]] 
-    (dosync 
-      (alter (:i-channels a) conj ch)
-      (alter (:ant-in-channels rnode) conj ch)))
+    (install-channel ch a rnode :i-channel))
   ;; Build the u-channels
   (doseq [c cqs :let [ch (build-channel rnode c nil nil)]]
-    (dosync 
-      (alter (:u-channels rnode) conj ch)
-      (alter (:ant-in-channels c) conj ch))))
+    (install-channel ch rnode c :u-channel)))
 
 (defn build-generic-channels
   [gnode ants]
   ;; Build the g-channels
   (doseq [a ants :let [ch (build-channel a gnode nil nil)]] 
-    (dosync 
-      (alter (:g-channels a) conj ch)
-      (alter (:ant-in-channels gnode) conj ch))))
-  
+    (install-channel ch a gnode :g-channel)))
 
 (defn build-channels
   [rnode]
