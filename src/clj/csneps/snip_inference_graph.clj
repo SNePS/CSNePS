@@ -187,15 +187,19 @@
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
-  ([term] 
+  ([term] (cancel-infer term nil))
+  ([term cancel-for-term]
     (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
                (every? #(not @(:valve-open %)) @(:u-channels term)))
       (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
+      (when cancel-for-term
+        (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
       (doseq [ch @(:ant-in-channels term)]
-        (close-valve ch)
+        (when (empty? @(:future-bw-infer term))
+          (close-valve ch))
         (.execute ^ThreadPoolExecutor executorService 
-          (priority-partial Integer/MAX_VALUE 
-                            cancel-infer (:originator ch)))))))
+            (priority-partial Integer/MAX_VALUE 
+                              cancel-infer (:originator ch) cancel-for-term))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
@@ -789,7 +793,7 @@
         #{}))))
 
 (defn cancel-infer-of [term]
-  (cancel-infer (csneps/get-term term)))
+  (cancel-infer (csneps/get-term term) (csneps/get-term term)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
