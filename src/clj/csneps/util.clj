@@ -362,3 +362,26 @@
   [s char]
   (subs s (.indexOf s char)))
 
+;;; Utility functions for evaluating functions with another
+;;; set of local bindings. 
+
+(defmacro local-bindings
+  "Produces a map of the names of local bindings to their values."
+  []
+  (let [symbols (keys &env)]
+    (zipmap (map (fn [sym] `(quote ~sym)) symbols) symbols)))
+
+(declare ^:dynamic *locals*)
+   
+(defn view-locals []
+  *locals*)
+   
+(defn eval-with-locals
+  "Evals a form with given locals. The locals should be a map of symbols to
+   values."
+  [locals form]
+  (binding [*locals* locals]
+    (eval
+    `(let ~(vec (mapcat #(list % `(*locals* '~%)) (keys locals)))
+       ~form))))
+
