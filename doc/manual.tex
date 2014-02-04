@@ -450,18 +450,17 @@ lisp, but also use SLIME. We will install clojure-mode to have proper syntax hig
 \docfun{allTerms}{}
 Returns a set of all the terms in the knowledge base.
 
-\docfun{ask}{\textit{exprpat}}
-Returns a set of instances of the term pattern \cv{exprpat} or its negation
-that are derivable in the current context; or the empty set if there are none.
+\docfun{ask}{\textit{expr}}
+Attempts to derive the term \texttt{expr} or its negation. Returns the derived term, or nil if it is not derivable in the current context. If the term is not derivable, focused inference is left running until it is derived, or the task is canceled using \textit{cancel-infer-of} or \textit{cancel-focused-infer}.
 
-\docfun{askif}{\textit{exprpat}}
-Returns a set of instances of the term pattern \cv{exprpat} that are
-derivable in the current context; or the empty set if there are none.
+\docfun{askif}{\textit{expr}}
+Attempts to derive the term \texttt{expr}. Returns the derived term, or nil if it is not derivable in the current context. If the term is not derivable, focused inference is left running until it is derived, or the task is canceled using \textit{cancel-infer-of} or \textit{cancel-focused-infer}.
 
-\docfun{askifnot}{\textit{exprpat}}
-"Returns a set of instances of the negation of the term pattern
-\cv{exprpat} that are derivable in the current context; or
-the empty set if there are none.
+\docfun{askifnot}{\textit{expr}}
+Attempts to derive the negation of the term \texttt{expr}. Returns the derived term, or nil if it is not derivable in the current context. If the term is not derivable, focused inference is left running until it is derived, or the task is canceled using \textit{cancel-infer-of} or \textit{cancel-focused-infer}.
+
+\docfun{askwh}{\textit{exprpat}}
+Returns a set of substitutions for variable placeholders for the term pattern \cv{exprpat} that are currently derivable in the current context; or the empty set if there are none. If no instances are derivable, focused inference is left running until an instance is derivable, or the task is canceled using \textit{cancel-infer-of} or \textit{cancel-focused-infer}.
 
 \docfun{assert}{\textit{expr}}
 Asserts the term expressed by \cv{expr} in the current context.
@@ -477,6 +476,15 @@ forward inference.
 %\texttt{\textit{term}} is an \texttt{Act}, it can then be
 %\texttt{perform}ed; if it is an \texttt{Action}, an \texttt{Act} can
 %then be \texttt{perform}ed whose \texttt{Action} is \texttt{\textit{term}}.
+
+\docfun{cancel-focused-infer}{}
+Cancels all focused inference tasks. 
+
+\docfun{cancel-infer-from}{\textit{exprpat}}
+Cancels any forward focused reasoning tasks deriving from \textit{exprpat}.
+
+\docfun{cancel-infer-of}{\textit{exprpat}} 
+Cancels any focused reasoning tasks attempting to derive \textit{exprpat}.
 
 \docfun{clearkb}{\&optional (\textit{clearall} nil)}
 Reinitializes the SNePS knowledge base.  If \cv{clearall} is
