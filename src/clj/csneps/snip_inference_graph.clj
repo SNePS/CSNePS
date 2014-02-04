@@ -806,10 +806,18 @@
         #{}))))
 
 (defn cancel-infer-of [term]
-  (cancel-infer (csneps/get-term term) (csneps/get-term term)))
+  (let [term (if (seq? term)
+               (build/build term :Proposition #{})
+               (csneps/get-term term))]
+    (when-not term (error "Term not found: " term))
+    (cancel-infer term term)))
 
 (defn cancel-infer-from [term]
-  (cancel-forward-infer (csneps/get-term term) (csneps/get-term term)))
+  (let [term (if (seq? term)
+               (build/build term :Proposition #{})
+               (csneps/get-term term))]
+    (when-not term (error "Term not found: " term))
+    (cancel-forward-infer term term)))
   
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
