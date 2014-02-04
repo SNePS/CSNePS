@@ -31,7 +31,9 @@
 
 (defn assert! [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
-    (snip/forward-infer (build/build expr :Proposition {}))))
+    (let [term (build/assert expr (currentContext) :hyp)]
+      (snip/forward-infer term)
+      term)))
 
 (defn assertAll [exprs & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
