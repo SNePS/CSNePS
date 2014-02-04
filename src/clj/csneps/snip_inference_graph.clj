@@ -818,6 +818,12 @@
                (csneps/get-term term))]
     (when-not term (error "Term not found: " term))
     (cancel-forward-infer term term)))
+
+(defn cancel-focused-infer []
+  (doseq [t (vals @csneps/TERMS)]
+    (dosync 
+      (alter (:future-fw-infer t) empty)
+      (alter (:future-bw-infer t) empty))))
   
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
