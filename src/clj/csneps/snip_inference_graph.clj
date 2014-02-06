@@ -15,10 +15,6 @@
 (def debug false)
 (def showproofs true)
 
-;; Asynchronous asserter
-(def asserter (agent nil))
-(def async-assert false)
-
 ;; Incremented whenever a message is submitted, and decremented once inference
 ;; on a message is complete, this variable allows us to determine if inference
 ;; is in progress, and attach a watch function for the purpose of notifying the
@@ -687,9 +683,7 @@
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
       (dosync (alter (:support assert-term) conj (:support-set message)))
       (when (or (not (ct/asserted? assert-term (ct/currentContext))) (:fwd-infer? message))
-        (if async-assert 
-          (send asserter (fn [_] (build/assert-term assert-term (ct/currentContext) :der)))
-          (build/assert-term assert-term (ct/currentContext) :der))
+        (build/assert-term assert-term (ct/currentContext) :der)
         (when print-intermediate-results
           (send screenprinter (fn [_]  (println "> " assert-term))))
         ;; Create and send derivative messages.
