@@ -21,7 +21,7 @@
 ;; user, or for benchmarking.
 (def to-infer (agent 0))
 
-(declare initiate-node-task create-message-structure get-rule-use-info open-valve)
+(declare initiate-node-task create-message-structure get-rule-use-info open-valve cancel-infer-of)
 
 (defn priority-partial
   [priority f & more] 
@@ -684,14 +684,17 @@
       (dosync (alter (:support assert-term) conj (:support-set message)))
       (when (or (not (ct/asserted? assert-term (ct/currentContext))) (:fwd-infer? message))
         (build/assert-term assert-term (ct/currentContext) :der)
-        (when print-intermediate-results
+        (when (or print-intermediate-results (:fwd-infer? message))
           (send screenprinter (fn [_]  (println "> " assert-term))))
         ;; Create and send derivative messages.
         (let [imsg (derivative-message message
                                    :origin term
                                    :support-set (conj (:support-set message) term)
                                    :type 'I-INFER)]
-            (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg))))
+            (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
+        ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
+        (when (@(:future-bw-infer term) assert-term)
+          (cancel-infer-of term)))
       (when (:true? message)
         ;; Apply elimination rules and report results
         (when-let [result (elimination-infer message term)]
