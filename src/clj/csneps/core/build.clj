@@ -565,7 +565,7 @@
   ;[clojure.lang.Cons] [expr semtype substitution]
   [clojure.lang.PersistentVector] [expr semtype substitution]
   (let [fcn (first expr)]
-    ;(println "Building: " expr semtype)
+    ;(println "Building: " expr semtype substitution)
     ;(println "Subs:" substitution)
     (case fcn
       ;; Only functions with special syntax
@@ -585,6 +585,7 @@
                                               (if (seq genfils)
                                                 (if (subtypep semtype :Generic) semtype :Generic)
                                                 semtype))]
+            
             (when (seq genfils)
               (build-generic-channels molnode genfils))
             molnode))
@@ -853,30 +854,35 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
   (let [var (substitution var-label)]
-    ;(dosync 
-      (alter TERMS assoc (:name var) var)
-      
-      (if (= quant :qvar)
-          (alter (:restriction-set var) clojure.set/union 
-                 (set (map #(build % :WhQuestion substitution) rsts)))
-          (alter (:restriction-set var) clojure.set/union 
-                 (set (map #(build % :Proposition substitution) rsts))))
-
-      (when (and (= quant :some) (not (nil? dependencies)))
-          (alter (:dependencies var) clojure.set/union
-                 (doall (map #(substitution %) dependencies))))
+    (alter TERMS assoc (:name var) var)
     
-      (internal-restrict var)
+    (cond 
+      (= quant :qvar) 
+      (alter (:restriction-set var) clojure.set/union 
+             (set (map #(build % :WhQuestion substitution) rsts)))
+      (and (= quant :some) (not (nil? dependencies)))
+      (do 
+        (alter (:dependencies var) clojure.set/union
+                 (doall (map #(substitution %) dependencies)))
+        (alter (:restriction-set var) clojure.set/union 
+               (set (map #(build % :Propositional substitution) rsts))))
+      :else
+      (alter (:restriction-set var) clojure.set/union 
+               (set (map #(build % :Propositional substitution) rsts))))
+    
+      (println "!%!%!%!" :quant)
+    
+    (internal-restrict var)
       
-      (alter TERMS assoc (:name var) var)
-      (case quant
-        :every (do 
-                 (alter ARBITRARIES conj var)
-                 (ref-set (:fully-built var) true))
-        :some  (alter INDEFINITES conj var)
-        :qvar  (do 
-                 (alter QVARS conj var)
-                 (ref-set (:fully-built var) true)))
+    (alter TERMS assoc (:name var) var)
+    (case quant
+      :every (do 
+               (alter ARBITRARIES conj var)
+               (ref-set (:fully-built var) true))
+      :some  (alter INDEFINITES conj var)
+      :qvar  (do 
+               (alter QVARS conj var)
+               (ref-set (:fully-built var) true)))
     
     var))
 
