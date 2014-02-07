@@ -150,9 +150,12 @@
   (doseq [arb @csneps/ARBITRARIES]
     (cl-format true "~:[~*~;<~S> ~]~S~%" 
                types (type arb) arb))
-  (doseq [arb @csneps/INDEFINITES]
+  (doseq [ind @csneps/INDEFINITES]
     (cl-format true "~:[~*~;<~S> ~]~S~%" 
-               types (type arb) arb)))
+               types (type ind) ind))
+  (doseq [qvar @csneps/QVARS]
+    (cl-format true "~:[~*~;<~S> ~]~S~%" 
+               types (type qvar) qvar)))
 
 (defn list-terms
   ""
