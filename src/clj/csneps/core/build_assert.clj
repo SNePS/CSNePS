@@ -13,8 +13,6 @@
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
-        (when-not (subtypep (semantic-type-of rst) :WhQuestion)
-          (build rst :AnalyticGeneric {}))
         (assert rst (ct/find-context 'BaseCT) :hyp))
       (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
@@ -27,8 +25,6 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq @(:restriction-set (first vars)))]
-      (when-not (subtypep (semantic-type-of rst) :WhQuestion)
-        (build rst :AnalyticGeneric {}))
       (assert rst (ct/find-context 'BaseCT) :hyp))
     (build-quantterm-channels (first vars))
     (first vars)))

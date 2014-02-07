@@ -853,24 +853,23 @@
    that should be needed to build the restrictions. Dependencies is only
    needed for building indefinite objects."
   [quant var-label rsts substitution & {:keys [dependencies]}]
-  (let [var (substitution var-label)]
+  (let [var (substitution var-label)
+        restrictions (map #(build % :Propositional substitution) rsts)]
     (alter TERMS assoc (:name var) var)
     
     (cond 
       (= quant :qvar) 
       (alter (:restriction-set var) clojure.set/union 
-             (set (map #(build % :WhQuestion substitution) rsts)))
+             (set (map #(adjustType % :Propositional :WhQuestion) restrictions)))
       (and (= quant :some) (not (nil? dependencies)))
       (do 
         (alter (:dependencies var) clojure.set/union
                  (doall (map #(substitution %) dependencies)))
         (alter (:restriction-set var) clojure.set/union 
-               (set (map #(build % :Propositional substitution) rsts))))
+             (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
       :else
       (alter (:restriction-set var) clojure.set/union 
-               (set (map #(build % :Propositional substitution) rsts))))
-    
-      (println "!%!%!%!" :quant)
+             (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
     
     (internal-restrict var)
       
