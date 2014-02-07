@@ -10,7 +10,7 @@
 ;;; a) 3 combined with 1 or 2 would be silly, and might as well not be there, 
 ;;;    since AnalyticGenerics are tautologies.
 
-;;; Case 1: As a rule of inference (asserted). 
+;;; Case 1a: As a rule of inference (asserted). 
 (clearkb true)
 (defineSlot actNoAgent :type Thing)
 (defineSlot theme :type Entity)
@@ -22,6 +22,17 @@
 (assert '(Isa Lassie Dog))
 (assert '(Scare Fido))
 (askwh '(Carry (?x (Isa ?x Dog))))
+
+;;; Case 1b: As a rule of inference, with embedded generics.
+(clearkb true)
+(defineSlot entity1 :type Entity)
+(defineSlot entity2 :type Entity)
+(defineCaseframe 'Entity '('Parent entity1))
+(defineCaseframe 'Propositional '('Ancestor entity1 entity2))
+
+(assert '(Ancestor (Parent (every x)) x))
+(assert '(Isa Alex Entity))
+(askwh '(Ancestor ?x Alex))
 
 ;;; Case 2: As a rule antecedent (unasserted).
 (clearkb true)
