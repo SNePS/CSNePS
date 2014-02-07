@@ -136,10 +136,10 @@
   []
   (let [fw-tasks (apply union (map #(deref (:future-fw-infer %)) (vals @csneps/TERMS)))
         bw-tasks (apply union (map #(deref (:future-bw-infer %)) (vals @csneps/TERMS)))]
-    (println "Attempting to derive:")
+    (when (seq bw-tasks) (println "Attempting to derive:"))
     (doseq [t bw-tasks]
       (println t))
-    (println "Deriving from:")
+    (when (seq fw-tasks) (println "Deriving from:"))
     (doseq [t fw-tasks]
       (println t))))
 
