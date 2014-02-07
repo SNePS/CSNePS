@@ -14,6 +14,7 @@
         [clojure.walk]
         [csneps.core.caseframes :only (list-caseframes sameFrame description)]
         [csneps.demo :only (demo)]
+        [clojure.set :only (union)]
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
         [csneps.core.build :only (find unassert *PRECISION*)]
@@ -130,6 +131,17 @@
 (defn find-term
   [term]
   (csneps/get-term (symbol term)))
+
+(defn list-focused-inference-tasks
+  []
+  (let [fw-tasks (apply union (map #(deref (:future-fw-infer %)) (vals @csneps/TERMS)))
+        bw-tasks (apply union (map #(deref (:future-bw-infer %)) (vals @csneps/TERMS)))]
+    (println "Attempting to derive:")
+    (doseq [t bw-tasks]
+      (println t))
+    (println "Deriving from:")
+    (doseq [t fw-tasks]
+      (println t))))
 
 (defn list-variables
   "Prints the variable nodes. First arbitraries and then indefinites. If the 
