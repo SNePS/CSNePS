@@ -113,7 +113,7 @@
     (seq? term)
     (build/variable-parse-and-build term :Propositional)
     :else
-    (build/build term (or semtype :Entity) {})))
+    (build/build term (or (first semtype) :Entity) {})))
 
 (defmacro defineType
   [newtype parents & docstring]
