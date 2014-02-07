@@ -37,7 +37,7 @@
                                                              (second (first p)))))]
                                          (conj (doall (map inner (:down-cableset termpart))) fsym)
                                          (doall (map inner (:down-cableset termpart))))
-                                       :Proposition 
+                                       :Propositional
                                        {}))
     (atomicTerm? termpart) (outer termpart)
     (set? termpart) (set (doall (map inner termpart)))
@@ -47,7 +47,7 @@
   [inner outer termpart]
   (cond
     (molecularTerm? termpart) (outer (build (conj (doall (map inner (:down-cableset termpart))) (term-predicate termpart)) 
-                                        :Proposition 
+                                        :Propositional
                                         {}))
     ;(arbitraryTerm? termpart) (outer (build-variable (list 'every (:var-label termpart) (map inner @(:restriction-set termpart))))) 
     (atomicTerm? termpart) (outer termpart)
