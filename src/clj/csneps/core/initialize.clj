@@ -100,10 +100,19 @@
         
         ;; Slots for SNeRE
         ;; ===================
-        (defineSlot actions :type Action
+        (defineSlot action :type Action
           :docstring "The actions of an act."
           :min 1 :max 1
           :posadjust none :negadjust none)
+        
+        ;; Slots for condition-action rules
+        ;; ================================
+        (defineSlot condition :type Propositional 
+          :docstring "conditions for a rule."
+          :min 1 :posadjust expand :negadjust reduce)
+        (defineSlot subrule :type Act 
+          :docstring "subrules for a rule."
+          :min 1 :posadjust expand :negadjust reduce)
         
         ;; Reinitialize caseframes
         (ref-set cf/CASEFRAMES (hash-set))
@@ -124,7 +133,10 @@
         (defineCaseframe 'Propositional '('if ant cq)
           :docstring "if [ant] then [cq]")
         (defineCaseframe 'Propositional '('close closedvar proposition)
-          :docstring "[proposition] is closed over [closedvar]"))
+          :docstring "[proposition] is closed over [closedvar]")
+        (defineCaseframe 'Act '('rule condition action subrule)
+          :docstring "[condition] must be matched for [action] to occur, and
+                      to satisfy the match of [subrule]"))
   
       ;; Output message.
       (if clearall
