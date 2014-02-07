@@ -217,9 +217,8 @@
 
                  (cf/add-caseframe-term wft :cf cf)
                  wft))]
-    ;(println "term: " term)
-    
-    (adjustType term (:type cf) (if fsemtype fsemtype semtype))))
+
+    (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))))
 
 
 (defn build-andor
@@ -438,7 +437,7 @@
           genfills (generic-fillers (set fillers))
           molnode (build-molecular-node cf fillers :csneps.core/Molecular 
                                         (if (seq genfills)
-                                          :Generic
+                                          (if (subtypep semtype :Generic) semtype :Generic)
                                           semtype))]
       (when (seq genfills)
         (build-generic-channels molnode genfills))
@@ -566,7 +565,7 @@
   ;[clojure.lang.Cons] [expr semtype substitution]
   [clojure.lang.PersistentVector] [expr semtype substitution]
   (let [fcn (first expr)]
-    ;(println "Building: " expr fcn)
+    ;(println "Building: " expr semtype)
     ;(println "Subs:" substitution)
     (case fcn
       ;; Only functions with special syntax
@@ -584,7 +583,7 @@
                                               (list entity category)
                                               :csneps.core/Categorization
                                               (if (seq genfils)
-                                                :Generic
+                                                (if (subtypep semtype :Generic) semtype :Generic)
                                                 semtype))]
             (when (seq genfils)
               (build-generic-channels molnode genfils))
@@ -798,29 +797,32 @@
     (error
       (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
-  (or (and (or (= quant :qvar) (= quant :every)) (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
-      (let [name (case quant
-                   :every (symbol (str "arb" (arb-counter)))
-                   :some (symbol (str "ind" (ind-counter)))
-                   :qvar (symbol (str "qvar" (qvar-counter))))
-            varterm (case quant
-                      :every (new-arbitrary {:name name 
-                                             :var-label var-label
-                                             :msgs (create-message-structure :csneps.core/Arbitrary nil)})
-                      :some (new-indefinite {:name name 
-                                             :var-label var-label
-                                             :msgs (create-message-structure :csneps.core/Indefinite nil)})
-                      :qvar (new-query-variable {:name name 
-                                                 :var-label var-label
-                                                 :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
-        ;(dosync 
-         (case quant
-           :every (inc-arb-counter)
-           :some  (inc-ind-counter)
-           :qvar  (inc-qvar-counter))
-         (instantiate-sem-type (:name varterm) :Entity)
+  (or 
+    (and 
+      (or (= quant :qvar) (= quant :every)) 
+      (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
+    (let [name (case quant
+                 :every (symbol (str "arb" (arb-counter)))
+                 :some (symbol (str "ind" (ind-counter)))
+                 :qvar (symbol (str "qvar" (qvar-counter))))
+          varterm (case quant
+                    :every (new-arbitrary {:name name 
+                                           :var-label var-label
+                                           :msgs (create-message-structure :csneps.core/Arbitrary nil)})
+                    :some (new-indefinite {:name name 
+                                           :var-label var-label
+                                           :msgs (create-message-structure :csneps.core/Indefinite nil)})
+                    :qvar (new-query-variable {:name name 
+                                               :var-label var-label
+                                               :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
+
+       (case quant
+         :every (inc-arb-counter)
+         :some  (inc-ind-counter)
+         :qvar  (inc-qvar-counter))
+       (instantiate-sem-type (:name varterm) :Entity)
         
-        varterm)))
+      varterm)))
 
 
 (defn pre-build-vars
