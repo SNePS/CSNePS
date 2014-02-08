@@ -46,3 +46,17 @@
 (assert '(Isa Lassie Dog))
 (assert '(Scare Fido))
 (askwh '(Carry (?x (Isa ?x Dog))))
+
+;;; Case 2b: A more interesting connective.
+(clearkb true)
+(defineSlot actNoAgent :type Thing)
+(defineSlot theme :type Entity)
+(defineCaseframe 'Propositional '(actNoAgent theme)
+ :fsymbols '(Carry Walk))
+ 
+(assert '(xor (Walk (every x (Isa x Dog))) (Carry x)))
+(assert '(Isa Fido Dog))
+(assert '(Isa Lassie Dog))
+(assert '(not (Carry Fido)))
+(assert '(Carry Lassie))
+(askwh '(Carry (?x (Isa ?x Dog))))
