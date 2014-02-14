@@ -2,10 +2,10 @@
   :description "CSNePS - Concurrent SNePS"
   :dependencies [[org.clojure/clojure "1.6.0-beta1"]
                  [org.clojure/core.incubator "0.1.2"]
-                 [org.clojure/math.numeric-tower "0.0.1"]
-                 [org.clojure/math.combinatorics "0.0.2"]
-                 [org.clojure/tools.trace "0.7.3"]
-                 [org.clojure/tools.nrepl "0.2.0"]
+                 [org.clojure/math.numeric-tower "0.0.4"]
+                 [org.clojure/math.combinatorics "0.0.7"]
+                 [org.clojure/tools.trace "0.7.6"]
+                 [org.clojure/tools.nrepl "0.2.3"]
                  [net.sf.jung/jung-graph-impl "2.0.1"]
                  [net.sf.jung/jung-api "2.0.1"]
                  [net.sf.jung/jung-visualization "2.0.1"]
@@ -28,7 +28,7 @@
                  [jpedal/jpedal "4.45-b-105"]
                  [org.swinglabs/swingx "1.6.1"]
                  [net.xeon/jspf.core "1.0.2"]]
-  :dev [[org/clojure/tools.namespace "0.1.2"]]
+  :dev [[org.clojure/tools.namespace "0.2.4"]]
   :repositories {"FreeHEP" "http://java.freehep.org/maven2"
                  "jpedal" "http://maven.geomajas.org"
                  "local" ~(str (.toURI (java.io.File. "local_maven_repo")))}
