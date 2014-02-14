@@ -79,7 +79,7 @@
   ([variable? s t] (garner-unifiers variable? s t [{} {}]))
   ([variable? s t binds] (garner-unifiers unify-variable variable? s t binds))
   ([uv-fn variable? s t [source target]]
-    (println "#U# Source:" s "Source Bindings:" source "Target:" t "Target Bindings:" target)
+    ;(println "#U# Source:" s "Source Bindings:" source "Target:" t "Target Bindings:" target)
      (cond
        (not (and source target)) [nil nil]
        (= s t)                   [source target]
@@ -133,7 +133,7 @@
   (let [substfn (fn [set1 set2]
                   (zipmap (keys set1)
                     (for [[k x] set1]
-                      (term-prewalk (fn [expr] ;;prev was walk/prewalk
+                      (term-prewalk (fn [expr]
                                       (if (variable? expr)
                                         (or (set1 expr) (set2 expr) expr)
                                         expr))
