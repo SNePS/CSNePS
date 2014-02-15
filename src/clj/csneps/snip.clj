@@ -30,7 +30,7 @@
 (load "snip_slot_based")
 (load "snip_message")
 (load "snip_inference_graph")
-;(load "snip_acting")
+(load "snip_acting")
 (load "snip_rules")
 
 (defn askif 
