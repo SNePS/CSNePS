@@ -110,7 +110,10 @@
         (defineSlot condition :type Propositional 
           :docstring "conditions for a rule."
           :min 1 :posadjust expand :negadjust reduce)
-        (defineSlot subrule :type Act 
+        (defineSlot name :type Thing
+          :docstring "The name of a rule."
+          :min 1 :max 1 :posadjust none :negadjust none)
+        (defineSlot subrule :type Policy
           :docstring "subrules for a rule."
           :min 1 :posadjust expand :negadjust reduce)
         
@@ -134,9 +137,9 @@
           :docstring "if [ant] then [cq]")
         (defineCaseframe 'Propositional '('close closedvar proposition)
           :docstring "[proposition] is closed over [closedvar]")
-        (defineCaseframe 'Act '('rule condition action subrule)
-          :docstring "[condition] must be matched for [action] to occur, and
-                      to satisfy the match of [subrule]"))
+        (defineCaseframe 'Policy '('rule name condition action subrule)
+          :docstring "for the rule [name] to fire, [condition] must be matched,
+                      then [action] may occur, and [subrule] may be matched."))
   
       ;; Output message.
       (if clearall
