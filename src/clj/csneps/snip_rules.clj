@@ -1,41 +1,5 @@
 (in-ns 'csneps.snip)
 
-(defn subs-non-locals
-  [pattern vars subs]
-  (walk/postwalk #(if (and (build/synvariable? %)
-                           (not (some #{%} vars)))
-                    (subs %)
-                    %)
-            pattern))
-
-(defn fix-forms
-  [forms subs]
-  (for [f forms] (replace {'of subs} f)))
-
-(defmacro withInstances 
-  "For each asserted substitution instance of pattern, evaluates the forms in forms,
-      with each variable in variables
-         taking on the term appropriate for the instance.
-   Question mark variables in pattern that are not in variables
-      take on the values they should have gotten in an enclosing withInstances."
-  [vars of pattern & forms]
-  (let [subs (when (map? of) of)
-        pattern (if subs (subs-non-locals pattern vars subs) pattern)
-        res (map second (find pattern vars))]
-    `(do
-       ~@(for [r res]
-           (let [rnobj (into {} (for [[k v] r] [k (:name v)]))
-                 varmap (merge subs (zipmap vars (for [v vars] (get rnobj v))))
-                 larg (vec (interleave vars (for [v vars] `(get '~rnobj '~v))))]
-             `(let ~larg
-                ~@(fix-forms forms varmap)))))))
-
-(defn build-rule-fn [rhs]
-  ;; Builds a partial function which takes a substitution
-  ;; and rule RHS. That function instantiates the RHS for
-  ;; execution.
-  )
-
 (defn lhsrhs [body]
   (loop [body body
          lhs '()]
@@ -44,6 +8,24 @@
       (recur (rest body)
              (conj lhs (first body))))))
 
+(defn formorsub [rhs]
+  (loop [rhs rhs
+         forms '()
+         subrules '()]
+    (cond
+      (empty? rhs)
+      [forms subrules]
+      (= (ffirst rhs) :subrule)
+      (recur (rest rhs)
+             forms
+             (conj subrules (first rhs)))
+      :else
+      (recur (rest rhs)
+             (conj forms (first rhs))
+             subrumes))))
+      
+
 (defmacro defrule [rulename & body]
-  (let [[lhs rhs] (lhsrhs body)]
-    `(defineTerm (list '~'rule (set '~lhs) (set '~rhs) (hash-set)))))
+  (let [[lhs rhs] (lhsrhs body)
+        [forms subs] (formorsub rhs)]
+    `(defineTerm (list '~'rule rulename (set '~lhs) (set '~forms) (set '~subs)))))
