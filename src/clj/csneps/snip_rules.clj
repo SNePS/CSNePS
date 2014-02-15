@@ -1,11 +1,11 @@
-(in-ns 'csneps.core.snuser)
+(in-ns 'csneps.snip)
 
 (defn subs-non-locals
   [pattern vars subs]
-  (postwalk #(if (and (build/synvariable? %)
-                      (not (some #{%} vars)))
-               (subs %)
-               %)
+  (walk/postwalk #(if (and (build/synvariable? %)
+                           (not (some #{%} vars)))
+                    (subs %)
+                    %)
             pattern))
 
 (defn fix-forms
@@ -46,4 +46,4 @@
 
 (defmacro defrule [rulename & body]
   (let [[lhs rhs] (lhsrhs body)]
-    `(defineTerm (list '~'rule (set '~lhs) (set '~rhs)))))
+    `(defineTerm (list '~'rule (set '~lhs) (set '~rhs) (hash-set)))))

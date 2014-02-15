@@ -4,7 +4,8 @@
             [csneps.core.find-utils :as find-utils]
             [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
-            [csneps.core.relations :as slot])
+            [csneps.core.relations :as slot]
+            [clojure.walk :as walk])
 ;  (:refer-clojure :exclude [merge])
   (:use [csneps.util]
         [csneps.snip.util]
@@ -29,6 +30,8 @@
 (load "snip_slot_based")
 (load "snip_message")
 (load "snip_inference_graph")
+;(load "snip_acting")
+(load "snip_rules")
 
 (defn askif 
   "If the proposition prop is derivable in context,

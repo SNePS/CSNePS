@@ -20,7 +20,7 @@
         [csneps.core.build :only (find unassert *PRECISION*)]
         [csneps.core :only (showTypes semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
-        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer)]
+        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer defrule)]
         [csneps.core.arithmetic]
         [csneps.util]))
 
@@ -188,7 +188,6 @@
   [fname]
   (clojure.lang.Compiler/loadFile fname))
 
-(clojure.core/load "/csneps/core/rules")
 (clojure.core/load "/csneps/core/initialize")
 
 (clearkb true)
