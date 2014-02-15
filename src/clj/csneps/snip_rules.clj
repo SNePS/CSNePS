@@ -22,7 +22,7 @@
       :else
       (recur (rest rhs)
              (conj forms (first rhs))
-             subrumes))))
+             subrules))))
       
 
 (defmacro defrule [rulename & body]
