@@ -28,4 +28,4 @@
 (defmacro defrule [rulename & body]
   (let [[lhs rhs] (lhsrhs body)
         [forms subs] (formorsub rhs)]
-    `(defineTerm (list '~'rule rulename (set '~lhs) (set '~forms) (set '~subs)))))
+    `(build/build (list '~'rule '~rulename (set '~lhs) (set '~forms) (set '~subs)) :Policy {})))

@@ -269,7 +269,7 @@
    down-weights (ref '())
    type ::Molecular])
 
-(defrecord2 Rule
+(defrecord2 Carule
    [name nil
    activation-value 0.0
    fired nil
@@ -290,9 +290,9 @@
    caseframe nil
    down-cableset '()
    down-weights (ref '())
-   ;;Additions for Rule
-   rhsfn nil
-   type ::Rule])
+   ;;Additions for Carule
+   print-forms (ref nil)
+   type ::CARule])
 
 
 (defrecord2 Param2op
@@ -653,7 +653,7 @@
   (define-syn-type ::Arbitrary ::Variable)
   (define-syn-type ::QueryVariable ::Variable)
   (define-syn-type ::Molecular ::Term)
-  (define-syn-type ::Rule ::Molecular)
+  (define-syn-type ::CARule ::Molecular)
   (define-syn-type ::Param2op ::Molecular)
   (define-syn-type ::Andor ::Param2op)
   (define-syn-type ::Disjunction ::Andor)
@@ -685,7 +685,7 @@
    ::Arbitrary (eval 'csneps.core/new-arbitrary)
    ::QueryVariable (eval 'csneps.core/new-query-variable)
    ::Molecular (eval 'csneps.core/new-molecular)
-   ::Rule (eval 'csneps.core/new-rule)
+   ::CARule (eval 'csneps.core/new-carule)
    ::Param2op (eval 'csneps.core/new-param2op)
    ::Andor (eval 'csneps.core/new-andor)
    ::Disjunction (eval 'csneps.core/new-disjunction)

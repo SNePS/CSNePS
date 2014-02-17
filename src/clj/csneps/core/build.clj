@@ -17,7 +17,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels build-unifier-channels create-message-structure generic-term?)
+(declare assert build check-and-build-variables build-channels build-unifier-channels create-message-structure generic-term? check-and-build-variables)
 
 (load "build_assert")
 (load "build_utils")
@@ -332,6 +332,26 @@
                          :csneps.core/Numericalentailment semtype
                          :fsemtype semtype :min i))]
             term)))))
+
+(defn build-rule 
+  [rulename lhs forms subrules]
+  ;(println rulename lhs forms subrules)
+  (let [[built-lhs subs] (loop [lhs (seq lhs)
+                                built-lhs #{}
+                                subs {}]
+                           (if (empty? lhs)
+                             [built-lhs subs]
+                             (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
+                               (recur (rest lhs)
+                                      (conj built-lhs (build new-expr :Propositional sub))
+                                      (set/union subs sub)))))
+        name (build rulename :Thing {})
+        act (build (str "act" (.hashCode forms)) :Action {})]
+    (let [cf (cf/find-frame 'rule)
+          rule (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy)]
+      (println rule)
+      (dosync (ref-set (:print-forms rule) (clojure.string/join "\n" forms)))
+      rule)))
 
 (defn build-quantterm-channels
   "Channels are built from each restriction, to the quantified term,
@@ -766,7 +786,13 @@
 	                                  (build (third expr) :Proposition substitution))
 	                            :csneps.core/Molecular
 	                            semtype))
-
+      rule 
+      (let [rulename (second expr)
+            lhs (third expr)
+            forms (nth expr 3)
+            subrules (last expr)]
+        (build-rule rulename lhs forms subrules))
+      
       (cond ;;Else caseframes
         (ientailsymb? fcn)
             ;; expr is (i=> ant cq)

@@ -115,7 +115,7 @@
           :min 1 :max 1 :posadjust none :negadjust none)
         (defineSlot subrule :type Policy
           :docstring "subrules for a rule."
-          :min 1 :posadjust expand :negadjust reduce)
+          :min 0 :posadjust expand :negadjust reduce)
         
         ;; Reinitialize caseframes
         (ref-set cf/CASEFRAMES (hash-set))
