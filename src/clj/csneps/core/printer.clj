@@ -251,6 +251,9 @@
 (defmethod print-method csneps.core.Molecular [o w]
   (.write ^java.io.Writer w (str (term-printer o))))
 
+(defmethod print-method csneps.core.Carule [o w]
+  (.write ^java.io.Writer w (str (term-printer o))))
+
 (defmethod print-method csneps.core.Param2op [o w]
   (.write ^java.io.Writer w (str (term-printer o))))
 
