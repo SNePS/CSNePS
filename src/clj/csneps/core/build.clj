@@ -345,12 +345,19 @@
                                (recur (rest lhs)
                                       (conj built-lhs (build new-expr :Propositional sub))
                                       (set/union subs sub)))))
+        fixedforms  (walk/postwalk #(if(synvariable? %)
+                                      (list 'subst (list 'csneps.core/get-term (list 'quote (:name (subs %)))))
+                                      %)
+                                   forms)
+        actfn (eval `(fn [~'subst] 
+                       ~@fixedforms))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})]
     (let [cf (cf/find-frame 'rule)
           rule (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy)]
-      (println rule)
-      (dosync (ref-set (:print-forms rule) (clojure.string/join "\n" forms)))
+      (dosync 
+        (ref-set (:print-forms rule) (clojure.string/join "\n" forms))
+        (alter csneps.core/primaction assoc act actfn))
       rule)))
 
 (defn build-quantterm-channels
