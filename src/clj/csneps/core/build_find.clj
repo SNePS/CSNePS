@@ -33,11 +33,10 @@
   [cf slot fillers]
   (loop [fs (seq fillers)
          res '()]
-    (if (empty? fs) 
+    (if (empty? fs)
       (apply clojure.set/intersection (map set res))
       (let [filler (first fs)
             termsfrom (filter #(= (:caseframe %) cf) (findfrom filler slot))]
-        ;(println termsfrom)
         (if (empty? termsfrom) 
           #{}
           (recur (rest fs) (conj res termsfrom)))))))
@@ -55,10 +54,15 @@
                  (if (empty? sfmap)
                    res
                    (let [[slot fillers] (first sfmap)
-                         sres (find-terms-with-filled-slot cf slot fillers)]
-                     (if (empty? sres)
+                         sres (when (seq fillers) (find-terms-with-filled-slot cf slot fillers))]
+                     (cond
+                       (empty? fillers)
+                       (recur (rest sfmap)
+                              res)
+                       (empty? sres)
                        sres
-                       (recur (rest sfmap) 
+                       :else
+                       (recur (rest sfmap)
                               (if (empty? res) sres (clojure.set/intersection res sres)))))))]
     
     (if (nil? result)
