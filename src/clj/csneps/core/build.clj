@@ -17,7 +17,7 @@
 
 ;(refer-clojure :exclude '[assert])
 
-(declare assert build check-and-build-variables build-channels build-unifier-channels create-message-structure generic-term? check-and-build-variables)
+(declare assert build check-and-build-variables build-channels build-unifier-channels build-quantterm-channels create-message-structure generic-term? check-and-build-variables)
 
 (load "build_assert")
 (load "build_utils")
@@ -353,6 +353,12 @@
                        ~@fixedforms))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})]
+    
+    (doseq [v (vals subs)]
+      (doseq [rst (seq @(:restriction-set v))]
+        (assert rst (ct/find-context 'BaseCT) :hyp))
+      (build-quantterm-channels v)
+      (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (let [cf (cf/find-frame 'rule)
           rule (build-channels (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy))]
       (dosync 

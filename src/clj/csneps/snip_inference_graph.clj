@@ -505,6 +505,19 @@
   ;; passed unification! Instead, lets use cached-terms.
   (dosync (alter (:instances node) assoc (:origin message) (:subst message))))
 
+(defn policy-instantiation
+  ;; Really, a kind of elimination rule.
+  [message node]
+  (let [new-msgs (get-rule-use-info (:msgs node) message)
+        inchct (count @(:ant-in-channels node)) ;; Should work even with sub-policies.
+        inst-msgs (filter #(= (:pos %) inchct) new-msgs)
+        new-msgs (map #(derivative-message % :origin node :fwd-infer? true) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        ich @(:i-channels node)]
+    (apply concat 
+           (for [nmsg new-msgs] 
+             (zipmap ich (repeat (count ich) nmsg))))))
+
+
 (defn generic-infer 
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node "from" (:origin message)))))
@@ -620,6 +633,7 @@
   [message node]
   (when debug (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
   (case (csneps/type-of node)
+    :csneps.core/CARule (policy-instantiation message node)
     :csneps.core/Negation (negation-elimination message node)
     :csneps.core/Conjunction (conjunction-elimination message node)
     (:csneps.core/Numericalentailment
@@ -707,6 +721,11 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   (cond 
+    ;; Actions should execute their primative action.
+    (and
+      (= (:type message) 'I-INFER)
+      (= (csneps/semantic-type-of term) :Action))
+    ((csneps/primaction term) (:subst message))
     ;; AnalyticGeneric terms need to just forward the messages
     ;; on towards the variable term.
     (and
