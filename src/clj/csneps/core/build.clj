@@ -345,7 +345,7 @@
                                (recur (rest lhs)
                                       (conj built-lhs (build new-expr :Propositional sub))
                                       (set/union subs sub)))))
-        fixedforms  (walk/postwalk #(if(synvariable? %)
+        fixedforms  (walk/postwalk #(if (subs %)
                                       (list 'subst (list 'csneps.core/get-term (list 'quote (:name (subs %)))))
                                       %)
                                    forms)
