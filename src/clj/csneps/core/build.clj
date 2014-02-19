@@ -26,6 +26,7 @@
 (load "build_unification")
 (load "build_find")
 (load "build_channel")
+(load "build_rules")
 
 (defvar KRNovice (ref nil)
   "If the value is non-null,
@@ -334,11 +335,11 @@
             term)))))
 
 (defn build-rule 
-  [rulename lhs forms subrules]
-  ;(println rulename lhs forms subrules)
+  [rulename lhs forms subrules & {:keys [subs] :or {subs {}}}]
+  (println rulename lhs forms subrules)
   (let [[built-lhs subs] (loop [lhs (seq lhs)
                                 built-lhs #{}
-                                subs {}]
+                                subs subs]
                            (if (empty? lhs)
                              [built-lhs subs]
                              (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
