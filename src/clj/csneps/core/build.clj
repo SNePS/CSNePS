@@ -336,7 +336,7 @@
 
 (defn build-rule 
   [rulename lhs forms subrules & {:keys [subs] :or {subs {}}}]
-  (println rulename lhs forms subrules)
+  (println rulename lhs forms subrules subs)
   (let [[built-lhs subs] (loop [lhs (seq lhs)
                                 built-lhs #{}
                                 subs subs]
@@ -353,7 +353,8 @@
         actfn (eval `(fn [~'subst] 
                        ~@fixedforms))
         name (build rulename :Thing {})
-        act (build (str "act" (.hashCode forms)) :Action {})]
+        act (build (str "act" (.hashCode forms)) :Action {})
+        subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     
     (doseq [v (vals subs)]
       (doseq [rst (seq @(:restriction-set v))]
@@ -361,7 +362,7 @@
       (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (let [cf (cf/find-frame 'rule)
-          rule (build-channels (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy))]
+          rule (build-channels (build-molecular-node cf (list name built-lhs act subrules) :csneps.core/CARule :Policy))]
       (dosync 
         (ref-set (:print-forms rule) (clojure.string/join "\n" forms))
         (alter csneps.core/primaction assoc act actfn))
@@ -824,7 +825,7 @@
             lhs (third expr)
             forms (nth expr 3)
             subrules (last expr)]
-        (build-rule rulename lhs forms subrules))
+        (build-rule rulename lhs forms subrules :subs substitution))
       
       (cond ;;Else caseframes
         (ientailsymb? fcn)
