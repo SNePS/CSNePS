@@ -10,7 +10,9 @@
   {:pre [(csneps/subtypep (csneps/semantic-type-of policy) :Policy)]}
   (let [ct (ct/currentContext)]
     (when-not (ct/asserted? policy ct)
-      (dosync (alter (:hyps ct) conj policy)))))
+      (dosync (alter (:hyps ct) conj policy))
+      (when (isa? (csneps/syntactic-type-of policy) :csneps.core/CARule)
+        (backward-infer policy)))))
 
 (defn unadopt
   "Unadopt a policy."
@@ -18,7 +20,9 @@
   {:pre [(csneps/subtypep (csneps/semantic-type-of policy) :Policy)]}
   (let [ct (ct/currentContext)]
     (when (ct/asserted? policy ct)
-      (dosync (alter (:hyps ct) disj policy)))))
+      (dosync (alter (:hyps ct) disj policy))
+      (when (isa? (csneps/syntactic-type-of policy) :csneps.core/CARule)
+        (cancel-infer-of policy)))))
 
 (defn attach-primaction [act fname]
   {:pre [(csneps/subtypep (csneps/semantic-type-of act) :Act)

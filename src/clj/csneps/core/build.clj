@@ -354,11 +354,28 @@
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})]
     (let [cf (cf/find-frame 'rule)
-          rule (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy)]
+          rule (build-channels (build-molecular-node cf (list name built-lhs act #{}) :csneps.core/CARule :Policy))]
       (dosync 
         (ref-set (:print-forms rule) (clojure.string/join "\n" forms))
         (alter csneps.core/primaction assoc act actfn))
       rule)))
+
+(defn build-carule-channels
+  "Channels are built from each generic term (proposition) to the 
+   rule, and from the rule to the action, and any subrules."
+  [carule]
+  (let [slot-map (cf/dcsRelationTermsetMap carule)
+        props (get slot-map (slot/find-slot 'condition))
+        acts (get slot-map (slot/find-slot 'action))
+        subrules (get slot-map (slot/find-slot 'subrule))]
+    (doseq [p props :let [ch (build-channel p carule nil nil)]] 
+      (install-channel ch p carule :i-channel))
+    (doseq [a acts :let [ch (build-channel carule a nil nil)]] 
+      (install-channel ch carule a :i-channel))
+    (doseq [s subrules :let [ch (build-channel carule s nil nil)]] 
+      (install-channel ch carule s :i-channel))))
+        
+  
 
 (defn build-quantterm-channels
   "Channels are built from each restriction, to the quantified term,
@@ -401,6 +418,8 @@
   [rnode]
   (let [slot-map (cf/dcsRelationTermsetMap rnode)]
     (case (type-of rnode)
+      :csneps.core/CARule
+      (build-carule-channels rnode)
       :csneps.core/Negation
       (build-internal-channels rnode (get slot-map (slot/find-slot 'nor)) (get slot-map (slot/find-slot 'nor)))
       :csneps.core/Conjunction
