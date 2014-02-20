@@ -347,7 +347,7 @@
                                       (conj built-lhs (build new-expr :Propositional sub))
                                       (set/union subs sub)))))
         actfn (fn [subst] 
-                (println forms "\n" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
+                (println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
                 (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})
@@ -844,7 +844,7 @@
    and modifies the substitution accordingly. Arbitrary individuals may
    have a resriction set slot filled in already if they existed in the KB
    previously. Otherwise, resrtiction sets still need to be built."
-  [quant var-label rsts & {:keys [arb-rsts ind-rsts qvar-rsts]}]
+  [quant var-label rsts notsames & {:keys [arb-rsts ind-rsts qvar-rsts]}]
   (doseq [rst rsts
             :when (not (some #{var-label} (flatten (prewalk (fn [x] 
                                                               (if (set? x) 
@@ -857,7 +857,7 @@
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
-      (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant))
+      (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
     (let [name (case quant
                  :every (symbol (str "arb" (arb-counter)))
                  :some (symbol (str "ind" (ind-counter)))
@@ -886,14 +886,14 @@
   "Loops through the arbitrary individuals and builds an initial
    structure, but not the restriction sets. The same is done for the
    indefinite objects."
-  [arb-rsts ind-dep-rsts qvar-rsts]
+  [arb-rsts ind-dep-rsts qvar-rsts notsames]
   (into {}
         (concat (for [k (seq (keys arb-rsts))]
-                  [k (pre-build-var :every k (get arb-rsts k) :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)])
+                  [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var :some k (second (get arb-rsts k)))])
+                  [k (pre-build-var :some k (second (get arb-rsts k)) notsames)])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (get qvar-rsts k))]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames)]))))
 
 (defn internal-restrict
   [var]
@@ -903,20 +903,52 @@
         semcats (filter semtype? (map #(keyword (:name %)) categories))]
     (doall (map #(adjustType var (semantic-type-of var) %) semcats))))
 
+;;; Note: Doesn't deal with if the user puts >1 notSame relation.
+(defn- notsames-helper 
+  "Finds a (notSame ...) relation, and builds a set of varlabels this term is not
+   the same as. Returns that set, and the set of restrictions without the
+   notSame relation."
+  [rsts var-label]
+  (let [[rsts not-same-var-labels] (loop [rsts rsts
+                                          seen '()]
+                                     (cond
+                                       (empty? rsts)
+                                       [seen #{}]
+                                       (= (ffirst rsts) 'notSame)
+                                       [(concat (rest rsts) seen) (rest (first rsts))]
+                                       :else
+                                       (recur (rest rsts)
+                                              (conj seen (first rsts)))))
+        not-same-var-labels (disj (set not-same-var-labels) var-label)]
+    [rsts not-same-var-labels]))
+
+(defn- notsames 
+  [arb-rsts qvar-rsts]
+  (let [arb (for [[k v] arb-rsts :let [[new-rsts nsvarlabels] (notsames-helper v k)]]
+              [[k new-rsts] [k nsvarlabels]])
+        arb-rsts (into {} (map #(first %) arb))
+        notsame (into {} (map #(second %) arb))
+        qvar (for [[k v] qvar-rsts :let [[new-rsts nsvarlabels] (notsames-helper v k)]]
+              [[k new-rsts] [k nsvarlabels]])
+        qvar-rsts (into {} (map #(first %) qvar))
+        notsame (into notsame (map #(second %) qvar))]
+    [arb-rsts qvar-rsts notsame]))
+
 (defn build-var
   "Build a variable node of type quant with label var-label and
    restrictions rsts. Substitution contains all the variable nodes
    that should be needed to build the restrictions. Dependencies is only
    needed for building indefinite objects."
-  [quant var-label rsts substitution & {:keys [dependencies]}]
+  [quant var-label rsts substitution notsames & {:keys [dependencies]}]
   (let [var (substitution var-label)
+        nsvars (set (map #(substitution %) (notsames var-label)))
         restrictions (map #(build % :Propositional substitution) rsts)]
     (alter TERMS assoc (:name var) var)
     
     (cond 
       (= quant :qvar) 
-      (alter (:restriction-set var) clojure.set/union 
-             (set (map #(adjustType % :Propositional :WhQuestion) restrictions)))
+        (alter (:restriction-set var) clojure.set/union 
+               (set (map #(adjustType % :Propositional :WhQuestion) restrictions)))
       (and (= quant :some) (not (nil? dependencies)))
       (do 
         (alter (:dependencies var) clojure.set/union
@@ -926,6 +958,8 @@
       :else
       (alter (:restriction-set var) clojure.set/union 
              (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
+    
+    (alter (:not-same-as var) clojure.set/union nsvars)
     
     (internal-restrict var)
       
@@ -945,16 +979,16 @@
   "Loops through the arbs and inds. and builds their restriction
    sets. In the case of indenfinite-objects, their dependency lists
    are populated."
-  [arb-rsts ind-dep-rsts qvar-rsts substitution]
+  [arb-rsts ind-dep-rsts qvar-rsts substitution notsames]
   (set 
     (concat
       (for [k (keys arb-rsts)]
-        (build-var :every k (get arb-rsts k) substitution))
+        (build-var :every k (get arb-rsts k) substitution notsames))
       (for [k (keys ind-dep-rsts)]
-        (build-var :some k (second (get ind-dep-rsts k)) substitution 
+        (build-var :some k (second (get ind-dep-rsts k)) substitution notsames
                    :dependencies (first (get ind-dep-rsts k))))
       (for [k (keys qvar-rsts)]
-        (build-var :qvar k (get qvar-rsts k) substitution)))))
+        (build-var :qvar k (get qvar-rsts k) substitution notsames)))))
 
 (defn- merge-error
   [fir lat]
@@ -1077,6 +1111,7 @@
   [expr]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
-          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts)
-          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution)]
+          [arb-rsts qvar-rsts notsames] (notsames arb-rsts qvar-rsts)
+          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames)
+          built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
       [new-expr built-vars substitution])))

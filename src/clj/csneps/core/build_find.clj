@@ -123,7 +123,7 @@
          restrictions;
    that existing node is returned.
    Otherwise nil is returned."
-  [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant]
+  [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant notsames]
   (let [distinctres (distinct restrictions)
         var-list (concat (keys arb-rsts) (keys ind-dep-rsts) (keys qvar-rsts))]
     ;; If the variable contains new terms which haven't yet been built,
@@ -131,18 +131,23 @@
     ;; same size as the one we're testing against, then intersect
     ;; that set with the terms in the substitutions resulting from 
     ;; using "find" to look for each of the restrictions of the arb.
-    (when-not (var-requires-new-term? var-label distinctres))
-      (loop [rst distinctres
-             possibles (find-vars-of-restriction-set-size (count distinctres) quant)]
-        (cond
-          (empty? rst) (first possibles)
-          (empty? possibles) nil
-          :else (recur (rest rst)
-                       (clojure.set/intersection possibles
-                                                 (apply clojure.set/union
-                                                        (map #(get-terms-from-find-results
-                                                                (find-in (first rst) @(:restriction-set %) var-list))
-                                                             possibles))))))))
+    (when-not (var-requires-new-term? var-label distinctres)
+      (let [possibles (loop [rst distinctres
+                             possibles (find-vars-of-restriction-set-size (count distinctres) quant)]
+                        (cond
+                          (empty? rst) possibles
+                          (empty? possibles) nil
+                          :else (recur (rest rst)
+                                       (clojure.set/intersection possibles
+                                                                 (apply clojure.set/union
+                                                                        (map #(get-terms-from-find-results
+                                                                                (find-in (first rst) @(:restriction-set %) var-list))
+                                                                             possibles))))))
+            nsct (count (notsames var-label))]
+        (when possibles
+          ;; If we can find one of the possibles with the same number of notsames,
+          ;; then return that one. Otherwise, return nil.
+          (first (filter #(= nsct (count @(:not-same-as %))) possibles)))))))
 
 (defn filter-termset
   [termset expr cf var-list]

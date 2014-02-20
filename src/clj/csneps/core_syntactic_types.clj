@@ -171,6 +171,7 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
+   not-same-as (ref (hash-set))
    type ::Variable])
 
 (defrecord2 Indefinite
@@ -193,6 +194,7 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
+   not-same-as (ref (hash-set))
    ;;Additions for Indefinite
    dependencies (ref (hash-set))
    type ::Indefinite])
@@ -220,6 +222,7 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
+   not-same-as (ref (hash-set))
    type ::Arbitrary])
 
 (defrecord2 QueryVariable
@@ -244,6 +247,7 @@
    ;;Additions for Variable
    restriction-set (ref (hash-set))
    var-label nil
+   not-same-as (ref (hash-set))
    type ::QueryVariable])
 
 (defrecord2 Molecular
