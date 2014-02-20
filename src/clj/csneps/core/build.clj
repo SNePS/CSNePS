@@ -346,16 +346,12 @@
                                (recur (rest lhs)
                                       (conj built-lhs (build new-expr :Propositional sub))
                                       (set/union subs sub)))))
-        fixedforms  (walk/postwalk #(if (subs %)
-                                      (list 'subst (list 'csneps.core/get-term (list 'quote (:name (subs %)))))
-                                      %)
-                                   forms)
-        actfn (eval `(fn [~'subst] 
-                       ~@fixedforms))
+        actfn (fn [subst] 
+                (println forms "\n" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
+                (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
-    
     (doseq [v (vals subs)]
       (doseq [rst (seq @(:restriction-set v))]
         (assert rst (ct/find-context 'BaseCT) :hyp))
