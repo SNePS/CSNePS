@@ -1,0 +1,35 @@
+;;; Demonstrates condition-action rules.
+
+(in-ns 'csneps.core.snuser)
+
+;; Simple rule.
+
+(clearkb true)
+
+(defineType Token (Thing)
+  "Start off as tokens created by GATE, later used for other thing.")
+(defineType Word (Thing)
+  "Words that appear in the messages.")
+  
+(defineSlot Dependent :type Token
+	    :docstring "The dependent in a dependency relation.")
+(defineSlot Governor :type Token
+	    :docstring "The head in a dependency relation.")
+(defineSlot Type :type Word
+	    :docstring "The dependency relation in a dependency graph.")
+	    
+(defineCaseframe 'Proposition '(Type Governor Dependent)
+  :docstring "[Dependent] is a [Type] dependent of [Governor]"
+  :fsymbols '(appos))
+
+(defrule apposCoref
+  (appos (every tok1 (Isa tok1 Token)) (every tok2 (Isa tok2 Token)))
+  =>
+  (assert `(~'Isa tok1 ~'item1)))
+  (assert `(~'Isa ~tok2 ~'item2)))
+  (unassert `(~'appos ~tok1 ~tok2)))
+  
+(assert '(appos n1 n2))
+(assert '(Isa n1 Token))
+(assert '(Isa n2 Token))
+(adopt (find-term 'wft4))
