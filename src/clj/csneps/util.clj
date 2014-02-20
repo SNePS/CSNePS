@@ -385,3 +385,12 @@
     `(let ~(vec (mapcat #(list % `(*locals* '~%)) (keys locals)))
        ~form))))
 
+(defn eval-forms-with-locals
+  "Evals forms with given locals. The locals should be a map of symbols to
+   values."
+  [locals forms]
+  (binding [*locals* locals]
+    (eval
+    `(let ~(vec (mapcat #(list % `(*locals* '~%)) (keys locals)))
+       ~@forms))))
+
