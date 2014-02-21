@@ -400,7 +400,7 @@
     (cond 
       (= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (install-channel s->t (:source unif) (:target unif) :i-channel)
-      :else ;; This case still needs to be worked out.
+      (not= (semantic-type-of (:source unif)) :AnalyticGeneric) ;; TODO: Still work to do here.
       (install-channel s->t (:source unif) (:target unif) :i-channel))))
 
 (defn build-internal-channels
