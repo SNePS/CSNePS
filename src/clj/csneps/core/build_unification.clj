@@ -52,23 +52,23 @@
 ;;; Set version.
 ;; Index is either 0 or 1 - 0 for target, 1 for source.
 (defn- unify-variable-1binds
-  [varp v expr binds index]
+  [variable? v expr binds index]
   (if-let [vb# ((binds index) v)]
-    (garner-unifiers varp vb# expr binds)
-    (if-let [vexpr# (and (varp expr) ((binds index) expr))]
-      (garner-unifiers varp v vexpr# binds)
+    (garner-unifiers variable? vb# expr binds)
+    (if-let [vexpr# (and (variable? expr) ((binds index) expr))]
+      (garner-unifiers variable? v vexpr# binds)
       (when-not (occurs? v expr)
         (bind-phase binds v expr index)))))
 
 (defn- unify-variable
-  [varp v expr binds index]
+  [variable? v expr binds index]
   ;(println (unify-variable-1binds varp v expr binds index))
   ;(println "v: " v "expr: " expr "binds: " (apply str binds) "index: " index)
   (if (list? binds)
     (remove nil?
       (for [b binds]
-        (unify-variable-1binds varp v expr b index)))
-    (unify-variable-1binds varp v expr binds index)))
+        (unify-variable-1binds variable? v expr b index)))
+    (unify-variable-1binds variable? v expr binds index)))
 
 (defn- garner-unifiers
   "Attempt to unify x and y with the given bindings (if any). Potentially returns a map of the
