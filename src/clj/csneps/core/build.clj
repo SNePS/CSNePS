@@ -337,14 +337,14 @@
 (defn build-rule 
   [rulename lhs forms subrules & {:keys [subs] :or {subs {}}}]
   (println rulename lhs forms subrules subs)
-  (let [[built-lhs subs] (loop [lhs (seq lhs)
+  (let [[built-lhs subs] (loop [lhs lhs
                                 built-lhs #{}
                                 subs subs]
                            (if (empty? lhs)
                              [built-lhs subs]
                              (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
                                (recur (rest lhs)
-                                      (conj built-lhs (build new-expr :Propositional sub))
+                                      (conj built-lhs (build new-expr :Propositional (set/union subs sub)))
                                       (set/union subs sub)))))
         actfn (fn [subst] 
                 (println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
@@ -818,7 +818,7 @@
 	                            semtype))
       rule 
       (let [rulename (second expr)
-            lhs (third expr)
+            lhs (nth expr 2)
             forms (nth expr 3)
             subrules (last expr)]
         (build-rule rulename lhs forms subrules :subs substitution))

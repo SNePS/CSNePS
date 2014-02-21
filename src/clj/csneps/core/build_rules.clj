@@ -4,7 +4,7 @@
 
 (defn lhsrhs [body]
   (loop [body body
-         lhs '()]
+         lhs []]
     (if (= (first body) '=>)
       [lhs (rest body)]
       (recur (rest body)
@@ -12,8 +12,8 @@
 
 (defn formorsub [rhs]
   (loop [rhs rhs
-         forms '()
-         subrules '()]
+         forms []
+         subrules []]
     (cond
       (empty? rhs)
       [forms subrules]
@@ -29,7 +29,7 @@
 (defn defrule-helper [rulename body substitutions]
   (let [[lhs rhs] (lhsrhs body)
         [forms subrules] (formorsub rhs)]
-    (build (list 'rule rulename (set lhs) (set forms) subrules) :Policy substitutions)))
+    (build (list 'rule rulename lhs (set forms) subrules) :Policy substitutions)))
 
 (defmacro defrule [rulename & body]
   `(defrule-helper '~rulename '~body {}))
