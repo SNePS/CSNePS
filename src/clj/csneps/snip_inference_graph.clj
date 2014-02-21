@@ -166,11 +166,11 @@
   ([term invoketermset] (backward-infer term -10 #{} invoketermset))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset] 
-    (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer - " depth " - opening in-channels for" term))))
     (when-not (= (union @(:future-bw-infer term) invoketermset) @(:future-bw-infer term))
       (dosync (alter (:future-bw-infer term) union invoketermset))
       (doseq [ch @(:ant-in-channels term)]
         (when (and (not (visited term)) (not (visited (:originator ch))))
+          (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
           (open-valve ch)
           (send to-infer inc)
           (.execute ^ThreadPoolExecutor executorService 
@@ -512,7 +512,7 @@
   (let [new-msgs (get-rule-use-info (:msgs node) message)
         inchct (count @(:ant-in-channels node)) ;; Should work even with sub-policies.
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % :origin node :fwd-infer? true) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER) inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich @(:i-channels node)]
     ;(when showproofs
     (when (seq new-msgs)
