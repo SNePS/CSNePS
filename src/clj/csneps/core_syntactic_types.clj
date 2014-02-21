@@ -77,6 +77,10 @@
   [o]
   (when (:type o) (isa? (:type o) ::Indefinite)))
 
+(defn queryTerm?
+  [o]
+  (when (:type o) (isa? (:type o) ::QueryVariable)))
+
 (defn atomicTerm? 
   [o]
   (when (:type o) (isa? (:type o) ::Atom)))

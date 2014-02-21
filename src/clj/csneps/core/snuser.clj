@@ -159,13 +159,24 @@
 
 (defn list-terms
   ""
+  ;; First print atomic terms;
+  ;; Then arbitrary nodes
+  ;; Then indefinite nodes
+  ;; Then qvar nodes
+  ;; Then print molecular terms;
   [& {:keys [asserted types]}]
-  (doseq [x (vals @csneps/TERMS)]
-    (when (or (not asserted)
-              (and asserted
-                   (ct/asserted? x (ct/currentContext))))
-      (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
-      (println x))))
+  (let [terms (vals @csneps/TERMS)
+        atoms (filter #(= (:type %) :csneps.core/Atom) terms)
+        arbs (filter csneps/arbitraryTerm? terms)
+        inds (filter csneps/indefiniteTerm? terms)
+        qvars (filter csneps/queryTerm? terms)
+        mols (filter csneps/molecularTerm? terms)]
+    (doseq [x (concat atoms arbs inds qvars mols)]
+      (when (or (not asserted)
+                (and asserted
+                     (ct/asserted? x (ct/currentContext))))
+        (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
+        (println x)))))
 
 (defn listkb
   "Prints the current context and all propositions asserted in it."
