@@ -300,7 +300,7 @@
                                               :type 'U-INFER 
                                               :true? true))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node))))))
-    ;; msg false
+
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           match-msg (some #(when (>= (:pos %) (:min node))
                               %)
@@ -514,6 +514,9 @@
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
         new-msgs (map #(derivative-message % :origin node :fwd-infer? true) inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich @(:i-channels node)]
+    ;(when showproofs
+    (when (seq new-msgs)
+      (send screenprinter (fn [_] (println "Policy " node " satisfied."))))
     (apply concat 
            (for [nmsg new-msgs] 
              (zipmap ich (repeat (count ich) nmsg))))))
@@ -539,14 +542,18 @@
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))]
           (dosync (alter (:instances node) assoc instance (:subst rcm)))
-          ;; Only assert the instance if this node is asserted. Important for nested generics.
-          (when (or (ct/asserted? node (ct/currentContext))
-                    (@(:expected-instances node) instance)) 
+          ;; Only assert the instance if this node is asserted. Important for nested generics/hybrids.
+          (when (ct/asserted? node (ct/currentContext))
+                ;(or (ct/asserted? node (ct/currentContext))
+                ;    (@(:expected-instances node) instance)) 
             (build/assert-term instance (ct/currentContext) :der))
           (let [imsg (derivative-message rcm
                                          :origin node
                                          :support-set (conj (:support-set rcm) node)
-                                         :true? true
+                                         :true? (let [[_ true?] (@(:expected-instances node) instance)]
+                                                  (if-not (nil? true?)
+                                                    true?
+                                                    true))
                                          :type 'I-INFER)]
             (doseq [cqch (if (or (ct/asserted? node (ct/currentContext))
                                  (@(:expected-instances node) instance))
@@ -561,13 +568,14 @@
         (let [imsg (derivative-message message
                                          :origin node
                                          :support-set (conj (:support-set message) node)
-                                         :true? true
                                          :type 'I-INFER)]
           (when showproofs
-            (send screenprinter (fn [_] (println "Since" node ", I confirmed restriction match for:" new-expected-instance "by generic-instantiation"))))
+            (send screenprinter (fn [_] (println "Since" node ", I confirmed a" 
+                                                 (if (:true? imsg) "positive" "negative") 
+                                                 "restriction match for:" new-expected-instance "by generic-instantiation"))))
           (doseq [cqch @(:i-channels node)]
             (submit-to-channel cqch imsg)))
-        (dosync (alter (:expected-instances node) assoc new-expected-instance (:subst message)))))))
+        (dosync (alter (:expected-instances node) assoc new-expected-instance [(:subst message) (:true? message)]))))))
 
 (defn arbitrary-instantiation
   [message node]
@@ -756,7 +764,7 @@
           (not (ct/asserted? term (ct/currentContext))))
       (= (:type message) 'I-INFER))
     (when-let [[true? result] (introduction-infer message term)]
-      (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?)))
+      (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?))))
       (when result 
         (if true?
           (if print-intermediate-results
