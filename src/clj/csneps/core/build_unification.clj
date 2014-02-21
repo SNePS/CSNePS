@@ -34,6 +34,23 @@
   [var term]
     (some #{var} (flatten term)))
 
+(defn notSameOK?
+  "If neither sbinds nor tbinds bind expr to a term which
+   is explicitly not the same as qterm, then return true."
+  [[sbinds tbinds] qterm expr]
+  (let [expr-binders-sbinds (filter #(= (second %) expr) sbinds)
+        expr-binders-tbinds (filter #(= (second %) expr) tbinds)
+        expr-binders (concat (map #(first %) expr-binders-sbinds) 
+                             (map #(first %) expr-binders-tbinds))
+        qtnsa @(:not-same-as qterm) ]
+    (loop [binders expr-binders]
+      (cond 
+        (empty? binders) true
+        (or (contains? qtnsa (first binders))
+            (contains? @(:not-same-as (first binders)) qterm))
+        false
+        :else (recur (rest binders))))))
+
 (defn- bind-phase
   [[source target] variable expr index]
   (if (ignore-variable? variable)
@@ -57,7 +74,7 @@
     (garner-unifiers variable? vb# expr binds)
     (if-let [vexpr# (and (variable? expr) ((binds index) expr))]
       (garner-unifiers variable? v vexpr# binds)
-      (when-not (occurs? v expr)
+      (when (and (not (occurs? v expr)) (notSameOK? binds v expr)) 
         (bind-phase binds v expr index)))))
 
 (defn- unify-variable
