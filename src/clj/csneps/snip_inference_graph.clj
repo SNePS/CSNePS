@@ -257,8 +257,8 @@
     nil
     (when (seq new-ruis)
       (when showproofs 
-        (doseq [y uch]
-          (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by negation-elimination")))))
+        (doseq [u uch]
+          (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
       (zipmap uch (repeat (count uch) dermsg)))))
 
 (defn negation-introduction
@@ -293,7 +293,7 @@
       (when showproofs 
         (doseq [u @(:u-channels node)]
           (when (build/valve-open? u)
-            (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination u) " by numericalentailment-elimination"))))))
+            (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst message)) " by numericalentailment-elimination"))))))
       (apply conj {} (doall (map #(vector % (derivative-message 
                                               message 
                                               :origin node 
@@ -308,9 +308,9 @@
       (when match-msg 
         (cancel-infer node)
         (when showproofs 
-          (doseq [y @(:u-channels node)]
-            (when (build/valve-open? y)
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by numericalentailment-elimination"))))))
+          (doseq [u @(:u-channels node)]
+            (when (build/valve-open? u)
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst message)) " by numericalentailment-elimination"))))))
         (apply conj {} (doall (map #(vector % (derivative-message match-msg 
                                                                   :origin node 
                                                                   :type 'U-INFER 
@@ -335,7 +335,7 @@
     (when showproofs
       (doseq [u uch]
         (when (build/valve-open? u)
-          (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination u) " by conjunction-elimination"))))))
+          (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by conjunction-elimination"))))))
     (zipmap uch (repeat (count uch) dermsg))))
 
 (defn conjunction-introduction
@@ -377,11 +377,11 @@
     (or 
       (when pos-match
 		    (when showproofs 
-          (doseq [y @(:u-channels node)]
-            (when (and (not ((:flaggedns pos-match) (:destination y)))
-                       (not (negated? (:destination y)))
-                       (build/valve-open? y))
-              (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (:destination y) " by andor-elimination"))))))
+          (doseq [u @(:u-channels node)]
+            (when (and (not ((:flaggedns pos-match) (:destination u)))
+                       (not (negated? (:destination u)))
+                       (build/valve-open? u))
+              (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
         (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
                                                (not (negated? (:destination %))))
                                       [% (derivative-message pos-match 
@@ -392,11 +392,11 @@
                                    @(:u-channels node)))))
       (when neg-match
 		    (when showproofs 
-          (doseq [y @(:u-channels node)]
-            (when (and (nil? ((:flaggedns neg-match) (:destination y)))
-                       (not (ct/asserted? (:destination y) (ct/currentContext)))
-                       (build/valve-open? y))
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by andor-elimination"))))))
+          (doseq [u @(:u-channels node)]
+            (when (and (nil? ((:flaggedns neg-match) (:destination u)))
+                       (not (ct/asserted? (:destination u) (ct/currentContext)))
+                       (build/valve-open? u))
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst neg-match)) " by andor-elimination"))))))
         (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
                                                (not (ct/asserted? (:destination %) (ct/currentContext))))
                                       [% (derivative-message neg-match 
@@ -474,10 +474,12 @@
                                           new-ruis)]
     (or (when more-than-min-true-match
           (when showproofs 
-            (doseq [y @(:u-channels node)]
-              (when-not ((:flaggedns more-than-min-true-match) (:destination y))
-                (when (build/valve-open? y)
-                  (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination")))))))
+            (doseq [u @(:u-channels node)]
+              (when-not ((:flaggedns more-than-min-true-match) (:destination u))
+                (when (build/valve-open? u)
+                  (send screenprinter (fn [_] (println "Since" node ", I derived:" 
+                                                       (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
+                                                       "by thresh-elimination")))))))
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% (derivative-message more-than-min-true-match 
                                                                :origin node 
@@ -487,10 +489,12 @@
                                      @(:u-channels node)))))
         (when less-than-max-true-match
           (when showproofs 
-            (doseq [y @(:u-channels node)]
-              (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination y)))
-                         (build/valve-open? y))
-                 (send screenprinter (fn [_] (println "Since " node ", I derived: " (:destination y) " by thresh-elimination"))))))
+            (doseq [u @(:u-channels node)]
+              (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination u)))
+                         (build/valve-open? u))
+                 (send screenprinter (fn [_] (println "Since" node ", I derived: " 
+                                                      (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)) 
+                                                      "by thresh-elimination"))))))
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% (derivative-message less-than-max-true-match 
                                                                :origin node 
@@ -544,6 +548,8 @@
           (dosync (alter (:instances node) assoc instance (:subst rcm)))
           ;; Only assert the instance if this node is asserted. Important for nested generics/hybrids.
           (when (ct/asserted? node (ct/currentContext))
+            (when showproofs
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
                 ;(or (ct/asserted? node (ct/currentContext))
                 ;    (@(:expected-instances node) instance)) 
             (build/assert-term instance (ct/currentContext) :der))
@@ -559,9 +565,7 @@
                                  (@(:expected-instances node) instance))
                            @(:i-channels node)
                            gch)] ;; If this node is not asserted, only inform other generics of this new message.
-              (submit-to-channel cqch imsg)
-              (when showproofs
-                (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation")))))))))
+              (submit-to-channel cqch imsg))))))
     ;; Step 2:
     (let [new-expected-instance (:origin message)]
       (if (@(:instances node) new-expected-instance)
