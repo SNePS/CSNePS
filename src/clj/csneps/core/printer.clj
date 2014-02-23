@@ -12,7 +12,7 @@
         [csneps.util]
         [clojure.java.io]))
 
-(def PRINTED-VARIABLES (atom (hash-set)))
+(def ^{:dynamic true} PRINTED-VARIABLES (hash-set))
 
 (declare print-term print-set)
 
@@ -76,10 +76,10 @@
   [term]
   (str
     (cond
-      (and @PRINTED-VARIABLES (@PRINTED-VARIABLES term)) (:var-label term)
+      (PRINTED-VARIABLES term) (:var-label term)
       :true
       (do 
-        (swap! PRINTED-VARIABLES conj term)
+        (set! PRINTED-VARIABLES (conj PRINTED-VARIABLES term))
         (str 
           (condp = (type-of term)
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
@@ -166,7 +166,7 @@
 
 (defn term-printer
   [term]
-  (reset! PRINTED-VARIABLES (hash-set))
+  (binding [PRINTED-VARIABLES (hash-set)]
   (cond
     ;; Variable
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Variable)
@@ -182,7 +182,7 @@
       (if
         (and (= (csneps.core/semantic-type-of term) :Proposition)
 	     (ct/asserted? term (ct/currentContext)))
-        "!" ""))))
+        "!" "")))))
 
 (defn sneps-printer
   [object]
