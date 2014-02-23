@@ -160,6 +160,10 @@
   [:csneps.core/Indefinite :csneps.core/Indefinite] [term1 term2]
   (restriction-subset? term1 term2))
 
+(defmethod subsumes?
+  [:csneps.core/Indefinite :csneps.core/Arbitrary] [term1 term2]
+  nil)
+
 (defmethod subsumes? 
   [:csneps.core/Arbitrary :csneps.core/Indefinite] [term1 term2]
   ;; Any elephant subsumes some albino elephant.

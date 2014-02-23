@@ -2,7 +2,9 @@
 
 (defn ignore-variable? [sym] (= '_ sym))
 
-(def variable? #(or (= (type-of %) :csneps.core/Arbitrary) (= (type-of %) :csneps.core/QueryVariable)))
+(def variable? #(isa? (type-of %) :csneps.core/Variable))
+
+;(def variable? #(or (= (type-of %) :csneps.core/Arbitrary) (= (type-of %) :csneps.core/QueryVariable)))
 
 (def synvariable? #(or (ignore-variable? %)
                       (and (symbol? %) (re-matches #"^\?.*" (name %)))))
