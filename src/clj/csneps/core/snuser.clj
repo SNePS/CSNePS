@@ -83,10 +83,10 @@
         qtvals (map (fn [v] `'~v) vals)
         call (interleave kws qtvals)
         zm (zipmap kws qtvals)]
-    `(do 
-       (slot/define-slot '~name ~@call)
+    `(let [slot# (slot/define-slot '~name ~@call)]
        (if (get ~zm :path)
-         (definePath '~name (get ~zm :path))))))
+         (definePath '~name (get ~zm :path)))
+       slot#)))
 
 (defn defineCaseframe
   [type frame & {:keys [docstring fsymbols] :or {docstring ""}}]
