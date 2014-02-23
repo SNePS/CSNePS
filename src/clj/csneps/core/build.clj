@@ -120,9 +120,8 @@
        has the wrong arity according to fn's caseframe, cf.
     Otherwise, just returns nil."
   [fn expr cf]
-  (let [correctlength
-	 (+ (count (:slots cf))
-	    (if (cf/quotedpp? cf) 1 0))]
+  (let [correctlength (+ (count (:slots cf))
+	                        (if (cf/quotedpp? cf) 1 0))]
     (when-not (= (count expr) correctlength)
       (error fn " is used with incorrect arity in " expr ".\n
                          It should be given " (dec correctlength) " arguments instead of " (dec (count expr)) "."))))
@@ -140,10 +139,10 @@
     (= (type-of term) (type-of newtype)) nil
     ;; Arbitrary terms can be adjusted down only while they're being built.
     ;; They can't ever be adjusted down below their highest-level restriction.
-      (and (arbitraryTerm? term) 
-           @(:fully-built term)
-           (not (subtypep oldtype newtype)))
-      (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
+    (and (or (arbitraryTerm? term) (queryTerm? term))
+         @(:fully-built term)
+         (not (subtypep oldtype newtype)))
+    (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
     ;; Newtype is a subtype of oldtype
     (subtypep newtype oldtype)
     (dosync (alter type-map assoc (:name term) newtype))
@@ -378,8 +377,6 @@
       (install-channel ch carule a :i-channel))
     (doseq [s subrules :let [ch (build-channel carule s nil nil)]] 
       (install-channel ch carule s :i-channel))))
-        
-  
 
 (defn build-quantterm-channels
   "Channels are built from each restriction, to the quantified term,
@@ -611,8 +608,6 @@
 ;    "Creates (if necessary) a well-formed term expressed by expr
 ;       of the given semantic type,
 ;     and returns it."
-  ;[clojure.lang.PersistentList] [expr semtype substitution]
-  ;[clojure.lang.Cons] [expr semtype substitution]
   [clojure.lang.PersistentVector] [expr semtype substitution]
   (let [fcn (first expr)]
     ;(println "Building: " expr semtype substitution)
@@ -923,7 +918,7 @@
     [rsts not-same-var-labels]))
 
 (defn- notsames 
-  [arb-rsts qvar-rsts]
+  [arb-rsts qvar-rsts ind-dep-rsts]
   (let [arb (for [[k v] arb-rsts :let [[new-rsts nsvarlabels] (notsames-helper v k)]]
               [[k new-rsts] [k nsvarlabels]])
         arb-rsts (into {} (map #(first %) arb))
@@ -931,8 +926,12 @@
         qvar (for [[k v] qvar-rsts :let [[new-rsts nsvarlabels] (notsames-helper v k)]]
               [[k new-rsts] [k nsvarlabels]])
         qvar-rsts (into {} (map #(first %) qvar))
-        notsame (into notsame (map #(second %) qvar))]
-    [arb-rsts qvar-rsts notsame]))
+        notsame (into notsame (map #(second %) qvar))
+        ind (for [[k v] ind-dep-rsts :let [[new-rsts nsvarlabels] (notsames-helper (second v) k)]]
+             [[k (list (first v) new-rsts)] [k nsvarlabels]])
+        ind-dep-rsts (into {} (map #(first %) ind))
+        notsame (into notsame (map #(second %) ind))]
+    [arb-rsts qvar-rsts ind-dep-rsts notsame]))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and
@@ -1111,7 +1110,7 @@
   [expr]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
-          [arb-rsts qvar-rsts notsames] (notsames arb-rsts qvar-rsts)
+          [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
       [new-expr built-vars substitution])))
