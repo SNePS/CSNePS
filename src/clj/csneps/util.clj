@@ -316,6 +316,21 @@
 	     (setOr ~@(rest setexprs))
 	     ~expr)))))
 
+(defmacro setAnd
+  "Returns true if each expression evalulates to a 
+   non-empty set. Otherwise, false."
+  [& setexprs] 
+  (if (empty? setexprs)
+    nil
+    `(loop [sexprs# '~setexprs]
+       (cond
+         (empty? sexprs#)
+         true
+         (empty? (first sexprs#))
+         false
+         :else
+         (recur (rest sexprs#))))))
+
 (defn cons?
   [expr]
   (= (type expr) clojure.lang.Cons))
