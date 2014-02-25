@@ -345,7 +345,7 @@
                                (recur (rest lhs)
                                       (conj built-lhs (build new-expr :Propositional (set/union subs sub)))
                                       (set/union subs sub)))))
-        actfn (fn [subst] 
+        actfn (bound-fn [subst] 
                 (println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
                 (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms))
         name (build rulename :Thing {})
