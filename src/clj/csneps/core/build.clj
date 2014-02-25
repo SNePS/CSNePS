@@ -1013,7 +1013,7 @@
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts & {:keys [buildingqvar] :or {buildingqvar #{}}}]
   (cond
-    (and (seqable? assertion-spec) (not (set? assertion-spec)))
+    (and (seqable? assertion-spec) (not (set? assertion-spec)) (not (map? assertion-spec)))
     (cond
       (= (first assertion-spec) 'some)
       (let [rsts (rest (ind-deps-rsts (second assertion-spec)))]
