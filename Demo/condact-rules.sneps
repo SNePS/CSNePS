@@ -6,30 +6,42 @@
 
 (clearkb true)
 
+(defineType POS (Thing)
+  "A part of speech tag.")
 (defineType Token (Thing)
   "Start off as tokens created by GATE, later used for other thing.")
 (defineType Word (Thing)
   "Words that appear in the messages.")
-  
+
+(defineSlot Category :type POS
+	    :docstring "The POS of some word.")
 (defineSlot Dependent :type Token
 	    :docstring "The dependent in a dependency relation.")
 (defineSlot Governor :type Token
 	    :docstring "The head in a dependency relation.")
+(defineSlot Token :type Token :docstring "Some token.")
 (defineSlot Type :type Word
 	    :docstring "The dependency relation in a dependency graph.")
 	    
 (defineCaseframe 'Proposition '(Type Governor Dependent)
   :docstring "[Dependent] is a [Type] dependent of [Governor]"
   :fsymbols '(appos))
+(defineCaseframe 'Proposition '('SyntacticCategoryOf Category Token)
+  :docstring "the syntactic category of [Token] is [Category]")
 
 (defrule apposCoref
-  (appos (every tok1 (Isa tok1 Token)) (every tok2 (Isa tok2 Token)))
+  (appos (every tok1 (Isa tok1 Token)) (every tok2 (Isa tok2 Token) (notSame tok1 tok2)))
   =>
-  (assert `(~'Isa tok1 ~'item1)))
-  (assert `(~'Isa ~tok2 ~'item2)))
-  (unassert `(~'appos ~tok1 ~tok2)))
+  (csneps.core.build/unassert `(~'appos ~tok1 ~tok2))
+  (when-not (csneps.util/setAnd (csneps.core.snuser/askif `(~'SyntacticCategoryOf ~'NNP ~tok1))
+                                (csneps.core.snuser/askif `(~'SyntacticCategoryOf ~'NNP ~tok2)))
+    (csneps.core.snuser/assert `(~'Equiv ~tok1 ~tok2))))
   
 (assert '(appos n1 n2))
 (assert '(Isa n1 Token))
 (assert '(Isa n2 Token))
+(assert '(SyntacticCategoryOf NN n1))
+(assert '(SyntacticCategoryOf JJ n2))
+(assert '(Isa NN POS))
+(assert '(Isa JJ POS))
 (adopt (find-term 'wft4))
