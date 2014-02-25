@@ -321,16 +321,12 @@
    non-empty set. Otherwise, false."
   [& setexprs] 
   (if (empty? setexprs)
-    nil
-    `(loop [sexprs# '~setexprs]
-       (cond
-         (empty? sexprs#)
-         true
-         (empty? (first sexprs#))
+    true
+    `(let [expr# ~(first setexprs)]
+       (if (empty? expr#)
          false
-         :else
-         (recur (rest sexprs#))))))
-
+         (setAnd ~@(rest setexprs))))))
+         
 (defn cons?
   [expr]
   (= (type expr) clojure.lang.Cons))
