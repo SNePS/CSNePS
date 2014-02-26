@@ -15,12 +15,6 @@
 (def debug false)
 (def showproofs true)
 
-;; Incremented whenever a message is submitted, and decremented once inference
-;; on a message is complete, this variable allows us to determine if inference
-;; is in progress, and attach a watch function for the purpose of notifying the
-;; user, or for benchmarking.
-(def to-infer (agent 0))
-
 (declare initiate-node-task create-message-structure get-rule-use-info open-valve cancel-infer-of)
 
 (defn priority-partial
@@ -30,6 +24,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 ;;; Concurrency control ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Incremented whenever a message is submitted, and decremented once inference
+;; on a message is complete, this allows us to determine when the graph is in
+;; a quiescent state.
+(def inferring (edu.buffalo.csneps.util.CountingLatch.))
 
 ;; Tasks have :priority metadata. This allows the queue to order them
 ;; properly for execution. Higher priority is executed first.
@@ -65,7 +64,7 @@
                          cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
-  (def to-infer (agent 0)))
+  (def inferring (edu.buffalo.csneps.util.CountingLatch.)))
 
 ;;; Experimental attempt at pausing inference.
 (let [waiting-queue (LinkedBlockingQueue.)]
@@ -94,7 +93,7 @@
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
         (do 
-          (send to-infer inc)
+          (.increment inferring)
           (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
@@ -137,7 +136,7 @@
   (dosync (ref-set (:valve-open channel) true))
   ;; Add the waiting messages to the executor pool.
   (doseq [msg @(:waiting-msgs channel)]
-    (send to-infer inc)
+    (.increment inferring)
     (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) msg)))
   ;; Clear the waiting messages list.
   (dosync (alter (:waiting-msgs channel) empty)))
@@ -172,10 +171,10 @@
         (when (and (not (visited term)) (not (visited (:originator ch))))
           (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
           (open-valve ch)
-          (send to-infer inc)
+          (.increment inferring)
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial depth 
-                              (fn [t d v i] (backward-infer t d v i) (send to-infer dec))
+                              (fn [t d v i] (backward-infer t d v i) (.decrement inferring))
                               (:originator ch)
                               (dec depth)
                               (conj visited term)
@@ -203,7 +202,7 @@
    through the graph."
   [term]
   ;; We need to pretend that a U-INFER message came in to this node.
-  (send to-infer inc)
+  (.increment inferring)
   (.execute ^ThreadPoolExecutor executorService 
     (priority-partial 1 initiate-node-task term 
                       (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term}}))))
@@ -779,7 +778,7 @@
             (build/assert (list 'not term) (ct/currentContext) :der)))
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))))
-  (send to-infer dec))
+  (.decrement inferring))
           
   
 ;;; Message Handling ;;;
@@ -799,40 +798,19 @@
 
 (defn backward-infer-derivable [term context]
   (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
-    (let [term (build/build term :Proposition #{})
-          answers (ref #{})
-          update-answers (fn [ref key oldvalue newvalue]
-                           (when (and (zero? newvalue) (not= oldvalue 0))
-                             (if (ct/asserted? term context)
-                               (dosync (alter answers conj term))
-                               (dosync (ref-set answers nil)))))]
-      (add-watch to-infer :to-infer update-answers)
-      (if (seq @(:ant-in-channels term))
-        (do 
-          (backward-infer term)
-          @(future (while (and (empty? @answers) (not (nil? @answers)))
-                     (Thread/sleep 10))
-             (remove-watch to-infer :to-infer)
-             @answers))
-        #{}))))
-   
+    (backward-infer term)
+    (.await inferring)
+    (if (ct/asserted? term context)
+      #{term}
+      #{})))
+
 (defn backward-infer-answer
   "Used for answering WhQuestions"
   [ques context]
   (binding [taskid (rand-int java.lang.Integer/MAX_VALUE)]
-    (let [answers (ref #{})
-          update-answers (fn [ref key oldvalue newvalue]
-                           (when (and (= newvalue 0) (not= oldvalue 0))
-                             (dosync (ref-set answers nil))))]
-      (add-watch to-infer :to-infer update-answers)
-      (if (seq @(:ant-in-channels ques))
-        (do 
-          (backward-infer ques)
-          @(future (while (and (empty? @answers) (not (nil? @answers)))
-                     (Thread/sleep 10))
-             (remove-watch to-infer :to-infer)
-             @(:instances ques)))
-        #{}))))
+    (backward-infer ques)
+    (.await inferring)
+    @(:instances ques)))
 
 (defn cancel-infer-of [term]
   (let [term (if (seq? term)
