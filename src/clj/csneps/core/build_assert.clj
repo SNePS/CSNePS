@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare lattice-insert submit-assertion-to-channels build-quantterm-channels)
+(declare lattice-insert submit-assertion-to-channels build-quantterm-channels adjustType)
 
 (defn variable-parse-and-build
   "Given a top-level build expression, checks that expression for
