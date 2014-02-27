@@ -26,6 +26,26 @@
 
 (declare askif askifnot defineTerm find-term)
 
+(defn adopt-rule
+  "Adopts the rule with the symbol rule-name as its name."
+  [rule-name]
+  (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))
+        rule (filter #(= rule-name (:name (ffirst (:down-cableset %)))) rules)]
+    (if (first rule)
+      (adopt (first rule))
+      (error "Rule " rule-name " does not exist."))))
+
+(defn adopt-rules 
+  "Takes a list of symbolic rule names to be adopted in order, one after the other. 
+   Rows may take the form of a single rule name, or a vector of rule names. A vector
+   of rule names will be adopted simultaneously."
+  [order]
+  (doseq [row order]
+    (if (vector? row)
+      (doall (map #(adopt-rule %) row))
+      (adopt-rule row))
+    (.await snip/inferring)))
+
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
     (build/assert expr (currentContext) :hyp)))
