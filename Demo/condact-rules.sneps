@@ -32,10 +32,10 @@
 (defrule apposCoref
   (appos (every tok1 (Isa tok1 Token)) (every tok2 (Isa tok2 Token) (notSame tok1 tok2)))
   =>
-  (csneps.core.build/unassert `(~'appos ~tok1 ~tok2))
-  (when-not (csneps.util/setAnd (csneps.core.snuser/askif `(~'SyntacticCategoryOf ~'NNP ~tok1))
-                                (csneps.core.snuser/askif `(~'SyntacticCategoryOf ~'NNP ~tok2)))
-    (csneps.core.snuser/assert `(~'Equiv ~tok1 ~tok2))))
+  (unassert `(~'appos ~tok1 ~tok2))  
+  (when-not (setAnd (askif `(~'SyntacticCategoryOf ~'NNP ~tok1))
+                    (askif `(~'SyntacticCategoryOf ~'NNP ~tok2)))
+    (assert `(~'Equiv #{~tok1 ~tok2}))))
   
 (assert '(appos n1 n2))
 (assert '(Isa n1 Token))
@@ -44,4 +44,4 @@
 (assert '(SyntacticCategoryOf JJ n2))
 (assert '(Isa NN POS))
 (assert '(Isa JJ POS))
-(adopt (find-term 'wft4))
+(adopt-rule 'apposCoref)
