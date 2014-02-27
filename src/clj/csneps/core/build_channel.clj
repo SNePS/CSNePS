@@ -85,7 +85,7 @@
     (alter (:ant-in-channels dest) conj ch))
   ;; Focused forward-in-backward, extension for new in-channels.
   (when (seq @(:future-bw-infer dest))
-    (backward-infer dest @(:future-bw-infer dest)))
+    (backward-infer dest @(:future-bw-infer dest) nil))
   (when (seq @(:future-fw-infer orig))
     (forward-infer orig)))
 

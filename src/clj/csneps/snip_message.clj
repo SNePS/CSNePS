@@ -24,7 +24,8 @@
    pos 0
    neg 0
    flaggedns {}
-   invoke-set #{}])
+   invoke-set #{}
+   taskid nil])
 
 (defn message-key [msg]
   (set (keys (:subst msg))))
@@ -57,7 +58,7 @@
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
-  [message & {:keys [origin subst support-set type true? fwd-infer? invoke-set pos neg flaggedns]}]
+  [message & {:keys [origin subst support-set type true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
   (-> message 
     (assoc :origin (or origin (:origin message)))
     (assoc :priority (inc (:priority message)))
@@ -69,6 +70,7 @@
     (assoc :invoke-set (or invoke-set (if origin
                                         @(:future-fw-infer origin)
                                         @(:future-fw-infer (:origin message)))))
+    (assoc :taskid (or taskid (:taskid message)))
     (assoc :pos (or pos (if (if (nil? true?) (:true? message) true?) 1 0)))
     (assoc :neg (or neg (if (if (nil? true?) (:true? message) true?) 0 1)))
     (assoc :flaggedns (or flaggedns 
