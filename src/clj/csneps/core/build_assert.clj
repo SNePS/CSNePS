@@ -93,6 +93,7 @@
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
         :der (dosync (commute (:ders ct) conj expr)))
+      (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
