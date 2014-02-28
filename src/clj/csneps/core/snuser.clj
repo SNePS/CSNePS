@@ -42,9 +42,9 @@
   [order]
   (doseq [row order]
     (if (vector? row)
-      (doall (map #(adopt-rule %) row))
-      (adopt-rule row))
-    (.await snip/inferring)))
+      (let [tasks (doall (map #(adopt-rule %) row))]
+        (doall (map #(.await (@snip/infer-status %)) tasks)))
+      (.await (@snip/infer-status (adopt-rule row))))))
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]

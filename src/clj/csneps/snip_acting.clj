@@ -8,11 +8,13 @@
   "Adopt a policy."
   [policy]
   {:pre [(csneps/subtypep (csneps/semantic-type-of policy) :Policy)]}
-  (let [ct (ct/currentContext)]
+  (let [ct (ct/currentContext)
+        taskid (gensym "task")]
     (when-not (ct/asserted? policy ct)
       (dosync (alter (:hyps ct) conj policy))
       (when (isa? (csneps/syntactic-type-of policy) :csneps.core/CARule)
-        (backward-infer policy)))))
+        (backward-infer policy taskid)
+        taskid))))
 
 (defn unadopt
   "Unadopt a policy."
