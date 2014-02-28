@@ -326,7 +326,8 @@
                                               message 
                                               :origin node 
                                               :type 'U-INFER 
-                                              :true? true))
+                                              :true? true
+                                              :taskid (:taskid message)))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node))))))
 
     (let [new-ruis (get-rule-use-info (:msgs node) message)
@@ -343,7 +344,8 @@
                                                                   :origin node 
                                                                   :type 'U-INFER 
                                                                   :true? true 
-                                                                  :fwd-infer? (:fwd-infer? message)))
+                                                                  :fwd-infer? (:fwd-infer? message)
+                                                                  :taskid (:taskid message)))
                                    (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))))
 
 (defn numericalentailment-introduction
@@ -416,7 +418,8 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? false 
-                                                             :fwd-infer? (:fwd-infer? message))])
+                                                             :fwd-infer? (:fwd-infer? message)
+                                                             :taskid (:taskid message))])
                                    @(:u-channels node)))))
       (when neg-match
 		    (when showproofs 
@@ -431,7 +434,8 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? true 
-                                                             :fwd-infer? (:fwd-infer? message))])
+                                                             :fwd-infer? (:fwd-infer? message)
+                                                             :taskid (:taskid message))])
                                    @(:u-channels node))))))))
 
 ;     Inference can terminate
@@ -513,7 +517,8 @@
                                                                :origin node 
                                                                :type 'U-INFER 
                                                                :true? true 
-                                                               :fwd-infer? (:fwd-infer? message))])
+                                                               :fwd-infer? (:fwd-infer? message)
+                                                               :taskid (:taskid message))])
                                      @(:u-channels node)))))
         (when less-than-max-true-match
           (when showproofs 
@@ -528,7 +533,8 @@
                                                                :origin node 
                                                                :type 'U-INFER 
                                                                :true? false 
-                                                               :fwd-infer? (:fwd-infer? message))])
+                                                               :fwd-infer? (:fwd-infer? message)
+                                                               :taskid (:taskid message))])
                                      @(:u-channels node))))))))
 
 (defn whquestion-infer 
@@ -544,7 +550,7 @@
   (let [new-msgs (get-rule-use-info (:msgs node) message)
         inchct (count @(:ant-in-channels node)) ;; Should work even with sub-policies.
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER :taskid (:taskid message)) inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich @(:i-channels node)]
     ;(when showproofs
     (when (seq new-msgs)
@@ -660,6 +666,7 @@
           new-msgs (map #(derivative-message 
                            % 
                            :origin node 
+                           :taskid (:taskid message)
                            :subst (assoc 
                                     (:subst message) 
                                     node 
