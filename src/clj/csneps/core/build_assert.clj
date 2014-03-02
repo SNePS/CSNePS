@@ -13,7 +13,8 @@
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
-        (assert rst (ct/find-context 'BaseCT) :hyp))
+        (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
+          (assert rst (ct/find-context 'BaseCT) :hyp)))
       (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
@@ -93,7 +94,7 @@
       (case origintag
         :hyp (dosync (alter (:hyps ct) conj expr))
         :der (dosync (commute (:ders ct) conj expr)))
-     ; (adjustType expr (semantic-type-of expr) :Proposition)
+      (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
