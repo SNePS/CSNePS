@@ -73,7 +73,7 @@
   "Returns nil if the argument is not a path keyword"
   [s]
   (get 
-    #{'and 'compose 'kstar 'kplus 'not 'relative-complement 
+    #{'and 'or 'compose 'kstar 'kplus 'not 'relative-complement 
       'irreflexive-restrict 'restrict 'converse}
     s))
 
