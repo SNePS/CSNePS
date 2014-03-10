@@ -12,7 +12,7 @@
   ;(:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.util]
-        [clojure.walk :as walk :only [prewalk]]
+        [clojure.walk :as walk :only [prewalk prewalk-replace]]
         [csneps.core.find-utils]))
 
 ;(refer-clojure :exclude '[assert])
@@ -933,6 +933,41 @@
         notsame (into notsame (map #(second %) ind))]
     [arb-rsts qvar-rsts ind-dep-rsts notsame]))
 
+(defn generate-notsames
+  "If the user names two arbs/qvars apart in one expr, assume they mean different (notsame) ones."
+  [rsts]
+  (loop [rsts rsts
+         rsts-done []]
+    (if (empty? rsts)
+      (into {} rsts-done)
+      ;; Determine if the first restiction is the same as any other in the sequence,
+      ;; modulo only the variable label used.
+      (let [replaced-variable (map #(vector 
+                                      (first %) 
+                                      (prewalk-replace {(first %) (ffirst rsts)} (second %))
+                                      (second %)) 
+                                   (rest rsts))
+            equal-restrictions (filter #(= (second (first rsts))
+                                           (second %))
+                                       replaced-variable)
+            equal-restriction-labels (map first equal-restrictions)
+            remaining (filter #(not ((set equal-restriction-labels) (first %))) (rest rsts))
+            finished (conj (map #(vector (first %) (third %)) equal-restrictions) (first rsts) )
+            finished (loop [nsvars [(ffirst finished)]
+                            remrsts (rest finished)
+                            fixedrsts [(first finished)]]
+                       (if (empty? remrsts)
+                         fixedrsts
+                         (recur 
+                           (conj nsvars (ffirst remrsts))
+                           (rest remrsts)
+                           (conj fixedrsts [(ffirst remrsts) 
+                                            (conj (second (first remrsts)) 
+                                                  `[~'notSame ~@nsvars ~(ffirst remrsts)])]))))]
+        (recur
+          remaining
+          (concat rsts-done finished))))))
+
 (defn build-var
   "Build a variable node of type quant with label var-label and
    restrictions rsts. Substitution contains all the variable nodes
@@ -1110,6 +1145,8 @@
   [expr]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
+          arb-rsts (generate-notsames arb-rsts)
+          qvar-rsts (generate-notsames qvar-rsts)
           [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
