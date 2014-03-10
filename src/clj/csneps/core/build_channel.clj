@@ -86,7 +86,7 @@
   ;; Focused forward-in-backward, extension for new in-channels.
   (when (seq @(:future-bw-infer dest))
     (backward-infer dest @(:future-bw-infer dest) nil))
-  (when (seq @(:future-fw-infer orig))
+  (when (and (seq @(:future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
     (forward-infer orig)))
 
 (defn build-channel

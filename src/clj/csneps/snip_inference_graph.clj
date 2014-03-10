@@ -28,8 +28,7 @@
 ;; Incremented whenever a message is submitted, and decremented once inference
 ;; on a message is complete, this allows us to determine when the graph is in
 ;; a quiescent state.
-(def infer-status (ref {}))
-(def inferring (edu.buffalo.csneps.util.CountingLatch.))
+(def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)}))
 
 ;; Tasks have :priority metadata. This allows the queue to order them
 ;; properly for execution. Higher priority is executed first.
@@ -65,7 +64,7 @@
                          cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
-  (def inferring (edu.buffalo.csneps.util.CountingLatch.)))
+  (def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)})))
 
 ;;; Experimental attempt at pausing inference.
 (let [waiting-queue (LinkedBlockingQueue.)]
@@ -171,7 +170,8 @@
   ([term taskid] 
     (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
     (backward-infer term -10 #{} #{term} taskid))
-  ([term invoketermset taskid] (backward-infer term -10 #{} invoketermset taskid))
+  ([term invoketermset taskid] 
+    (backward-infer term -10 #{} invoketermset taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset taskid] 
     (when-not (= (union @(:future-bw-infer term) invoketermset) @(:future-bw-infer term))
@@ -197,8 +197,9 @@
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
-  ([term] (cancel-infer term nil))
-  ([term cancel-for-term]
+  ([term] (cancel-infer term nil nil))
+  ([term cancel-for-term] (cancel-infer term cancel-for-term nil))
+  ([term cancel-for-term taskid]
     (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
                (every? #(not @(:valve-open %)) @(:u-channels term)))
       (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
@@ -207,22 +208,24 @@
       (doseq [ch @(:ant-in-channels term)]
         (when (empty? @(:future-bw-infer term))
           (close-valve ch))
-        (.increment inferring)
+        (.increment (@infer-status taskid))
         (.execute ^ThreadPoolExecutor executorService 
             (priority-partial Integer/MAX_VALUE 
-                              (fn [t c] (cancel-infer t c) (.decrement inferring))
-                              (:originator ch) cancel-for-term))))))
+                              (fn [t c id] (cancel-infer t c id) (.decrement (@infer-status id)))
+                              (:originator ch) cancel-for-term taskid))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
    through the graph."
   [term]
-  ;; We need to pretend that a U-INFER message came in to this node.
-  ;(send screenprinter (fn [_]  (println "inc-fwi")))
-  (.increment inferring)
-  (.execute ^ThreadPoolExecutor executorService 
-    (priority-partial 1 initiate-node-task term 
-                      (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term}}))))
+  (let [taskid (gensym "task")]
+    (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+    ;; We need to pretend that a U-INFER message came in to this node.
+    ;(send screenprinter (fn [_]  (println "inc-fwi")))
+    (.increment (@infer-status taskid))
+    (.execute ^ThreadPoolExecutor executorService 
+      (priority-partial 1 initiate-node-task term 
+                        (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term} :taskid taskid})))))
 
 (defn cancel-forward-infer
   ([term] (cancel-infer term term))
@@ -230,10 +233,10 @@
     (when cancel-for-term
       (dosync (alter (:future-fw-infer term) disj cancel-for-term)))
     (doseq [ch (concat @(:i-channels term) @(:u-channels term) @(:g-channels term))]
-      (.increment inferring)
+      (.increment (@infer-status nil))
       (.execute ^ThreadPoolExecutor executorService 
         (priority-partial Integer/MAX_VALUE 
-                          (fn [t c] (cancel-forward-infer t c) (.decrement inferring))
+                          (fn [t c] (cancel-forward-infer t c) (.decrement (@infer-status nil)))
                           (:destination ch) cancel-for-term)))))
 
 (defn unassert
@@ -241,10 +244,13 @@
   ([term]
     (build/unassert term)
     (doseq [ch @(:i-channels term)]
-      (.increment inferring)
-      (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin term :type 'UNASSERT}) false)))
+      (.increment (@infer-status nil))
+      (.execute ^ThreadPoolExecutor executorService 
+        (priority-partial Integer/MAX_VALUE 
+                          unassert 
+                          (:destination ch) (new-message {:origin term :type 'UNASSERT}) false)))
     (doseq [ch @(:u-channels term)]
-      (.increment inferring)
+      (.increment (@infer-status nil))
       (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin term :type 'UNASSERT}) true))))
   ([node message uch?]
     (when debug (send screenprinter (fn [_]  (println "Unassert: " message "at" node))))
@@ -252,14 +258,14 @@
       (and (not uch?)
            (= (type node) csneps.core.Implication))
       (doseq [ch @(:u-channels node)]
-        (.increment inferring)
+        (.increment (@infer-status nil))
         (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin (:origin message) :type 'UNASSERT}) true)))
       (let [oscont (map #(contains? % (:origin message)) @(:support node))]
         (and uch?
              (seq oscont)
              (every? true? oscont)))
       (unassert node))
-    (.decrement inferring)))
+    (.decrement (@infer-status nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Rules ;;;
@@ -311,7 +317,7 @@
   ;; maintain the RUI structure. 
   (if (> (:min node) 1)
     (when (:true? message)
-      (cancel-infer node)
+      (cancel-infer node nil (:taskid message))
       (when showproofs 
         (doseq [u @(:u-channels node)]
           (when (build/valve-open? u)
@@ -320,7 +326,8 @@
                                               message 
                                               :origin node 
                                               :type 'U-INFER 
-                                              :true? true))
+                                              :true? true
+                                              :taskid (:taskid message)))
                                  (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node))))))
 
     (let [new-ruis (get-rule-use-info (:msgs node) message)
@@ -328,7 +335,7 @@
                               %)
                            new-ruis)]
       (when match-msg 
-        (cancel-infer node)
+        (cancel-infer node nil (:taskid message))
         (when showproofs 
           (doseq [u @(:u-channels node)]
             (when (build/valve-open? u)
@@ -337,7 +344,8 @@
                                                                   :origin node 
                                                                   :type 'U-INFER 
                                                                   :true? true 
-                                                                  :fwd-infer? (:fwd-infer? message)))
+                                                                  :fwd-infer? (:fwd-infer? message)
+                                                                  :taskid (:taskid message)))
                                    (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))))
 
 (defn numericalentailment-introduction
@@ -410,7 +418,8 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? false 
-                                                             :fwd-infer? (:fwd-infer? message))])
+                                                             :fwd-infer? (:fwd-infer? message)
+                                                             :taskid (:taskid message))])
                                    @(:u-channels node)))))
       (when neg-match
 		    (when showproofs 
@@ -425,7 +434,8 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? true 
-                                                             :fwd-infer? (:fwd-infer? message))])
+                                                             :fwd-infer? (:fwd-infer? message)
+                                                             :taskid (:taskid message))])
                                    @(:u-channels node))))))))
 
 ;     Inference can terminate
@@ -507,7 +517,8 @@
                                                                :origin node 
                                                                :type 'U-INFER 
                                                                :true? true 
-                                                               :fwd-infer? (:fwd-infer? message))])
+                                                               :fwd-infer? (:fwd-infer? message)
+                                                               :taskid (:taskid message))])
                                      @(:u-channels node)))))
         (when less-than-max-true-match
           (when showproofs 
@@ -522,7 +533,8 @@
                                                                :origin node 
                                                                :type 'U-INFER 
                                                                :true? false 
-                                                               :fwd-infer? (:fwd-infer? message))])
+                                                               :fwd-infer? (:fwd-infer? message)
+                                                               :taskid (:taskid message))])
                                      @(:u-channels node))))))))
 
 (defn whquestion-infer 
@@ -538,7 +550,7 @@
   (let [new-msgs (get-rule-use-info (:msgs node) message)
         inchct (count @(:ant-in-channels node)) ;; Should work even with sub-policies.
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER :taskid (:taskid message)) inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich @(:i-channels node)]
     ;(when showproofs
     (when (seq new-msgs)
@@ -611,8 +623,9 @@
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           resct (count @(:restriction-set node))
           der-rui-t (filter #(= (:pos %) resct) new-ruis)
-          new-msgs (map #(derivative-message % :origin node) der-rui-t)
+          new-msgs (map #(derivative-message % :origin node :taskid (:taskid message)) der-rui-t)
           gch @(:g-channels node)]
+      (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis)))
       (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
       (when (seq der-rui-t)
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
@@ -653,6 +666,7 @@
           new-msgs (map #(derivative-message 
                            % 
                            :origin node 
+                           :taskid (:taskid message)
                            :subst (assoc 
                                     (:subst message) 
                                     node 
@@ -727,6 +741,7 @@
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
   (when (= (:type message) 'U-INFER)
+    (send screenprinter (fn [_]  (println message term)))
     ;; Assert myself appropriately.
     (let [assert-term (if (:true? message) 
                         (build/apply-sub-to-term term (:subst message))
@@ -769,7 +784,8 @@
       (= (csneps/semantic-type-of term) :AnalyticGeneric))
     (let [imsg (derivative-message message :origin term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
-      (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
+      (doseq [cqch @(:i-channels term)] 
+        (submit-to-channel cqch imsg)))
     ;; "Introduction" of a WhQuestion is really just collecting answers.
     (and
       (= (:type message) 'I-INFER)
@@ -785,10 +801,16 @@
       (= (csneps/semantic-type-of term) :Generic)
       (seq (:subst message)))
     (generic-infer message term)
+    ;; Arbs
+    (and (csneps/arbitraryTerm? term)
+         (= (:type message) 'I-INFER))
+    (when-let [[true? result] (introduction-infer message term)]
+      (when result 
+        (doseq [[ch msg] result] 
+          (submit-to-channel ch msg))))
     ;; Normal introduction for derivation.
     (and 
-      (or (csneps/arbitraryTerm? term)
-          (not (ct/asserted? term (ct/currentContext))))
+      (not (ct/asserted? term (ct/currentContext)))
       (= (:type message) 'I-INFER))
     (when-let [[true? result] (introduction-infer message term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?))))

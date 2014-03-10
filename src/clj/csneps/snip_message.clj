@@ -58,10 +58,10 @@
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
-  [message & {:keys [origin subst support-set type true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
+  [message & {:keys [origin priority subst support-set type true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
   (-> message 
     (assoc :origin (or origin (:origin message)))
-    (assoc :priority (inc (:priority message)))
+    (assoc :priority (or priority (inc (:priority message))))
     (assoc :subst (or subst (:subst message)))
     (assoc :support-set (or support-set (:support-set message)))
     (assoc :type (or type (:type message)))
@@ -82,3 +82,11 @@
                       :origin node
                       :support-set (conj (:support-set message) node)
                       :type 'I-INFER))
+
+(defn sanitize-message
+  "Produces a message without the fields which vary without
+   actually indicating the messages represent different information."
+  [message]
+  (derivative-message message
+                      :priority 10
+                      :fwd-infer? false))
