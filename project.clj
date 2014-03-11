@@ -1,6 +1,6 @@
 (defproject Sneps3-Clojure "1.0.0-SNAPSHOT"
   :description "CSNePS - Concurrent SNePS"
-  :dependencies [[org.clojure/clojure "1.6.0-beta2"]
+  :dependencies [[org.clojure/clojure "1.6.0-RC1"]
                  [org.clojure/core.incubator "0.1.2"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/math.combinatorics "0.0.7"]
