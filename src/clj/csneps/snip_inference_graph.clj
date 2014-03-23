@@ -174,10 +174,12 @@
     (backward-infer term -10 #{} invoketermset taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset taskid] 
-    (when-not (= (union @(:future-bw-infer term) invoketermset) @(:future-bw-infer term))
+    (println term invoketermset @(:ant-in-channels term))
       (dosync (alter (:future-bw-infer term) union invoketermset))
       (doseq [ch @(:ant-in-channels term)]
-        (when (and (not (visited term)) (not (visited (:originator ch))))
+        (when (and (not (visited term)) 
+                   (not (visited (:originator ch)))
+                   (not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
           (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
           (open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
@@ -192,7 +194,7 @@
                               (dec depth)
                               (conj visited term)
                               invoketermset
-                              taskid)))))))
+                              taskid))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
@@ -271,9 +273,10 @@
 ;; When do we call this? 
 (defn derive-otherwise 
   "Attempt derivation using methods other than the IG"
+  [p]
   (setOr
-    (sort-based-derivable p context)
-    (slot-based-derivable p context termstack)))
+    (sort-based-derivable p (ct/currentContext))
+    (slot-based-derivable p (ct/currentContext) nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Rules ;;;
@@ -820,9 +823,9 @@
     (and 
       (not (ct/asserted? term (ct/currentContext)))
       (= (:type message) 'I-INFER))
-    (when-let [[true? result] (introduction-infer message term)]
-      (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?))))
+    (if-let [[true? result] (introduction-infer message term)]
       (when result 
+        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?))))
         (if true?
           (if print-intermediate-results
             (send screenprinter (fn [_]  (println "> " (build/assert term (ct/currentContext) :der))))
@@ -831,7 +834,11 @@
             (send screenprinter (fn [_] (println "> " (build/assert (list 'not term) (ct/currentContext) :der))))
             (build/assert (list 'not term) (ct/currentContext) :der)))
         (doseq [[ch msg] result] 
-          (submit-to-channel ch msg)))))
+          (submit-to-channel ch msg)))
+      ;; When introduction fails, try backward-in-forward reasoning. 
+      (when (:fwd-infer? message)
+        ;; TODO: Not quite finished, I think.
+        (backward-infer term #{term} nil))))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
   (when (:taskid message) (.decrement (@infer-status (:taskid message)))))
           
