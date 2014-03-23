@@ -267,6 +267,14 @@
       (unassert node))
     (.decrement (@infer-status nil))))
 
+;; How do we ensure no re-derivations?
+;; When do we call this? 
+(defn derive-otherwise 
+  "Attempt derivation using methods other than the IG"
+  (setOr
+    (sort-based-derivable p context)
+    (slot-based-derivable p context termstack)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Rules ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
