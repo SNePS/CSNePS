@@ -174,27 +174,26 @@
     (backward-infer term -10 #{} invoketermset taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset taskid] 
-    (println term invoketermset @(:ant-in-channels term))
-      (dosync (alter (:future-bw-infer term) union invoketermset))
-      (doseq [ch @(:ant-in-channels term)]
-        (when (and (not (visited term)) 
-                   (not (visited (:originator ch)))
-                   (not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
-          (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
-          (open-valve ch taskid)
-          ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
-          (when taskid (.increment (@infer-status taskid)))
-          (.execute ^ThreadPoolExecutor executorService 
-            (priority-partial depth 
-                              (fn [t d v i id] 
-                                (backward-infer t d v i id) 
-                                ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                (when id (.decrement (@infer-status id))))
-                              (:originator ch)
-                              (dec depth)
-                              (conj visited term)
-                              invoketermset
-                              taskid))))))
+    (dosync (alter (:future-bw-infer term) union invoketermset))
+    (doseq [ch @(:ant-in-channels term)]
+      (when (and (not (visited term)) 
+                 (not (visited (:originator ch)))
+                 (not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
+        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
+        (open-valve ch taskid)
+        ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
+        (when taskid (.increment (@infer-status taskid)))
+        (.execute ^ThreadPoolExecutor executorService 
+          (priority-partial depth 
+                            (fn [t d v i id] 
+                              (backward-infer t d v i id) 
+                              ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
+                              (when id (.decrement (@infer-status id))))
+                            (:originator ch)
+                            (dec depth)
+                            (conj visited term)
+                            invoketermset
+                            taskid))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
