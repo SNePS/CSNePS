@@ -814,10 +814,14 @@
     ;; Arbs
     (and (csneps/arbitraryTerm? term)
          (= (:type message) 'I-INFER))
-    (when-let [[true? result] (introduction-infer message term)]
+    (if-let [[true? result] (introduction-infer message term)]
       (when result 
         (doseq [[ch msg] result] 
-          (submit-to-channel ch msg))))
+          (submit-to-channel ch msg)))
+      ;; When introduction fails, try backward-in-forward reasoning. 
+      (when (:fwd-infer? message)
+        ;; TODO: Not quite finished, I think.
+        (backward-infer term #{term} nil)))
     ;; Normal introduction for derivation.
     (and 
       (not (ct/asserted? term (ct/currentContext)))
