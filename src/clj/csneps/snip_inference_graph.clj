@@ -560,8 +560,9 @@
   [message node]
   (let [new-msgs (get-rule-use-info (:msgs node) message)
         inchct (count @(:ant-in-channels node)) ;; Should work even with sub-policies.
+                                                ;; What about shared sub-policies though?
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % :origin node :fwd-infer? true :type 'I-INFER :taskid (:taskid message)) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message)) inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich @(:i-channels node)]
     ;(when showproofs
     (when (seq new-msgs)

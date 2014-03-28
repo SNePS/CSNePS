@@ -350,6 +350,7 @@
                 (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})
+        ;; TODO: Note, gensymming the subrule name precludes sharing subrules
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     (doseq [v (vals subs)]
       (doseq [rst (seq @(:restriction-set v))]
