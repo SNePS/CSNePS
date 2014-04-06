@@ -45,3 +45,23 @@
 (assert '(Isa NN POS))
 (assert '(Isa JJ POS))
 (adopt-rule 'apposCoref)
+
+
+;; Subrules: 
+
+(clearkb true)
+
+(defrule subruletest
+  (Isa (every x) Animal)
+  => 
+  (:subrule
+    (Isa x Beast)
+    => 
+    (assert `(~'Isa ~x ~'ScaryThing))))
+    
+(assert '(Isa Adam Animal))
+(assert '(Isa Adam Beast))
+(assert '(Isa Adam Entity))
+(adopt-rule 'subruletest)
+(list-terms)
+
