@@ -48,8 +48,12 @@
    valve-open    (ref false) ;; A channels valve begins in the closed state. 
                              ;; It can be opened by the originator to invoke fwd inference, 
                              ;; or by the destination to invoke backward inference. 
+   valve-selectors (ref #{}) ;; Valve selectors allow a message to pass a valve if it passes
+                             ;; the condition of the selector.
    filter-fn     nil
-   switch-fn     nil])
+   switch-fn     nil
+   switch-binds  nil
+   filter-binds  nil])
 
 ;; Filter just makes sure that the incoming supstitutions is compatible. 
 
@@ -97,6 +101,8 @@
                                 :destination destination
                                 :filter-fn (filter-fn target-binds)
                                 :switch-fn (switch-fn source-binds)
+                                :switch-binds source-binds
+                                :filter-binds target-binds
                                 :valve-open (ref false)}))]
 
     ;; The following section covers the following case: 
@@ -115,10 +121,17 @@
         (submit-to-channel channel (new-message {:origin originator, :support-set #{up-term}, :type 'I-INFER, :true? false}))))
     channel))
 
-
 (defn valve-open?
   [channel]
   @(:valve-open channel))
+
+(defn pass-message?
+  [channel message]
+  (or
+    (:fwd-infer? message)
+    (valve-open? channel) ;; Kept for legacy reasons for now.
+    (some #(subset? (:subst message) %) @(:valve-selectors channel))))
+  
 
 
 ;; Watch the valve-state for changes. Adjust the operation of the channel as necessary.

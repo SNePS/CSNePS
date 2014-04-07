@@ -23,6 +23,14 @@
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
     (clojure.core/merge subs2 (into {} compose))))
 
+;; Ex: subs2: {arb1: (every x (Isa x Cat)) cat}
+;;     subs1: {arb2: (every x (Isa x BlahBlah)) arb1: (every x (Isa x Cat))}
+;;     Result: {arb2: (every x (Isa x BlahBlah)) cat}
+(defn substitution-application-nomerge
+  [subs1 subs2]
+  (into {} (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)))
+
+
 (defn compatible-substitutions?
   "Returns true if no variable is bound to two different terms."
   [subs1 subs2]
