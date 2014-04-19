@@ -158,6 +158,9 @@
             (error "No semantic type for " term ".")))
         (dosync (alter type-map assoc (:name term) (first gcsub))))
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
+  ;; Propositions are true in contexts where they are hyps.
+  (when (subtypep newtype :Proposition)
+    (dosync (alter (:support term) conj #{term})))
   term)
 
 (defn check-min-max
