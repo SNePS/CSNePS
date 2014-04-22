@@ -165,6 +165,6 @@
                               (E y v)
                               (G y z)
                               (H x w))
-                        (ct/currentContext) :hyp)]
+                        (ct/currentContext))]
     (make-ptree :csneps.core/Conjunction (:down-cableset a))))
   

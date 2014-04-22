@@ -357,7 +357,7 @@
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     (doseq [v (vals subs)]
       (doseq [rst (seq @(:restriction-set v))]
-        (assert rst (ct/find-context 'BaseCT) :hyp))
+        (assert rst (ct/find-context 'BaseCT)))
       (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (let [cf (cf/find-frame 'rule)
@@ -571,11 +571,11 @@
             (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype))
           (when (= expr 'True)
-            (assert term (ct/find-context 'BaseCT) :hyp))
+            (assert term (ct/find-context 'BaseCT)))
           (when (= expr 'False)
             (assert 
               (build (list 'not term) :Proposition substitution)
-              (ct/find-context 'BaseCT) :hyp))
+              (ct/find-context 'BaseCT)))
           term))))
 
 

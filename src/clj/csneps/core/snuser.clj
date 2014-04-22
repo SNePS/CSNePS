@@ -48,11 +48,11 @@
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
-    (build/assert expr (currentContext) :hyp)))
+    (build/assert expr (currentContext))))
 
 (defn assert! [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
-    (let [term (build/assert expr (currentContext) :hyp)]
+    (let [term (build/assert expr (currentContext))]
       (snip/forward-infer term)
       term)))
 

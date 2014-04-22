@@ -1,5 +1,6 @@
 (ns csneps.core.contexts
-  (:require [csneps.core :as csneps])
+  (:require [csneps.core :as csneps]
+            [clojure.set :as set])
   (:use [csneps.util]))
 
 (defvar CONTEXTS (ref (hash-map))
@@ -14,7 +15,6 @@
         ^String docstring
         ^clojure.lang.PersistentList parents
         ^clojure.lang.PersistentHashSet hyps
-        ^clojure.lang.PersistentHashSet ders
         ^java.lang.Boolean kinconsistent])
 
 (defn find-context
@@ -52,7 +52,7 @@
     (dosync (alter CONTEXTS assoc name (Context. name docstring 
                                                  (doall (map #(find-context %) parents)) 
                                                  (ref (set (map #(csneps/get-term %) hyps))) 
-                                                 (ref (hash-set)) false))))
+                                                 false))))
   (find-context name))
 
 (defn currentContext
@@ -67,32 +67,29 @@
     (println n)))
 
 (defn remove-from-context
-  "Removes the term from the context (ctx) hyps or ders."
-  [term ctx]
-  (dosync
-    (alter (:hyps ctx) disj term)
-    (alter (:ders ctx) disj term)))
+  "Removes the term from the context (ct) hyps."
+  [term ct]
+  (dosync (alter (:hyps ct) disj term)))
+
+(defn hyps
+  "Returns the full set of hyps of ct, both those local to
+   ct, and those of its parents."
+  [ct]
+  (loop [cts (list ct)
+         hyps #{}]
+    (if (empty? cts)
+      hyps
+      (recur (apply concat (map #(:parents %) cts))
+             (set/union hyps (apply set/union (map #(deref (:hyps %)) cts)))))))
 
 (defn asserted?
-  ""
+  "If p has an origin set which is a subset of the hyps of the
+   context ct, then it is asserted."
   [p ct]
-  (let [context (find-context ct)]
-    (cond 
-      (or (contains? @(:hyps context) p)
-          (contains? @(:ders context) p))
-      context
-      ;; check parents
-      :else (some #(asserted? p %) (:parents context)))))
-
-;;Trace:
-;context=> (defineContext {:name 'BaseCT})
-;#'context/CONTEXTS
-;context=> (set-current-context 'BaseCT)
-;#'context/*CurrentContext*
-;context=> *CurrentContext*
-;#:context.Context{:name BaseCT, :docstring "", :parents (BaseCT), :hyps #{}, :ders #{}, :kinconsistent nil}
-;context=> (listContexts)
-;"BaseCT"
+  (let [context (find-context ct)
+        cthyps (hyps context)]
+    (when (some #(set/subset? % cthyps) @(:support p))
+      context)))
 
 
 

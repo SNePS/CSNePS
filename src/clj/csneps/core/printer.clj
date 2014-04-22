@@ -316,18 +316,10 @@
     (when headerfile 
       (.write ^java.io.Writer w "(clojure.lang.Compiler/loadFile " (first headerfile) ")\n"))
     (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n(in-ns 'snuser)\n")
-    (doall (map 
-      #(do
-         (doseq [hyp @(:hyps %)]
-           (.write w  "(csneps.core.build/assert '")
-           (if (= (:type hyp) :csneps.core/Atom)
-             (.write w (str (print-atom hyp)))
-             (.write w (str (print-unnamed-molecular-term hyp))))
-           (.write w (str " '" (:name %) " :hyp)\n")))
-         (doseq [der @(:ders %)]
-           (.write w "(csneps.core.build/assert '")
-           (if (= (:type der) :csneps.core/Atom)
-             (.write w (str (print-atom der)))
-             (.write w (str (print-unnamed-molecular-term der))))
-           (.write w (str" '" (:name %) " :der)\n"))))
-      (vals @ct/CONTEXTS)))))
+    (doseq [term (vals @csneps/TERMS)]
+      (when (ct/asserted? term)
+        (.write w  "(csneps.core.build/assert '")
+        (if (= (:type term) :csneps.core/Atom)
+          (.write w (str (print-atom term)))
+          (.write w (str (print-unnamed-molecular-term term))))
+        (.write w (str " '" (:name term) ")\n"))))))

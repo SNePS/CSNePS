@@ -14,7 +14,7 @@
     (doseq [v (seq vars)]
       (doseq [rst (seq @(:restriction-set v))]
         (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
-          (assert rst (ct/find-context 'BaseCT) :hyp)))
+          (assert rst (ct/find-context 'BaseCT))))
       (build-quantterm-channels v)
       (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
@@ -26,7 +26,7 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq @(:restriction-set (first vars)))]
-      (assert rst (ct/find-context 'BaseCT) :hyp))
+      (assert rst (ct/find-context 'BaseCT)))
     (build-quantterm-channels (first vars))
     (first vars)))
 
@@ -44,43 +44,41 @@
         (println "Warning:" p "and" n "contradict!")))))
 
 (defmulti assert
-  (fn [expr context origintag] [(type-of expr)]))
+  (fn [expr context] [(type-of expr)]))
 
 (defmethod assert
-  [clojure.lang.Symbol] [expr context origintag]
-  (assert (build expr :Proposition {}) context origintag))
+  [clojure.lang.Symbol] [expr context]
+  (assert (build expr :Proposition {}) context))
 
 (defmethod assert
-  [java.lang.Integer] [expr context origintag]
-  (assert (build expr :Proposition {}) context origintag))
+  [java.lang.Integer] [expr context]
+  (assert (build expr :Proposition {}) context))
 
 (defmethod assert
-  [java.lang.Double] [expr context origintag]
-  (assert (build expr :Proposition {}) context origintag))
+  [java.lang.Double] [expr context]
+  (assert (build expr :Proposition {}) context))
 
 (defmethod assert
-  [java.lang.String] [expr context origintag]
-  (assert (build expr :Proposition {}) context origintag))
+  [java.lang.String] [expr context]
+  (assert (build expr :Proposition {}) context))
 
 (defmethod assert
-  [clojure.lang.PersistentList] [expr context origintag]
-  (assert (variable-parse-and-build expr :Proposition) context origintag))
+  [clojure.lang.PersistentList] [expr context]
+  (assert (variable-parse-and-build expr :Proposition) context))
 
 (defmethod assert
-  [clojure.lang.Cons] [expr context origintag]
-  (assert (variable-parse-and-build (seq expr) :Proposition) context origintag))
+  [clojure.lang.Cons] [expr context]
+  (assert (variable-parse-and-build (seq expr) :Proposition) context))
 
 (defmethod assert
-  [clojure.lang.PersistentVector] [expr context origintag]
-  (assert (variable-parse-and-build (seq expr) :Proposition) context origintag))
+  [clojure.lang.PersistentVector] [expr context]
+  (assert (variable-parse-and-build (seq expr) :Proposition) context))
 
 (defn assert-term
-  [expr context origintag]
+  [expr context]
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
-      (case origintag
-        :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr)))
+      (dosync (alter (:hyps ct) conj expr))
       (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
@@ -88,12 +86,10 @@
 
 (defmethod assert
   ;[:Proposition] [expr context origintag]
-  [:csneps.core/Term] [expr context origintag]
+  [:csneps.core/Term] [expr context]
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
-      (case origintag
-        :hyp (dosync (alter (:hyps ct) conj expr))
-        :der (dosync (commute (:ders ct) conj expr)))
+      (dosync (alter (:hyps ct) conj expr))
       (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
