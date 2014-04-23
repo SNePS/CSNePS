@@ -13,7 +13,8 @@
         [clojure.pprint :only (cl-format)]
         [clojure.set])
   (:import [java.util Comparator]
-           [java.util.concurrent TimeUnit LinkedBlockingQueue PriorityBlockingQueue ThreadPoolExecutor]))
+           [java.util.concurrent TimeUnit LinkedBlockingQueue PriorityBlockingQueue ThreadPoolExecutor]
+           [edu.buffalo.csneps.util]))
 
 (declare assertTrace askif)
 
@@ -29,6 +30,7 @@
 (load "snip_path_based")
 (load "snip_slot_based")
 (load "snip_message")
+(load "snip_originset")
 (load "snip_inference_graph")
 (load "snip_acting")
 
