@@ -106,7 +106,7 @@
   ;; Send the information about this assertion forward in the graph.
   ;; Positive instances:
   (let [msg (new-message {:origin term, 
-                          :support-set #{term}, 
+                          :support-set #{#{term}}, 
                           :type 'I-INFER, 
                           :fwd-infer? fwd-infer
                           :pos 1
@@ -116,19 +116,19 @@
   ;; Conjunctions:
   ;; Conjunctions have no antecedents if they are true, so the U-INFER messages must be passed on here
   (when (= (csneps/type-of term) :csneps.core/Conjunction)
-    (let [msg (new-message {:origin term, :support-set #{term}, :type 'U-INFER, :fwd-infer? fwd-infer})]
+    (let [msg (new-message {:origin term, :support-set #{#{term}}, :type 'U-INFER, :fwd-infer? fwd-infer})]
       (doall (map #(submit-to-channel % msg) @(:u-channels term)))))
   ;; Negations:
   ;; When the assertion makes terms negated, the negated terms need to send out
   ;; on their i-channels that they are now negated.
   (let [dcs-map (cf/dcsRelationTermsetMap term)
         nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))
-        msg (when nor-dcs (new-message {:origin term, :support-set #{term}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer}))]
+        msg (when nor-dcs (new-message {:origin term, :support-set #{#{term}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer}))]
     (when nor-dcs
       (doseq [negterm nor-dcs]
         (doall (map #(submit-to-channel 
                        % 
-                       (new-message {:origin negterm, :support-set #{negterm}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
+                       (new-message {:origin negterm, :support-set #{#{negterm}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
                     @(:i-channels negterm)))))))
 
 (defn open-valve 
@@ -170,6 +170,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Control ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn natural-deduction-backward-infer
+  "In order to infer some terms, suppositions should be made which are propogated
+   backward through the graph in the messages. The suppositions are treated as if true,
+   but inferred results are not asserted, unless:
+   a) The inferred item is a ND rule which has collected enough messages with appropriate
+      suppositions, or
+   b) The suppositions aren't actually necessary for the derivation (e.g., Gamma |- A, 
+      and Gamma U suppositions |- A)."
+  [])
 
 (defn backward-infer
   "Spawns tasks recursively to open valves in channels and begin performing
@@ -382,7 +392,7 @@
   [message node]
   (let [dermsg (derivative-message message 
                                    :origin node
-                                   :support-set (conj (:support-set message) node)
+                                   :support-set @(:support node) ;(conj (:support-set message) node)
                                    :type 'U-INFER)
         uch @(:u-channels node)]
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
@@ -397,12 +407,13 @@
    can say it is true based on message."
   [message node]
   (let [new-ruis (get-rule-use-info (:msgs node) message)
-        der-rui-t (some #(= (:pos %) (count @(:u-channels node))) new-ruis)
-        der-rui-f (some #(pos? (:neg %)) new-ruis)
-        dermsg-t (imessage-from-ymessage message node)
+        der-rui-t (some #(when (= (:pos %) (count @(:u-channels node))) %) new-ruis)
+        der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
+        dermsg-t (derivative-message (imessage-from-ymessage message node)
+                                     :support-set der-rui-t)
         dermsg-f (derivative-message message 
                                    :origin node
-                                   :support-set (conj (:support-set message) node)
+                                   :support-set (:support-set der-rui-f)
                                    :type 'I-INFER
                                    :true? false)
         ich @(:i-channels node)]
@@ -410,11 +421,11 @@
       der-rui-t (do 
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: " node " by conjunction-introduction"))))
-                  [true (zipmap ich (repeat (count ich) dermsg-t))])
+                  [true (:support-set der-rui-t) (zipmap ich (repeat (count ich) dermsg-t))])
       der-rui-f (do
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction"))))
-                  [false (zipmap ich (repeat (count ich) dermsg-f))])
+                  [false (:support-set der-rui-f) (zipmap ich (repeat (count ich) dermsg-f))])
       :else nil)))
 
 (defn andor-elimination
@@ -476,39 +487,36 @@
   "Check the RUIs to see if I have enough to be true."
   [message node]
   (let [new-ruis (get-rule-use-info (:msgs node) message)
-        merged-rui (when new-ruis (reduce merge-messages new-ruis)) ;; If they contradict, we have other problems...
+        ;merged-rui (when new-ruis (merge-messages new-ruis)) ;; If they contradict, we have other problems...
         totparam (csneps/totparam node)
-        case1 (and merged-rui
-                   (> (:pos merged-rui) (:max node))
-                   (> (:neg merged-rui) (- totparam (:min node))))
-        case2 (and merged-rui
-                   (>= (:pos merged-rui) (:min node))
-                   (>= (:neg merged-rui) (- totparam (:max node))))
-        dermsg-t (derivative-message message 
-                      :origin node
-                      :support-set (conj (:support-set message) node)
-                      :type 'I-INFER
-                      :true? true)
-        dermsg-f (derivative-message message 
-                      :origin node
-                      :support-set (conj (:support-set message) node)
-                      :type 'I-INFER
-                      :true? false)
+        case1 (some #(when (and (> (:pos %) (:max node))
+                                (> (:neg %) (- totparam (:min node)))) %) new-ruis)
+        case2 (some #(when (and (>= (:pos %) (:min node))
+                                (>= (:neg %) (- totparam (:max node)))) %) new-ruis)
         ich @(:i-channels node)]
-    (when debug (send screenprinter (fn [_]  (println case1 case2))))
     (cond
       (isa? (csneps/syntactic-type-of node) :csneps.core/Andor)
       (when case2
-        (when showproofs 
-          (doseq [i ich]
-            (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
-        [true (zipmap ich (repeat (count ich) dermsg-t))])
+        (let [dermsg (derivative-message message 
+                                         :origin node
+                                         :support-set (:support-set case2)
+                                         :type 'I-INFER
+                                         :true? true)]
+          (when showproofs 
+            (doseq [i ich]
+              (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
+          [true (:support-set case2) (zipmap ich (repeat (count ich) dermsg))]))
       (isa? (csneps/syntactic-type-of node) :csneps.core/Thresh)
       (when case1
-        (when showproofs 
-          (doseq [i ich]
-            (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
-        [true (zipmap ich (repeat (count ich) dermsg-t))]))))
+        (let [dermsg (derivative-message message 
+                                         :origin node
+                                         :support-set (:support-set case1)
+                                         :type 'I-INFER
+                                         :true? true)]
+          (when showproofs 
+            (doseq [i ich]
+              (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
+          [true (:support-set case1) (zipmap ich (repeat (count ich) dermsg))])))))
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
@@ -611,7 +619,7 @@
               (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
                 ;(or (ct/asserted? node (ct/currentContext))
                 ;    (@(:expected-instances node) instance)) 
-            (build/assert-term instance (ct/currentContext) :der))
+            (build/assert-term instance (ct/currentContext)))
           (let [imsg (derivative-message rcm
                                          :origin node
                                          :support-set (conj (:support-set rcm) node)
@@ -773,7 +781,7 @@
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
       (dosync (alter (:support assert-term) conj (:support-set message)))
       (when (or (not (ct/asserted? assert-term (ct/currentContext))) (:fwd-infer? message))
-        (build/assert-term assert-term (ct/currentContext) :der)
+        (build/assert-term assert-term (ct/currentContext))
         (when (or print-intermediate-results (:fwd-infer? message))
           (send screenprinter (fn [_]  (println "> " assert-term))))
         ;; Create and send derivative messages.
@@ -841,16 +849,25 @@
     (and 
       (not (ct/asserted? term (ct/currentContext)))
       (= (:type message) 'I-INFER))
-    (if-let [[true? result] (introduction-infer message term)]
+    (if-let [[true? support result] (introduction-infer message term)]
       (when result 
-        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," true?))))
+        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," support "," true?))))
         (if true?
-          (if print-intermediate-results
-            (send screenprinter (fn [_]  (println "> " (build/assert term (ct/currentContext) :der))))
-            (build/assert term (ct/currentContext) :der))
-          (if print-intermediate-results
-            (send screenprinter (fn [_] (println "> " (build/assert (list 'not term) (ct/currentContext) :der))))
-            (build/assert (list 'not term) (ct/currentContext) :der)))
+          (do 
+            (dosync (alter (:support term) union support))
+            (when print-intermediate-results (println "> " term)))
+          (let [neg (build/variable-parse-and-build (list 'not term) :Propositional)]
+            (dosync (alter (:support neg) union support))
+            (when print-intermediate-results (println "> " neg))))
+        
+        
+;        (if true?
+;          (if print-intermediate-results
+;            (send screenprinter (fn [_]  (println "> " (build/assert term (ct/currentContext)))))
+;            (build/assert term (ct/currentContext)))
+;          (if print-intermediate-results
+;            (send screenprinter (fn [_] (println "> " (build/assert (list 'not term) (ct/currentContext)))))
+;            (build/assert (list 'not term) (ct/currentContext))))
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))
       ;; When introduction fails, try backward-in-forward reasoning. 

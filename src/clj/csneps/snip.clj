@@ -29,8 +29,8 @@
 (load "snip_sort_based")
 (load "snip_path_based")
 (load "snip_slot_based")
-(load "snip_message")
 (load "snip_originset")
+(load "snip_message")
 (load "snip_inference_graph")
 (load "snip_acting")
 

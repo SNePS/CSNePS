@@ -113,12 +113,12 @@
     
     ;; Inform the I-Channels that this is true.
     (when (ct/asserted? originator (ct/currentContext))
-      (submit-to-channel channel (new-message {:origin originator, :support-set #{originator}, :type 'I-INFER})))
+      (submit-to-channel channel (new-message {:origin originator, :support-set #{#{originator}}, :type 'I-INFER})))
     ;; Handle negations
     (let [nor-cs (@(:up-cablesetw originator) (slot/find-slot 'nor))
           up-term (when nor-cs (some #(when (ct/asserted? % (ct/currentContext)) %) @nor-cs))]
       (when up-term
-        (submit-to-channel channel (new-message {:origin originator, :support-set #{up-term}, :type 'I-INFER, :true? false}))))
+        (submit-to-channel channel (new-message {:origin originator, :support-set #{#{up-term}}, :type 'I-INFER, :true? false}))))
     channel))
 
 (defn valve-open?
