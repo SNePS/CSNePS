@@ -45,16 +45,27 @@
                       (and (true? fn2p) (false? fn1p)))
             (recur (rest fns1))))))))
 
-(defn merge-messages [msg1 msg2]
+(defn merge-two-messages
+  [msg1 msg2]
   (let [new-flaggedns (clojure.core/merge (:flaggedns msg1) (:flaggedns msg2))]
     (new-message {:subst (merge (:subst msg1) (:subst msg2))
                   :pos (count (filter true? (vals new-flaggedns)))
                   :neg (count (filter false? (vals new-flaggedns)))
-                  :support-set (union (:support-set msg1) (:support-set msg2))
+                  :support-set (os-union (:support-set msg1) (:support-set msg2))
                   :flaggedns new-flaggedns
                   :priority (max (:priority msg1) (:priority msg2))
                   :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))
                   :invoke-set (union (:invoke-set msg1) (:invoke-set msg2))})))
+
+(defn merge-messages 
+  [& msgs]
+  (cond
+    (empty? msgs)
+    nil
+    (= (count msgs) 1)
+    (first msgs)
+    :else
+    (reduce merge-two-messages msgs)))
 
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
