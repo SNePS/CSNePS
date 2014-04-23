@@ -184,7 +184,7 @@
   ;; Then indefinite nodes
   ;; Then qvar nodes
   ;; Then print molecular terms;
-  [& {:keys [asserted types]}]
+  [& {:keys [asserted types originsets]}]
   (let [terms (vals @csneps/TERMS)
         atoms (filter #(= (:type %) :csneps.core/Atom) terms)
         arbs (filter csneps/arbitraryTerm? terms)
@@ -196,7 +196,9 @@
                 (and asserted
                      (ct/asserted? x (ct/currentContext))))
         (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
-        (println x)))))
+        (print x)
+        (when originsets (print " " @(:support x)))
+        (println)))))
 
 (defn listkb
   "Prints the current context and all propositions asserted in it."
