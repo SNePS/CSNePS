@@ -339,7 +339,7 @@
       (when showproofs 
         (send screenprinter (fn [_] (println "I derived: " node " by negation-introduction"))))
       (dosync (alter (:support node) conj (:support-set message)))
-      [true (zipmap ich (repeat (count ich) dermsg))])))
+      [true nil (zipmap ich (repeat (count ich) dermsg))]))) ;;TODO: Fix this.
   
 
 (defn numericalentailment-elimination
@@ -489,8 +489,8 @@
   (let [new-ruis (get-rule-use-info (:msgs node) message)
         ;merged-rui (when new-ruis (merge-messages new-ruis)) ;; If they contradict, we have other problems...
         totparam (csneps/totparam node)
-        case1 (some #(when (and (> (:pos %) (:max node))
-                                (> (:neg %) (- totparam (:min node)))) %) new-ruis)
+        case1 (some #(when (or (> (:pos %) (:max node))
+                               (> (:neg %) (- totparam (:min node)))) %) new-ruis)
         case2 (some #(when (and (>= (:pos %) (:min node))
                                 (>= (:neg %) (- totparam (:max node)))) %) new-ruis)
         ich @(:i-channels node)]
