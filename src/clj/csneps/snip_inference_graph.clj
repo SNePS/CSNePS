@@ -171,16 +171,6 @@
 ;;; Inference Control ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn natural-deduction-backward-infer
-  "In order to infer some terms, suppositions should be made which are propogated
-   backward through the graph in the messages. The suppositions are treated as if true,
-   but inferred results are not asserted, unless:
-   a) The inferred item is a ND rule which has collected enough messages with appropriate
-      suppositions, or
-   b) The suppositions aren't actually necessary for the derivation (e.g., Gamma |- A, 
-      and Gamma U suppositions |- A)."
-  [])
-
 (defn backward-infer
   "Spawns tasks recursively to open valves in channels and begin performing
    backward-chaining inference. The network tries to derive term, and uses a
@@ -195,11 +185,10 @@
   ([term invoketermset taskid] 
     (backward-infer term -10 #{} invoketermset {} taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
-  ([term depth visited invoketermset subst taskid] 
+  ([term depth traversed invoketermset subst taskid] 
     (dosync (alter (:future-bw-infer term) union invoketermset))
     (doseq [ch @(:ant-in-channels term)]
-      (when (and (not (visited term)) 
-                 (not (visited (:originator ch)))
+      (when (and (not (traversed ch))
                  (not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
         (let [subst (add-valve-selector ch subst taskid)]
@@ -214,7 +203,7 @@
                                 (when id (.decrement (@infer-status id))))
                               (:originator ch)
                               (dec depth)
-                              (conj visited term)
+                              (conj traversed ch)
                               invoketermset
                               subst
                               taskid)))))))
@@ -613,16 +602,16 @@
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))]
           (dosync (alter (:instances node) assoc instance (:subst rcm)))
-          ;; Only assert the instance if this node is asserted. Important for nested generics/hybrids.
-          (when (ct/asserted? node (ct/currentContext))
-            (when showproofs
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-                ;(or (ct/asserted? node (ct/currentContext))
-                ;    (@(:expected-instances node) instance)) 
-            (build/assert-term instance (ct/currentContext)))
+          
+          ;; Add to the support of instance the os-union of this node, and the messages supports.
+          (dosync (alter (:support instance) union (os-union (:support-set rcm) @(:support node))))
+          
+          (when (and showproofs (ct/asserted? node (ct/currentContext)))
+            (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
+          
           (let [imsg (derivative-message rcm
                                          :origin node
-                                         :support-set (conj (:support-set rcm) node)
+                                         :support-set (os-union (:support-set rcm) @(:support node))
                                          :true? (let [[_ true?] (@(:expected-instances node) instance)]
                                                   (if-not (nil? true?)
                                                     true?
@@ -639,7 +628,7 @@
       (if (@(:instances node) new-expected-instance)
         (let [imsg (derivative-message message
                                          :origin node
-                                         :support-set (conj (:support-set message) node)
+                                         :support-set (os-union (:support-set message) @(:support node))
                                          :type 'I-INFER)]
           (when showproofs
             (send screenprinter (fn [_] (println "Since" node ", I confirmed a" 
