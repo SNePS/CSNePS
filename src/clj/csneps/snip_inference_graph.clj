@@ -163,8 +163,12 @@
 ;;;;;;;;;;;;;;;;;
 
 (defn negated?
-  [term]
-  (ct/asserted? (build/build (list 'not term) :Proposition {}) (ct/currentContext)))
+  ([term]
+    (negated? term (ct/currentContext)))
+  ([term context]
+    (let [negation (get-froms #{term} (slot/find-slot 'nor))]
+      (when-not (empty? negation)
+        (ct/asserted? (first negation) context)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Control ;;;
