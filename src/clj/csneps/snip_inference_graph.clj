@@ -9,7 +9,6 @@
 (def ^:dynamic taskid 0)
 
 ;; For debug:
-(def screenprinter (agent nil))
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
@@ -178,27 +177,27 @@
   ([term] 
     (let [taskid (gensym "task")] 
       (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
-      (backward-infer term -10 #{} #{term} {} taskid)))
+      (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term taskid] 
     (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
-    (backward-infer term -10 #{} #{term} {} taskid))
+    (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid))
   ([term invoketermset taskid] 
-    (backward-infer term -10 #{} invoketermset {} taskid))
+    (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
-  ([term depth traversed invoketermset subst taskid] 
+  ([term depth traversed invoketermset subst context taskid] 
     (dosync (alter (:future-bw-infer term) union invoketermset))
     (doseq [ch @(:ant-in-channels term)]
-      (when (and (not (traversed ch))
-                 (not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
-        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" term "to" (:originator ch)))))
+      (when (and (not (traversed ch)))
+                 ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
+        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
         (let [subst (add-valve-selector ch subst taskid)]
           (open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
           (when taskid (.increment (@infer-status taskid)))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial depth 
-                              (fn [t d v i s id] 
-                                (backward-infer t d v i s id) 
+                              (fn [t d v i s c id] 
+                                (backward-infer t d v i s c id) 
                                 ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
                                 (when id (.decrement (@infer-status id))))
                               (:originator ch)
@@ -206,6 +205,7 @@
                               (conj traversed ch)
                               invoketermset
                               subst
+                              context
                               taskid)))))))
 
 (defn cancel-infer
