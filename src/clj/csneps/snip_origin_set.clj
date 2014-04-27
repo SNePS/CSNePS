@@ -1,2 +1,0 @@
-(in-ns 'csneps.snip)
-
