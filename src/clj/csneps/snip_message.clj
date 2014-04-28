@@ -30,7 +30,7 @@
 (defmethod print-method csneps.snip.Message [o w]
   (.write ^java.io.Writer w 
     (str "(" (:priority o) ")"
-         " From: " (if (:origin o) (print-str (:origin o)) "<fwdinfer>")
+         " From: " (if (:origin o) (print-str (:origin o)) "<?>")
          " " (:type o) " (" (if (:true? o) "t" "f") ")"
          " pos:" (:pos o) " neg:" (:neg o)
          " support: " (:support-set o))))
