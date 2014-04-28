@@ -649,11 +649,11 @@
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           resct (count @(:restriction-set node))
           der-rui-t (filter #(= (:pos %) resct) new-ruis)
-          new-msgs (map #(derivative-message % :origin node :taskid (:taskid message)) der-rui-t)
+          new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message)) der-rui-t)
           gch @(:g-channels node)]
-      (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis)))
       (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
       (when (seq der-rui-t)
+        (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs)))
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
                     ch gch]
