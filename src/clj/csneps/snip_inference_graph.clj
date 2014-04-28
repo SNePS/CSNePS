@@ -147,10 +147,10 @@
   (dosync (ref-set (:valve-open channel) false)))
 
 (defn add-valve-selector
-  [channel subst taskid]
+  [channel subst context taskid]
   (let [subst (build/substitution-application-nomerge (:switch-binds channel) 
                                                       (merge subst (:filter-binds channel)))]
-    (dosync (alter (:valve-selectors channel) conj subst))
+    (dosync (alter (:valve-selectors channel) conj [subst context]))
     (doseq [msg @(:waiting-msgs channel)]
       (when (build/pass-message? channel msg)
         (when taskid (.increment (@infer-status taskid)))
@@ -194,7 +194,7 @@
       (when (and (not (traversed ch)))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
-        (let [subst (add-valve-selector ch subst taskid)]
+        (let [subst (add-valve-selector ch subst context taskid)]
           (open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
           (when taskid (.increment (@infer-status taskid)))

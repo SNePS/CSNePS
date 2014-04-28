@@ -49,11 +49,24 @@
                              ;; It can be opened by the originator to invoke fwd inference, 
                              ;; or by the destination to invoke backward inference. 
    valve-selectors (ref #{}) ;; Valve selectors allow a message to pass a valve if it passes
-                             ;; the condition of the selector.
+                             ;; the condition of the selector. Each valve selector is a pair
+                             ;; [subst context].
    filter-fn     nil
    switch-fn     nil
    switch-binds  nil
    filter-binds  nil])
+
+(defmethod print-method csneps.core.build.Channel [o w]
+  (.write ^java.io.Writer w 
+    (str (print/term-printer (:originator o)) " -(" (count @(:waiting-msgs o)) ")"
+         (cond
+           (not @(:valve-open o)) "/"
+           (seq @(:valve-selectors o)) "~"
+           :else "-")
+         "> " (print/term-printer (:destination o))
+         " F: " (:filter-binds o)
+         " S: " (:switch-binds o)
+         "\n")))
 
 ;; Filter just makes sure that the incoming supstitutions is compatible. 
 
@@ -130,9 +143,10 @@
   (or
     (:fwd-infer? message)
     (valve-open? channel) ;; Kept for legacy reasons for now.
-    (some #(subset? (:subst message) %) @(:valve-selectors channel))))
-  
-
+    (some #(and 
+             (subset? (:subst message) (first %))
+             (clojure.set/subset? (:support-set message) @(:hyps (second %))))
+          @(:valve-selectors channel))))
 
 ;; Watch the valve-state for changes. Adjust the operation of the channel as necessary.
 
