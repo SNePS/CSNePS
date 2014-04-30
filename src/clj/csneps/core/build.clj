@@ -4,6 +4,7 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
+            [clojure.core.match :as match]
             [clojure.math.numeric-tower :as math]
             [clojure.math.combinatorics :as cb]
             [clojure.zip :as zip]
@@ -27,6 +28,7 @@
 (load "build_find")
 (load "build_channel")
 (load "build_rules")
+(load "build_rewrite")
 
 (defvar KRNovice (ref nil)
   "If the value is non-null,
