@@ -374,7 +374,7 @@
                                                                   :true? true 
                                                                   :fwd-infer? (:fwd-infer? message)
                                                                   :taskid (:taskid message)))
-                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))))
+                                   @(:u-channels node))))))))
 
 (defn numericalentailment-introduction
   ""
