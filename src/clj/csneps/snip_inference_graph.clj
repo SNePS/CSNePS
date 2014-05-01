@@ -188,10 +188,11 @@
   ([term invoketermset taskid] 
     (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid))
   ;; Opens appropriate in-channels, sends messages to their originators.
-  ([term depth traversed invoketermset subst context taskid] 
+  ([term depth visited invoketermset subst context taskid] 
     (dosync (alter (:future-bw-infer term) union invoketermset))
     (doseq [ch @(:ant-in-channels term)]
-      (when (and (not (traversed ch)))
+      (when (and (not (visited term)) 
+ -                 (not (visited (:originator ch))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
         (let [subst (add-valve-selector ch subst context taskid)]
@@ -206,7 +207,7 @@
                                 (when id (.decrement (@infer-status id))))
                               (:originator ch)
                               (dec depth)
-                              (conj traversed ch)
+                              (conj visited term)
                               invoketermset
                               subst
                               context
