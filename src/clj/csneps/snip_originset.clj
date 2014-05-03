@@ -35,3 +35,20 @@
    (i.e., the intersection of the two)"
   [supports1 supports2]
   (intersection supports1 supports2))
+
+(defn os-concat
+  "When two sets of OSes are concatted, the union of the two sets is
+   taken, while ensuring only minimal members remain in the final 
+   set."
+  [supports1 supports2]
+  (loop [result supports1
+         supports2 (seq supports2)]
+    (cond
+      (empty? supports2) 
+      result
+      (nil? (first (map #(subset? % (first supports2)) supports1)))
+      (recur (conj result (first supports2))
+             (rest supports2))
+      :else
+      (recur result
+             (rest supports2)))))
