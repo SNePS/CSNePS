@@ -46,7 +46,7 @@
     (cond
       (empty? supports2) 
       result
-      (nil? (first (map #(subset? % (first supports2)) supports1)))
+      (nil? (first (filter #(subset? % (first supports2)) supports1)))
       (recur (conj result (first supports2))
              (rest supports2))
       :else
