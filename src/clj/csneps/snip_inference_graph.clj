@@ -605,18 +605,22 @@
           gch (when new-combined-messages 
                 @(:g-channels node))]
       (doseq [rcm rel-combined-messages]
-        (let [instance (build/apply-sub-to-term node (:subst rcm))]
+        (let [instance (build/apply-sub-to-term node (:subst rcm))
+              new-support (os-union (:support-set rcm) @(:support node))]
+          ;; The support of an instance is it's existing support, concatenated
+          ;; with the union of the set of support for the generic, and the
+          ;; incoming substitution's support set (i.e., arbitrary subs).
+          ;(send screenprinter (fn [_] (println "OS: " @(:support instance) "::::" (os-union (:support-set rcm) @(:support node)))))
+          (dosync (alter (:support instance) os-concat new-support))
+          ;(send screenprinter (fn [_] (println "Instance: " instance (:support instance))))
           (dosync (alter (:instances node) assoc instance (:subst rcm)))
-          
-          ;; Add to the support of instance the os-union of this node, and the messages supports.
-          (dosync (alter (:support instance) union (os-union (:support-set rcm) @(:support node))))
           
           (when (and showproofs (ct/asserted? node (ct/currentContext)))
             (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
           
           (let [imsg (derivative-message rcm
                                          :origin node
-                                         :support-set (os-union (:support-set rcm) @(:support node))
+                                         :support-set new-support
                                          :true? (let [[_ true?] (@(:expected-instances node) instance)]
                                                   (if-not (nil? true?)
                                                     true?
@@ -627,13 +631,16 @@
                                  (@(:expected-instances node) instance))
                            @(:i-channels node)
                            gch)] ;; If this node is not asserted, only inform other generics of this new message.
+              ;(send screenprinter (fn [_] (println "GenMsg-Infer" imsg)))
               (submit-to-channel cqch imsg))))))
     ;; Step 2:
     (let [new-expected-instance (:origin message)]
       (if (@(:instances node) new-expected-instance)
         (let [imsg (derivative-message message
                                          :origin node
-                                         :support-set (os-union (:support-set message) @(:support node))
+                                         :support-set (os-concat 
+                                                        (os-union (:support-set message) @(:support node))
+                                                        (os-union (:support-set message) @(:support new-expected-instance)))
                                          :type 'I-INFER)]
           (when showproofs
             (send screenprinter (fn [_] (println "Since" node ", I confirmed a" 
@@ -769,30 +776,30 @@
   ;; new belief, and attempt elimination.
   (when (= (:type message) 'U-INFER)
     (send screenprinter (fn [_]  (println message term)))
-    ;; Assert myself appropriately.
-    (let [assert-term (if (:true? message) 
+    ;; Update origin sets of result appropriately.
+    (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
-      (dosync (alter (:support assert-term) conj (:support-set message)))
-      (when (or (not (ct/asserted? assert-term (ct/currentContext))) (:fwd-infer? message))
-        (build/assert-term assert-term (ct/currentContext))
-        (when (or print-intermediate-results (:fwd-infer? message))
-          (send screenprinter (fn [_]  (println "> " assert-term))))
-        ;; Create and send derivative messages.
-        (let [imsg (derivative-message message
+      (dosync (alter (:support result-term) os-concat (:support-set message)))
+      ;; When this hasn't already been derived otherwise in this ct, let the user know.
+      (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
+                (:fwd-infer? message))
+        (send screenprinter (fn [_]  (println "> " result-term))))
+      ;; Send messages onward that this has been derived.
+      (let [imsg (derivative-message message
                                    :origin term
-                                   :support-set (conj (:support-set message) term)
+                                   :support-set @(:support result-term)
                                    :type 'I-INFER)]
-            (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
-        ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
-        (when (@(:future-bw-infer term) assert-term)
+        (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
+      ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
+      (when (@(:future-bw-infer term) result-term)
           (cancel-infer-of term)))
       (when (:true? message)
         ;; Apply elimination rules and report results
         (when-let [result (elimination-infer message term)]
           (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
           (doseq [[ch msg] result] 
-            (submit-to-channel ch msg))))))
+            (submit-to-channel ch msg)))))
     
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Introduction Rules ---- ;;
