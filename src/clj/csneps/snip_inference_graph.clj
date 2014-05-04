@@ -447,6 +447,7 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? false 
+                                                             :support-set (os-union (:support-set pos-match) @(:support node))
                                                              :fwd-infer? (:fwd-infer? message)
                                                              :taskid (:taskid message))])
                                    @(:u-channels node)))))
@@ -463,6 +464,7 @@
                                                              :origin node 
                                                              :type 'U-INFER 
                                                              :true? true 
+                                                             :support-set (os-union (:support-set neg-match) @(:support node))
                                                              :fwd-infer? (:fwd-infer? message)
                                                              :taskid (:taskid message))])
                                    @(:u-channels node))))))))
@@ -606,7 +608,10 @@
                 @(:g-channels node))]
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))
-              new-support (os-union (:support-set rcm) @(:support node))]
+              new-support (os-concat 
+                            (os-union (:support-set rcm) @(:support node)) ;; case 1: node is true.
+                            (os-union (:support-set rcm) @(:support instance)))] ;; case 2: instance is true.
+              
           ;; The support of an instance is it's existing support, concatenated
           ;; with the union of the set of support for the generic, and the
           ;; incoming substitution's support set (i.e., arbitrary subs).
@@ -633,7 +638,7 @@
                            gch)] ;; If this node is not asserted, only inform other generics of this new message.
               ;(send screenprinter (fn [_] (println "GenMsg-Infer" imsg)))
               (submit-to-channel cqch imsg))))))
-    ;; Step 2:
+    ;; Step 2: (TODO: Remove this, and edit cqch above?)
     (let [new-expected-instance (:origin message)]
       (if (@(:instances node) new-expected-instance)
         (let [imsg (derivative-message message
@@ -779,7 +784,7 @@
     ;; Update origin sets of result appropriately.
     (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
-                        (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Entity {}))]
+                        (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
       (dosync (alter (:support result-term) os-concat (:support-set message)))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
