@@ -7,6 +7,9 @@
 ;;Maps the term name to the semantic type
 (defvar type-map (ref (hash-map)))
 
+;;Maps the term to its set of properties.
+(defvar property-map (ref (hash-map)))
+
 ;;Maps the term name to it's support set
 (defvar support-set (ref (hash-map)))
 
@@ -21,6 +24,16 @@
 ;;; Act/Action is an Entity/Thing with a primaction
 
 (declare type-of subtypep)
+
+(defn genericTerm? 
+  [o]
+  (when-let [pset (@property-map o)]
+    (pset :Generic)))
+
+(defn genericAnalyticTerm? 
+  [o]
+  (when-let [pset (@property-map o)]
+    (and (pset :Generic) (pset :Analytic))))
 
 ;;; Functions on Semantic Types
 ;;; ============================
@@ -77,8 +90,6 @@
 	  (define-type :Propositional '(:Entity))
 	  (define-type :WhQuestion '(:Propositional))
 	  (define-type :Proposition '(:Propositional))
-    (define-type :Generic '(:Proposition))
-    (define-type :AnalyticGeneric '(:Generic))
 	  (define-type :Act '(:Entity))
 	  (define-type :Policy '(:Entity))
 	  (define-type :Thing '(:Entity))

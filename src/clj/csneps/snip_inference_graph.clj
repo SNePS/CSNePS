@@ -820,7 +820,7 @@
     ;; on towards the variable term.
     (and
       (= (:type message) 'I-INFER)
-      (= (csneps/semantic-type-of term) :AnalyticGeneric))
+      (csneps/genericAnalyticTerm? term))
     (let [imsg (derivative-message message :origin term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
       (doseq [cqch @(:i-channels term)] 
@@ -837,7 +837,7 @@
     ;;   means the generic has been inferred, and should just be treated
     ;;   as usual.
     (and 
-      (= (csneps/semantic-type-of term) :Generic)
+      (csneps/genericTerm? term)
       (seq (:subst message)))
     (generic-infer message term)
     ;; Arbs

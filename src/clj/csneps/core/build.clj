@@ -71,9 +71,10 @@
                  (every? digit-char-p i)))))))
 
 (defn generic-term?
-  "A term is a generic term if it has a semantic type which is a subtype of :Generic."
+  "A term is a generic term if it has the property of being :Generic."
   [term]
-  (subtypep (semantic-type-of term) :Generic))
+  (when-let [pmap (@property-map term)]
+    (pmap :Generic)))
 
 (defn filler-generic?
   "The filler of a slot is generic if:
@@ -401,9 +402,13 @@
   [unif]
   (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
     (cond 
-      (= (semantic-type-of (:target unif)) :AnalyticGeneric)
+      (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
+      
+      ;(= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (install-channel s->t (:source unif) (:target unif) :i-channel)
-      (not= (semantic-type-of (:source unif)) :AnalyticGeneric) ;; TODO: Still work to do here.
+      
+      (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic)))
+      ;(not= (semantic-type-of (:source unif)) :AnalyticGeneric) ;; TODO: Still work to do here.
       (install-channel s->t (:source unif) (:target unif) :i-channel))))
 
 (defn build-internal-channels
@@ -488,11 +493,12 @@
                                        (:slots cf))]
                     (build arg (:type rel) substitution))
           genfills (generic-fillers (set fillers))
-          molnode (build-molecular-node cf fillers :csneps.core/Molecular 
-                                        (if (seq genfills)
-                                          (if (subtypep semtype :Generic) semtype :Generic)
-                                          semtype))]
+          molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype)]
+                                        ;(if (seq genfills)
+                                          ;(if (subtypep semtype :Generic) semtype :Generic)
+                                          ;semtype))]
       (when (seq genfills)
+        (dosync (alter property-map assoc molnode (set/union (@property-map molnode) #{:Generic})))
         (build-generic-channels molnode genfills))
       molnode)))
 
@@ -633,11 +639,13 @@
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
-                                              (if (seq genfils)
-                                                (if (subtypep semtype :Generic) semtype :Generic)
-                                                semtype))]
+                                              semtype)]
+                                              ;(if (seq genfils)
+                                              ;  (if (subtypep semtype :Generic) semtype :Generic)
+                                              ;  semtype))]
             
             (when (seq genfils)
+              (dosync (alter property-map assoc molnode (set/union (@property-map molnode) #{:Generic})))
               (build-generic-channels molnode genfils))
             molnode))
               
@@ -993,11 +1001,16 @@
       (do 
         (alter (:dependencies var) clojure.set/union
                  (doall (map #(substitution %) dependencies)))
-        (alter (:restriction-set var) clojure.set/union 
-             (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
+        (alter (:restriction-set var) clojure.set/union restrictions)
+        (dosync (doseq [r restrictions]
+                  (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
+             ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
       :else
-      (alter (:restriction-set var) clojure.set/union 
-             (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
+      (do 
+        (alter (:restriction-set var) clojure.set/union restrictions)
+        (dosync (doseq [r restrictions]
+                  (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
+            ; (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
     
     (alter (:not-same-as var) clojure.set/union nsvars)
     
