@@ -39,7 +39,7 @@
                                                              (second (first p)))))]
                                          (conj (doall (map inner (:down-cableset termpart))) fsym)
                                          (doall (map inner (:down-cableset termpart))))
-                                       :Propositional
+                                       (csneps.core/semantic-type-of termpart)
                                        {}))
     (atomicTerm? termpart) (outer termpart)
     (set? termpart) (set (doall (map inner termpart)))
