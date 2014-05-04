@@ -11,9 +11,12 @@
    which has size |supports1|*|supports2|, and represents every 
    combination of the two."
   [supports1 supports2]
-  (set (for [s1 supports1
-             s2 supports2]
-         (union s1 s2))))
+  (cond
+    (empty? supports1) supports2
+    (empty? supports2) supports1
+    :else (set (for [s1 supports1
+                     s2 supports2]
+                 (union s1 s2)))))
 
 (defn os-remove-hyp
   "For all sets in supports1 which contain hyp,
