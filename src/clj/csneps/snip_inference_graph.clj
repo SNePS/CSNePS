@@ -148,11 +148,15 @@
 
 (defn add-valve-selector
   [channel subst context taskid]
+  (send screenprinter (fn [_] (println "sigma" subst "f" (:filter-binds channel) "s" (:switch-binds channel)  "on ch" channel)))
+  
   (let [subst (build/substitution-application-nomerge (:switch-binds channel) 
                                                       (merge subst (:filter-binds channel)))]
     (dosync (alter (:valve-selectors channel) conj [subst context]))
     (doseq [msg @(:waiting-msgs channel)]
       (when (build/pass-message? channel msg)
+        (send screenprinter (fn [_]  (println "Pass")))
+        (dosync (alter (:waiting-msgs channel) disj msg))
         (when taskid (.increment (@infer-status taskid)))
         (.execute ^ThreadPoolExecutor executorService 
           (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid)))))
@@ -195,6 +199,7 @@
  -                 (not (visited (:originator ch))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
+        ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
         (let [subst (add-valve-selector ch subst context taskid)]
           (open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
@@ -346,35 +351,43 @@
   (if (> (:min node) 1)
     (when (:true? message)
       (cancel-infer node nil (:taskid message))
-      (when showproofs 
-        (doseq [u @(:u-channels node)]
-          (when (build/valve-open? u)
-            (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst message)) " by numericalentailment-elimination"))))))
-      (apply conj {} (doall (map #(vector % (derivative-message 
-                                              message 
-                                              :origin node 
-                                              :type 'U-INFER 
-                                              :true? true
-                                              :taskid (:taskid message)))
-                                 (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node))))))
-
+      (let [der-msg (derivative-message message 
+                                        :origin node 
+                                        :type 'U-INFER 
+                                        :true? true
+                                        :taskid (:taskid message))]
+        
+        (when showproofs 
+          (doseq [u @(:u-channels node)]
+            (when (or (build/valve-open? u) (build/pass-message? u der-msg))
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " 
+                                                   (build/apply-sub-to-term (:destination u) (:subst message)) 
+                                                   " by numericalentailment-elimination"))))))
+        
+        (apply conj {} (doall (map #(vector % der-msg)
+                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))
+    ;; :min = 1
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           match-msg (some #(when (>= (:pos %) (:min node))
                               %)
                            new-ruis)]
       (when match-msg 
         (cancel-infer node nil (:taskid message))
-        (when showproofs 
-          (doseq [u @(:u-channels node)]
-            (when (build/valve-open? u)
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst message)) " by numericalentailment-elimination"))))))
-        (apply conj {} (doall (map #(vector % (derivative-message match-msg 
-                                                                  :origin node 
-                                                                  :type 'U-INFER 
-                                                                  :true? true 
-                                                                  :fwd-infer? (:fwd-infer? message)
-                                                                  :taskid (:taskid message)))
-                                   @(:u-channels node))))))))
+        (let [der-msg (derivative-message match-msg 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :true? true 
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
+          
+          (when showproofs 
+            (doseq [u @(:u-channels node)]
+              (when (or (build/valve-open? u) (build/pass-message? u der-msg))
+                (send screenprinter (fn [_] (println "Since " node ", I derived: " 
+                                                     (build/apply-sub-to-term (:destination u) (:subst message)) 
+                                                     " by numericalentailment-elimination"))))))
+        
+          (apply conj {} (doall (map #(vector % der-msg) @(:u-channels node)))))))))
 
 (defn numericalentailment-introduction
   ""
@@ -392,7 +405,7 @@
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
     (when showproofs
       (doseq [u uch]
-        (when (build/valve-open? u)
+        (when (or (build/valve-open? u) (build/pass-message? u dermsg))
           (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by conjunction-elimination"))))))
     (zipmap uch (repeat (count uch) dermsg))))
 
@@ -633,10 +646,11 @@
                                          :type 'I-INFER
                                          :taskid (:taskid message))]
             (doseq [cqch (if (or (ct/asserted? node (ct/currentContext))
+                                 (csneps/subtypep (csneps/syntactic-type-of node) :Proposition) ;;????
                                  (@(:expected-instances node) instance))
                            @(:i-channels node)
                            gch)] ;; If this node is not asserted, only inform other generics of this new message.
-              ;(send screenprinter (fn [_] (println "GenMsg-Infer" imsg)))
+              (send screenprinter (fn [_] (println "GenMsg-Infer" imsg ":"  @(:support instance))))
               (submit-to-channel cqch imsg))))))
     ;; Step 2: (TODO: Remove this, and edit cqch above?)
     (let [new-expected-instance (:origin message)]
@@ -652,6 +666,7 @@
                                                  (if (:true? imsg) "positive" "negative") 
                                                  "restriction match for:" new-expected-instance "by generic-instantiation"))))
           (doseq [cqch @(:i-channels node)]
+            (send screenprinter (fn [_] (println "GenMsg-Infer2" imsg)))
             (submit-to-channel cqch imsg)))
         (dosync (alter (:expected-instances node) assoc new-expected-instance [(:subst message) (:true? message)]))))))
 
@@ -758,6 +773,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
+  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter (:future-fw-infer term) union (:invoke-set message))))
@@ -940,7 +956,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- print-valve [ch]
-  (if @(:valve-open ch) "-" "/"))
+  (let [selectors-this-ct (filter #(subset? @(:hyps (second %)) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
+    (cond
+      @(:valve-open ch) "-"
+      (seq selectors-this-ct) (str "~" (print-str (map #(first %) selectors-this-ct)) "~")
+      :else "/")))
 
 (defn ig-status []
   (doseq [x @csneps.core/TERMS]
