@@ -45,7 +45,7 @@
     (let [rs1 @(:restriction-set term1)]
       (every? #(not (nil? %))
               (map #(ct/asserted? 
-                      (apply-sub-to-term % {term1 term2}) 
+                      (apply-sub-to-term % {term1 term2} true) 
                       (ct/currentContext)) rs1)))))
 
 (defn restriction-nodelist-subset

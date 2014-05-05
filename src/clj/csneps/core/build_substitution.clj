@@ -6,13 +6,15 @@
 
 (defn apply-sub-to-term
   "Apply a substitution to a term."
-  ([term sub] (apply-sub-to-term variable? term sub))
-  ([variable? term sub]
-   (term-prewalk (fn [x]
-                         (if (sub x)
-                           (sub x)
-                           x))
-                        term)))
+  ([term sub] (apply-sub-to-term variable? term sub nil))
+  ([term sub ignore-type] (apply-sub-to-term variable? term sub ignore-type))
+  ([variable? term sub ignore-type]
+    (term-prewalk (fn [x]
+                          (if (sub x)
+                            (sub x)
+                            x))
+                         term
+                         :ignore-type ignore-type)))
 
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}

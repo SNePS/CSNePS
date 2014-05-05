@@ -30,7 +30,7 @@
         (:name (first (first (:down-cableset term))))))))
 
 (defn term-walk
-  [inner outer termpart]
+  [inner outer termpart & {:keys [ignore-type]}]
   (cond
     (molecularTerm? termpart) (outer (build 
                                        (if-let [fsym (or ((type-of termpart) syntype-fsym-map)
@@ -39,7 +39,7 @@
                                                              (second (first p)))))]
                                          (conj (doall (map inner (:down-cableset termpart))) fsym)
                                          (doall (map inner (:down-cableset termpart))))
-                                       (csneps.core/semantic-type-of termpart)
+                                       (if ignore-type :Entity (csneps.core/semantic-type-of termpart))
                                        {}))
     (atomicTerm? termpart) (outer termpart)
     (set? termpart) (set (doall (map inner termpart)))
@@ -57,8 +57,8 @@
     :else (error (str "Term contains unknown parts (" termpart ")"))))
 
 (defn term-prewalk
-  [f term]
-  (term-walk (partial term-prewalk f) identity (f term)))
+  [f term & {:keys [ignore-type]}]
+  (term-walk (partial term-prewalk f) identity (f term) :ignore-type ignore-type))
 
 (defn term-prewalk-test
   [term]
