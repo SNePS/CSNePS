@@ -405,3 +405,15 @@
     `(let ~(vec (mapcat #(list % `(*locals* '~%)) (keys locals)))
        ~@forms))))
 
+(defn submap?
+  "Checks whether m contains all entries in sub."
+  [^java.util.Map sub ^java.util.Map m]
+  (.containsAll (.entrySet m) (.entrySet sub)))
+
+;; Debug stuff
+
+(def screenprinter (agent nil))
+
+(defn println-agent
+  [& strs]
+  (send screenprinter (fn [_]  (println (clojure.string/join " " strs)))))
