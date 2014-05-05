@@ -520,10 +520,11 @@
   (when (and (variable? t1) (variable? t2))
     [t2 t1]))
 
+;; Variable pairs for variable changes need to go in the switch, and not in the filter.
 (defn- fix-binds
   [unifier]
   (let [sbinds (into (:sourcebind unifier) (map vvbindreverse (:targetbind unifier)))
-        tbinds (into (:targetbind unifier) (map vvbindreverse (:sourcebind unifier)))]
+        tbinds (into {} (filter #(not (and (variable? (first %)) (variable? (second %)))) (:targetbind unifier)))]
     (-> unifier (assoc :sourcebind sbinds) (assoc :targetbind tbinds))))
 
 (defn- check-binding-matches
@@ -566,6 +567,8 @@
    of a unified term, both versions are returned."
   [term]
   (let [unifiers (getUnifiers term)]
+    ;(println "UNIFIERS" unifiers)
+    ;(println "MATCHES" (apply concat (map match-single-unifier unifiers)))
     (apply concat (map match-single-unifier unifiers))))
 
 (defn unify?
