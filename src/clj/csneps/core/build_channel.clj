@@ -144,7 +144,8 @@
     (:fwd-infer? message)
     (valve-open? channel) ;; Kept for legacy reasons for now.
     (some #(and 
-             (submap? (:subst message) (first %))
+             ;; Empty map means pass everything in the ct. (Used with qvars)
+             (or (= (first %) {}) (submap? (:subst message) (first %)))
              (some 
                (fn [supportset] 
                  (clojure.set/subset? supportset @(:hyps (second %)))) 
