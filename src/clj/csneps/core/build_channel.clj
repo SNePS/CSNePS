@@ -144,8 +144,11 @@
     (:fwd-infer? message)
     (valve-open? channel) ;; Kept for legacy reasons for now.
     (some #(and 
-             (subset? (:subst message) (first %))
-             (clojure.set/subset? (:support-set message) @(:hyps (second %))))
+             (submap? (:subst message) (first %))
+             (some 
+               (fn [supportset] 
+                 (clojure.set/subset? supportset @(:hyps (second %)))) 
+               (:support-set message)))
           @(:valve-selectors channel))))
 
 ;; Watch the valve-state for changes. Adjust the operation of the channel as necessary.
