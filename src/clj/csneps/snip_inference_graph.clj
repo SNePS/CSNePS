@@ -154,7 +154,7 @@
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
     (when (not (@(:valve-selectors channel) valve-selector))
-      (dosync (alter (:valve-selectors channel) conj [subst context]))
+      (dosync (alter (:valve-selectors channel) conj valve-selector))
       (doseq [msg @(:waiting-msgs channel)]
         (when (build/pass-message? channel msg)
           (send screenprinter (fn [_]  (println "Pass")))
@@ -163,6 +163,19 @@
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
+
+;;; Two different sets of args: 
+;;; 1) [channel context] to be called by introduction rules, since once a rule has been
+;;; introduced in a context, it doesn't need to be again.
+;;; 2) [channel subst context] to be called for halting the derivation of specific
+;;; instances, since the subst matters.
+(defn remove-valve-selector
+  ([channel context] (remove-valve-selector channel nil context))
+  ([channel subst context]
+    (if subst
+      (dosync (alter (:valve-selectors channel) disj [subst context]))
+      (let [vs-for-context (filter #(= (second %) context) @(:valve-selectors channel))]
+        (dosync (alter (:valve-selectors channel) difference vs-for-context))))))
 
 ;;;;;;;;;;;;;;;;;
 ;;; Inference ;;;
