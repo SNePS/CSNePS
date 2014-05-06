@@ -348,25 +348,25 @@
   ;; If the node only requires 1 antecedent to be true, any incoming positive
   ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
   ;; maintain the RUI structure. 
-  (if (> (:min node) 1)
+  (if (= (:min node) 1)
     (when (:true? message)
       (cancel-infer node nil (:taskid message))
       (let [der-msg (derivative-message message 
                                         :origin node 
                                         :type 'U-INFER 
+                                        :support-set (os-union (:support-set message) @(:support node))
                                         :true? true
                                         :taskid (:taskid message))]
         
         (when showproofs 
           (doseq [u @(:u-channels node)]
-            (when (or (build/valve-open? u) (build/pass-message? u der-msg))
+            (when (build/pass-message? u der-msg)
               (send screenprinter (fn [_] (println "Since " node ", I derived: " 
                                                    (build/apply-sub-to-term (:destination u) (:subst message)) 
                                                    " by numericalentailment-elimination"))))))
         
-        (apply conj {} (doall (map #(vector % der-msg)
-                                   (filter #(not (ct/asserted? % (ct/currentContext))) @(:u-channels node)))))))
-    ;; :min = 1
+        (apply conj {} (doall (map #(vector % der-msg) @(:u-channels node))))))
+    ;; :min > 1
     (let [new-ruis (get-rule-use-info (:msgs node) message)
           match-msg (some #(when (>= (:pos %) (:min node))
                               %)
@@ -376,13 +376,14 @@
         (let [der-msg (derivative-message match-msg 
                                           :origin node 
                                           :type 'U-INFER 
+                                          :support-set (os-union (:support-set message) @(:support node))
                                           :true? true 
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
           
           (when showproofs 
             (doseq [u @(:u-channels node)]
-              (when (or (build/valve-open? u) (build/pass-message? u der-msg))
+              (when (build/pass-message? u der-msg)
                 (send screenprinter (fn [_] (println "Since " node ", I derived: " 
                                                      (build/apply-sub-to-term (:destination u) (:subst message)) 
                                                      " by numericalentailment-elimination"))))))
