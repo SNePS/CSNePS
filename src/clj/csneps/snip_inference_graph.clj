@@ -615,75 +615,45 @@
            (for [nmsg new-msgs] 
              (zipmap ich (repeat (count ich) nmsg))))))
 
-
-(defn generic-infer 
+;;; A generic which has had all of the restrictions of its arbitraries
+;;; met, should produce an instance (and resulting messages) for those
+;;; restrictions. That instance has origin sets which indicate that it 
+;;; could be inferred in two ways (in addition to itself being asserted): 
+;;; 1) The generic is believed, and all of the restrictions are believed.
+;;; 2) All of the restrictions are believed, and the instance is believed.
+;;; These cases are not checked by the generic - that is the job of the
+;;; origin set, which the resulting instance will have.
+(defn generic-infer
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Generic derivation:" (:subst message) "at" node "from" (:origin message)))))
-  ;; A genernic does two things, always:
-  ;; 1) Collect messages from its incoming generics/arbitraries and managing their substitutions
-  ;; 2) Collect messages from its incoming instances and comparing their substitutions with those from 1.
-  (if (or (csneps/arbitraryTerm? (:origin message)) ;; This doesn't work. Has to have come on a G-Channel,
-          (build/generic-term? (:origin message)))  ;; and be sent out a G-Channel.
-    ;; Step 1:
+  (when (or (csneps/arbitraryTerm? (:origin message))
+            (build/generic-term? (:origin message)))
     (let [new-combined-messages (get-rule-use-info (:msgs node) message)
           total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
                                                     (build/generic-term? (:originator %)))
                                                @(:ant-in-channels node)))
           rel-combined-messages (when new-combined-messages
                                   (filter #(= (:pos %) total-parent-generics) new-combined-messages))
-          gch (when new-combined-messages 
-                @(:g-channels node))]
+          cqch (union @(:i-channels node) @(:g-channels node))]
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))
-              new-support (os-concat 
-                            (os-union (:support-set rcm) @(:support node)) ;; case 1: node is true.
-                            (os-union (:support-set rcm) @(:support instance)))] ;; case 2: instance is true.
-              
-          ;; The support of an instance is it's existing support, concatenated
-          ;; with the union of the set of support for the generic, and the
-          ;; incoming substitution's support set (i.e., arbitrary subs).
-          ;(send screenprinter (fn [_] (println "OS: " @(:support instance) "::::" (os-union (:support-set rcm) @(:support node)))))
-          (dosync (alter (:support instance) os-concat new-support))
-          ;(send screenprinter (fn [_] (println "Instance: " instance (:support instance))))
-          (dosync (alter (:instances node) assoc instance (:subst rcm)))
-          
-          (when (and showproofs (ct/asserted? node (ct/currentContext)))
-            (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-          
-          (let [imsg (derivative-message rcm
+              inst-support (os-concat 
+                             (os-union (:support-set rcm) @(:support node))
+                             (os-union (:support-set rcm) @(:support instance)))
+              der-msg (derivative-message rcm
                                          :origin node
-                                         :support-set new-support
-                                         :true? (let [[_ true?] (@(:expected-instances node) instance)]
-                                                  (if-not (nil? true?)
-                                                    true?
-                                                    true))
+                                         :support-set inst-support
+                                         :true? true
                                          :type 'I-INFER
                                          :taskid (:taskid message))]
-            (doseq [cqch (if (or (ct/asserted? node (ct/currentContext))
-                                 (csneps/subtypep (csneps/syntactic-type-of node) :Proposition) ;;????
-                                 (@(:expected-instances node) instance))
-                           @(:i-channels node)
-                           gch)] ;; If this node is not asserted, only inform other generics of this new message.
-              (send screenprinter (fn [_] (println "GenMsg-Infer" imsg ":"  @(:support instance))))
-              (submit-to-channel cqch imsg))))))
-    ;; Step 2: (TODO: Remove this, and edit cqch above?)
-    (let [new-expected-instance (:origin message)]
-      (if (@(:instances node) new-expected-instance)
-        (let [imsg (derivative-message message
-                                         :origin node
-                                         :support-set (os-concat 
-                                                        (os-union (:support-set message) @(:support node))
-                                                        (os-union (:support-set message) @(:support new-expected-instance)))
-                                         :type 'I-INFER)]
-          (when showproofs
-            (send screenprinter (fn [_] (println "Since" node ", I confirmed a" 
-                                                 (if (:true? imsg) "positive" "negative") 
-                                                 "restriction match for:" new-expected-instance "by generic-instantiation"))))
-          (doseq [cqch @(:i-channels node)]
-            (send screenprinter (fn [_] (println "GenMsg-Infer2" imsg)))
-            (submit-to-channel cqch imsg)))
-        (dosync (alter (:expected-instances node) assoc new-expected-instance [(:subst message) (:true? message)]))))))
-
+          (dosync (alter (:support instance) os-concat inst-support))
+          (dosync (alter (:instances node) assoc instance (:subst rcm))) ;; idk if we need this.
+          
+          (doseq [ch cqch]
+            (when (build/pass-message? ch der-msg)
+              (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
+            (submit-to-channel ch der-msg)))))))
+              
+    
 (defn arbitrary-instantiation
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
