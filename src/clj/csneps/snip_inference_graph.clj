@@ -448,39 +448,45 @@
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     (or 
       (when pos-match
-		    (when showproofs 
-          (doseq [u @(:u-channels node)]
-            (when (and (not ((:flaggedns pos-match) (:destination u)))
-                       (not (negated? (:destination u)))
-                       (build/valve-open? u))
-              (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
-        (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
-                                               (not (negated? (:destination %))))
-                                      [% (derivative-message pos-match 
-                                                             :origin node 
-                                                             :type 'U-INFER 
-                                                             :true? false 
-                                                             :support-set (os-union (:support-set pos-match) @(:support node))
-                                                             :fwd-infer? (:fwd-infer? message)
-                                                             :taskid (:taskid message))])
-                                   @(:u-channels node)))))
+        (let [der-msg (derivative-message pos-match 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :true? false 
+                                          :support-set (os-union (:support-set pos-match) @(:support node))
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
+
+          (when showproofs 
+            (doseq [u @(:u-channels node)]
+              (when (and (not ((:flaggedns pos-match) (:destination u)))
+                         (not (negated? (:destination u)))
+                         (or (build/valve-open? u) (build/pass-message? u der-msg)))
+                (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
+          
+          (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
+                                                 (not (negated? (:destination %))))
+                                        [% der-msg])
+                                     @(:u-channels node))))))
       (when neg-match
-		    (when showproofs 
-          (doseq [u @(:u-channels node)]
-            (when (and (nil? ((:flaggedns neg-match) (:destination u)))
-                       (not (ct/asserted? (:destination u) (ct/currentContext)))
-                       (build/valve-open? u))
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst neg-match)) " by andor-elimination"))))))
-        (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
-                                               (not (ct/asserted? (:destination %) (ct/currentContext))))
-                                      [% (derivative-message neg-match 
-                                                             :origin node 
-                                                             :type 'U-INFER 
-                                                             :true? true 
-                                                             :support-set (os-union (:support-set neg-match) @(:support node))
-                                                             :fwd-infer? (:fwd-infer? message)
-                                                             :taskid (:taskid message))])
-                                   @(:u-channels node))))))))
+        (let [der-msg (derivative-message neg-match 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :true? true 
+                                          :support-set (os-union (:support-set neg-match) @(:support node))
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
+        
+          (when showproofs 
+              (doseq [u @(:u-channels node)]
+                (when (and (nil? ((:flaggedns neg-match) (:destination u)))
+                           (not (ct/asserted? (:destination u) (ct/currentContext)))
+                           (or (build/valve-open? u) (build/pass-message? u der-msg)))
+                  (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst neg-match)) " by andor-elimination"))))))
+          
+          (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
+                                                 (not (ct/asserted? (:destination %) (ct/currentContext))))
+                                        [% der-msg])
+                                     @(:u-channels node)))))))))
 
 ;     Inference can terminate
 ;        as soon as one of the following is determined to hold:
@@ -545,38 +551,46 @@
                                                    (= (:pos %) (dec (:min node))))
                                           %)
                                           new-ruis)]
-    (or (when more-than-min-true-match
+    (or 
+      (when more-than-min-true-match
+        (let [der-msg (derivative-message more-than-min-true-match 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :true? true 
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
+        
           (when showproofs 
             (doseq [u @(:u-channels node)]
               (when-not ((:flaggedns more-than-min-true-match) (:destination u))
-                (when (build/valve-open? u)
+                (when (or (build/valve-open? u) (build/pass-message? u der-msg))
                   (send screenprinter (fn [_] (println "Since" node ", I derived:" 
                                                        (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
                                                        "by thresh-elimination")))))))
+          
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
-                                        [% (derivative-message more-than-min-true-match 
-                                                               :origin node 
-                                                               :type 'U-INFER 
-                                                               :true? true 
-                                                               :fwd-infer? (:fwd-infer? message)
-                                                               :taskid (:taskid message))])
-                                     @(:u-channels node)))))
-        (when less-than-max-true-match
+                                        [% der-msg])
+                                     @(:u-channels node))))))
+      
+      (when less-than-max-true-match
+        (let [der-msg (derivative-message less-than-max-true-match 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :true? false 
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
+        
           (when showproofs 
             (doseq [u @(:u-channels node)]
               (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination u)))
-                         (build/valve-open? u))
+                         (or (build/valve-open? u) (build/pass-message? u der-msg)))
                  (send screenprinter (fn [_] (println "Since" node ", I derived: " 
                                                       (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)) 
                                                       "by thresh-elimination"))))))
+          
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
-                                        [% (derivative-message less-than-max-true-match 
-                                                               :origin node 
-                                                               :type 'U-INFER 
-                                                               :true? false 
-                                                               :fwd-infer? (:fwd-infer? message)
-                                                               :taskid (:taskid message))])
-                                     @(:u-channels node))))))))
+                                        [% der-msg])
+                                     @(:u-channels node)))))))))
 
 (defn whquestion-infer 
   [message node]
