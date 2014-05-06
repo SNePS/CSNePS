@@ -148,10 +148,8 @@
 
 (defn add-valve-selector
   [channel subst context taskid]
-  (send screenprinter (fn [_] (println "sigma" subst "f" (:filter-binds channel) "s" (:switch-binds channel)  "on ch" channel)))
-  
-  (let [subst (build/substitution-application-nomerge (:switch-binds channel) 
-                                                      (merge subst (:filter-binds channel)))]
+  (let [subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
+                                                      (or (:switch-binds channel) #{}))]
     (dosync (alter (:valve-selectors channel) conj [subst context]))
     (doseq [msg @(:waiting-msgs channel)]
       (when (build/pass-message? channel msg)
