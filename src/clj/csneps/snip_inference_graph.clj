@@ -149,15 +149,19 @@
 (defn add-valve-selector
   [channel subst context taskid]
   (let [subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
-                                                      (or (:switch-binds channel) #{}))]
-    (dosync (alter (:valve-selectors channel) conj [subst context]))
-    (doseq [msg @(:waiting-msgs channel)]
-      (when (build/pass-message? channel msg)
-        (send screenprinter (fn [_]  (println "Pass")))
-        (dosync (alter (:waiting-msgs channel) disj msg))
-        (when taskid (.increment (@infer-status taskid)))
-        (.execute ^ThreadPoolExecutor executorService 
-          (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid)))))
+                                                      (or (:switch-binds channel) #{}))
+        valve-selector [subst context]]
+    ;; Only add the selector and check for new matching messages if this is actually a new selector.
+    ;; New messages will otherwise be checked upon being submitted to the channel.
+    (when (not (@(:valve-selectors channel) valve-selector))
+      (dosync (alter (:valve-selectors channel) conj [subst context]))
+      (doseq [msg @(:waiting-msgs channel)]
+        (when (build/pass-message? channel msg)
+          (send screenprinter (fn [_]  (println "Pass")))
+          (dosync (alter (:waiting-msgs channel) disj msg))
+          (when taskid (.increment (@infer-status taskid)))
+          (.execute ^ThreadPoolExecutor executorService 
+            (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
 
 ;;;;;;;;;;;;;;;;;
