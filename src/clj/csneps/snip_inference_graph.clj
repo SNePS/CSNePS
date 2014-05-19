@@ -170,12 +170,13 @@
 ;;; 2) [channel subst context] to be called for halting the derivation of specific
 ;;; instances, since the subst matters.
 (defn remove-valve-selector
-  ([channel context] (remove-valve-selector channel nil context))
-  ([channel subst context]
-    (if subst
-      (dosync (alter (:valve-selectors channel) disj [subst context]))
-      (let [vs-for-context (filter #(= (second %) context) @(:valve-selectors channel))]
-        (dosync (alter (:valve-selectors channel) difference vs-for-context))))))
+  ([channel hyps] (remove-valve-selector channel nil hyps))
+  ([channel subst hyps]
+    (let [rel-vses (filter #(clojure.set/subset? hyps @(:hyps (second %))) @(:valve-selectors channel))
+          match-vses (when subst (filter #(submap? (first %) subst) rel-vses))]
+      (if subst
+        (dosync (alter (:valve-selectors channel) difference match-vses))
+        (dosync (alter (:valve-selectors channel) difference rel-vses))))))
 
 ;;;;;;;;;;;;;;;;;
 ;;; Inference ;;;
@@ -216,7 +217,7 @@
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
         ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
         (let [subst (add-valve-selector ch subst context taskid)]
-          (open-valve ch taskid)
+          ;(open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
           (when taskid (.increment (@infer-status taskid)))
           (.execute ^ThreadPoolExecutor executorService 
@@ -236,9 +237,10 @@
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
-  ([term] (cancel-infer term nil nil))
-  ([term cancel-for-term] (cancel-infer term cancel-for-term nil))
-  ([term cancel-for-term taskid]
+  ([term] (cancel-infer term nil nil nil nil))
+  ([term cancel-for-term] (cancel-infer term cancel-for-term nil nil nil))
+  ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid nil nil)) 
+  ([term cancel-for-term taskid subst hyps]
     (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
                (every? #(not @(:valve-open %)) @(:u-channels term)))
       (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
@@ -246,12 +248,18 @@
         (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
       (doseq [ch @(:ant-in-channels term)]
         (when (empty? @(:future-bw-infer term))
-          (close-valve ch))
+          (if hyps
+            (remove-valve-selector ch subst hyps)
+            (close-valve ch)))
         (.increment (@infer-status taskid))
         (.execute ^ThreadPoolExecutor executorService 
             (priority-partial Integer/MAX_VALUE 
-                              (fn [t c id] (cancel-infer t c id) (.decrement (@infer-status id)))
-                              (:originator ch) cancel-for-term taskid))))))
+                              (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
+                              (:originator ch) 
+                              cancel-for-term 
+                              taskid
+                              subst ;; This needs to be re-calculated!!
+                              hyps))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
@@ -365,7 +373,7 @@
   ;; maintain the RUI structure. 
   (if (= (:min node) 1)
     (when (:true? message)
-      (cancel-infer node nil (:taskid message))
+      ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
       (let [der-msg (derivative-message message 
                                         :origin node 
                                         :type 'U-INFER 
@@ -387,7 +395,7 @@
                               %)
                            new-ruis)]
       (when match-msg 
-        (cancel-infer node nil (:taskid message))
+        ;(cancel-infer node nil (:taskid message) (:subst match-msg) (:support-set match-msg))
         (let [der-msg (derivative-message match-msg 
                                           :origin node 
                                           :type 'U-INFER 
@@ -732,6 +740,17 @@
                     ch gch]
                 [ch msg])]))))
 
+;; When a message reaches a closure, the result is that same message,
+;; with substitutions for the closed variables removed. 
+(defn closure-elimination
+  [message node]
+  (let [result-msg (derivative-message message
+                                       :origin node
+                                       :subst (apply dissoc (:subst message) (map #(:var-label %) (:closed-vars node)))
+                                       :support (os-union (:support-set message) (:support node)))
+        ich @(:i-channels node)]
+    (zipmap ich (repeat (count ich) result-msg))))
+
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node]
@@ -748,6 +767,7 @@
      :csneps.core/Nand)  (andor-elimination message node)
     (:csneps.core/Thresh
      :csneps.core/Equivalence) (thresh-elimination message node)
+    :csneos.core/Closure (closure-elimination message node)
     nil ;default
     ))
 
