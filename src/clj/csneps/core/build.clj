@@ -1053,6 +1053,36 @@
       (for [k (keys qvar-rsts)]
         (build-var :qvar k (get qvar-rsts k) substitution notsames)))))
 
+(defn function-symbol?
+  "Checks if a literal is a function symbol." 
+  [literal]
+  (@cf/FN2CF literal))
+  
+(defn expand-rst
+  [var rst]
+  (cond
+    (function-symbol? rst) [rst var]
+    (symbol? rst) ['Isa var rst]
+    (and (seqable? rst)
+         (not (some #(= % var) rst))) (into [(first rst) var] (rest rst))
+    :else rst))
+
+(defn expand-rsts
+  "Expands rsts to account for the syntactic sugar allowed in writing them."
+  [rsts]
+  ;; rsts are a map from var name to restrictions. 
+  (let [var-rsts-pairs (vec rsts)]
+    (into {}
+          (for [[var rsts] var-rsts-pairs]
+            [var (vec (map #(expand-rst var %) rsts))]))))
+
+(defn expand-ind-dep-rsts
+  [rsts]
+  (let [var-rsts-pairs (vec rsts)]
+    (into {}
+          (for [[var dep-rsts] var-rsts-pairs]
+            [var (list (first dep-rsts) (vec (map #(expand-rst var %) (second dep-rsts))))]))))
+
 (defn- merge-error
   [fir lat]
   (when (not= fir lat)
@@ -1174,8 +1204,9 @@
   [expr]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
-          arb-rsts (generate-notsames arb-rsts)
-          qvar-rsts (generate-notsames qvar-rsts)
+          arb-rsts (generate-notsames (expand-rsts arb-rsts))
+          qvar-rsts (generate-notsames (expand-rsts qvar-rsts))
+          ind-dep-rsts (expand-ind-dep-rsts ind-dep-rsts)
           [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
           substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
