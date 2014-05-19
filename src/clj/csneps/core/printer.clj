@@ -87,10 +87,16 @@
             :csneps.core/QueryVariable (str "(" (:var-label term) " "))
           (print-set @(:restriction-set term) false) ")")))))
 
+(defn print-closure
+  [term]
+  (print-str (list 'close (map #(:var-label %) (:closed-vars term)) (print-term (first (:down-cableset term))))))
+
 (defn print-unnamed-molecular-term
   [term]
   ;(println "Printing term: " term)
   (condp = (type-of term)
+    :csneps.core/Closure
+      (print-closure term)
     :csneps.core/Negation
       (print-negation (first (:down-cableset term)))
     :csneps.core/Negationbyfailure
@@ -249,6 +255,9 @@
   (.write ^java.io.Writer w (str (term-printer o))))
 
 (defmethod print-method csneps.core.Molecular [o w]
+  (.write ^java.io.Writer w (str (term-printer o))))
+
+(defmethod print-method csneps.core.Closure [o w]
   (.write ^java.io.Writer w (str (term-printer o))))
 
 (defmethod print-method csneps.core.Carule [o w]

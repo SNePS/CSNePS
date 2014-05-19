@@ -302,6 +302,31 @@
    print-forms (ref nil)
    type ::CARule])
 
+(defrecord2 Closure
+   [name nil
+   activation-value 0.0
+   fired nil
+   recorded-firing nil
+   activation-marker nil
+   i-channels (ref (hash-set))
+   u-channels (ref (hash-set))
+   g-channels (ref (hash-set))
+   ant-in-channels (ref (hash-set))
+   future-fw-infer (ref (hash-set))
+   future-bw-infer (ref (hash-set))
+   instances (ref (hash-map))
+   expected-instances (ref (hash-map))
+   msgs (ref nil)
+   up-cablesetw (ref (hash-map))
+   support (ref (hash-set))
+   ;;Additions for Molecular
+   caseframe nil
+   down-cableset '()
+   down-weights (ref '())
+   ;;Additions for Closure
+   closed-vars nil
+   type ::Closure])
+
 
 (defrecord2 Param2op
    [name nil
@@ -662,6 +687,7 @@
   (define-syn-type ::QueryVariable ::Variable)
   (define-syn-type ::Molecular ::Term)
   (define-syn-type ::CARule ::Molecular)
+  (define-syn-type ::Closure ::Molecular)
   (define-syn-type ::Param2op ::Molecular)
   (define-syn-type ::Andor ::Param2op)
   (define-syn-type ::Disjunction ::Andor)
@@ -694,6 +720,7 @@
    ::QueryVariable (eval 'csneps.core/new-query-variable)
    ::Molecular (eval 'csneps.core/new-molecular)
    ::CARule (eval 'csneps.core/new-carule)
+   ::Closure (eval 'csneps.core/new-closure)
    ::Param2op (eval 'csneps.core/new-param2op)
    ::Andor (eval 'csneps.core/new-andor)
    ::Disjunction (eval 'csneps.core/new-disjunction)

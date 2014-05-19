@@ -196,7 +196,7 @@
             are to be used instead of the type proposition;
        the min parameter, given for andor and thresh;
        the max parameter, given for andor and thresh."
-  [cf dcs syntype semtype & {:keys [fsemtype min max]}]
+  [cf dcs syntype semtype & {:keys [fsemtype min max closed-vars]}]
   ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
   (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
@@ -210,6 +210,7 @@
                                                         :down-cableset dcs-sets
                                                         :min (if (nil? min) 0 min)
                                                         :max (if (nil? max) 0 max)
+                                                        :closed-vars closed-vars
                                                         :msgs (create-message-structure syntype dcs-sets)})]
                  (initialize-syntype wft)
                  (dosync 
@@ -225,7 +226,7 @@
                  wft))]
 
     (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))))
-
+  
 
 (defn build-andor
   "Build a term for andor
@@ -819,12 +820,21 @@
                                vars)
             vars-name-map (into {} (map (fn [x] [(:var-label x) x]) vars-in-closure))
             closed-var-names (if (seq? (second expr)) (second expr) (list (second expr)))
-            closed-vars (map vars-name-map closed-var-names)]
-	      (build-molecular-node (cf/find-frame 'close)
-	                            (list (build (set closed-vars) :Entity substitution)
-	                                  (build (third expr) :Proposition substitution))
-	                            :csneps.core/Molecular
-	                            semtype))
+            closed-vars (map vars-name-map closed-var-names)
+            fillers (build (set (rest (rest expr))) :Proposition substitution)]
+        (println fillers)
+        
+          (build-molecular-node (cf/find-frame 'close)
+	                              (list fillers)
+	                              :csneps.core/Closure
+	                              semtype
+                                :closed-vars closed-vars))
+        
+	      ;(build-molecular-node (cf/find-frame 'close)
+	      ;                      (list (build (set closed-vars) :Entity substitution)
+	      ;                            (build (third expr) :Proposition substitution))
+	      ;                      :csneps.core/Molecular
+	      ;                      semtype))
       rule 
       (let [rulename (second expr)
             lhs (nth expr 2)
