@@ -641,6 +641,15 @@
            (for [nmsg new-msgs] 
              (zipmap ich (repeat (count ich) nmsg))))))
 
+(defn g-chan-to-node?
+  [orig dest]
+  (some #(= (:destination %) dest) @(:g-channels orig)))
+
+(defn apply-to-all-restrictions
+  [subst arb]
+  (let [rsts @(:restriction-set arb)]
+    (map #(build/apply-sub-to-term % subst) rsts)))
+
 ;;; A generic which has had all of the restrictions of its arbitraries
 ;;; met, should produce an instance (and resulting messages) for those
 ;;; restrictions. That instance has origin sets which indicate that it 
@@ -651,8 +660,8 @@
 ;;; origin set, which the resulting instance will have.
 (defn generic-infer
   [message node]
-  (when (or (csneps/arbitraryTerm? (:origin message))
-            (build/generic-term? (:origin message)))
+  ;; Instance from g-channel
+  (if (g-chan-to-node? (:origin message) node)
     (let [new-combined-messages (get-rule-use-info (:msgs node) message)
           total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
                                                     (build/generic-term? (:originator %)))
@@ -677,7 +686,24 @@
           (doseq [ch cqch]
             (when (build/pass-message? ch der-msg)
               (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-            (submit-to-channel ch der-msg)))))))
+            (submit-to-channel ch der-msg)))))
+    ;; Instance from unifying ground term.
+    (let [instance (:origin message)
+          outgoing-support (os-union (:support-set message)
+                                     #{(set (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                                         (filter #(csneps/arbitraryTerm? %) 
+                                                                 (keys (:subst message))))))})
+          der-msg (derivative-message message
+                                      :origin node
+                                      :support-set outgoing-support
+                                      :type 'I-INFER
+                                      :taskid (:taskid message))
+          cqch (union @(:i-channels node) @(:g-channels node))]
+      ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
+      (doseq [ch cqch]
+         (when (build/pass-message? ch der-msg)
+           (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
+         (submit-to-channel ch der-msg)))))
               
     
 (defn arbitrary-instantiation
