@@ -72,4 +72,7 @@
 (assert '(Isa Lassie Dog))
 (assert '(not (Carry Fido)))
 (assert '(Carry Lassie))
+(askif '(not (Walk Lassie)))
+(askif '(Carry Fido))
+
 (askwh '(Carry (?x (Isa ?x Dog))))
