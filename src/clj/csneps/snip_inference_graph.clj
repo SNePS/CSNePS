@@ -121,13 +121,12 @@
   ;; When the assertion makes terms negated, the negated terms need to send out
   ;; on their i-channels that they are now negated.
   (let [dcs-map (cf/dcsRelationTermsetMap term)
-        nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))
-        msg (when nor-dcs (new-message {:origin term, :support-set #{#{term}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer}))]
+        nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))]
     (when nor-dcs
       (doseq [negterm nor-dcs]
         (doall (map #(submit-to-channel 
                        % 
-                       (new-message {:origin negterm, :support-set #{#{negterm}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
+                       (new-message {:origin negterm, :support-set #{#{term}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
                     @(:i-channels negterm)))))))
 
 (defn open-valve 
@@ -330,20 +329,17 @@
 (defn negation-elimination
   "Invert the truth of the :true? key in the message, and pass onward."
   [message node]
-  (let [new-ruis (get-rule-use-info (:msgs node) message)
-        dermsg (derivative-message message
+  (let [dermsg (derivative-message message
                                    :origin node
-                                   :support-set (conj (:support-set message) node)
+                                   :support-set (:support-set message)
                                    :true? false
                                    :type 'U-INFER)
         uch @(:u-channels node)]
-    (when debug (send screenprinter (fn [_]  (println "NEX" new-ruis))))
-    nil
-    (when (seq new-ruis)
-      (when showproofs 
-        (doseq [u uch]
-          (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
-      (zipmap uch (repeat (count uch) dermsg)))))
+
+    (when showproofs 
+      (doseq [u uch]
+        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
+      (zipmap uch (repeat (count uch) dermsg))))
 
 (defn negation-introduction
   "Pretty much conjunction-introduction, but with :neg instead of :pos"
@@ -472,6 +468,7 @@
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     (or 
       (when pos-match
+        (send screenprinter (fn [_]  (println "msg" (:support-set pos-match) "node" @(:support node))))
         (let [der-msg (derivative-message pos-match 
                                           :origin node 
                                           :type 'U-INFER 
@@ -492,6 +489,7 @@
                                         [% der-msg])
                                      @(:u-channels node))))))
       (when neg-match
+        (send screenprinter (fn [_]  (println "msg" (:support-set neg-match) "node" @(:support node))))
         (let [der-msg (derivative-message neg-match 
                                           :origin node 
                                           :type 'U-INFER 
@@ -793,7 +791,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter (:future-fw-infer term) union (:invoke-set message))))
@@ -822,6 +820,7 @@
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
       (dosync (alter (:support result-term) os-concat (:support-set message)))
+      (send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
                 (:fwd-infer? message))
@@ -831,10 +830,13 @@
                                    :origin term
                                    :support-set @(:support result-term)
                                    :type 'I-INFER)]
-        (doseq [cqch @(:i-channels term)] (submit-to-channel cqch imsg)))
+        (doseq [cqch @(:i-channels term)] 
+          (submit-to-channel cqch imsg)))
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
-      (when (@(:future-bw-infer term) result-term)
-          (cancel-infer-of term)))
+      ;TODO: Bring this back, once cance;-infer is fixed.
+      ;(when (@(:future-bw-infer term) result-term)
+      ;    (cancel-infer-of term))
+      )
       (when (:true? message)
         ;; Apply elimination rules and report results
         (when-let [result (elimination-infer message term)]

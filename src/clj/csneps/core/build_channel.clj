@@ -124,14 +124,12 @@
     ;; Therfore, originator needs to send a message to destination
     ;; informing it that it is true.
     
-    ;; Inform the I-Channels that this is true.
-    (when (ct/asserted? originator (ct/currentContext))
-      (submit-to-channel channel (new-message {:origin originator, :support-set #{#{originator}}, :type 'I-INFER})))
-    ;; Handle negations
-    (let [nor-cs (@(:up-cablesetw originator) (slot/find-slot 'nor))
-          up-term (when nor-cs (some #(when (ct/asserted? % (ct/currentContext)) %) @nor-cs))]
-      (when up-term
-        (submit-to-channel channel (new-message {:origin originator, :support-set #{#{up-term}}, :type 'I-INFER, :true? false}))))
+    ;; Submit a message for the originator. 
+    (submit-to-channel channel (new-message {:origin originator, :support-set #{#{originator}}, :type 'I-INFER}))
+    ;; When a term has a negation, submit a message saying so.
+    (when-let [nor-cs (@(:up-cablesetw originator) (slot/find-slot 'nor))]
+      (doseq [nor @nor-cs]
+        (submit-to-channel channel (new-message {:origin originator, :support-set #{#{nor}}, :type 'I-INFER, :true? false}))))
     channel))
 
 (defn valve-open?

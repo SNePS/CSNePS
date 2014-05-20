@@ -822,13 +822,12 @@
             closed-var-names (if (seq? (second expr)) (second expr) (list (second expr)))
             closed-vars (map vars-name-map closed-var-names)
             fillers (build (set (rest (rest expr))) :Proposition substitution)]
-        (println fillers)
         
-          (build-molecular-node (cf/find-frame 'close)
-	                              (list fillers)
-	                              :csneps.core/Closure
-	                              semtype
-                                :closed-vars closed-vars))
+        (build-molecular-node (cf/find-frame 'close)
+	                            (list fillers)
+	                            :csneps.core/Closure
+	                            semtype
+                              :closed-vars closed-vars))
         
 	      ;(build-molecular-node (cf/find-frame 'close)
 	      ;                      (list (build (set closed-vars) :Entity substitution)
