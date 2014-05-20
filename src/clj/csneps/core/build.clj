@@ -162,7 +162,7 @@
         (dosync (alter type-map assoc (:name term) (first gcsub))))
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
-  (when (subtypep newtype :Proposition)
+  (when (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
     (dosync (alter (:support term) conj #{term})))
   term)
 
@@ -219,6 +219,7 @@
 
                  ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
                  (doseq [unif (match wft)]
+                     (println unif)
                    (build-unifier-channels unif))
                  (addTermToUnificationTree wft)
 
@@ -408,7 +409,8 @@
       ;(= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (install-channel s->t (:source unif) (:target unif) :i-channel)
       
-      (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic)))
+      (or (not (@property-map (:source unif)))
+          (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic))))
       ;(not= (semantic-type-of (:source unif)) :AnalyticGeneric) ;; TODO: Still work to do here.
       (install-channel s->t (:source unif) (:target unif) :i-channel))))
 
