@@ -329,7 +329,10 @@
 (defn negation-elimination
   "Invert the truth of the :true? key in the message, and pass onward."
   [message node]
-  (let [dermsg (derivative-message message
+  ;; new-msgs is used in this case, not because we want to combine messages, but
+  ;; because we want to ensure we don't re-produce the same message.
+  (let [new-msgs (get-rule-use-info (:msgs node) message)
+        dermsg (derivative-message message
                                    :origin node
                                    :support-set (:support-set message)
                                    :true? false
@@ -339,7 +342,8 @@
     (when showproofs 
       (doseq [u uch]
         (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
-      (zipmap uch (repeat (count uch) dermsg))))
+    (when (seq new-msgs) 
+      (zipmap uch (repeat (count uch) dermsg)))))
 
 (defn negation-introduction
   "Pretty much conjunction-introduction, but with :neg instead of :pos"
