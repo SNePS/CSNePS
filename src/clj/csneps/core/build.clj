@@ -163,7 +163,7 @@
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
   (when (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
-    (dosync (alter (:support term) conj #{term})))
+    (dosync (alter (:support term) conj ['hyp #{term}])))
   term)
 
 (defn check-min-max
@@ -219,7 +219,6 @@
 
                  ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
                  (doseq [unif (match wft)]
-                     (println unif)
                    (build-unifier-channels unif))
                  (addTermToUnificationTree wft)
 

@@ -105,7 +105,7 @@
   ;; Send the information about this assertion forward in the graph.
   ;; Positive instances:
   (let [msg (new-message {:origin term, 
-                          :support-set #{#{term}}, 
+                          :support-set #{['hyp #{term}]}, 
                           :type 'I-INFER, 
                           :fwd-infer? fwd-infer
                           :pos 1
@@ -115,7 +115,7 @@
   ;; Conjunctions:
   ;; Conjunctions have no antecedents if they are true, so the U-INFER messages must be passed on here
   (when (= (csneps/type-of term) :csneps.core/Conjunction)
-    (let [msg (new-message {:origin term, :support-set #{#{term}}, :type 'U-INFER, :fwd-infer? fwd-infer})]
+    (let [msg (new-message {:origin term, :support-set #{['der #{term}]}, :type 'U-INFER, :fwd-infer? fwd-infer})]
       (doall (map #(submit-to-channel % msg) @(:u-channels term)))))
   ;; Negations:
   ;; When the assertion makes terms negated, the negated terms need to send out
@@ -126,7 +126,7 @@
       (doseq [negterm nor-dcs]
         (doall (map #(submit-to-channel 
                        % 
-                       (new-message {:origin negterm, :support-set #{#{term}}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
+                       (new-message {:origin negterm, :support-set #{['der #{term}]}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
                     @(:i-channels negterm)))))))
 
 (defn open-valve 
@@ -334,7 +334,7 @@
   (let [new-msgs (get-rule-use-info (:msgs node) message)
         dermsg (derivative-message message
                                    :origin node
-                                   :support-set (:support-set message)
+                                   :support-set (der-tag (:support-set message))
                                    :true? false
                                    :type 'U-INFER)
         uch @(:u-channels node)]
@@ -352,7 +352,7 @@
         der-rui (some #(= (:neg %) (count @(:u-channels node))) new-ruis)
         dermsg (derivative-message message
                                    :origin node
-                                   :support-set (conj (:support-set message) node)
+                                   :support-set (conj (:support-set message) node) ;; TODO: THIS IS WRONG
                                    :true? true
                                    :type 'I-INFER)
         ich @(:i-channels node)]
@@ -423,7 +423,7 @@
   [message node]
   (let [dermsg (derivative-message message 
                                    :origin node
-                                   :support-set @(:support node) ;(conj (:support-set message) node)
+                                   :support-set (der-tag @(:support node)) ;(conj (:support-set message) node)
                                    :type 'U-INFER)
         uch @(:u-channels node)]
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
@@ -441,10 +441,10 @@
         der-rui-t (some #(when (= (:pos %) (count @(:u-channels node))) %) new-ruis)
         der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
         dermsg-t (derivative-message (imessage-from-ymessage message node)
-                                     :support-set der-rui-t)
+                                     :support-set (der-tag der-rui-t))
         dermsg-f (derivative-message message 
                                    :origin node
-                                   :support-set (:support-set der-rui-f)
+                                   :support-set (der-tag (:support-set der-rui-f))
                                    :type 'I-INFER
                                    :true? false)
         ich @(:i-channels node)]
@@ -452,11 +452,11 @@
       der-rui-t (do 
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: " node " by conjunction-introduction"))))
-                  [true (:support-set der-rui-t) (zipmap ich (repeat (count ich) dermsg-t))])
+                  [true (der-tag (:support-set der-rui-t)) (zipmap ich (repeat (count ich) dermsg-t))])
       der-rui-f (do
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction"))))
-                  [false (:support-set der-rui-f) (zipmap ich (repeat (count ich) dermsg-f))])
+                  [false (der-tag (:support-set der-rui-f)) (zipmap ich (repeat (count ich) dermsg-f))])
       :else nil)))
 
 (defn andor-elimination
@@ -540,24 +540,24 @@
       (when case2
         (let [dermsg (derivative-message message 
                                          :origin node
-                                         :support-set (:support-set case2)
+                                         :support-set (der-tag (:support-set case2))
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
             (doseq [i ich]
               (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
-          [true (:support-set case2) (zipmap ich (repeat (count ich) dermsg))]))
+          [true (der-tag (:support-set case2)) (zipmap ich (repeat (count ich) dermsg))]))
       (isa? (csneps/syntactic-type-of node) :csneps.core/Thresh)
       (when case1
         (let [dermsg (derivative-message message 
                                          :origin node
-                                         :support-set (:support-set case1)
+                                         :support-set (der-tag (:support-set case1))
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
             (doseq [i ich]
               (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
-          [true (:support-set case1) (zipmap ich (repeat (count ich) dermsg))])))))
+          [true (der-tag (:support-set case1)) (zipmap ich (repeat (count ich) dermsg))])))))
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
@@ -687,12 +687,12 @@
             (when (build/pass-message? ch der-msg)
               (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
             (submit-to-channel ch der-msg)))))
-    ;; Instance from unifying ground term.
+    ;; Instance from unifying term.
     (let [instance (:origin message)
           outgoing-support (os-union (:support-set message)
-                                     #{(set (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
-                                                         (filter #(csneps/arbitraryTerm? %) 
-                                                                 (keys (:subst message))))))})
+                                     #{['der (set (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                                               (filter #(csneps/arbitraryTerm? %) 
+                                                                       (keys (:subst message))))))]})
           der-msg (derivative-message message
                                       :origin node
                                       :support-set outgoing-support
