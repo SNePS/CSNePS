@@ -108,7 +108,8 @@
 
 (defn build-channel
   [originator destination target-binds source-binds]
-  (let [channel (or 
+  (let [target-binds (into {} (filter #(not (queryTerm? (second %))) target-binds))
+        channel (or 
                   (find-channel originator destination)
                   (new-channel {:originator originator
                                 :destination destination
