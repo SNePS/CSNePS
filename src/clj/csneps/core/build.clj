@@ -200,11 +200,12 @@
   ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
   (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
+        existing-term (cond 
+                        max (find-exact syntype cf dcs-sets :min min :max max)
+                        min (find-exact syntype cf dcs-sets :min min)
+                        :else (find-exact syntype cf dcs-sets))
         term (or
-               (cond 
-                 max (find-exact syntype cf dcs-sets :min min :max max)
-                 min (find-exact syntype cf dcs-sets :min min)
-                 :else (find-exact syntype cf dcs-sets))
+               existing-term
                (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
                                                         :caseframe cf
                                                         :down-cableset dcs-sets
@@ -217,15 +218,18 @@
                    (alter TERMS assoc (:name wft) wft)
                    (alter type-map assoc (:name wft) (:type cf)))
 
-                 ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
-                 (doseq [unif (match wft)]
-                   (build-unifier-channels unif))
-                 (addTermToUnificationTree wft)
-
                  (cf/add-caseframe-term wft :cf cf)
                  wft))]
 
-    (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))))
+    (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
+    
+    ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
+    (when-not existing-term
+      (doseq [unif (match term)]
+        (build-unifier-channels unif))
+      (addTermToUnificationTree term))
+    
+    term))
   
 
 (defn build-andor
@@ -404,13 +408,13 @@
   (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
     (cond 
       (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
-      
-      ;(= (semantic-type-of (:target unif)) :AnalyticGeneric)
       (install-channel s->t (:source unif) (:target unif) :i-channel)
+      
+      (= (semantic-type-of (:source unif)) :WhQuestion)
+      nil
       
       (or (not (@property-map (:source unif)))
           (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic))))
-      ;(not= (semantic-type-of (:source unif)) :AnalyticGeneric) ;; TODO: Still work to do here.
       (install-channel s->t (:source unif) (:target unif) :i-channel))))
 
 (defn build-internal-channels
@@ -999,16 +1003,14 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution notsames & {:keys [dependencies]}]
   (let [var (substitution var-label)
-        nsvars (set (map #(substitution %) (notsames var-label)))
-        restrictions (map #(build % :Propositional substitution) rsts)]
+        nsvars (set (map #(substitution %) (notsames var-label)))]
     (alter TERMS assoc (:name var) var)
-    
     (cond 
       (= quant :qvar) 
-        (alter (:restriction-set var) clojure.set/union 
-               (set (map #(adjustType % :Propositional :WhQuestion) restrictions)))
+      (alter (:restriction-set var) clojure.set/union 
+             (set (map #(build % :WhQuestion substitution) rsts)))
       (and (= quant :some) (not (nil? dependencies)))
-      (do 
+      (let [restrictions (map #(build % :Propositional substitution) rsts)] 
         (alter (:dependencies var) clojure.set/union
                  (doall (map #(substitution %) dependencies)))
         (alter (:restriction-set var) clojure.set/union restrictions)
@@ -1016,7 +1018,7 @@
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
              ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
       :else
-      (do 
+      (let [restrictions (map #(build % :Propositional substitution) rsts)] 
         (alter (:restriction-set var) clojure.set/union restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
@@ -1188,9 +1190,9 @@
     (and (synvariable? assertion-spec)
          (not (buildingqvar assertion-spec))) ;; Don't add the Entity restriction later! 
     (let [qvar-rsts (assoc qvar-rsts assertion-spec (list (list 'Isa assertion-spec 'Entity)))]
-      [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts])
+      [assertion-spec arb-rsts ind-deps-rsts qvar-rsts])
     :else 
-    [assertion-spec qvar-rsts ind-deps-rsts qvar-rsts]))
+    [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]))
 
 (defn check-and-build-variables
   "Given a top-level build expression, checks that expression for
