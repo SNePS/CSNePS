@@ -171,11 +171,24 @@
 (defn remove-valve-selector
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
-    (let [rel-vses (filter #(clojure.set/subset? hyps @(:hyps (second %))) @(:valve-selectors channel))
-          match-vses (when subst (filter #(submap? (first %) subst) rel-vses))]
+    (let [rel-vses (loop [vs (seq @(:valve-selectors channel))
+                          rel-vses #{}]
+                     (cond
+                       (empty? vs) rel-vses
+                       (some #(clojure.set/subset? (second %) @(:hyps (second (first vs)))) hyps) (recur 
+                                                                                                    (rest vs)
+                                                                                                    (conj rel-vses (first vs)))
+                       :else (recur
+                               (rest vs)
+                               rel-vses)))
+          blah (println rel-vses)
+          match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
       (if subst
         (dosync (alter (:valve-selectors channel) difference match-vses))
-        (dosync (alter (:valve-selectors channel) difference rel-vses))))))
+        (dosync (alter (:valve-selectors channel) difference rel-vses)))
+      (if subst
+        (when (seq match-vses) true)
+        (when (seq rel-vses) true)))))
 
 ;;;;;;;;;;;;;;;;;
 ;;; Inference ;;;
@@ -236,29 +249,55 @@
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
-  ([term] (cancel-infer term nil nil nil nil))
-  ([term cancel-for-term] (cancel-infer term cancel-for-term nil nil nil))
-  ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid nil nil)) 
+  ([term] (cancel-infer term nil nil nil @(:support term)))
+  ([term cancel-for-term] (cancel-infer term cancel-for-term nil nil @(:support term)))
+  ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid nil @(:support term))) 
   ([term cancel-for-term taskid subst hyps]
-    (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
-               (every? #(not @(:valve-open %)) @(:u-channels term)))
-      (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
-      (when cancel-for-term
-        (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
-      (doseq [ch @(:ant-in-channels term)]
-        (when (empty? @(:future-bw-infer term))
-          (if hyps
-            (remove-valve-selector ch subst hyps)
-            (close-valve ch)))
-        (.increment (@infer-status taskid))
-        (.execute ^ThreadPoolExecutor executorService 
-            (priority-partial Integer/MAX_VALUE 
-                              (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
-                              (:originator ch) 
-                              cancel-for-term 
-                              taskid
-                              subst ;; This needs to be re-calculated!!
-                              hyps))))))
+    (when cancel-for-term
+      (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
+    ;(when (empty? @(:future-bw-infer term))
+      (let [affected-chs (remove nil? 
+                                 (doall 
+                                   (for [ch @(:ant-in-channels term)
+                                         :let [subst (build/substitution-application-nomerge 
+                                                       (merge subst (:filter-binds ch))
+                                                       (or (:switch-binds ch) #{}))]]
+                                     (when (remove-valve-selector ch subst hyps) [ch subst]))))]
+        (when (seq affected-chs)
+          (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
+          (doseq [[ch subst] affected-chs]
+            (.increment (@infer-status taskid))
+            (.execute ^ThreadPoolExecutor executorService 
+                (priority-partial Integer/MAX_VALUE 
+                                  (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
+                                  (:originator ch) 
+                                  cancel-for-term 
+                                  taskid
+                                  subst
+                                  hyps)))))));)
+    
+    
+;    
+;    
+;    (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
+;               (every? #(not @(:valve-open %)) @(:u-channels term)))
+;      (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
+;      (when cancel-for-term
+;        (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
+;      (doseq [ch @(:ant-in-channels term)]
+;        (when (empty? @(:future-bw-infer term))
+;          (if hyps
+;            (remove-valve-selector ch subst hyps)
+;            (close-valve ch)))
+;        (.increment (@infer-status taskid))
+;        (.execute ^ThreadPoolExecutor executorService 
+;            (priority-partial Integer/MAX_VALUE 
+;                              (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
+;                              (:originator ch) 
+;                              cancel-for-term 
+;                              taskid
+;                              subst ;; This needs to be re-calculated!!
+;                              hyps))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
