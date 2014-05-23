@@ -248,9 +248,9 @@
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
    has top priority."
-  ([term] (cancel-infer term nil nil nil @(:support term)))
-  ([term cancel-for-term] (cancel-infer term cancel-for-term nil nil @(:support term)))
-  ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid nil @(:support term))) 
+  ([term] (cancel-infer term nil nil {} @(:support term)))
+  ([term cancel-for-term] (cancel-infer term cancel-for-term nil {} @(:support term)))
+  ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid {} @(:support term))) 
   ([term cancel-for-term taskid subst hyps]
     (when cancel-for-term
       (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
@@ -610,7 +610,7 @@
   (when debug (send screenprinter (fn [_]  (println "Deriving answer:" (:subst message)))))
   ;; We don't need RUIs - the received substitutions must be complete since they
   ;; passed unification! Instead, lets use cached-terms.
-  (dosync (alter (:instances node) assoc (:origin message) (:subst message))))
+  (dosync (alter (:instances node) assoc (build/apply-sub-to-term node (:subst message) true) (:subst message))))
 
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
@@ -850,16 +850,14 @@
         (doseq [cqch @(:i-channels term)] 
           (submit-to-channel cqch imsg)))
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
-      ;TODO: Bring this back, once cance;-infer is fixed.
-      ;(when (@(:future-bw-infer term) result-term)
-      ;    (cancel-infer-of term))
-      )
-      (when (:true? message)
-        ;; Apply elimination rules and report results
-        (when-let [result (elimination-infer message term)]
-          (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
-          (doseq [[ch msg] result] 
-            (submit-to-channel ch msg)))))
+      (when (@(:future-bw-infer term) result-term)
+        (cancel-infer-of term)))
+    (when (:true? message)
+      ;; Apply elimination rules and report results
+      (when-let [result (elimination-infer message term)]
+        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
+        (doseq [[ch msg] result] 
+          (submit-to-channel ch msg)))))
     
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Introduction Rules ---- ;;
@@ -968,7 +966,7 @@
   (let [taskid (gensym "task")]
     (backward-infer ques taskid)
     (.await (@infer-status taskid))
-    @(:instances ques)))
+    (into {} (filter #(ct/asserted? (first %) context) @(:instances ques)))))
 
 (defn cancel-infer-of [term]
   (let [term (if (seq? term)
