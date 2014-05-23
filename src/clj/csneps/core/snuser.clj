@@ -17,7 +17,7 @@
         [clojure.set :only (union)]
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
-        [csneps.core.build :only (find unassert *PRECISION* defrule)]
+        [csneps.core.build :only (find *PRECISION* defrule)]
         [csneps.core :only (showTypes semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
         [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction)]

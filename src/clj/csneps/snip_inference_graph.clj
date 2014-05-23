@@ -181,7 +181,6 @@
                        :else (recur
                                (rest vs)
                                rel-vses)))
-          blah (println rel-vses)
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
       (if subst
         (dosync (alter (:valve-selectors channel) difference match-vses))
@@ -275,29 +274,6 @@
                                   taskid
                                   subst
                                   hyps)))))));)
-    
-    
-;    
-;    
-;    (when (and (every? #(not @(:valve-open %)) @(:i-channels term))
-;               (every? #(not @(:valve-open %)) @(:u-channels term)))
-;      (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
-;      (when cancel-for-term
-;        (dosync (alter (:future-bw-infer term) disj cancel-for-term)))
-;      (doseq [ch @(:ant-in-channels term)]
-;        (when (empty? @(:future-bw-infer term))
-;          (if hyps
-;            (remove-valve-selector ch subst hyps)
-;            (close-valve ch)))
-;        (.increment (@infer-status taskid))
-;        (.execute ^ThreadPoolExecutor executorService 
-;            (priority-partial Integer/MAX_VALUE 
-;                              (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
-;                              (:originator ch) 
-;                              cancel-for-term 
-;                              taskid
-;                              subst ;; This needs to be re-calculated!!
-;                              hyps))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
@@ -323,34 +299,6 @@
         (priority-partial Integer/MAX_VALUE 
                           (fn [t c] (cancel-forward-infer t c) (.decrement (@infer-status nil)))
                           (:destination ch) cancel-for-term)))))
-
-(defn unassert
-  "Move forward through the graph recursively unasserting terms which depend on this one."
-  ([term]
-    (build/unassert term)
-    (doseq [ch @(:i-channels term)]
-      (.increment (@infer-status nil))
-      (.execute ^ThreadPoolExecutor executorService 
-        (priority-partial Integer/MAX_VALUE 
-                          unassert 
-                          (:destination ch) (new-message {:origin term :type 'UNASSERT}) false)))
-    (doseq [ch @(:u-channels term)]
-      (.increment (@infer-status nil))
-      (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin term :type 'UNASSERT}) true))))
-  ([node message uch?]
-    (when debug (send screenprinter (fn [_]  (println "Unassert: " message "at" node))))
-    (cond 
-      (and (not uch?)
-           (= (type node) csneps.core.Implication))
-      (doseq [ch @(:u-channels node)]
-        (.increment (@infer-status nil))
-        (.execute ^ThreadPoolExecutor executorService (priority-partial Integer/MAX_VALUE unassert (:destination ch) (new-message {:origin (:origin message) :type 'UNASSERT}) true)))
-      (let [oscont (map #(contains? % (:origin message)) @(:support node))]
-        (and uch?
-             (seq oscont)
-             (every? true? oscont)))
-      (unassert node))
-    (.decrement (@infer-status nil))))
 
 ;; How do we ensure no re-derivations?
 ;; When do we call this? 
