@@ -11,7 +11,6 @@
 ;; G-INFER
 ;; BACKWARD-INFER
 ;; CANCEL-INFER
-;; UNASSERT
 
 (defrecord2 Message
   [origin nil
@@ -33,7 +32,8 @@
          " From: " (if (:origin o) (print-str (:origin o)) "<?>")
          " " (:type o) " (" (if (:true? o) "t" "f") ")"
          " pos:" (:pos o) " neg:" (:neg o)
-         " support: " (:support-set o))))
+         " support: " (:support-set o)
+         " substitution: " (:subst o))))
 
 (defn message-key [msg]
   (set (keys (:subst msg))))
