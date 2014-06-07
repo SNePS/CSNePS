@@ -147,8 +147,10 @@
 
 (defn add-valve-selector
   [channel subst context taskid]
-  (let [subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
+  (let [vars-in-dest (set (filter build/variable? (build/flatten-term (:destination channel))))
+        subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
+        subst (into {} (filter #(vars-in-dest (first %)) subst))
         valve-selector [subst context]]
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
@@ -332,23 +334,35 @@
     (when (seq new-msgs) 
       (zipmap uch (repeat (count uch) dermsg)))))
 
+;(defn negation-introduction
+;  "Pretty much conjunction-introduction, but with :neg instead of :pos"
+;  [message node]
+;  (let [new-ruis (get-rule-use-info (:msgs node) message)
+;        der-rui (some #(= (:neg %) (count @(:u-channels node))) new-ruis)
+;        dermsg (derivative-message message
+;                                   :origin node
+;                                   :support-set (conj (:support-set message) node) ;; TODO: THIS IS WRONG
+;                                   :true? true
+;                                   :type 'I-INFER)
+;        ich @(:i-channels node)]
+;    (when debug (send screenprinter (fn [_]  (println "N-Int" new-ruis "\n" der-rui))))
+;    (when der-rui
+;      (when showproofs 
+;        (send screenprinter (fn [_] (println "I derived: " node " by negation-introduction"))))
+;      (dosync (alter (:support node) conj (:support-set message)))
+;      [true nil (zipmap ich (repeat (count ich) dermsg))]))) ;;TODO: Fix this.
+
+
+;;; TODO: Building new contexts and such is probably the task for backward-infer.
 (defn negation-introduction
-  "Pretty much conjunction-introduction, but with :neg instead of :pos"
+  "Reductio ad Absurdum"
   [message node]
-  (let [new-ruis (get-rule-use-info (:msgs node) message)
-        der-rui (some #(= (:neg %) (count @(:u-channels node))) new-ruis)
-        dermsg (derivative-message message
-                                   :origin node
-                                   :support-set (conj (:support-set message) node) ;; TODO: THIS IS WRONG
-                                   :true? true
-                                   :type 'I-INFER)
-        ich @(:i-channels node)]
-    (when debug (send screenprinter (fn [_]  (println "N-Int" new-ruis "\n" der-rui))))
-    (when der-rui
-      (when showproofs 
-        (send screenprinter (fn [_] (println "I derived: " node " by negation-introduction"))))
-      (dosync (alter (:support node) conj (:support-set message)))
-      [true nil (zipmap ich (repeat (count ich) dermsg))]))) ;;TODO: Fix this.
+  (let [new-msgs (get-rule-use-info (:msgs node) message)]
+    
+    
+    
+    
+  ))
   
 
 (defn numericalentailment-elimination
@@ -947,6 +961,24 @@
   (make-linear-msg-set))
 
 (build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer forward-infer)
+
+;;; Reductio
+
+(defn reductio-infer
+  [term context]
+  (if (ct/asserted? term context)
+    term
+    ;; Assume the opposite.
+    (let [reductio-term (build/build (list 'not term) :Proposition #{})
+          ;; If the opposite is already assumed, don't bother doing it again.
+          new-context (if (ct/asserted? reductio-term context)
+                        context
+                        (ct/defineContext (gensym "ct") :parents [context] :hyps [reductio-term]))]
+      ;; Forward infer on the reductio-term.
+      (forward-infer reductio-term)
+      ;; Check if new-context is now inconsistent. If so, infer term. Otherwise, don't.
+      )))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; User-oriented functions ;;;
