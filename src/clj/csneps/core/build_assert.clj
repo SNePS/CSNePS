@@ -15,8 +15,8 @@
       (doseq [rst (seq @(:restriction-set v))]
         (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
           (assert rst (ct/find-context 'BaseCT))))
-      (build-quantterm-channels v)
-      (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
+      (build-quantterm-channels v))
+      ;(when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
 
 (defn build-variable 
