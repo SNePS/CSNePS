@@ -701,10 +701,12 @@
                                       :taskid (:taskid message))
           cqch (union @(:i-channels node) @(:g-channels node))]
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
-      (doseq [ch cqch]
-         (when (build/pass-message? ch der-msg)
-           (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-         (submit-to-channel ch der-msg)))))
+      (when-not (@(:instances node) instance)
+        (dosync (alter (:instances node) assoc instance (:subst message)))
+        (doseq [ch cqch]
+           (when (build/pass-message? ch der-msg)
+             (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
+           (submit-to-channel ch der-msg))))))
               
     
 (defn arbitrary-instantiation
