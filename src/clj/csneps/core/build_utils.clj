@@ -67,3 +67,12 @@
 (defn term-prewalk-test2
   [term]
   (term-prewalk (fn [x] (when (term? x) (print "Walked: ") (prn x)) x) term))
+
+(defn flatten-term
+  "Takes a term, and recursively explores its down-cablesets to build a
+   complete set of subterms."
+  [term]
+  (cond 
+    (molecularTerm? term) (flatten (map flatten-term (:down-cableset term)))
+    (atomicTerm? term) term
+    (set? term) (flatten (map flatten-term term))))
