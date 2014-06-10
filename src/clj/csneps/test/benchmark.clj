@@ -24,7 +24,8 @@
   []
   (def runtime (atom 0))
   (def iterations-left (atom iterations))
-  (remove-watch csneps.snip/to-infer :to-infer))
+  ;(remove-watch csneps.snip/to-infer :to-infer)
+  )
 
 (defn print-time
   []
@@ -106,24 +107,15 @@
 ;;; Benchmarks ;;;
 ;;;;;;;;;;;;;;;;;;
 
-(defn to-infer-update
-  [benchfn start-time ref key oldvalue newvalue]
-  (when (and (= newvalue 0) (not= oldvalue 0))
-    (log-elapsed start-time)
-    (print-time)
-    ;(println (count (filter #(ct/asserted? % (ct/currentContext)) (vals @csneps/TERMS))))
-    (when (> (swap! iterations-left dec) 0)
-      (remove-watch csneps.snip/to-infer :to-infer)
-      (benchfn))))
-
 (defn benchmark-fwd-1
   [buildgraphfn]
-  (snuser/clearkb true)
-  (send snip/to-infer (fn [_] 0))
-  (buildgraphfn)
-  (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-    (add-watch csneps.snip/to-infer :to-infer (partial to-infer-update #(benchmark-fwd-1 buildgraphfn) start-time))
-    (snuser/assert! 'ant)))
+  (while (>= (swap! iterations-left dec) 0)
+    (snuser/clearkb true)
+    (buildgraphfn)
+    (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+      (snuser/assert! 'ant)
+      (log-elapsed start-time)
+      (print-time))))
 
 (defn benchmark-fwd
   [entailsym bf depth]
@@ -133,15 +125,17 @@
 
 (defn benchmark-bwd-1
   [buildgraphfn]
-  (snuser/clearkb true)
-  (send snip/to-infer (fn [_] 0))
-  (buildgraphfn)
-  (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-    (add-watch csneps.snip/to-infer :to-infer (partial to-infer-update #(benchmark-bwd-1 buildgraphfn) start-time))
-    (snip/backward-infer (snuser/find-term 'cq))))
+  (while (>= (swap! iterations-left dec) 0)
+    (snuser/clearkb true)
+    (buildgraphfn)
+    (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+      (snip/backward-infer (snuser/find-term 'cq))
+      (log-elapsed start-time)
+      (print-time))))
 
 (defn benchmark-bwd
-  [entailsym bf depth]
+  [entailsym bf depth itrs]
+  (def iterations itrs)
   (reset-benchmark)
   (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth)]
     (benchmark-bwd-1 buildgraphfn)))
