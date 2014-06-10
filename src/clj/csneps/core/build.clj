@@ -583,7 +583,8 @@
         (let [term (new-atom {:name expr})]
           (dosync 
             (alter TERMS assoc expr term)
-            (alter type-map assoc expr semtype))
+            (alter type-map assoc expr semtype)
+            (alter (:support term) conj ['hyp #{term}]))
           (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)))
           (when (= expr 'False)
