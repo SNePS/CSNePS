@@ -1,7 +1,7 @@
 ;;; sneps3_printer.clj
 ;;; A printer for SNePS 3 terms.
 ;;; Author: Daniel R. Schlegel
-;;; Modified: 2/11/2013
+;;; Modified: 6/10/2014
 
 (ns csneps.core.printer
   (:require [csneps.core.contexts :as ct]
@@ -48,7 +48,7 @@
 
 (defn print-molecular
   [cf cs]
-  (str "(" 
+  (print-str "(" 
          (apply str 
                 (interpose " " 
                            (if (cf/hasOneArgumentSlot cf)
@@ -80,7 +80,7 @@
       :true
       (do 
         (set! PRINTED-VARIABLES (conj PRINTED-VARIABLES term))
-        (str 
+        (print-str 
           (condp = (type-of term)
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
             :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set @(:dependencies term) false) ") ")
@@ -116,10 +116,10 @@
     :csneps.core/Thresh
       (print-param2op 'thresh (:min term) (:max term) (first (:down-cableset term)))
     :csneps.core/Implication
-      (str (list 'if (print-term (first (:down-cableset term))) (print-term (second (:down-cableset term)))))
+      (print-str (list 'if (print-term (first (:down-cableset term))) (print-term (second (:down-cableset term)))))
     :csneps.core/Numericalentailment
-      (str (list (symbol (str "=" (if (= (:min term) 1) :v (:min term)) ">"))
-                 (first (:down-cableset term)) (second (:down-cableset term))))
+      (print-str (list (symbol (str "=" (if (= (:min term) 1) :v (:min term)) ">"))
+                       (first (:down-cableset term)) (second (:down-cableset term))))
     :csneps.core/Arbitrary
       (print-unnamed-variable-term term)
     :csneps.core/Indefinite
@@ -176,10 +176,10 @@
   (cond
     ;; Variable
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Variable)
-    (str (print-named-variable-term term))
+    (print-str (print-named-variable-term term))
     ;; Molecular
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Molecular)
-    (str (wft-string term) (print-term term))
+    (print-str (wft-string term) (print-term term))
     ;; Term Set
     (set? term)
     (print-set term true)
@@ -324,11 +324,11 @@
     (.write w (str ";;; " (.toString (new java.util.Date)) "\n"))
     (when headerfile 
       (.write ^java.io.Writer w "(clojure.lang.Compiler/loadFile " (first headerfile) ")\n"))
-    (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n(in-ns 'snuser)\n")
+    (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n(in-ns 'csneps.core.snuser)\n")
     (doseq [term (vals @csneps/TERMS)]
-      (when (ct/asserted? term)
+      (when (ct/asserted? term (ct/currentContext))
         (.write w  "(csneps.core.build/assert '")
         (if (= (:type term) :csneps.core/Atom)
           (.write w (str (print-atom term)))
           (.write w (str (print-unnamed-molecular-term term))))
-        (.write w (str " '" (:name term) ")\n"))))))
+        (.write w (str " 'DefaultCT)\n"))))))
