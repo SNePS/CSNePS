@@ -256,7 +256,7 @@
 ;;; Note that the resolution of variables in these is handled later.
 
 (defn unifySets [set1 set2 binds idx & {:keys [varfn] :or {varfn variable?}}]
-  (println "Unifying sets: " set1 "\nand: \n" set2) 
+  ;(println "Unifying sets: " set1 "\nand: \n" set2) 
   (let [unifiers (findSetUnifiers set1 set2) ;; Step 1.
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
@@ -273,9 +273,9 @@
                           binds
                           permutation)
                         binds)))]
-    (binding [*print-level* 6] 
-      (println "Set Unifiers " unifiers)
-      (println "Permutations" unifpermute)) 
+    ;(binding [*print-level* 6] 
+    ;  (println "Set Unifiers " unifiers)
+    ;  (println "Permutations" unifpermute)) 
     (remove nil? 
             (loop [unifpermute unifpermute
                    sub (map #(extract-permutation (first unifpermute) %) 
