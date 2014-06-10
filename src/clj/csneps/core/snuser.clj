@@ -220,7 +220,7 @@
 
 (defn load
   [fname]
-  (clojure.lang.Compiler/loadFile fname))
+  (load-file fname))
 
 (clojure.core/load "/csneps/core/initialize")
 
