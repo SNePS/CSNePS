@@ -1,6 +1,7 @@
 (ns csneps.test.benchmark
   (:require [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
+            [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
             [csneps.core :as csneps]
             [csneps.core.build :as build]
@@ -103,6 +104,23 @@
                (snuser/defineTerm (list* 'andor (list min-ct max-ct) (concat true-ants false-ants))))]
     [true-ants false-ants term]))
 
+;;;;;;;;;;;;;;;;;;;;;;
+;;; Graph Builders ;;;
+;;;;;;;;;;;;;;;;;;;;;;
+
+(defn write-entailment-graph-cqroot
+  [entailsym bf depth outfile]
+  (snuser/clearkb true)
+  (generate-entailment-chain-cqroot entailsym bf depth)
+  (print/writeKBToTextFile outfile))
+    
+(defn write-entailment-graph-antroot
+  [entailsym bf depth outfile]
+  (snuser/clearkb true)
+  (generate-entailment-chain-antroot entailsym bf depth)
+  (print/writeKBToTextFile outfile))
+
+
 ;;;;;;;;;;;;;;;;;;
 ;;; Benchmarks ;;;
 ;;;;;;;;;;;;;;;;;;
@@ -123,6 +141,26 @@
   (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth)]
     (benchmark-fwd-1 buildgraphfn)))
 
+(defn benchmark-fwd-file
+  [fname itrs include-build-time?]
+  (def iterations itrs)
+  (reset-benchmark)
+  (while (>= (swap! iterations-left dec) 0)
+    (snuser/clearkb true)
+    (if include-build-time?
+      (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+        (load-file fname)
+        (snuser/assert! 'ant)
+        (log-elapsed start-time)
+        (print-time))
+      (do
+        (load-file fname)
+        (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+          (snuser/assert! 'ant)
+          (log-elapsed start-time)
+          (print-time))))))
+
+
 (defn benchmark-bwd-1
   [buildgraphfn]
   (while (>= (swap! iterations-left dec) 0)
@@ -139,3 +177,22 @@
   (reset-benchmark)
   (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth)]
     (benchmark-bwd-1 buildgraphfn)))
+
+(defn benchmark-bwd-file
+  [fname itrs include-build-time?]
+  (def iterations itrs)
+  (reset-benchmark)
+  (while (>= (swap! iterations-left dec) 0)
+    (snuser/clearkb true)
+    (if include-build-time?
+      (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+        (load-file fname)
+        (snip/backward-infer (snuser/find-term 'cq))
+        (log-elapsed start-time)
+        (print-time))
+      (do
+        (load-file fname)
+        (let [start-time (. java.lang.System (clojure.core/nanoTime))]
+          (snip/backward-infer (snuser/find-term 'cq))
+          (log-elapsed start-time)
+          (print-time))))))
