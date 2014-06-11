@@ -158,7 +158,7 @@
       (dosync (alter (:valve-selectors channel) conj valve-selector))
       (doseq [msg @(:waiting-msgs channel)]
         (when (build/pass-message? channel msg)
-          (send screenprinter (fn [_]  (println "Pass")))
+          ;(send screenprinter (fn [_]  (println "Pass")))
           (dosync (alter (:waiting-msgs channel) disj msg))
           (when taskid (.increment (@infer-status taskid)))
           (.execute ^ThreadPoolExecutor executorService 
@@ -824,7 +824,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter (:future-fw-infer term) union (:invoke-set message))))
@@ -847,13 +847,13 @@
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
   (when (= (:type message) 'U-INFER)
-    (send screenprinter (fn [_]  (println message term)))
+    ;(send screenprinter (fn [_]  (println message term)))
     ;; Update origin sets of result appropriately.
     (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
       (dosync (alter (:support result-term) os-concat (:support-set message)))
-      (send screenprinter (fn [_]  (println result-term (:support result-term))))
+      ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
                 (:fwd-infer? message))
