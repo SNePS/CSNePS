@@ -2,7 +2,9 @@
 
 (defn ignore-variable? [sym] (= '_ sym))
 
-(def variable? #(isa? (type-of %) :csneps.core/Variable))
+(def variable?
+  (fn [term]
+    (variableTerm? term)))
 
 ;(def variable? #(or (= (type-of %) :csneps.core/Arbitrary) (= (type-of %) :csneps.core/QueryVariable)))
 
