@@ -5,6 +5,7 @@
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
             [clojure.core.match :as match]
+            [clojure.core.memoize :as memo]
             [clojure.math.numeric-tower :as math]
             [clojure.math.combinatorics :as cb]
             [clojure.zip :as zip]
@@ -224,7 +225,9 @@
     (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
     
     ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
-    (when-not existing-term
+    (when (and (not existing-term)
+               (#{:csneps.core/Molecular :csneps.core/Categorization
+                  :csneps.core/Closure :csneps.core/Negation} (:type term)))
       (doseq [unif (match term)]
         (build-unifier-channels unif))
       (addTermToUnificationTree term))

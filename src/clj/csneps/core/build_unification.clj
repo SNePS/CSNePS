@@ -99,22 +99,15 @@
     ;(println "#U# Source:" s "Source Bindings:" source "Target:" t "Target Bindings:" target)
      (cond
        (not (and source target)) [nil nil]
-       (= s t)                   [source target]
+       (= (:name s) (:name t))                   [source target]
        (set? s)                  (do (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
                                    (unifySets s (if (set? t) t #{t}) [source target] 0))
        (set? t)                  (do (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
                                    (unifySets t (if (set? s) s #{s}) [source target] 1))
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
-       (every? seq? [s t]) (garner-unifiers variable?
-                                                 (rest s)
-                                                 (rest t)
-                                                 (garner-unifiers variable?
-                                                                  (first s)
-                                                                  (first t)
-                                                                  [source target]))
-       (every? #(isa? (syntactic-type-of %) :csneps.core/Molecular) [s t])
-                                 (garner-unifiers variable?
+       (and (molecularTerm? s)
+            (molecularTerm? t))  (garner-unifiers variable?
                                                  (:down-cableset s)
                                                  (:down-cableset t)
                                                  (garner-unifiers variable?
@@ -194,9 +187,9 @@
       '() (range 0 (inc (- (count xs) n))))))
 
 (defn findSetUnifiers [set1 set2]
-  (vec (for [x set1]
-          (vec (for [y set2]
-                 (garner-unifiers x y))))))
+  (for [x set1
+        y set2]
+    (garner-unifiers x y)))
 
 ;(defn reduction [binds permutation]
 ;  (reduce
@@ -257,7 +250,7 @@
 
 (defn unifySets [set1 set2 binds idx & {:keys [varfn] :or {varfn variable?}}]
   ;(println "Unifying sets: " set1 "\nand: \n" set2) 
-  (let [unifiers (findSetUnifiers set1 set2) ;; Step 1.
+  (let [unifiers (disj (set (findSetUnifiers set1 set2)) [nil nil]) ;; Step 1.
         unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
         reduction (fn [permutation]
                     ;(println "!!!" (ffirst permutation) (second (first permutation)))
@@ -288,9 +281,9 @@
                                     (map #(extract-permutation (first (rest unifpermute)) %) 
                                          (cb/permutations (range (count (first (rest unifpermute))))))
                                     result)
-                (not (some nil? sub)) (recur unifpermute
-                                             (rest sub)
-                                             (conj result (reduction (first sub))))
+                (not (some nil? (flatten sub))) (recur unifpermute
+                                                       (rest sub)
+                                                       (conj result (reduction (first sub))))
                 :else (recur unifpermute
                              (rest sub)
                              result))))))
@@ -461,25 +454,26 @@
                                                               :variable? variable? :s s :t t :source %
                                                               :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
-      (= (:name (:acceptWft sourcenode))
-         (:name (:acceptWft targetnode)))                     (map #(unifyTreeWithChain
-                                                                      @(:children targetnode)
-                                                                      :variable? variable? :s s :t t :source %
-                                                                      :distnodes distnodes)
-                                                                (vals @(:children sourcenode)))
-      (and (molecularTerm? (:acceptWft sourcenode))
-           (molecularTerm? (:acceptWft targetnode))
-           (or (not-empty @(:children sourcenode))
-               (not-empty @(:children targetnode))))  (map #(unifyTreeWithChain
+      (and (:name (:acceptWft sourcenode))
+           (:name (:acceptWft targetnode))
+           (= (:name (:acceptWft sourcenode))
+              (:name (:acceptWft targetnode))))       (map #(unifyTreeWithChain
                                                               @(:children targetnode)
                                                               :variable? variable? :s s :t t :source %
                                                               :distnodes distnodes)
-                                                        (vals @(:children sourcenode)))
+                                                               (vals @(:children sourcenode)))
       (and (molecularTerm? (:acceptWft sourcenode))
-           (molecularTerm? (:acceptWft targetnode)))      {:source (:acceptWft sourcenode) 
-                                                       :target (:acceptWft targetnode) 
-                                                       :sourcebind s 
-                                                       :targetbind t}
+           (molecularTerm? (:acceptWft targetnode)))  (if (or (not-empty @(:children sourcenode))
+                                                              (not-empty @(:children targetnode)))
+                                                        (map #(unifyTreeWithChain
+                                                                @(:children targetnode)
+                                                                :variable? variable? :s s :t t :source %
+                                                                :distnodes distnodes)
+                                                          (vals @(:children sourcenode)))
+                                                        {:source (:acceptWft sourcenode) 
+                                                         :target (:acceptWft targetnode) 
+                                                         :sourcebind s 
+                                                         :targetbind t})
       ;; Variables.
       (or 
         (variable? (:acceptWft sourcenode))           
@@ -595,6 +589,10 @@
 ;  (addTermToUnificationTree t2)
 ;  (def t3 (snuser/assert '(Isa (every x) Animal)))
 ;  (getUnifiers t3))
+
+(defn reset-tree
+  []
+  (dosync (ref-set DistNodes {})))
 
 ;;;;;;;;;;;;;;;;
 ;;; Generics ;;;

@@ -40,7 +40,7 @@
       (ref-set csneps/QVARCOUNT 0)
 
       ;; Reinitialize unification tree.
-      (ref-set build/DistNodes {})
+      (build/reset-tree)
       
       ;; Clear the subsumption lattice
       (build/reset-lattice)      
