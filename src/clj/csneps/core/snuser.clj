@@ -223,6 +223,7 @@
   (load-file fname))
 
 (clojure.core/load "/csneps/core/initialize")
+(clojure.core/load "/csneps/test/benchmark")
 
 (clearkb true)
 
