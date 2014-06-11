@@ -461,12 +461,12 @@
                                                               :variable? variable? :s s :t t :source %
                                                               :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
-      (= (:acceptWft sourcenode)
-         (:acceptWft targetnode))                     (map #(unifyTreeWithChain
-                                                              @(:children targetnode)
-                                                              :variable? variable? :s s :t t :source %
-                                                              :distnodes distnodes)
-                                                        (vals @(:children sourcenode)))
+      (= (:name (:acceptWft sourcenode))
+         (:name (:acceptWft targetnode)))                     (map #(unifyTreeWithChain
+                                                                      @(:children targetnode)
+                                                                      :variable? variable? :s s :t t :source %
+                                                                      :distnodes distnodes)
+                                                                (vals @(:children sourcenode)))
       (and (molecularTerm? (:acceptWft sourcenode))
            (molecularTerm? (:acceptWft targetnode))
            (or (not-empty @(:children sourcenode))
@@ -508,12 +508,12 @@
         termchain (addTermToUnificationTree term :distnodes tempdist)
         unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
                    (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
-    ;(when-not (empty? unifiers) (println unifiers))
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
                                                 (try-subst-map variable?))]]
       {:source (:source u) :target (:target u) :sourcebind subsourcebind :targetbind subtargetbind})))
+
 
 (defn- vvbindreverse
   [[t1 t2]]
