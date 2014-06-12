@@ -1014,15 +1014,15 @@
       (alter (:restriction-set var) clojure.set/union 
              (set (map #(build % :WhQuestion substitution) rsts)))
       (and (= quant :some) (not (nil? dependencies)))
-      (let [restrictions (map #(build % :Propositional substitution) rsts)] 
+      (let [restrictions (set (map #(build % :Propositional substitution) rsts))] 
         (alter (:dependencies var) clojure.set/union
-                 (doall (map #(substitution %) dependencies)))
+                 (set (map #(substitution %) dependencies)))
         (alter (:restriction-set var) clojure.set/union restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
              ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
       :else
-      (let [restrictions (map #(build % :Propositional substitution) rsts)] 
+      (let [restrictions (set (map #(build % :Propositional substitution) rsts))] 
         (alter (:restriction-set var) clojure.set/union restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
