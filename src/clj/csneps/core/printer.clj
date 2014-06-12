@@ -48,7 +48,7 @@
 
 (defn print-molecular
   [cf cs]
-  (print-str "(" 
+  (str "(" 
          (apply str 
                 (interpose " " 
                            (if (cf/hasOneArgumentSlot cf)
@@ -330,5 +330,6 @@
         (.write w  "(csneps.core.build/assert '")
         (if (= (:type term) :csneps.core/Atom)
           (.write w (str (print-atom term)))
-          (.write w (str (print-unnamed-molecular-term term))))
+          (binding [PRINTED-VARIABLES (hash-set)]
+            (.write w (str (print-unnamed-molecular-term term)))))
         (.write w (str " 'DefaultCT)\n"))))))
