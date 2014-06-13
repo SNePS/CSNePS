@@ -36,39 +36,65 @@
 ;;; Graph Construction ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn generate-arb
+  [rescount]
+  (let [id (gensym "")
+        varlabel (symbol (str "x" id))]
+    (list* 'every varlabel
+           (for [x (range rescount)
+                 :let [resfsym (symbol (str "r" id "-" x))]]
+             (list resfsym varlabel)))))
+
+(defn generate-term 
+  [prefix args]
+  (let [id (gensym "")]
+    (if (= args nil)
+      (symbol (str prefix id))
+      (list* (symbol (str prefix id)) args))))
+
 ;;; Entailments ;;;
 
 ;; General function to generate entailments automatically. entailsym can be things like
 ;; =v> or if. 
 (defn generate-entailment
-  [entailsym & {:keys [antset antcount cqset cqcount assert?]}]
-  (let [ants (if antset antset (set (map gensym (repeat antcount "ant"))))
-        cqs (if cqset cqset (set (map gensym (repeat cqcount "cq"))))]
+  [entailsym & {:keys [antset antcount cqset cqcount assert? args]}]
+  (let [ants (if antset antset (set (for [i (range antcount)]
+                                      (generate-term "ant" args))))
+        cqs (if cqset cqset (set (for [i (range antcount)]
+                                   (generate-term "cq" args))))]
     (if assert?
       [ants cqs (snuser/assert (list entailsym ants cqs))]
       [ants cqs (snuser/defineTerm (list entailsym ants cqs))])))
 
 (defn generate-entailment-chain-cqroot
-  [entailsym branching-factor maxdepth]
-  (loop [depth 0
-         cqset '#{cq}]
-    (if (< depth maxdepth)
-      (recur (inc depth)
-             (apply clojure.set/union
-                    (map first
-                         (map #(generate-entailment entailsym :antcount branching-factor :cqset #{%} :assert? true) cqset))))
-      (doall (map #(snuser/assert %) cqset)))))
+  [entailsym branching-factor maxdepth arbcount rescount]
+  (let [args (if (> arbcount 0)
+               (for [i (range arbcount)]
+                 (generate-arb rescount))
+               nil)]
+    (loop [depth 0
+           cqset #{(generate-term 'cq args)}]
+      (if (< depth maxdepth)
+        (recur (inc depth)
+               (apply clojure.set/union
+                      (map first
+                           (map #(generate-entailment entailsym :antcount branching-factor :cqset #{%} :assert? true :args args) cqset))))
+        (doall (map #(snuser/assert %) cqset))))))
 
 (defn generate-entailment-chain-antroot
-  [entailsym branching-factor maxdepth]
-  (loop [depth 0
-         antset '#{ant}]
-    (if (< depth maxdepth)
-      (recur (inc depth)
-             (apply clojure.set/union
-                    (map second 
-                         (map #(generate-entailment entailsym :antset #{%} :cqcount branching-factor :assert? true) antset))))
-      antset)))
+  [entailsym branching-factor maxdepth arbcount rescount]
+  (let [args (if (> arbcount 0)
+               (for [i (range arbcount)]
+                 (generate-arb rescount))
+               nil)]
+    (loop [depth 0
+           antset #{(generate-term 'ant args)}]
+      (if (< depth maxdepth)
+        (recur (inc depth)
+               (apply clojure.set/union
+                      (map second 
+                           (map #(generate-entailment entailsym :antset #{%} :cqcount branching-factor :assert? true :args args) antset))))
+        antset))))
 
 ;;; And ;;;
 
@@ -104,20 +130,27 @@
                (snuser/defineTerm (list* 'andor (list min-ct max-ct) (concat true-ants false-ants))))]
     [true-ants false-ants term]))
 
+;;; Helper ;;;
+
+(defn get-atom-or-molecular
+  [name]
+  (or (when (cf/FN2CF (symbol name)) (first @(:terms (cf/FN2CF (symbol name)))))
+      (snuser/find-term (symbol name))))
+
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; Graph Builders ;;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (defn write-entailment-graph-cqroot
-  [entailsym bf depth outfile]
+  [entailsym bf depth arbcount rescount outfile]
   (snuser/clearkb true)
-  (generate-entailment-chain-cqroot entailsym bf depth)
+  (generate-entailment-chain-cqroot entailsym bf depth arbcount rescount)
   (print/writeKBToTextFile outfile))
     
 (defn write-entailment-graph-antroot
-  [entailsym bf depth outfile]
+  [entailsym bf depth arbcount rescount outfile]
   (snuser/clearkb true)
-  (generate-entailment-chain-antroot entailsym bf depth)
+  (generate-entailment-chain-antroot entailsym bf depth arbcount rescount)
   (print/writeKBToTextFile outfile))
 
 
@@ -136,9 +169,9 @@
       (print-time))))
 
 (defn benchmark-fwd
-  [entailsym bf depth]
+  [entailsym bf depth arbcount rescount]
   (reset-benchmark)
-  (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth)]
+  (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth arbcount rescount)]
     (benchmark-fwd-1 buildgraphfn)))
 
 (defn benchmark-fwd-file
@@ -167,15 +200,15 @@
     (snuser/clearkb true)
     (buildgraphfn)
     (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-      (snip/backward-infer (snuser/find-term 'cq))
+      (snip/backward-infer-derivable (get-atom-or-molecular 'cq) (ct/currentContext))
       (log-elapsed start-time)
       (print-time))))
 
 (defn benchmark-bwd
-  [entailsym bf depth itrs]
+  [entailsym bf depth arbcount rescount itrs]
   (def iterations itrs)
   (reset-benchmark)
-  (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth)]
+  (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth arbcount rescount)]
     (benchmark-bwd-1 buildgraphfn)))
 
 (defn benchmark-bwd-file
@@ -187,12 +220,12 @@
     (if include-build-time?
       (let [start-time (. java.lang.System (clojure.core/nanoTime))]
         (load-file fname)
-        (snip/backward-infer (snuser/find-term 'cq))
+        (snip/backward-infer-derivable (get-atom-or-molecular 'cq) (ct/currentContext))
         (log-elapsed start-time)
         (print-time))
       (do
         (load-file fname)
         (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-          (snip/backward-infer (snuser/find-term 'cq))
+          (snip/backward-infer-derivable (get-atom-or-molecular 'cq) (ct/currentContext))
           (log-elapsed start-time)
           (print-time))))))
