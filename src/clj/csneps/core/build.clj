@@ -1130,9 +1130,10 @@
                            (list (nth assertion-spec 2) aspec))]
             [(second assertion-spec) ar idr qvr])))
       (= (first assertion-spec) 'every)
-      (let [rsts (second (arb-rsts (second assertion-spec)))]
+      (let [rsts (arb-rsts (second assertion-spec))]
         (cond
-          (and rsts (not (clojure.set/difference rsts (rest (rest assertion-spec)))))
+          (and rsts (not (empty? (clojure.set/difference (set rsts)
+                                                         (set (map vec (rest (rest assertion-spec))))))))
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else
