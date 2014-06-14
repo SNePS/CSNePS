@@ -12,7 +12,7 @@
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
-(def showproofs true)
+(def showproofs false)
 
 (declare initiate-node-task create-message-structure get-rule-use-info open-valve cancel-infer-of)
 
@@ -664,11 +664,11 @@
   ;; Instance from g-channel
   (if (g-chan-to-node? (:origin message) node)
     (let [new-combined-messages (get-rule-use-info (:msgs node) message)
-          total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
-                                                    (build/generic-term? (:originator %)))
-                                               @(:ant-in-channels node)))
+          ;total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
+          ;                                          (build/generic-term? (:originator %)))
+          ;                                     @(:ant-in-channels node)))
           rel-combined-messages (when new-combined-messages
-                                  (filter #(= (:pos %) total-parent-generics) new-combined-messages))
+                                  (filter #(> (:pos %) 0) new-combined-messages))
           cqch (union @(:i-channels node) @(:g-channels node))]
       (doseq [rcm rel-combined-messages]
         (let [instance (build/apply-sub-to-term node (:subst rcm))
@@ -700,7 +700,7 @@
                                       :type 'I-INFER
                                       :taskid (:taskid message))
           cqch (union @(:i-channels node) @(:g-channels node))]
-      ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
+      (send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
       (when-not (@(:instances node) instance)
         (dosync (alter (:instances node) assoc instance (:subst message)))
         (doseq [ch cqch]
