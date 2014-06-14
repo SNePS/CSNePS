@@ -11,5 +11,84 @@
 (assert '(xor q r s))
 ;; Ask question which can't be answered, but opens channels.
 (ask 'r)
+;; A focused reasoning task should have been started for both r and (not r)
+(list-focused-inference-tasks)
 ;; Assert information to flow forward.
 (assert 'p)
+;; Focused inference should have been cancelled, as the intended
+;; result was derived. 
+(list-focused-inference-tasks)
+
+;;; Backward-in-Forward Reasoning
+(clearkb true)
+(assert! 'q)
+(list-focused-inference-tasks)
+(assert '(if p (if q r)))
+(list-focused-inference-tasks)
+(assert 'p)
+
+;;; Examples from Schlegel's dissertation:
+
+(clearkb true)
+(krnovice true)
+
+;; Forward-in-backward
+
+;; Azam is a person
+(assert '(Isa Azam Person))
+
+;; If a person is arrested, they are detained.
+(assert '(if (Arrested (every x (Isa x Person))) (Detained x)))
+
+;; A person is either detained or free.
+(assert '(xor (Detained (every x (Isa x Person))) (Free x)))
+
+(askif '(Detained Azam))
+
+(assert '(Arrested Azam))
+
+;; It should now be derived that Azam is detained.
+
+;; Forward
+
+(clearkb true)
+
+;; A person is either detained or free.
+(assert '(xor (Detained (every x (Isa x Person))) (Free x)))
+
+;; Azam is a Person
+(assert! '(Isa Azam Person))
+
+;; Azam is arrested
+(assert! '(Arrested Azam))
+
+;; If a person is arrested, they are detained.
+(assert '(if (Arrested (every x (Isa x Person))) (Detained x)))
+
+;; This should derive (not (Free Azam))
+
+;; Backward-in-Forward
+
+(clearkb true)
+
+;; Ahmad is a person.
+(assert '(Isa Ahmad Person))
+
+;; If a person is a person of interest (POI),
+;; they are either under surveillance, or
+;; being sought out.
+(assert '(if (POI (every x (Isa x Person)))
+             (xor (UnderSurveillance x)
+                  (BeingSoughtOut x))))
+
+;; If a person is a POI, they are of
+;; interest to INSCOM
+(assert '(if (POI (every x (Isa x Person))) (ofInterestTo x INSCOM)))
+
+;; Ahmad is not under surveillance
+(assert! '(not (UnderSurveillance Ahmad)))
+
+;; Ahmad is a POI
+(assert '(POI Ahmad))
+
+It should now be derived that Azam is not being sought out.
