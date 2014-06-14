@@ -88,7 +88,7 @@
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
     (assoc :invoke-set (or invoke-set (if origin
                                         @(:future-fw-infer origin)
-                                        @(:future-fw-infer (:origin message)))))
+                                        (when (:origin message) @(:future-fw-infer (:origin message))))))
     (assoc :taskid (or taskid (:taskid message)))
     (assoc :pos (or pos (if (if (nil? true?) (:true? message) true?) 1 0)))
     (assoc :neg (or neg (if (if (nil? true?) (:true? message) true?) 0 1)))
