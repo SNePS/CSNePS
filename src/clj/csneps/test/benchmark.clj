@@ -45,6 +45,19 @@
                  :let [resfsym (symbol (str "r" id "-" x))]]
              (list resfsym varlabel)))))
 
+(defn generate-arb-instance
+  [arbexpr]
+  (let [inst (gensym "inst")
+        restrictions (nnext arbexpr)]
+    (doseq [r restrictions]
+      (snuser/assert (list (first r) inst)))
+    inst))
+
+(defn generate-arb-instances
+  [arbexpr instct]
+  (for [n (range instct)]
+    (generate-arb-instance arbexpr)))
+
 (defn generate-term 
   [prefix args]
   (let [id (gensym "")]
@@ -67,11 +80,15 @@
       [ants cqs (snuser/defineTerm (list entailsym ants cqs))])))
 
 (defn generate-entailment-chain-cqroot
-  [entailsym branching-factor maxdepth arbcount rescount]
-  (let [args (if (> arbcount 0)
+  [entailsym branching-factor maxdepth arbcount rescount instcount]
+  (let [args (when (> arbcount 0)
                (for [i (range arbcount)]
-                 (generate-arb rescount))
-               nil)]
+                 (generate-arb rescount)))
+        instances (when args
+                    (map #(generate-arb-instances % instcount) args))
+        inst-invert (for [n (range (count (first instances)))]
+                      (map #(nth % n) instances))]
+    (println inst-invert)
     (loop [depth 0
            cqset #{(generate-term 'cq args)}]
       (if (< depth maxdepth)
@@ -79,7 +96,15 @@
                (apply clojure.set/union
                       (map first
                            (map #(generate-entailment entailsym :antcount branching-factor :cqset #{%} :assert? true :args args) cqset))))
-        (doall (map #(snuser/assert %) cqset))))))
+        (if args
+          ;; Assert instances.
+          (flatten
+            (for [i inst-invert
+                  cq cqset]
+              (snuser/assert (list* (first cq) i))))
+          ;; If there are no arbs, assert the leaves.
+          (doall (map #(snuser/assert %) cqset))
+          )))))
 
 (defn generate-entailment-chain-antroot
   [entailsym branching-factor maxdepth arbcount rescount]
