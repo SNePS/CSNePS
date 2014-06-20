@@ -59,8 +59,11 @@
                        (empty? fillers)
                        (recur (rest sfmap)
                               res)
+                       (and (seq res)
+                            (empty? (clojure.set/intersection res sres)))
+                         nil
                        (empty? sres)
-                       sres
+                       nil
                        :else
                        (recur (rest sfmap)
                               (if (empty? res) sres (clojure.set/intersection res sres)))))))]
