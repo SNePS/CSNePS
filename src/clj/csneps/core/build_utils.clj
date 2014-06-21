@@ -76,5 +76,5 @@
   [term]
   (cond 
     (molecularTerm? term) (flatten (map flatten-term (:down-cableset term)))
-    (atomicTerm? term) term
+    (atomicTerm? term) (list term)
     (set? term) (flatten (map flatten-term term))))

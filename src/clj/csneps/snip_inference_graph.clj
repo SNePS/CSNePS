@@ -147,7 +147,7 @@
 
 (defn add-valve-selector
   [channel subst context taskid]
-  (let [vars-in-dest (set (filter build/variable? (build/flatten-term (:destination channel))))
+  (let [vars-in-dest (set (filter build/variable? (build/flatten-term (:originator channel))))
         subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
         subst (into {} (filter #(vars-in-dest (first %)) subst))
