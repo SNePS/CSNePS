@@ -81,5 +81,9 @@ public class CountingLatch
   {
     return sync.tryAcquireSharedNanos(1,TimeUnit.MILLISECONDS.toNanos(timeout));
   }
+  
+  public String toString(){
+	  return Integer.toString(this.getCount());
+  }
 
 }
