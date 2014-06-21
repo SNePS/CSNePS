@@ -84,13 +84,13 @@
   (let [args (when (> arbcount 0)
                (for [i (range arbcount)]
                  (generate-arb rescount)))
+        cq (generate-term 'cq args)
         instances (when args
                     (map #(generate-arb-instances % instcount) args))
         inst-invert (for [n (range (count (first instances)))]
                       (map #(nth % n) instances))]
-    (println inst-invert)
     (loop [depth 0
-           cqset #{(generate-term 'cq args)}]
+           cqset #{cq}]
       (if (< depth maxdepth)
         (recur (inc depth)
                (apply clojure.set/union
@@ -98,28 +98,46 @@
                            (map #(generate-entailment entailsym :antcount branching-factor :cqset #{%} :assert? true :args args) cqset))))
         (if args
           ;; Assert instances.
-          (flatten
+          (do 
             (for [i inst-invert
-                  cq cqset]
-              (snuser/assert (list* (first cq) i))))
+                  c cqset]
+              (snuser/assert (list* (first c) i)))
+            (for [i inst-invert]
+              (list* (first cq) i)))
           ;; If there are no arbs, assert the leaves.
-          (doall (map #(snuser/assert %) cqset))
-          )))))
+          (do 
+            (doall (map #(snuser/assert %) cqset))
+            '(cq)))))))
 
 (defn generate-entailment-chain-antroot
-  [entailsym branching-factor maxdepth arbcount rescount]
-  (let [args (if (> arbcount 0)
+  [entailsym branching-factor maxdepth arbcount rescount instcount]
+  (let [args (when (> arbcount 0)
                (for [i (range arbcount)]
-                 (generate-arb rescount))
-               nil)]
+                 (generate-arb rescount)))
+        ant (generate-term 'ant args)
+        instances (when args
+                    (map #(generate-arb-instances % instcount) args))
+        inst-invert (for [n (range (count (first instances)))]
+                      (map #(nth % n) instances))]
     (loop [depth 0
-           antset #{(generate-term 'ant args)}]
+           antset #{ant}]
       (if (< depth maxdepth)
         (recur (inc depth)
                (apply clojure.set/union
                       (map second 
                            (map #(generate-entailment entailsym :antset #{%} :cqcount branching-factor :assert? true :args args) antset))))
-        antset))))
+        (if args
+          ;; Assert instances.
+          (do 
+            (for [i inst-invert
+                  a antset]
+              (snuser/assert (list* (first a) i)))
+            (for [i inst-invert]
+              (list* (first ant) i)))
+          ;; If there are no arbs, assert the leaves.
+          (do 
+            (doall (map #(snuser/assert %) antset))
+            '(ant)))))))
 
 ;;; And ;;;
 
@@ -167,15 +185,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (defn write-entailment-graph-cqroot
-  [entailsym bf depth arbcount rescount outfile]
+  [entailsym bf depth arbcount rescount instcount outfile]
   (snuser/clearkb true)
-  (generate-entailment-chain-cqroot entailsym bf depth arbcount rescount)
+  (generate-entailment-chain-cqroot entailsym bf depth arbcount instcount rescount)
   (print/writeKBToTextFile outfile))
     
 (defn write-entailment-graph-antroot
-  [entailsym bf depth arbcount rescount outfile]
+  [entailsym bf depth arbcount rescount instcount outfile]
   (snuser/clearkb true)
-  (generate-entailment-chain-antroot entailsym bf depth arbcount rescount)
+  (generate-entailment-chain-antroot entailsym bf depth arbcount instcount rescount)
   (print/writeKBToTextFile outfile))
 
 
@@ -187,16 +205,16 @@
   [buildgraphfn]
   (while (>= (swap! iterations-left dec) 0)
     (snuser/clearkb true)
-    (buildgraphfn)
-    (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-      (snuser/assert! 'ant)
+    (let [ant (build/build (first (buildgraphfn)) :Proposition {})
+          start-time (. java.lang.System (clojure.core/nanoTime))]
+      (snuser/assert! ant)
       (log-elapsed start-time)
       (print-time))))
 
 (defn benchmark-fwd
-  [entailsym bf depth arbcount rescount]
+  [entailsym bf depth arbcount rescount instcount]
   (reset-benchmark)
-  (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth arbcount rescount)]
+  (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth arbcount rescount instcount)]
     (benchmark-fwd-1 buildgraphfn)))
 
 (defn benchmark-fwd-file
@@ -223,17 +241,17 @@
   [buildgraphfn]
   (while (>= (swap! iterations-left dec) 0)
     (snuser/clearkb true)
-    (buildgraphfn)
-    (let [start-time (. java.lang.System (clojure.core/nanoTime))]
-      (snip/backward-infer-derivable (get-atom-or-molecular 'cq) (ct/currentContext))
+    (let [cq (build/build (first (buildgraphfn)) :Proposition {})
+          start-time (. java.lang.System (clojure.core/nanoTime))]
+      (snip/backward-infer-derivable cq (ct/currentContext))
       (log-elapsed start-time)
       (print-time))))
 
 (defn benchmark-bwd
-  [entailsym bf depth arbcount rescount itrs]
+  [entailsym bf depth arbcount rescount instcount itrs]
   (def iterations itrs)
   (reset-benchmark)
-  (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth arbcount rescount)]
+  (let [buildgraphfn #(generate-entailment-chain-cqroot entailsym bf depth arbcount rescount instcount)]
     (benchmark-bwd-1 buildgraphfn)))
 
 (defn benchmark-bwd-file
