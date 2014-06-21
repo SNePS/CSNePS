@@ -99,8 +99,8 @@
         (if args
           ;; Assert instances.
           (do 
-            (for [i inst-invert
-                  c cqset]
+            (doseq [i inst-invert
+                    c cqset]
               (snuser/assert (list* (first c) i)))
             (for [i inst-invert]
               (list* (first cq) i)))
@@ -129,8 +129,8 @@
         (if args
           ;; Assert instances.
           (do 
-            (for [i inst-invert
-                  a antset]
+            (doseq [i inst-invert
+                    a antset]
               (snuser/assert (list* (first a) i)))
             (for [i inst-invert]
               (list* (first ant) i)))
