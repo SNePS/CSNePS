@@ -92,8 +92,9 @@
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
         (do 
-          ;(send screenprinter (fn [_]  (println "inc-stc" (:taskid message))))
-          (when (:taskid message) (.increment (@infer-status (:taskid message))))
+          (when (:taskid message) 
+            ;(send screenprinter (fn [_]  (println "inc-stc" (:taskid message) (derivative-message message :taskid taskid))))
+            (.increment (@infer-status (:taskid message))))
           (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
@@ -105,7 +106,7 @@
   ;; Send the information about this assertion forward in the graph.
   ;; Positive instances:
   (let [msg (new-message {:origin term, 
-                          :support-set #{['hyp #{term}]}, 
+                          :support-set #{['hyp #{(:name term)}]}, 
                           :type 'I-INFER, 
                           :fwd-infer? fwd-infer
                           :pos 1
@@ -115,7 +116,7 @@
   ;; Conjunctions:
   ;; Conjunctions have no antecedents if they are true, so the U-INFER messages must be passed on here
   (when (= (csneps/type-of term) :csneps.core/Conjunction)
-    (let [msg (new-message {:origin term, :support-set #{['der #{term}]}, :type 'U-INFER, :fwd-infer? fwd-infer})]
+    (let [msg (new-message {:origin term, :support-set #{['der #{(:name term)}]}, :type 'U-INFER, :fwd-infer? fwd-infer})]
       (doall (map #(submit-to-channel % msg) @(:u-channels term)))))
   ;; Negations:
   ;; When the assertion makes terms negated, the negated terms need to send out
@@ -126,24 +127,24 @@
       (doseq [negterm nor-dcs]
         (doall (map #(submit-to-channel 
                        % 
-                       (new-message {:origin negterm, :support-set #{['der #{term}]}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
+                       (new-message {:origin negterm, :support-set #{['der #{(:name term)}]}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
                     @(:i-channels negterm)))))))
 
-(defn open-valve 
-  [channel taskid]
-  ;; Start by opening the channel. Anything new should go right to the executor pool.
-  (dosync (ref-set (:valve-open channel) true))
-  ;; Add the waiting messages to the executor pool.
-  (doseq [msg @(:waiting-msgs channel)]
-    ;(send screenprinter (fn [_]  (println "inc-ov" taskid)))
-    (when taskid (.increment (@infer-status taskid)))
-    (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))
-  ;; Clear the waiting messages list.
-  (dosync (alter (:waiting-msgs channel) empty)))
-
-(defn close-valve
-  [channel]
-  (dosync (ref-set (:valve-open channel) false)))
+;(defn open-valve 
+;  [channel taskid]
+;  ;; Start by opening the channel. Anything new should go right to the executor pool.
+;  (dosync (ref-set (:valve-open channel) true))
+;  ;; Add the waiting messages to the executor pool.
+;  (doseq [msg @(:waiting-msgs channel)]
+;    ;(send screenprinter (fn [_]  (println "inc-ov" taskid)))
+;    (when taskid (.increment (@infer-status taskid)))
+;    (.execute ^ThreadPoolExecutor executorService (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))
+;  ;; Clear the waiting messages list.
+;  (dosync (alter (:waiting-msgs channel) empty)))
+;
+;(defn close-valve
+;  [channel]
+;  (dosync (ref-set (:valve-open channel) false)))
 
 (defn add-valve-selector
   [channel subst context taskid]
@@ -160,7 +161,11 @@
         (when (build/pass-message? channel msg)
           ;(send screenprinter (fn [_]  (println "Pass")))
           (dosync (alter (:waiting-msgs channel) disj msg))
-          (when taskid (.increment (@infer-status taskid)))
+          (if taskid 
+            (do 
+              ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
+              (.increment (@infer-status taskid)))
+            (send screenprinter (fn [_]  (println "no taskid" msg))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
@@ -219,7 +224,13 @@
     (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
     (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid))
   ([term invoketermset taskid] 
-    (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid))
+    (let [gt (gensym "task")
+          taskid (if taskid 
+                   taskid
+                   (do 
+                     (dosync (alter infer-status assoc gt (edu.buffalo.csneps.util.CountingLatch.)))
+                     gt))]
+    (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid)))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset subst context taskid] 
     (dosync (alter (:future-bw-infer term) union invoketermset))
@@ -267,10 +278,10 @@
         (when (seq affected-chs)
           (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
           (doseq [[ch subst] affected-chs]
-            (.increment (@infer-status taskid))
+            (when taskid (.increment (@infer-status taskid)))
             (.execute ^ThreadPoolExecutor executorService 
                 (priority-partial Integer/MAX_VALUE 
-                                  (fn [t c id s h] (cancel-infer t c id s h) (.decrement (@infer-status id)))
+                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement (@infer-status id))))
                                   (:originator ch) 
                                   cancel-for-term 
                                   taskid
@@ -685,7 +696,7 @@
           (dosync (alter (:instances node) assoc instance (:subst rcm))) ;; idk if we need this.
           
           (doseq [ch cqch]
-            (when (build/pass-message? ch der-msg)
+            (when (and showproofs (build/pass-message? ch der-msg))
               (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
             (submit-to-channel ch der-msg)))))
     ;; Instance from unifying term.
@@ -700,11 +711,11 @@
                                       :type 'I-INFER
                                       :taskid (:taskid message))
           cqch (union @(:i-channels node) @(:g-channels node))]
-      (send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
+      ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
       (when-not (@(:instances node) instance)
         (dosync (alter (:instances node) assoc instance (:subst message)))
         (doseq [ch cqch]
-           (when (build/pass-message? ch der-msg)
+           (when (and showproofs (build/pass-message? ch der-msg))
              (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
            (submit-to-channel ch der-msg))))))
               
@@ -720,7 +731,10 @@
           gch @(:g-channels node)]
       (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
       (when (seq der-rui-t)
-        (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs)))
+;        (send screenprinter (fn [_]  (println "NEWMESSAGE:" (count (for [msg new-msgs
+;                                                                         ch gch]
+;                                                                     [ch msg]))
+;                                              new-msgs)))
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
                     ch gch]
@@ -778,7 +792,7 @@
   (let [result-msg (derivative-message message
                                        :origin node
                                        :subst (apply dissoc (:subst message) (map #(:var-label %) (:closed-vars node)))
-                                       :support (os-union (:support-set message) (:support node)))
+                                       :support-set (os-union (:support-set message) (:support node)))
         ich @(:i-channels node)]
     (zipmap ich (repeat (count ich) result-msg))))
 
@@ -950,7 +964,9 @@
         ;; TODO: Not quite finished, I think.
         (backward-infer term #{term} nil))))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
-  (when (:taskid message) (.decrement (@infer-status (:taskid message)))))
+  (when (:taskid message) 
+    ;(send screenprinter (fn [_]  (println "dec-stc" (:taskid message) message)))
+    (.decrement (@infer-status (:taskid message)))))
           
   
 ;;; Message Handling ;;;

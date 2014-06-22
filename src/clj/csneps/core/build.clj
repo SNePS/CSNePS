@@ -5,7 +5,6 @@
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
             [clojure.core.match :as match]
-            [clojure.core.memoize :as memo]
             [clojure.math.numeric-tower :as math]
             [clojure.math.combinatorics :as cb]
             [clojure.zip :as zip]
@@ -164,7 +163,7 @@
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
   (when (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
-    (dosync (alter (:support term) conj ['hyp #{term}])))
+    (dosync (alter (:support term) conj ['hyp #{(:name term)}])))
   term)
 
 (defn check-min-max
@@ -587,7 +586,7 @@
           (dosync 
             (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype)
-            (alter (:support term) conj ['hyp #{term}]))
+            (alter (:support term) conj ['hyp #{(:name term)}]))
           (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)))
           (when (= expr 'False)

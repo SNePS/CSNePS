@@ -126,11 +126,11 @@
     ;; informing it that it is true.
     
     ;; Submit a message for the originator. 
-    (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{originator}]}, :type 'I-INFER}))
+    (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER}))
     ;; When a term has a negation, submit a message saying so.
     (when-let [nor-cs (@(:up-cablesetw originator) (slot/find-slot 'nor))]
       (doseq [nor @nor-cs]
-        (submit-to-channel channel (new-message {:origin originator, :support-set #{['der #{nor}]}, :type 'I-INFER, :true? false}))))
+        (submit-to-channel channel (new-message {:origin originator, :support-set #{['der #{(:name nor)}]}, :type 'I-INFER, :true? false}))))
     channel))
 
 (defn valve-open?
@@ -147,7 +147,7 @@
              (or (= (first %) {}) (submap? (first %) (:subst message)))
              (some 
                (fn [supportset] 
-                 (clojure.set/subset? (second supportset) @(:hyps (second %)))) 
+                 (clojure.set/subset? (map get-term (second supportset)) @(:hyps (second %)))) 
                (:support-set message)))
           @(:valve-selectors channel))))
 
