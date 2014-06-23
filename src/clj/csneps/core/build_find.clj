@@ -34,7 +34,11 @@
   (loop [fs (seq fillers)
          res '()]
     (if (empty? fs)
-      (apply clojure.set/intersection (map set res))
+      (map get-term 
+           (apply clojure.set/intersection
+                  (for [r res]
+                    (set (map #(:name %) r)))))
+      ;(apply clojure.set/intersection (map set res))
       (let [filler (first fs)
             termsfrom (filter #(= (:caseframe %) cf) (findfrom filler slot))]
         (if (empty? termsfrom) 
@@ -52,9 +56,9 @@
   (let [result (loop [sfmap (map #(vector %1 %2) (seq (:slots cf)) (seq dcs))
                       res #{}]
                  (if (empty? sfmap)
-                   res
+                   (map get-term res)
                    (let [[slot fillers] (first sfmap)
-                         sres (when (seq fillers) (find-terms-with-filled-slot cf slot fillers))]
+                         sres (set (map #(:name %) (when (seq fillers) (find-terms-with-filled-slot cf slot fillers))))]
                      (cond
                        (empty? fillers)
                        (recur (rest sfmap)
@@ -78,7 +82,7 @@
                                               (= max (:max n)))
                                           (eqfillersets (:down-cableset n) dcs))]
                   n)]
-        (when (pos? (count ret)) (first ret))))))
+        (first ret)))))
 
 ;;; Rewritten 6/21/2012 [DRS]
 (defn contains-new-term-or-cf?
