@@ -23,7 +23,8 @@
   "Apples the substitution subs2 to subs1"
   [subs1 subs2] 
   (let [compose (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)]
-    (clojure.core/merge subs2 (into {} compose))))
+    (into subs2 compose)))
+    ;(clojure.core/merge subs2 (into {} compose))))
 
 ;; Ex: subs2: {arb1: (every x (Isa x Cat)) cat}
 ;;     subs1: {arb2: (every x (Isa x BlahBlah)) arb1: (every x (Isa x Cat))}
