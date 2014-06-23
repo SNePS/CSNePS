@@ -453,7 +453,7 @@
         der-rui-t (some #(when (= (:pos %) (count @(:u-channels node))) %) new-ruis)
         der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
         dermsg-t (derivative-message (imessage-from-ymessage message node)
-                                     :support-set (der-tag der-rui-t))
+                                     :support-set (der-tag (:support-set der-rui-t)))
         dermsg-f (derivative-message message 
                                    :origin node
                                    :support-set (der-tag (:support-set der-rui-f))
@@ -702,9 +702,9 @@
     ;; Instance from unifying term.
     (let [instance (:origin message)
           outgoing-support (os-union (:support-set message)
-                                     #{['der (set (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
-                                                               (filter #(csneps/arbitraryTerm? %) 
-                                                                       (keys (:subst message))))))]})
+                                     #{['der (set (map (fn [t] (:name t)) (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                                                                       (filter #(csneps/arbitraryTerm? %) 
+                                                                                               (keys (:subst message)))))))]})
           der-msg (derivative-message message
                                       :origin node
                                       :support-set outgoing-support
