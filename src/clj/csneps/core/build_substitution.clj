@@ -10,8 +10,8 @@
   ([term sub ignore-type] (apply-sub-to-term variable? term sub ignore-type))
   ([variable? term sub ignore-type]
     (term-prewalk (fn [x]
-                          (if (sub x)
-                            (sub x)
+                          (if-let [s (sub x)]
+                            s
                             x))
                          term
                          :ignore-type ignore-type)))
