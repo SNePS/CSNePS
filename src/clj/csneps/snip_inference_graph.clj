@@ -702,9 +702,9 @@
     ;; Instance from unifying term.
     (let [instance (:origin message)
           outgoing-support (os-union (:support-set message)
-                                     #{['der (set (map (fn [t] (:name t)) (flatten (map (fn [a] (apply-to-all-restrictions (:subst message) a))
-                                                                                       (filter #(csneps/arbitraryTerm? %) 
-                                                                                               (keys (:subst message)))))))]})
+                                     #{['der (set (flatten (map (fn [a] (:name (apply-to-all-restrictions (:subst message) a)))
+                                                               (filter #(csneps/arbitraryTerm? %) 
+                                                                       (keys (:subst message))))))]})
           der-msg (derivative-message message
                                       :origin node
                                       :support-set outgoing-support
