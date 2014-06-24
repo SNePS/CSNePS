@@ -318,7 +318,7 @@
 
 (defn build-numerical-entailmant
   "Builds the term for `(i=> ant cq)."
-  [i ant cq semtype]
+  [i ant cq semtype substitution]
   (let [ant (if (= (type ant) clojure.lang.PersistentHashSet)
                ant
                (hash-set ant))
@@ -342,7 +342,7 @@
         :else 
           (let [term (build-channels
                        (build-molecular-node
-                         cf (list (build ant semtype {}) (build cq semtype {}))
+                         cf (list (build ant semtype substitution) (build cq semtype substitution))
                          :csneps.core/Numericalentailment semtype
                          :fsemtype semtype :min i))]
             term)))))
@@ -853,7 +853,7 @@
       (cond ;;Else caseframes
         (ientailsymb? fcn)
             ;; expr is (i=> ant cq)
-            (build-numerical-entailmant (ientaili fcn) (second expr) (third expr) semtype)
+            (build-numerical-entailmant (ientaili fcn) (second expr) (third expr) semtype substitution)
             :else
             (build-user-term fcn expr semtype substitution)))))
 
