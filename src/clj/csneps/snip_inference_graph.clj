@@ -179,6 +179,8 @@
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
     (let [vars-in-orig (when subst (set (filter build/variable? (build/flatten-term (:originator channel)))))
+          subst (when subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
+                                                                    (or (:switch-binds channel) #{})))
           subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
           rel-vses (loop [vs (seq @(:valve-selectors channel))
                           rel-vses #{}]
@@ -195,15 +197,16 @@
                                (rest vs)
                                rel-vses)))
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
-      (if (and (seq rel-vses) (empty? match-vses))
-        (println channel vars-in-orig subst))
+      ;(if (seq rel-vses)
+      ;(send screenprinter (fn [_] (println channel vars-in-orig subst "VSes" (map first @(:valve-selectors channel)))));)
       
       (if subst
         (dosync (alter (:valve-selectors channel) difference match-vses))
         (dosync (alter (:valve-selectors channel) difference rel-vses)))
-      (if subst
-        (when (seq match-vses) true)
-        (when (seq rel-vses) true)))))
+      ;(if subst
+      ;  (when (seq match-vses) true)
+      ;  (when (seq rel-vses) true))
+      (when (seq match-vses) subst))))
 
 ;;;;;;;;;;;;;;;;;
 ;;; Inference ;;;
@@ -245,11 +248,13 @@
     (dosync (alter future-bw-infer assoc term (union (@future-bw-infer term) invoketermset)))
     (doseq [ch (@ant-in-channels term)]
       (when (and (not (visited term)) 
- -                 (not (visited (:originator ch))))
+                 (not (visited (:originator ch))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
         ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
         (let [subst (add-valve-selector ch subst context taskid)]
+          ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "vs" subst)))
+          
           ;(open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
           (when taskid (.increment (@infer-status taskid)))
@@ -277,13 +282,11 @@
     (when cancel-for-term
       (dosync (alter future-bw-infer assoc term (disj (@future-bw-infer term) cancel-for-term))))
     ;(when (empty? @(:future-bw-infer term))
-      (let [affected-chs (remove nil? 
-                                 (doall 
-                                   (for [ch (@ant-in-channels term)
-                                         :let [subst (build/substitution-application-nomerge 
-                                                       (merge subst (:filter-binds ch))
-                                                       (or (:switch-binds ch) #{}))]]
-                                     (when (remove-valve-selector ch subst hyps) [ch subst]))))]
+      (let [affected-chs (doall 
+                           (for [ch (@ant-in-channels term)
+                                 :let [new-subst (remove-valve-selector ch subst hyps)]
+                                 :when (not (nil? new-subst))]
+                             [ch new-subst]))]
         (when (seq affected-chs)
           (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
           (doseq [[ch subst] affected-chs]
@@ -876,12 +879,16 @@
     (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
+      
+      (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message))
+      
       (dosync (alter support assoc result-term (os-concat (@support result-term) (:support-set message))))
       ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
                 (:fwd-infer? message))
         (send screenprinter (fn [_]  (println "> " result-term))))
+      
       ;; Send messages onward that this has been derived.
       (let [imsg (derivative-message message
                                    :origin term
@@ -890,7 +897,7 @@
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       
-      (cancel-infer term nil (:taskid message) (:subst message) (:support-set message))
+      
       
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
       (when (get (@future-bw-infer term) result-term)
