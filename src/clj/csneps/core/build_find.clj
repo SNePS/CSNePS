@@ -34,13 +34,9 @@
   (loop [fs (seq fillers)
          res '()]
     (if (empty? fs)
-      (map get-term 
-           (apply clojure.set/intersection
-                  (for [r res]
-                    (set (map #(:name %) r)))))
-      ;(apply clojure.set/intersection (map set res))
+      (apply clojure.set/intersection (map set res))
       (let [filler (first fs)
-            termsfrom (filter #(= (:caseframe %) cf) (findfrom filler slot))]
+            termsfrom (filter #(= (@caseframe %) cf) (findfrom filler slot))]
         (if (empty? termsfrom) 
           #{}
           (recur (rest fs) (conj res termsfrom)))))))
@@ -80,7 +76,7 @@
                                               (= min (:min n)))
                                           (or (nil? max)
                                               (= max (:max n)))
-                                          (eqfillersets (:down-cableset n) dcs))]
+                                          (eqfillersets (@down-cableset n) dcs))]
                   n)]
         (first ret)))))
 
@@ -110,7 +106,7 @@
 (defn find-vars-of-restriction-set-size
   "Returns all vars of type [quant] in the KB which have a restriction set of size [size]."
   [size quant]
-  (set (filter #(= (count @(:restriction-set %)) size) 
+  (set (filter #(= (count (@restriction-set %)) size) 
                (case quant
                  :every @ARBITRARIES
                  :some @INDEFINITES
@@ -148,7 +144,7 @@
                                        (clojure.set/intersection possibles
                                                                  (apply clojure.set/union
                                                                         (map #(get-terms-from-find-results
-                                                                                (find-in (first rst) @(:restriction-set %) var-list))
+                                                                                (find-in (first rst) (@restriction-set %) var-list))
                                                                              possibles))))))
             nsct (count (notsames var-label))]
         (when possibles
@@ -212,7 +208,7 @@
     ;; Check if expr is a seq. If it is, we'll need to compare it with the
     ;; dcs of the term we're comparing against.
     (seq? expr)
-    (pattern-term-match expr (:down-cableset term) var-list subs)
+    (pattern-term-match expr (@down-cableset term) var-list subs)
     ;; Check if expr is a variable. If so, we need to verify that any new
     ;; substitution we create will be valid.
     (or (some #{expr} var-list)
@@ -258,7 +254,7 @@
   [expr termset var-list]
   (remove #(nil? %)
     (for [term termset]
-      (let [subs (pattern-term-match expr (:down-cableset term) var-list {})]
+      (let [subs (pattern-term-match expr (@down-cableset term) var-list {})]
         ;; TODO: Why is this like this? Very odd...
         (cond
           (seq subs) ;; non-empty sequence.

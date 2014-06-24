@@ -99,6 +99,23 @@
   [term]
   (:type term))
 
+(def i-channels (ref {}))
+(def u-channels (ref {}))
+(def g-channels (ref {}))
+(def ant-in-channels (ref {}))
+(def future-fw-infer (ref {}))
+(def future-bw-infer (ref {}))
+(def instances (ref {}))
+(def expected-instances (ref {}))
+(def up-cablesetw (ref {}))
+(def support (ref {}))
+(def msgs (ref {}))
+(def restriction-set (ref {}))
+(def dependencies (ref {}))
+(def lattice-node (ref {}))
+(def down-cableset (ref {}))
+(def caseframe (ref {}))
+
 ;;;Instantiate with (new-test {}) and inside {} use any args you need.
 (defrecord2 Term
   [name nil
@@ -106,16 +123,6 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    type ::Term])
 
 ;;;Portnote: was named "atom", Clojure doesn't like this.
@@ -125,16 +132,6 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    type ::Atom])
 
 (defrecord2 Base
@@ -143,16 +140,6 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    type ::Base])
 
 (defrecord2 Variable
@@ -161,21 +148,9 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Variable
-   restriction-set (ref (hash-set))
    var-label nil
-   not-same-as (ref (hash-set))
+   not-same-as (ref #{})
    type ::Variable])
 
 (defrecord2 Indefinite
@@ -184,23 +159,9 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Variable
-   restriction-set (ref (hash-set))
    var-label nil
-   not-same-as (ref (hash-set))
-   ;;Additions for Indefinite
-   dependencies (ref (hash-set))
+   not-same-as (ref #{})
    type ::Indefinite])
 
 (defrecord2 Arbitrary
@@ -209,24 +170,11 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;; Arbitrary specific:
-   lattice-node (ref nil)
    fully-built (ref false)
    ;;Additions for Variable
-   restriction-set (ref (hash-set))
    var-label nil
-   not-same-as (ref (hash-set))
+   not-same-as (ref #{})
    type ::Arbitrary])
 
 (defrecord2 QueryVariable
@@ -235,23 +183,11 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;; QueryVariable Specific
    fully-built (ref false)
    ;;Additions for Variable
-   restriction-set (ref (hash-set))
    var-label nil
-   not-same-as (ref (hash-set))
+   not-same-as (ref #{})
    type ::QueryVariable])
 
 (defrecord2 Molecular
@@ -260,20 +196,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Molecular])
 
@@ -283,20 +206,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Carule
    print-forms (ref nil)
@@ -308,25 +218,11 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Closure
    closed-vars nil
    type ::Closure])
-
 
 (defrecord2 Param2op
    [name nil
@@ -334,20 +230,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -360,20 +243,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -386,20 +256,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -412,20 +269,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -438,20 +282,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -464,20 +295,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -490,20 +308,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    ;;Additions for Param2op
    min nil
@@ -516,20 +321,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Conjunction])
 
@@ -539,20 +331,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Negation])
 
@@ -562,20 +341,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Negationbyfailure])
 
@@ -585,20 +351,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Numericalentailment])
 
@@ -608,20 +361,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Orentailment])
 
@@ -631,20 +371,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Implication])
 
@@ -654,20 +381,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
-   i-channels (ref (hash-set))
-   u-channels (ref (hash-set))
-   g-channels (ref (hash-set))
-   ant-in-channels (ref (hash-set))
-   future-fw-infer (ref (hash-set))
-   future-bw-infer (ref (hash-set))
-   instances (ref (hash-map))
-   expected-instances (ref (hash-map))
-   msgs (ref nil)
-   up-cablesetw (ref (hash-map))
-   support (ref (hash-set))
    ;;Additions for Molecular
-   caseframe nil
-   down-cableset '()
    down-weights (ref '())
    type ::Categorization])
 
@@ -742,13 +456,13 @@
 (defn install-in-upcset
   "Installs n in the up-cableset of m for relation r."
   [n r m]
-    (when-not (contains? @(:up-cablesetw m) r)
-      (dosync (alter (:up-cablesetw m) assoc r (ref (hash-set)))))
-    (dosync (alter (second (find @(:up-cablesetw m) r)) conj n)))
+    (when-not (contains? (@up-cablesetw m) r)
+      (dosync (alter up-cablesetw assoc m (assoc (@up-cablesetw m) r (ref (hash-set))))))
+    (dosync (alter (second (find (@up-cablesetw m) r)) conj n)))
 
 (defn totparam [term]
   "Returns the tot of the given param2op term."
-  (count (first (:down-cableset term))))
+  (count (first (@down-cableset term))))
 
 (defn change-type
   [term newtype]
@@ -770,7 +484,7 @@
 
 (defn build-upcsets
   [mol]
-  (doseq [[rel ns] (map #(vector %1 %2) (:slots (:caseframe mol)) (:down-cableset mol))]
+  (doseq [[rel ns] (map #(vector %1 %2) (:slots (@caseframe mol)) (@down-cableset mol))]
     (if (= (type ns) clojure.lang.PersistentHashSet)
       (doseq [m ns]
         (install-in-upcset mol rel m))

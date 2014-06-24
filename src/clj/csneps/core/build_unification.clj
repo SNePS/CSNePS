@@ -108,8 +108,8 @@
        (variable? t)             (uv-fn variable? t s [source target] 1)
        (and (molecularTerm? s)
             (molecularTerm? t))  (garner-unifiers variable?
-                                                 (:down-cableset s)
-                                                 (:down-cableset t)
+                                                 (@down-cableset s)
+                                                 (@down-cableset t)
                                                  (garner-unifiers variable?
                                                                   (term-predicate s)
                                                                   (term-predicate t)
@@ -351,14 +351,14 @@
   [term & {:keys [parent distnodes] :or {distnodes DistNodes}}]
   (if (isa? (syntactic-type-of term) :csneps.core/Molecular)
     (let [termid (term-predicate term)
-          termpp (:print-pattern (:caseframe term))
+          termpp (:print-pattern (@caseframe term))
           nofsyms (and (seq? (first termpp)) (= (ffirst termpp) 'quote))
-          arity (dec (count (:print-pattern (:caseframe term))))
+          arity (dec (count (:print-pattern (@caseframe term))))
           newparent (buildUnificationTreeNode termid arity :parent parent :distnodes distnodes)] ; ;Builds the node for the predicate symbol
       (loop [p newparent
              dcs (if nofsyms
-                   (:down-cableset term)
-                   (rest (:down-cableset term)))]
+                   (@down-cableset term)
+                   (rest (@down-cableset term)))]
         ;(binding [*print-level* 4] 
         ;  (println p "\n" dcs))
         (if (= dcs '())
@@ -603,7 +603,7 @@
     arb, then term satisfies arb."
   [term arb]
   (when (and term arb)
-    (let [rs @(:restriction-set arb)]
+    (let [rs (@restriction-set arb)]
       (every? #(not (nil? %)) 
               (map #(ct/asserted? 
                       (apply-sub-to-term % {arb term}) 

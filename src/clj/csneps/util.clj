@@ -417,3 +417,7 @@
 (defn println-agent
   [& strs]
   (send screenprinter (fn [_]  (println (clojure.string/join " " strs)))))
+
+(defn conj-in-val-set 
+  [map key element]
+  (set (conj (map key) element)))

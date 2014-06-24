@@ -12,7 +12,7 @@
   [expr type]
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
-      (doseq [rst (seq @(:restriction-set v))]
+      (doseq [rst (seq (@restriction-set v))]
         (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
           (assert rst (ct/find-context 'BaseCT))))
       (build-quantterm-channels v))
@@ -25,7 +25,7 @@
    their restriction sets. Returns the variable node built."
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
-    (doseq [rst (seq @(:restriction-set (first vars)))]
+    (doseq [rst (seq (@restriction-set (first vars)))]
       (assert rst (ct/find-context 'BaseCT)))
     (build-quantterm-channels (first vars))
     (first vars)))

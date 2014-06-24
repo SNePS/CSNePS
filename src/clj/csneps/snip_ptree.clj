@@ -66,11 +66,11 @@
 (defn term-vars
   "Returns the set of arbitrary terms which are in the down cableset of term."
   [term]
-  (loop [dcs (:down-cableset term)
+  (loop [dcs (@down-cableset term)
          vars #{}]
     (if (seq dcs)
       (recur (rest dcs)
-             (union vars (set (filter csneps/arbitraryTerm? (first dcs)))))
+             (union vars (set (filter arbitraryTerm? (first dcs)))))
       vars)))
 
 (defn var-pat-map
@@ -166,5 +166,5 @@
                               (G y z)
                               (H x w))
                         (ct/currentContext))]
-    (make-ptree :csneps.core/Conjunction (:down-cableset a))))
+    (make-ptree :csneps.core/Conjunction (@down-cableset a))))
   

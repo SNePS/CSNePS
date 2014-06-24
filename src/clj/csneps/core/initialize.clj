@@ -38,6 +38,24 @@
       ;; Initialize the set of question mark variables.
       (ref-set csneps/QVARS #{})
       (ref-set csneps/QVARCOUNT 0)
+      
+      ;; Reset term parts:
+      (ref-set csneps/i-channels {})
+			(ref-set csneps/u-channels {})
+			(ref-set csneps/g-channels {})
+			(ref-set csneps/ant-in-channels {})
+			(ref-set csneps/future-fw-infer {})
+			(ref-set csneps/future-bw-infer {})
+			(ref-set csneps/instances {})
+			(ref-set csneps/expected-instances {})
+			(ref-set csneps/up-cablesetw {})
+			(ref-set csneps/support {})
+			(ref-set csneps/msgs {})
+			(ref-set csneps/restriction-set {})
+			(ref-set csneps/dependencies {})
+			(ref-set csneps/lattice-node {})
+			(ref-set csneps/down-cableset {})
+			(ref-set csneps/caseframe {})
 
       ;; Reinitialize unification tree.
       (build/reset-tree)

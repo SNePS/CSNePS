@@ -10,7 +10,7 @@
   ;; sort-based-derivable only considers the sorts of terms.
   ;; So it doesn't consider any term that logically implies p.
   ;; So it doesn't need a termstack argument.
-  (if-not (= (csneps/syntactic-type-of p) :csneps.core/Categorization)
+  (if-not (= (syntactic-type-of p) :csneps.core/Categorization)
     #{}
     (let [members (seq (find-utils/findto p 'member))]
       (if (= (count members)
@@ -21,8 +21,8 @@
                             (loop [class classes
                                    countc 0]
                               (if (and class
-                                       (csneps/semantic-type-p (keyword (:name (first class))))
-                                       (isa? (csneps/semantic-type-of (first member)) (keyword (:name (first class)))))
+                                       (semantic-type-p (keyword (:name (first class))))
+                                       (isa? (semantic-type-of (first member)) (keyword (:name (first class)))))
                                 (recur (next class) (inc countc))
                                 countc))))
                       (recur (next member) (inc countm))

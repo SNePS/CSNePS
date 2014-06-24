@@ -29,7 +29,7 @@
 (declare covers valid-adjust)
 
 (defmulti slot-based-entails
-  (fn [source target] [(csneps/syntactic-type-of source) (csneps/syntactic-type-of target)]))
+  (fn [source target] [(syntactic-type-of source) (syntactic-type-of target)]))
 
 ;;; Slot-based entailment never applies to an atom and anything
 (defmethod slot-based-entails [:csneps.core/Atom :csneps.core/Molecular] [source target])
@@ -47,7 +47,7 @@
     [args (find-utils/findto source 'nor)]
     (let [arg (first args)]
       (cond 
-        (and (= (csneps/syntactic-type-of arg) :csneps.core/Conjunction)
+        (and (= (syntactic-type-of arg) :csneps.core/Conjunction)
                (subset? (find-utils/findto arg 'and) (find-utils/findto target 'andorargs)))
         target
         (nil? (rest args))
@@ -57,10 +57,10 @@
 
 (defmethod slot-based-entails 
   [:csneps.core/Implication :csneps.core/Implication] [source target]
-  (let [src-ant (nth (:down-cableset source) 0)
-        src-cq  (nth (:down-cableset target) 1)
-        tgt-ant (nth (:down-cableset source) 0)
-        tgt-cq  (nth (:down-cableset target) 1)]
+  (let [src-ant (nth (@down-cableset source) 0)
+        src-cq  (nth (@down-cableset target) 1)
+        tgt-ant (nth (@down-cableset source) 0)
+        tgt-cq  (nth (@down-cableset target) 1)]
     (when (and (subset? src-ant tgt-ant) (subset? tgt-cq src-cq))
       target)))
 
@@ -68,8 +68,8 @@
   [:csneps.core/Andor :csneps.core/Andor] [source target]
   (let [i       (:min source)
         j       (:max source)
-        src-set (nth (:down-cableset source) 0)
-        tgt-set (nth (:down-cableset target) 0)
+        src-set (nth (@down-cableset source) 0)
+        tgt-set (nth (@down-cableset target) 0)
         k       (- (count src-set) (count tgt-set))]
     (when (or 
             (and (>= k 0)
@@ -85,8 +85,8 @@
   [:csneps.core/Thresh :csneps.core/Thresh] [source target]
   (let [i       (:min source)
         j       (:max source)
-        src-set (nth (:down-cableset source) 0)
-        tgt-set (nth (:down-cableset target) 0)
+        src-set (nth (@down-cableset source) 0)
+        tgt-set (nth (@down-cableset target) 0)
         k       (- (count src-set) (count tgt-set))]
     (when (or 
             (and (>= k 0)
@@ -109,9 +109,9 @@
               target (first targetset)]
           ;; If source and target are molecular, and have compatible frames
 	        ;; TODO:     should this "adjustable" check be eliminated?
-          (if (and (isa? (csneps/syntactic-type-of target) :csneps.core/Molecular)
-                   (isa? (csneps/syntactic-type-of source) :csneps.core/Molecular)
-                   (cf/adjustable? (:caseframe source) (:caseframe target)))
+          (if (and (isa? (syntactic-type-of target) :csneps.core/Molecular)
+                   (isa? (syntactic-type-of source) :csneps.core/Molecular)
+                   (cf/adjustable? (@caseframe source) (@caseframe target)))
             ;; Return targetset if the fillers of every source slot can 
 		        ;;     be validly adjusted to the fillers of the corresponding target slot
             (when (every?
@@ -120,7 +120,7 @@
                                    (:max %)
                                    (pb-findtos (hash-set source) %)
                                    (pb-findtos (hash-set target) %))
-                    (:slots (:caseframe source)))
+                    (:slots (@caseframe source)))
               targetset)))
         ;; Else (not singletons;  special nor case): 
 	      ;;      return targetset if the source set covers the target set
@@ -129,14 +129,14 @@
 (defmethod slot-based-entails 
   [:csneps.core/Molecular :csneps.core/Molecular] [source target]
   ;(println "Here" (cf/adjustable? (:caseframe source) (:caseframe target)))
-  (when (and (cf/adjustable? (:caseframe source) (:caseframe target))
+  (when (and (cf/adjustable? (@caseframe source) (@caseframe target))
              (every? 
                #(valid-adjust (:posadjust %)
                               (:min %)
                               (:max %)
                               (pb-findtos (hash-set source) %)
                               (pb-findtos (hash-set target) %))
-               (:slots (:caseframe source))))
+               (:slots (@caseframe source))))
     target))
 
 (defn covers
@@ -186,14 +186,14 @@
      The termstack is a stack of propositions
          that this goal is a subgoal of."
   [target context termstack]
-  (if (isa? (csneps/type-of target) :csneps.core/Molecular) 
+  (if (isa? (type-of target) :csneps.core/Molecular) 
     (do 
 	    ;;Look at the terms stored in the target's caseframe
 	    (when GOALTRACE 
 	      (cl-format true "~&I will consider using Slot&Path-Based inference.~%"))
 	    (or 
 	      (loop 
-	        [terms @(:terms (:caseframe target))]
+	        [terms @(:terms (@caseframe target))]
 	        (cond 
 	          (empty? terms) 
 	          nil
@@ -205,7 +205,7 @@
 	      ;; For each caseframe cf that can be adjusted to the target's frame, 
 	      ;;  look at each of cf's stored terms
 	      (loop 
-	        [cfs @(:adj-from (:caseframe target))]
+	        [cfs @(:adj-from (@caseframe target))]
 	        (let [cf (first cfs)
 	              res (when cf
 	                    (loop 

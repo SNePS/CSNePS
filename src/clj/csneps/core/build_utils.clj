@@ -26,21 +26,21 @@
   [term]
   (or
     ((type-of term) syntype-fsym-map)
-    (let [p (:print-pattern (:caseframe term))]
+    (let [p (:print-pattern (@caseframe term))]
       (if (and (seq? (first p)) (= (first (first p)) 'quote))
         (second (first p))
-        (:name (first (first (:down-cableset term))))))))
+        (:name (first (first (@down-cableset term))))))))
 
 (defn term-walk
   [inner outer termpart & {:keys [ignore-type]}]
   (cond
     (molecularTerm? termpart) (outer (build 
                                        (if-let [fsym (or ((type-of termpart) syntype-fsym-map)
-                                                         (let [p (:print-pattern (:caseframe termpart))]
+                                                         (let [p (:print-pattern (@caseframe termpart))]
                                                            (when (and (seq? (first p)) (= (first (first p)) 'quote))
                                                              (second (first p)))))]
-                                         (conj (doall (map inner (:down-cableset termpart))) fsym)
-                                         (doall (map inner (:down-cableset termpart))))
+                                         (conj (doall (map inner (@down-cableset termpart))) fsym)
+                                         (doall (map inner (@down-cableset termpart))))
                                        (if ignore-type :Entity (csneps.core/semantic-type-of termpart))
                                        {}))
     (atomicTerm? termpart) (outer termpart)
@@ -50,7 +50,7 @@
 (defn term-recur
   [inner outer termpart]
   (cond
-    (molecularTerm? termpart) (outer (build (conj (doall (map inner (:down-cableset termpart))) (term-predicate termpart)) 
+    (molecularTerm? termpart) (outer (build (conj (doall (map inner (@down-cableset termpart))) (term-predicate termpart)) 
                                         :Propositional
                                         {}))
     ;(arbitraryTerm? termpart) (outer (build-variable (list 'every (:var-label termpart) (map inner @(:restriction-set termpart))))) 
@@ -75,6 +75,6 @@
    complete set of subterms."
   [term]
   (cond 
-    (molecularTerm? term) (flatten (map flatten-term (:down-cableset term)))
+    (molecularTerm? term) (flatten (map flatten-term (@down-cableset term)))
     (atomicTerm? term) (list term)
     (set? term) (flatten (map flatten-term term))))

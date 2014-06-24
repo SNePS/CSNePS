@@ -11,9 +11,9 @@
               (slot/find-slot r)
               r)]
     (when (isa? (type-of n) :csneps.core/Molecular)
-      (let [pos (first (positions #{rel} (:slots (:caseframe n))))]
+      (let [pos (first (positions #{rel} (:slots (@caseframe n))))]
         (if pos
-          (nth (seq (:down-cableset n)) pos)
+          (nth (seq (@down-cableset n)) pos)
           #{})))))
 
 (defn findfrom
@@ -21,5 +21,5 @@
         from which a slot r, or a slot named r, goes to m."
   [m r]
   {:pre [(term? m)]}
-  (let [res (get @(:up-cablesetw m) (if (= (type r) csneps.core.relations.Slot) r (slot/find-slot r)))]
+  (let [res (get (@up-cablesetw m) (if (= (type r) csneps.core.relations.Slot) r (slot/find-slot r)))]
     (if res @res (hash-set))))

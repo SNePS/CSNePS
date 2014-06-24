@@ -90,20 +90,20 @@
 
 (defn find-channel 
   [originator destination]
-  (some #(when (= (:originator %) originator) %) @(:ant-in-channels destination)))
+  (some #(when (= (:originator %) originator) %) (@ant-in-channels destination)))
 
 (defn install-channel
   [ch orig dest type]
   (dosync
     (condp = type
-      :i-channel (alter (:i-channels orig) conj ch)
-      :u-channel (alter (:u-channels orig) conj ch)
-      :g-channel (alter (:g-channels orig) conj ch))
-    (alter (:ant-in-channels dest) conj ch))
+      :i-channel (alter i-channels assoc orig (set (conj (@i-channels orig) ch)))
+      :u-channel (alter u-channels assoc orig (set (conj (@u-channels orig) ch)))
+      :g-channel (alter g-channels assoc orig (set (conj (@g-channels orig) ch))))
+    (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch))))
   ;; Focused forward-in-backward, extension for new in-channels.
-  (when (seq @(:future-bw-infer dest))
-    (backward-infer dest @(:future-bw-infer dest) nil))
-  (when (and (seq @(:future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
+  (when (seq (@future-bw-infer dest))
+    (backward-infer dest (@future-bw-infer dest) nil))
+  (when (and (seq (@future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
     (forward-infer orig)))
 
 (defn build-channel
@@ -128,7 +128,8 @@
     ;; Submit a message for the originator. 
     (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER}))
     ;; When a term has a negation, submit a message saying so.
-    (when-let [nor-cs (@(:up-cablesetw originator) (slot/find-slot 'nor))]
+    (when-let [nor-cs (when (set? (@up-cablesetw originator))
+                        ((@up-cablesetw originator) (slot/find-slot 'nor)))]
       (doseq [nor @nor-cs]
         (submit-to-channel channel (new-message {:origin originator, :support-set #{['der #{(:name nor)}]}, :type 'I-INFER, :true? false}))))
     channel))

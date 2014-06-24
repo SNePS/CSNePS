@@ -163,7 +163,7 @@
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
   (when (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
-    (dosync (alter (:support term) conj ['hyp #{(:name term)}])))
+    (dosync (alter support assoc term #{['hyp #{(:name term)}]})))
   term)
 
 (defn check-min-max
@@ -207,17 +207,18 @@
         term (or
                existing-term
                (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
-                                                        :caseframe cf
-                                                        :down-cableset dcs-sets
                                                         :min (if (nil? min) 0 min)
                                                         :max (if (nil? max) 0 max)
-                                                        :closed-vars closed-vars
-                                                        :msgs (create-message-structure syntype dcs-sets)})]
-                 (initialize-syntype wft)
+                                                        :closed-vars closed-vars})]
                  (dosync 
+                   (alter down-cableset assoc wft dcs-sets)
+                   (alter caseframe assoc wft cf)
+                   (alter msgs assoc wft (create-message-structure syntype dcs-sets))
                    (alter TERMS assoc (:name wft) wft)
                    (alter type-map assoc (:name wft) (:type cf)))
-
+                 
+                 (initialize-syntype wft)
+                 
                  (cf/add-caseframe-term wft :cf cf)
                  wft))]
 
@@ -397,10 +398,10 @@
    and in each indefinite, from each dep."
   [quantterm]
   (if (variable? quantterm)
-    (doseq [r @(:restriction-set quantterm)
+    (doseq [r (@restriction-set quantterm)
             :let [ch (build-channel r quantterm nil nil)]]
       (install-channel ch r quantterm :i-channel))
-    (doseq [d @(:dependencies quantterm)
+    (doseq [d (@dependencies quantterm)
             :let [ch (build-channel d quantterm nil nil)]]
       (install-channel ch d quantterm :g-channel))))
 
@@ -469,12 +470,12 @@
                (condp = (type-of fcn)
                  clojure.lang.Symbol
                  (if (wftname? (str fcn))
-                   (:caseframe (get-term fcn))
+                   (@caseframe (get-term fcn))
                    fcn)
                  :csneps.core/Atom
                  (:name fcn)
                  :csneps.core/Molecular
-                 (:caseframe fcn)
+                 (@caseframe fcn)
                  (error
                    "The function \"symbol\", "fcn", is not an acceptable function \"symbol\".")))
              (and @KRNovice
@@ -586,7 +587,7 @@
           (dosync 
             (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype)
-            (alter (:support term) conj ['hyp #{(:name term)}]))
+            (alter support assoc term #{['hyp #{(:name term)}]}))
           (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)))
           (when (= expr 'False)
@@ -900,9 +901,15 @@
                                                :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
 
        (case quant
-         :every (inc-arb-counter)
-         :some  (inc-ind-counter)
-         :qvar  (inc-qvar-counter))
+         :every (do 
+                  (inc-arb-counter)
+                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Arbitrary nil))))
+         :some  (do 
+                  (inc-ind-counter)
+                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Indefinite nil))))
+         :qvar  (do 
+                  (inc-qvar-counter)
+                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Indefinite nil)))))
        (instantiate-sem-type (:name varterm) :Entity)
         
       varterm)))
@@ -923,9 +930,9 @@
 
 (defn internal-restrict
   [var]
-  (let [res @(:restriction-set var)
+  (let [res (@restriction-set var)
         categorizations (filter #(isa? (syntactic-type-of %) :csneps.core/Categorization) res)
-        categories (apply clojure.set/union (map #(second (:down-cableset %)) categorizations))
+        categories (apply clojure.set/union (map #(second (@down-cableset %)) categorizations))
         semcats (filter semtype? (map #(keyword (:name %)) categories))]
     (doall (map #(adjustType var (semantic-type-of var) %) semcats))))
 
@@ -1010,23 +1017,27 @@
     (alter TERMS assoc (:name var) var)
     (cond 
       (= quant :qvar) 
-      (alter (:restriction-set var) clojure.set/union 
-             (set (map #(build % :WhQuestion substitution) rsts)))
+      (let [restrictions (clojure.set/union (@restriction-set var)
+                                            (set (map #(build % :WhQuestion substitution) rsts)))]
+        (alter restriction-set assoc var restrictions))
       (and (= quant :some) (not (nil? dependencies)))
-      (let [restrictions (set (map #(build % :Propositional substitution) rsts))] 
-        (alter (:dependencies var) clojure.set/union
-                 (set (map #(substitution %) dependencies)))
-        (alter (:restriction-set var) clojure.set/union restrictions)
+      (let [restrictions (set (map #(build % :Propositional substitution) rsts))
+            dependencies (clojure.set/union (@dependencies var)
+                                            (set (map #(substitution %) dependencies)))] 
+        (alter dependencies assoc var dependencies)
+        (alter restriction-set assoc var restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
              ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
       :else
-      (let [restrictions (set (map #(build % :Propositional substitution) rsts))] 
-        (alter (:restriction-set var) clojure.set/union restrictions)
+      (let [restrictions (clojure.set/union (@restriction-set var)
+                                            (set (map #(build % :Propositional substitution) rsts)))] 
+        (alter restriction-set assoc var restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
             ; (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
     
+            
     (alter (:not-same-as var) clojure.set/union nsvars)
     
     (internal-restrict var)

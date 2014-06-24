@@ -1,13 +1,13 @@
 (ns csneps.snip
-  (:require [csneps.core :as csneps]
-            [csneps.core.build :as build]
+  (:require [csneps.core.build :as build]
             [csneps.core.find-utils :as find-utils]
             [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
             [csneps.core.relations :as slot]
             [clojure.walk :as walk])
 ;  (:refer-clojure :exclude [merge])
-  (:use [csneps.util]
+  (:use [csneps.core]
+        [csneps.util]
         [csneps.snip.util]
         [csneps.core.build :only (term-prewalk variable?)]
         [clojure.pprint :only (cl-format)]

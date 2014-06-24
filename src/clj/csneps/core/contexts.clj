@@ -88,7 +88,7 @@
   [p ct]
   (let [context (find-context ct)
         cthyps (hyps context)]
-    (when (some #(set/subset? (map csneps/get-term (second %)) cthyps) @(:support p))
+    (when (some #(set/subset? (map csneps/get-term (second %)) cthyps) (@csneps/support p))
       context)))
 
 

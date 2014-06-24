@@ -1,7 +1,7 @@
 (ns csneps.core.caseframes
   (:use [csneps.util])
   (:require [csneps.core.relations :as slot]
-            [csneps.core]
+            [csneps.core :as csneps]
             [clojure.pprint :as pprint]
             [clojure.string :as string]
             [csneps.core.find-utils]))
@@ -50,8 +50,8 @@
 (defn description
   [term]
   (cond
-    (csneps.core/atomicTerm? term) (str (:name term))
-    (csneps.core/molecularTerm? term) ((:descfun (:caseframe term)) term)
+    (csneps/atomicTerm? term) (str (:name term))
+    (csneps/molecularTerm? term) ((:descfun (@csneps/caseframe term)) term)
     (set? term) (clojure.string/join ", and " (for [trm term] (description trm)))))
 
 (defn make-description-function
@@ -87,8 +87,8 @@
         ;; CF <C_src,R_src> is pos-adjustable to case frame <C_tgt,R_tgt> iff:
         (and
           ;; 1) C_src is the same as, or a subtype of, C_tgt
-          (csneps.core/subtypep (csneps.core/type-of (:type srcframe))
-                                (csneps.core/type-of (:type tgtframe)))
+          (csneps/subtypep (csneps/type-of (:type srcframe))
+                                (csneps/type-of (:type tgtframe)))
           ;; 2) Every slot in R_src - R_tgt is posadjust reducible and has min = 0
           (every? #(or   (find % tgtslots)
                          (and (zero? (:min %))
@@ -110,8 +110,8 @@
         ;; Case frame <C_src,R_src> is neg-adjustable to case frame <C_tgt,R_tgt> iff:
         (and
           ;; 1) C_src is the same as, or a subtype of, C_tgt
-          (csneps.core/subtypep (csneps.core/type-of  (:type srcframe))
-                                (csneps.core/type-of  (:type tgtframe)))
+          (csneps/subtypep (csneps/type-of  (:type srcframe))
+                                (csneps/type-of  (:type tgtframe)))
           ;; 2) Every slot in R_src - R_tgt is negadjust reducible and has min = 0
           (every? #(or (find % tgtslots)
                        (and (zero? (:min %))
@@ -235,7 +235,7 @@
 
 (defn define-caseframe
   [typename slots & {:keys [docstring print-pattern fsymbols] :or {docstring ""}}]
-  {:pre [(csneps.core/semantic-type-p (keyword typename))
+  {:pre [(csneps/semantic-type-p (keyword typename))
          (check-new-caseframe typename slots)
          (string? docstring)
          (seq? print-pattern)
@@ -295,7 +295,7 @@
    If the caseframe cf is given, add the term to that caseframe.
    Else, add the term to the caseframe that term uses."
   [term & {:keys [cf]}]
-  (dosync (alter (:terms (if cf cf (:caseframe term))) conj term)))
+  (dosync (alter (:terms (if cf cf (@csneps/caseframe term))) conj term)))
 
 (defn quotedpp?
   "Returns True if the caseframe cf
@@ -348,7 +348,7 @@
   "Given a term, returns a map with the keys being relations and the values being sets of terms for each
    item in the original terms down cableset."
   [term]
-  (apply merge (map hash-map (:slots (:caseframe term)) (:down-cableset term))))
+  (apply merge (map hash-map (:slots (@csneps/caseframe term)) (@csneps/down-cableset term))))
   
 (defn hasOneArgumentSlot
   [cf]

@@ -42,7 +42,7 @@
     (= term1 'OMEGA)
     false
     :else
-    (let [rs1 @(:restriction-set term1)]
+    (let [rs1 (@restriction-set term1)]
       (every? #(not (nil? %))
               (map #(ct/asserted? 
                       (apply-sub-to-term % {term1 term2} true) 

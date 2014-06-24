@@ -83,13 +83,13 @@
         (print-str 
           (condp = (type-of term)
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
-            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set @(:dependencies term) false) ") ")
+            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set (@csneps/dependencies term) false) ") ")
             :csneps.core/QueryVariable (str "(" (:var-label term) " "))
-          (print-set @(:restriction-set term) false) ")")))))
+          (print-set (@csneps/restriction-set term) false) ")")))))
 
 (defn print-closure
   [term]
-  (print-str (list 'close (map #(:var-label %) (:closed-vars term)) (print-term (first (:down-cableset term))))))
+  (print-str (list 'close (map #(:var-label %) (:closed-vars term)) (print-term (first (@csneps/down-cableset term))))))
 
 (defn print-unnamed-molecular-term
   [term]
@@ -98,35 +98,35 @@
     :csneps.core/Closure
       (print-closure term)
     :csneps.core/Negation
-      (print-negation (first (:down-cableset term)))
+      (print-negation (first (@csneps/down-cableset term)))
     :csneps.core/Negationbyfailure
-      (print-negationbyfailure (first (:down-cableset term)))
+      (print-negationbyfailure (first (@csneps/down-cableset term)))
     :csneps.core/Conjunction
-      (print-nary 'and (first (:down-cableset term)))
+      (print-nary 'and (first (@csneps/down-cableset term)))
     :csneps.core/Disjunction
-      (print-nary 'or (first (:down-cableset term)))
+      (print-nary 'or (first (@csneps/down-cableset term)))
     :csneps.core/Equivalence
-      (print-nary 'iff (first (:down-cableset term)))
+      (print-nary 'iff (first (@csneps/down-cableset term)))
     :csneps.core/Xor
-      (print-nary 'xor (first (:down-cableset term)))
+      (print-nary 'xor (first (@csneps/down-cableset term)))
     :csneps.core/Nand
-      (print-nary 'nand (first (:down-cableset term)))
+      (print-nary 'nand (first (@csneps/down-cableset term)))
     :csneps.core/Andor
-      (print-param2op 'andor (:min term) (:max term) (first (:down-cableset term)))
+      (print-param2op 'andor (:min term) (:max term) (first (@csneps/down-cableset term)))
     :csneps.core/Thresh
-      (print-param2op 'thresh (:min term) (:max term) (first (:down-cableset term)))
+      (print-param2op 'thresh (:min term) (:max term) (first (@csneps/down-cableset term)))
     :csneps.core/Implication
-      (print-str (list 'if (print-term (first (:down-cableset term))) (print-term (second (:down-cableset term)))))
+      (print-str (list 'if (print-term (first (@csneps/down-cableset term))) (print-term (second (@csneps/down-cableset term)))))
     :csneps.core/Numericalentailment
       (print-str (list (symbol (str "=" (if (= (:min term) 1) :v (:min term)) ">"))
-                       (first (:down-cableset term)) (second (:down-cableset term))))
+                       (first (@csneps/down-cableset term)) (second (@csneps/down-cableset term))))
     :csneps.core/Arbitrary
       (print-unnamed-variable-term term)
     :csneps.core/Indefinite
       (print-unnamed-variable-term term)
     :csneps.core/QueryVariable
       (print-unnamed-variable-term term)
-    (print-molecular (:caseframe term) (:down-cableset term))
+    (print-molecular (@csneps/caseframe term) (@csneps/down-cableset term))
     ))
 
 (defn sneps-printer

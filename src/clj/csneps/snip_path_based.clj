@@ -19,8 +19,8 @@
   "Returns the set of nodes
    from which the given slot, or a path for the slot, goes to terms."
   [terms slotname]
-  {:pre [(or (set? terms) (csneps/term? terms))]}
-  (let [termset (if (set? terms) terms (hash-set (csneps/get-term terms)))
+  {:pre [(or (set? terms) (term? terms))]}
+  (let [termset (if (set? terms) terms (hash-set (get-term terms)))
         slot (slot/find-slot slotname)
         bfn @(:b-pathfn slot)]
     (if bfn 
@@ -31,8 +31,8 @@
   "Returns the set of nodes to which the given slot goes from 
    each of the terms, or to which the path for the slot goes"
   [terms slotname]
-  {:pre [(or (set? terms) (csneps/term? terms))]}
-  (let [termset (if (set? terms) terms (hash-set (csneps/get-term terms)))
+  {:pre [(or (set? terms) (term? terms))]}
+  (let [termset (if (set? terms) terms (hash-set (get-term terms)))
         slot (slot/find-slot slotname)
         ffn @(:f-pathfn slot)]
     (if ffn 
@@ -132,7 +132,7 @@
   (or (and (symbol? symbol)
 	         (= symbol '?)
 	         (seq termSet))
-      (get termSet (csneps/get-term symbol))))
+      (get termSet (get-term symbol))))
 
 (defn build-path-fn
   "Given a path expression, returns the function that will traverse that path"
@@ -196,8 +196,8 @@
   (let [termset (cond
                   (set? terms) terms
                   (nil? terms) #{}
-                  (symbol? terms) #{(csneps/get-term terms)}
-                  (seq? terms) (set (map #(csneps/get-term %) terms)))
+                  (symbol? terms) #{(get-term terms)}
+                  (seq? terms) (set (map #(get-term %) terms)))
         builtpath (build-path-fn path)]
     (builtpath termset)))
 
@@ -208,7 +208,7 @@
   [p context]
   (when GOALTRACE
     (cl-format true "~&I will consider using Path-Based inference.~%"))
-  (if (isa? (csneps/type-of p) :csneps.core/Molecular)
+  (if (isa? (type-of p) :csneps.core/Molecular)
     (let [dcs (:down-cableset p)
           results (remove #(not (ct/asserted? % context))
                           (apply intersection
@@ -218,7 +218,7 @@
                                                     (map #(pb-findfroms % slot) fillers))
                                                   (cf/dcsRelationTermsetMap p))))))]
       (if (and (seq results)
-               (some #(build/eqfillersets (:down-cableset %) dcs) results))
+               (some #(build/eqfillersets (@down-cableset %) dcs) results))
         (do 
           (assertTrace nil (seq results) p "Path-Based inference" context)
           (hash-set p))
