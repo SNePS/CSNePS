@@ -148,10 +148,10 @@
 
 (defn add-valve-selector
   [channel subst context taskid]
-  (let [vars-in-dest (set (filter build/variable? (build/flatten-term (:originator channel))))
+  (let [vars-in-orig (set (filter build/variable? (build/flatten-term (:originator channel))))
         subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
-        subst (into {} (filter #(vars-in-dest (first %)) subst))
+        subst (into {} (filter #(vars-in-orig (first %)) subst))
         valve-selector [subst context]]
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
@@ -178,17 +178,26 @@
 (defn remove-valve-selector
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
-    (let [rel-vses (loop [vs (seq @(:valve-selectors channel))
+    (let [vars-in-orig (when subst (set (filter build/variable? (build/flatten-term (:originator channel)))))
+          subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
+          rel-vses (loop [vs (seq @(:valve-selectors channel))
                           rel-vses #{}]
+                     
                      (cond
                        (empty? vs) rel-vses
-                       (some #(clojure.set/subset? (second %) @(:hyps (second (first vs)))) hyps) (recur 
-                                                                                                    (rest vs)
-                                                                                                    (conj rel-vses (first vs)))
+                       (some #(clojure.set/subset? 
+                                (second %) 
+                                (set (map (fn [h] (:name h)) @(:hyps (second (first vs)))))) 
+                             hyps) (recur 
+                                     (rest vs)
+                                     (conj rel-vses (first vs)))
                        :else (recur
                                (rest vs)
                                rel-vses)))
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
+      (if (and (seq rel-vses) (empty? match-vses))
+        (println channel vars-in-orig subst))
+      
       (if subst
         (dosync (alter (:valve-selectors channel) difference match-vses))
         (dosync (alter (:valve-selectors channel) difference rel-vses)))
@@ -407,7 +416,6 @@
                               %)
                            new-ruis)]
       (when match-msg 
-        ;(cancel-infer node nil (:taskid message) (:subst match-msg) (:support-set match-msg))
         (let [der-msg (derivative-message match-msg 
                                           :origin node 
                                           :type 'U-INFER 
@@ -415,7 +423,7 @@
                                           :true? true 
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
-          
+          ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
           (when showproofs 
             (doseq [u (@u-channels node)]
               (when (build/pass-message? u der-msg)
@@ -881,6 +889,9 @@
                                    :type 'I-INFER)]
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
+      
+      (cancel-infer term nil (:taskid message) (:subst message) (:support-set message))
+      
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
       (when (get (@future-bw-infer term) result-term)
         (cancel-infer-of term)))
