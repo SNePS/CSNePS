@@ -118,8 +118,8 @@
     :csneps.core/Implication
       (print-str (list 'if (print-term (first (@csneps/down-cableset term))) (print-term (second (@csneps/down-cableset term)))))
     :csneps.core/Numericalentailment
-      (print-str (list (symbol (str "=" (if (= (:min term) 1) :v (:min term)) ">"))
-                       (first (@csneps/down-cableset term)) (second (@csneps/down-cableset term))))
+      (print-str (list (symbol (str "=" (if (= (:min term) 1) 'v (:min term)) ">"))
+                       (print-term (first (@csneps/down-cableset term))) (print-term (second (@csneps/down-cableset term)))))
     :csneps.core/Arbitrary
       (print-unnamed-variable-term term)
     :csneps.core/Indefinite
