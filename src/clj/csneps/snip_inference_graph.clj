@@ -182,20 +182,11 @@
           subst (when subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                                     (or (:switch-binds channel) #{})))
           subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
-          rel-vses (loop [vs (seq @(:valve-selectors channel))
-                          rel-vses #{}]
-                     
-                     (cond
-                       (empty? vs) rel-vses
-                       (some #(clojure.set/subset? 
-                                (second %) 
-                                (set (map (fn [h] (:name h)) @(:hyps (second (first vs)))))) 
-                             hyps) (recur 
-                                     (rest vs)
-                                     (conj rel-vses (first vs)))
-                       :else (recur
-                               (rest vs)
-                               rel-vses)))
+          is-rel-vs? (fn [vs] (some #(clojure.set/subset? 
+                                       (second %) 
+                                       (set (map (fn [h] (:name h)) @(:hyps (second vs))))) 
+                                    hyps))
+          rel-vses (filter is-rel-vs? @(:valve-selectors channel))
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
       ;(if (seq rel-vses)
       ;(send screenprinter (fn [_] (println channel vars-in-orig subst "VSes" (map first @(:valve-selectors channel)))));)
