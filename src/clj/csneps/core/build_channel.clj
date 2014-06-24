@@ -101,8 +101,9 @@
       :g-channel (alter g-channels assoc orig (set (conj (@g-channels orig) ch))))
     (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch))))
   ;; Focused forward-in-backward, extension for new in-channels.
-  (when (seq (@future-bw-infer dest))
-    (backward-infer dest (@future-bw-infer dest) nil))
+  ;; TODO: Temporarily disabled, since it needs fixing to include valve-selector info.
+;  (when (seq (@future-bw-infer dest))
+;    (backward-infer dest (@future-bw-infer dest) nil))
   (when (and (seq (@future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
     (forward-infer orig)))
 
