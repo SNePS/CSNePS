@@ -198,7 +198,7 @@
         (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
         (if (and properties (@csneps/property-map x)) (print (@csneps/property-map x) " ") #{})
         (print x)
-        (when originsets (print " " @(:support x)))
+        (when originsets (print " " (@csneps/support x)))
         (println)))))
 
 (defn listkb
