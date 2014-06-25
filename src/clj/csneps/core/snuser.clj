@@ -11,6 +11,7 @@
   (:use clojure.stacktrace)
   (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load])
   (:use [clojure.pprint :only (cl-format)]
+        [clojure.core.memoize :only (memo-clear!)]
         [clojure.walk]
         [csneps.core.caseframes :only (list-caseframes sameFrame description)]
         [csneps.demo :only (demo)]

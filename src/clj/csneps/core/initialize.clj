@@ -56,6 +56,9 @@
 			(ref-set csneps/lattice-node {})
 			(ref-set csneps/down-cableset {})
 			(ref-set csneps/caseframe {})
+   
+      ;; Clear cache used by IG.
+      (memo-clear! snip/hyp-subst-of-ct?)
 
       ;; Reinitialize unification tree.
       (build/reset-tree)

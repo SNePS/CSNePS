@@ -85,7 +85,7 @@
   [subs]
   (fn [varbinds]
     (if varbinds
-      (subset? subs varbinds)
+      (clojure.set/subset? subs varbinds)
       true)))
 
 (defn find-channel 

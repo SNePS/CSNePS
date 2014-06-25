@@ -10,6 +10,7 @@
         [csneps.util]
         [csneps.snip.util]
         [csneps.core.build :only (term-prewalk variable?)]
+        [clojure.core.memoize :only (memo)]
         [clojure.pprint :only (cl-format)]
         [clojure.set])
   (:import [java.util Comparator]

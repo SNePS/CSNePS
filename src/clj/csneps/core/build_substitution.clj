@@ -56,7 +56,7 @@
                     (structurally-subsumes-varterm (% subs2) (% subs1))))
           (keys subs1)))
 
-(defn subset?
-  "Returns true if subs1 is a subset of subs2"
-  [subs1 subs2]
-  (every? #(= (subs1 %) (subs2 %)) (keys subs1)))
+;(defn subset?
+;  "Returns true if subs1 is a subset of subs2"
+;  [subs1 subs2]
+;  (every? #(= (subs1 %) (subs2 %)) (keys subs1)))

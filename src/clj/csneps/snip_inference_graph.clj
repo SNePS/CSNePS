@@ -170,6 +170,13 @@
             (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
 
+(def hyp-subst-of-ct?
+  (memo
+    (fn [hyps ct]
+      (clojure.set/subset? 
+        hyps
+        (set (map (fn [h] (:name h)) @(:hyps ct)))))))
+
 ;;; Two different sets of args: 
 ;;; 1) [channel context] to be called by introduction rules, since once a rule has been
 ;;; introduced in a context, it doesn't need to be again.
@@ -182,10 +189,11 @@
           subst (when subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                                     (or (:switch-binds channel) #{})))
           subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
-          is-rel-vs? (fn [vs] (some #(clojure.set/subset? 
-                                       (second %) 
-                                       (set (map (fn [h] (:name h)) @(:hyps (second vs))))) 
-                                    hyps))
+          ;is-rel-vs? (fn [vs] (some #(clojure.set/subset? 
+          ;                             (second %) 
+          ;                             (set (map (fn [h] (:name h)) @(:hyps (second vs))))) 
+          ;                          hyps))
+          is-rel-vs? (fn [vs] (some #(hyp-subst-of-ct? (second %) (second vs)) hyps))
           rel-vses (filter is-rel-vs? @(:valve-selectors channel))
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
       ;(if (seq rel-vses)
@@ -1054,7 +1062,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- print-valve [ch]
-  (let [selectors-this-ct (filter #(subset? @(:hyps (second %)) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
+  (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (second %)) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
     (cond
       @(:valve-open ch) "-"
       (seq selectors-this-ct) (str "~" (print-str (map #(first %) selectors-this-ct)) "~")
