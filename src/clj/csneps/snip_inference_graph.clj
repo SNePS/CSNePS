@@ -884,8 +884,9 @@
       (dosync (alter support assoc result-term (os-concat (@support result-term) (:support-set message))))
       ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
-      (when (or (and (not (ct/asserted? result-term (ct/currentContext))) print-intermediate-results)
-                (:fwd-infer? message))
+      (when (and print-intermediate-results
+                 (or (:fwd-infer? message)
+                     (not (ct/asserted? result-term (ct/currentContext)))))
         (send screenprinter (fn [_]  (println "> " result-term))))
       
       ;; Send messages onward that this has been derived.
