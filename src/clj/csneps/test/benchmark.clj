@@ -46,17 +46,22 @@
              (list resfsym varlabel)))))
 
 (defn generate-arb-instance
-  [arbexpr]
+  [arbexpr fwd?]
   (let [inst (gensym "inst")
         restrictions (nnext arbexpr)]
-    (doseq [r restrictions]
-      (snuser/assert (list (first r) inst)))
-    inst))
+    (if-not fwd?
+      (do 
+        (doseq [r restrictions]
+          (when-not fwd? 
+            (snuser/assert (list (first r) inst))))
+        inst)
+      [inst (for [r restrictions]
+              (list (first r) inst))])))
 
 (defn generate-arb-instances
-  [arbexpr instct]
+  [arbexpr instct fwd?]
   (for [n (range instct)]
-    (generate-arb-instance arbexpr)))
+    (generate-arb-instance arbexpr fwd?)))
 
 (defn generate-term 
   [prefix args]
@@ -73,7 +78,7 @@
   [entailsym & {:keys [antset antcount cqset cqcount assert? args]}]
   (let [ants (if antset antset (set (for [i (range antcount)]
                                       (generate-term "ant" args))))
-        cqs (if cqset cqset (set (for [i (range antcount)]
+        cqs (if cqset cqset (set (for [i (range cqcount)]
                                    (generate-term "cq" args))))]
     (if assert?
       [ants cqs (snuser/assert (list entailsym ants cqs))]
@@ -86,7 +91,7 @@
                  (generate-arb rescount)))
         cq (generate-term 'cq args)
         instances (when args
-                    (map #(generate-arb-instances % instcount) args))
+                    (map #(generate-arb-instances % instcount false) args))
         inst-invert (for [n (range (count (first instances)))]
                       (map #(nth % n) instances))]
     (loop [depth 0
@@ -115,9 +120,13 @@
                (for [i (range arbcount)]
                  (generate-arb rescount)))
         ant (generate-term 'ant args)
-        instances (when args
-                    (map #(generate-arb-instances % instcount) args))
-        inst-invert (for [n (range (count (first instances)))]
+        instance-res-pairs (when args
+                             (apply concat (map #(generate-arb-instances % instcount true) args)))
+        blah (println instance-res-pairs)
+        instances (map #(list (first %)) instance-res-pairs)
+        restrictions (apply concat (map second instance-res-pairs))
+        blah (println instances restrictions)
+        inst-invert (for [n (range (count instances))]
                       (map #(nth % n) instances))]
     (loop [depth 0
            antset #{ant}]
@@ -127,17 +136,9 @@
                       (map second 
                            (map #(generate-entailment entailsym :antset #{%} :cqcount branching-factor :assert? true :args args) antset))))
         (if args
-          ;; Assert instances.
-          (do 
-            (doseq [i inst-invert
-                    a antset]
-              (snuser/assert (list* (first a) i)))
-            (for [i inst-invert]
-              (list* (first ant) i)))
-          ;; If there are no arbs, assert the leaves.
-          (do 
-            (doall (map #(snuser/assert %) antset))
-            '(ant)))))))
+          [(for [i inst-invert]
+             (list* (first ant) i)) restrictions]
+          ['(ant) nil])))))
 
 ;;; And ;;;
 
@@ -205,14 +206,20 @@
   [buildgraphfn]
   (while (>= (swap! iterations-left dec) 0)
     (snuser/clearkb true)
-    (let [ant (build/build (first (buildgraphfn)) :Proposition {})
+    (let [[a res] (buildgraphfn)
+          ant (build/build (first a) :Proposition {})
+          restrictions (map #(build/build % :Proposition {}) res)
           start-time (. java.lang.System (clojure.core/nanoTime))]
+      ;(println ant restrictions)
+      (doseq [r restrictions]
+        (snuser/assert! r))
       (snuser/assert! ant)
       (log-elapsed start-time)
       (print-time))))
 
 (defn benchmark-fwd
-  [entailsym bf depth arbcount rescount instcount]
+  [entailsym bf depth arbcount rescount instcount itrs]
+  (def iterations itrs)
   (reset-benchmark)
   (let [buildgraphfn #(generate-entailment-chain-antroot entailsym bf depth arbcount rescount instcount)]
     (benchmark-fwd-1 buildgraphfn)))
