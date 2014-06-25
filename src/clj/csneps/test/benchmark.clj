@@ -122,10 +122,8 @@
         ant (generate-term 'ant args)
         instance-res-pairs (when args
                              (apply concat (map #(generate-arb-instances % instcount true) args)))
-        blah (println instance-res-pairs)
         instances (map #(list (first %)) instance-res-pairs)
         restrictions (apply concat (map second instance-res-pairs))
-        blah (println instances restrictions)
         inst-invert (for [n (range (count instances))]
                       (map #(nth % n) instances))]
     (loop [depth 0
