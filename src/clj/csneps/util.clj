@@ -408,7 +408,8 @@
 (defn submap?
   "Checks whether m contains all entries in sub."
   [^java.util.Map sub ^java.util.Map m]
-  (.containsAll (.entrySet m) (.entrySet sub)))
+  (and (<= (count sub) (count m)) 
+       (.containsAll (.entrySet m) (.entrySet sub))))
 
 ;; Debug stuff
 
@@ -417,7 +418,3 @@
 (defn println-agent
   [& strs]
   (send screenprinter (fn [_]  (println (clojure.string/join " " strs)))))
-
-(defn conj-in-val-set 
-  [map key element]
-  (set (conj (map key) element)))
