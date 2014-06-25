@@ -310,7 +310,8 @@
     (.increment (@infer-status taskid))
     (.execute ^ThreadPoolExecutor executorService 
       (priority-partial 1 initiate-node-task term 
-                        (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term} :taskid taskid})))))
+                        (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term} :taskid taskid})))
+    (.await (@infer-status taskid))))
 
 (defn cancel-forward-infer
   ([term] (cancel-infer term term))
@@ -985,6 +986,7 @@
         (backward-infer term #{term} nil))))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
   (when (:taskid message) 
+    (when-not (@infer-status (:taskid message)) (println (:taskid message)))
     ;(send screenprinter (fn [_]  (println "dec-stc" (:taskid message) message)))
     (.decrement (@infer-status (:taskid message)))))
           
