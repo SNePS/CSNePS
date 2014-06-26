@@ -7,7 +7,8 @@
    term-to-pnode-map]
   MessageStructure
   (get-rule-use-info [this new-msg]
-    (let [starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns new-msg)))
+    (let [new-msg (sanitize-message new-msg)
+          starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns new-msg)))
           starting-msgset (:msgset starting-pnode)]
       (if (@starting-msgset new-msg)
         ;; If we've already seen the message, stop now.
@@ -15,6 +16,8 @@
         ;; Otherwise, lets see how far this takes us!
         (loop [currnode starting-pnode
                totest #{new-msg}]
+          ;(binding [*print-level* 3] (send screenprinter (fn [_]  (println currnode totest))))
+          
           ;; Start by adding totest to the current node.
           ;; TODO: Do we need to filter these to check for existing? 
           (dosync (alter (:msgset currnode) union totest))
@@ -46,7 +49,7 @@
 (defn- promote-msg-helper
   [new-msg sibling-msgs]
   (let [compat-msgs (filter #(compatible? % new-msg) sibling-msgs)
-        merged-msgs (set (map #(merge new-msg %) compat-msgs))]
+        merged-msgs (set (map #(merge-messages new-msg %) compat-msgs))]
     merged-msgs))
 
 (defn msgs-to-promote
@@ -101,7 +104,7 @@
   (loop [root nil
          patseq patseq
          term-to-pnode-map {}]
-    (binding [*print-level* 2] (println root))
+    ;(binding [*print-level* 2] (println root))
     (if (empty? patseq)
       [root term-to-pnode-map]
       (let [n (first patseq)
@@ -113,7 +116,9 @@
           ;; Combine n with previous pattern.
           (let [newchild (PNode. (ref nil) n nil nil (ref #{}))
                 newroot (PNode. (ref nil) (list (:data root) n) root newchild (ref #{}))]
-            (dosync (ref-set (:parent newchild) newroot))
+            (dosync 
+              (ref-set (:parent newchild) newroot)
+              (ref-set (:parent root) newroot))
             (recur
               newroot
               (rest patseq)
@@ -128,7 +133,8 @@
               (dosync 
                 (ref-set (:parent newchild) newroot)
                 (ref-set (:parent newleft) newchild)
-                (ref-set (:parent newright) newchild))
+                (ref-set (:parent newright) newchild)
+                (ref-set (:parent root) newroot))
               (recur
                 newroot
                 (rest (rest patseq))
@@ -149,11 +155,14 @@
   [syntype fillers]
   (let [ants (condp = syntype
                :csneps.core/Conjunction (first fillers)
+               :csneps.core/Implication (first fillers)
                :csneps.core/Numericalentailment (first fillers));; Only and-entailment!
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
         [ptree tpmap] (pat-seq-to-ptree adj-pat-seq ants)]
     (PTree. ptree tpmap)))
+
+;;; Debug and testing
 
 (defn test-ptree
   []
@@ -167,4 +176,26 @@
                               (H x w))
                         (ct/currentContext))]
     (make-ptree :csneps.core/Conjunction (@down-cableset a))))
+
+(defn- get-root
+  [ptree]
+  (loop [node (first (vals (:term-to-pnode-map ptree)))]
+    (if (= @(:parent node) nil)
+      node
+      (recur @(:parent node)))))
+
+(defn- print-tree
+  [node depth]
+  (when (:left node)
+    (print-tree (:left node) (inc depth)))
+  (println (apply str (repeat depth "-")) (str "[" (count @(:msgset node)) "]") (:data node) (when (nil? @(:parent node)) "(Root)"))
+  (when (:right node)
+    (print-tree (:right node) (inc depth))))
+
+(defn print-ptree
+  [ptree]
+  (let [root (get-root ptree)]
+    (print-tree root 0)))
+    ;(binding [*print-level* 3] (println (sibling (:right root))))))
+  
   
