@@ -880,7 +880,7 @@
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
       
-      (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message))
+      (when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
       
       (dosync (alter support assoc result-term (os-concat (@support result-term) (:support-set message))))
       ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
@@ -997,8 +997,18 @@
   "Create the RUI structure for a rule node. For now,
    we always create an empty set. In the future, we'll create P-Trees
    and S-Indexes as necessary."
-  [syntype dcs]
-  (make-linear-msg-set))
+  [syntype dcs & {:keys [n]}]
+  (cond
+    (empty? (filter #(arbitraryTerm? %) (build/flatten-term dcs)))
+    (make-linear-msg-set)
+    (and (or (= syntype :csneps.core/Numericalentailment)
+             (= syntype :csneps.core/Implication))
+         (= n (count (first dcs))))
+    (make-ptree syntype dcs)
+    (= syntype :csneps.core/Conjunction)
+    (make-ptree syntype dcs)
+    :else
+    (make-linear-msg-set)))
 
 (build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer forward-infer)
 
