@@ -83,7 +83,7 @@
 (defn adjacent-pat-seq
   [pat-list pat-map]
   (loop [vars-unproc (keys pat-map)
-         vars-dolist [(key (first pat-map))]
+         vars-dolist [(first vars-unproc)]
          vars-done #{}
          patseq []]
     (if (or (= (count patseq) (count pat-list)) (and (empty? vars-unproc) (empty? vars-dolist)))
