@@ -211,7 +211,7 @@
       ;(println ant restrictions)
       (doseq [r restrictions]
         (snuser/assert! r))
-      (snuser/assert! ant)
+      (snuser/assert ant) ;; The fwd inference is really already done.
       (log-elapsed start-time)
       (print-time))))
 
