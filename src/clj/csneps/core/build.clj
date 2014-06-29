@@ -1011,7 +1011,7 @@
    restrictions rsts. Substitution contains all the variable nodes
    that should be needed to build the restrictions. Dependencies is only
    needed for building indefinite objects."
-  [quant var-label rsts substitution notsames & {:keys [dependencies]}]
+  [quant var-label rsts substitution notsames & {:keys [deps]}]
   (let [var (substitution var-label)
         nsvars (set (map #(substitution %) (notsames var-label)))]
     (alter TERMS assoc (:name var) var)
@@ -1022,9 +1022,9 @@
         (alter restriction-set assoc var restrictions))
       (and (= quant :some) (not (nil? dependencies)))
       (let [restrictions (set (map #(build % :Propositional substitution) rsts))
-            dependencies (clojure.set/union (@dependencies var)
-                                            (set (map #(substitution %) dependencies)))] 
-        (alter dependencies assoc var dependencies)
+            deps (clojure.set/union (@dependencies var)
+                                    (set (map #(substitution %) deps)))] 
+        (alter dependencies assoc var deps)
         (alter restriction-set assoc var restrictions)
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
@@ -1065,7 +1065,7 @@
         (build-var :every k (get arb-rsts k) substitution notsames))
       (for [k (keys ind-dep-rsts)]
         (build-var :some k (second (get ind-dep-rsts k)) substitution notsames
-                   :dependencies (first (get ind-dep-rsts k))))
+                   :deps (first (get ind-dep-rsts k))))
       (for [k (keys qvar-rsts)]
         (build-var :qvar k (get qvar-rsts k) substitution notsames)))))
 
