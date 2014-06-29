@@ -18,10 +18,10 @@
 
 (defn find-and-reverse-quantifier
   [subexpr var]
-  (prewalk #(do (if-let [rewrite (and (seq? %) (reverse-quantifier % var))]
-                  rewrite
-                  %))
-         subexpr))
+  (list 'not (prewalk #(do (if-let [rewrite (and (seq? %) (reverse-quantifier % var))]
+                             rewrite
+                             %))
+                    subexpr)))
 
 (defn match-propositional-expr 
   [expr]
