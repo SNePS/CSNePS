@@ -127,7 +127,8 @@
     ;; informing it that it is true.
     
     ;; Submit a message for the originator. 
-    (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER}))
+    (when-not (variableTerm? originator)
+      (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER})))
     ;; When a term has a negation, submit a message saying so.
     (when-let [nor-cs (when (set? (@up-cablesetw originator))
                         ((@up-cablesetw originator) (slot/find-slot 'nor)))]
