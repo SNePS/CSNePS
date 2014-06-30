@@ -360,8 +360,9 @@
                                       (conj built-lhs (build new-expr :Propositional (set/union subs sub)))
                                       (set/union subs sub)))))
         actfn (bound-fn [subst] 
-                (println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
-                (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms))
+                (when (= (count subs) (count (filter (fn [[k v]] (subst v)) subs)))
+	                ;(println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
+                  (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms)))
         name (build rulename :Thing {})
         act (build (str "act" (.hashCode forms)) :Action {})
         ;; TODO: Note, gensymming the subrule name precludes sharing subrules
