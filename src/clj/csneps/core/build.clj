@@ -367,10 +367,11 @@
         ;; TODO: Note, gensymming the subrule name precludes sharing subrules
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     (doseq [v (vals subs)]
-      (doseq [rst (seq @(:restriction-set v))]
+      (doseq [rst (seq (@restriction-set v))]
         (assert rst (ct/find-context 'BaseCT)))
       (build-quantterm-channels v)
-      (when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
+      ;(when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v))
+      )
     (let [cf (cf/find-frame 'rule)
           rule (build-channels (build-molecular-node cf (list name built-lhs act subrules) :csneps.core/CARule :Policy))]
       (dosync 
