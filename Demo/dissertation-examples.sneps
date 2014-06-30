@@ -1,0 +1,109 @@
+(krnovice true)
+(clearkb true)
+
+;; Fido and Lassie are dogs.
+(assert '(Isa Fido Dog))
+(assert '(Isa Lassie Dog))
+
+;; Going outside, and barking at the door are actions.
+(assert '(Isa goOutside Act))
+(assert '(Isa barkAtDoor Act))
+
+;; Fido and Lassie both like going outside.
+(assert '(likesDoing Fido goOutside))
+(assert '(likesDoing Lassie goOutside))
+
+;; Every dog that likes doing something, wants to do that thing.
+(assert '(wantsTo (every d Dog) (every a Act (likesDoing d a))))
+
+;; If a dog wants to go outside, it barks at the door.
+(assert '(if (wantsTo (every d Dog) goOutside)
+            (performs d barkAtDoor)))
+            
+(askwh '(performs Fido (?x Act)))
+
+;Since wft10!: (wantsTo (every d  (Isa d Dog)) (every a  (likesDoing d a) (Isa a Act)))
+;  and wft1!: (Isa Fido Dog)
+;  and wft5!: (likesDoing Fido goOutside)
+;  and wft3!: (Isa goOutside Act)
+;I derived:  wft16!: (wantsTo Fido goOutside) by generic-instantiation.
+
+;Since wft13!: (if (wantsTo (every d  (Isa d Dog)) goOutside) (performs d barkAtDoor))
+;  and wft16!: (wantsTo Fido goOutside)
+;  and wft1!: (Isa Fido Dog)
+;I derived:  wft17!: (performs Fido barkAtDoor)  by implication-elimination
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(clearkb true)
+(krnovice true)
+
+;; Every Grain is a Plant
+(assert '(Isa (every x (Isa x Grain)) Plant))
+
+;; Every Bird eats every Grain
+(assert '(eats (every x (Isa x Bird)) (every y (Isa y Grain))))
+
+;; Every Cow eats every Plant
+(assert '(eats (every x (Isa x Cow)) (every y (Isa y Plant))))
+
+;; Every Lion eats every Animal
+(assert '(eats (every x (Isa x Lion)) (every y (Isa y Animal))))
+
+;; An Antelope is an Animal
+(assert '(Isa Antelope Animal))
+
+(assert! '(Isa (every x (Isa x Wheat)) Grain))
+
+Since wft2!: (Isa (every x (Isa x Grain)) Plant) 
+  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
+I derived: wft21!: (Isa (every x (Isa x Wheat)) Plant) by generic-instantiation.
+
+Since wft4!: (eats (every x (Isa x Bird)) (every x (Isa x Grain)))
+  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
+I derived: wft22!: (eats (every x (Isa x Bird)) (every x (Isa x Wheat))) by generic-instantiation.
+
+Since wft7!: (eats (every x (Isa x Cow)) (every y (Isa y Plant)))
+  and wft21!: (Isa (every x (Isa x Wheat)) Plant)
+I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by generic-instantiation.
+
+
+wft7!: (eats (every x  (Isa x Cow) ) (every y  (Isa y Plant) )) , I derived:  wft22!: (eats (every x  (Isa x Bird) ) (every x  (Isa x Wheat) ))  by generic-instantiation
+
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(clearkb true)
+(krnovice true)
+
+;; A person is arrested if and only if they are held by a another person
+;;  who is a corrections officer.
+(assert '(iff 
+           (Arrested (every x Person))
+           (heldBy x (some y (x) Person
+                                 (Isa y CrctnsOfcr) 
+                                 (notSame x y)))))
+
+;; A person is detained if and only if they are held by another person.
+(assert '(iff 
+           (Detained (every x Person))
+           (heldBy x (some y (x) Person
+                                 (notSame x y)))))
+
+;; A person is either detained, on supervised release, or free.
+(assert '(xor 
+           (Detained (every x Person))
+           (onSupervisedRelease x)
+           (Free x)))
+     
+;; A person who is not free has travel constraints.
+(assert '(hasTravelConstraints (every x Person
+                                        (not (Free x)))))
+           
+;; Azam is an arrested person.
+(assert '(Arrested Azam))
+(assert '(Isa Azam Person))
+
