@@ -1,3 +1,15 @@
+;;; Utility Functions
+
+(defn numberTerm? 
+  [term]
+  (number? (read-string (str (:name term)))))
+  
+(defn NPhead?
+  [token]
+  (or (seq (find `(~'det ~token ~'?x)))
+      (filter #(seq (find (list % '?x token))) '(nsubj dobj pobj iobj dobj poss xsubj agent))))
+  
+
 ;;; Rule 1: generalizeNounsAndVerbs 
 
 ;(defun generalizeNounsAndVerbs ()
@@ -176,6 +188,7 @@
   (:subrule 
     (Isa tok1 Person)
     =>
+    (assert `(~'hasName ~tok1 ~name)))
     (unassert `(~'hasName ~tok2 ~name)))
   (unassert `(~'nn ~tok1 ~tok2)))
   
