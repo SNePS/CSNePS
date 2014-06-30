@@ -31,7 +31,7 @@
   "Adopts the rule with the symbol rule-name as its name."
   [rule-name]
   (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))
-        rule (filter #(= rule-name (:name (ffirst (:down-cableset %)))) rules)]
+        rule (filter #(= rule-name (:name (ffirst (@csneps/down-cableset %)))) rules)]
     (if (first rule)
       (adopt (first rule))
       (error "Rule " rule-name " does not exist."))))
