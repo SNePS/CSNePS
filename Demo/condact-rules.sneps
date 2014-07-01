@@ -47,6 +47,20 @@
 (adopt-rule 'apposCoref)
 
 
+;; Simple rule: 
+
+(clearkb true)
+(krnovice true)
+
+(defrule simplerule
+  (Isa (every x) Animal)
+  => 
+  (assert `(~'Alive ~x)))
+  
+(assert '(Isa Ren Animal))
+(assert '(Isa Ren Entity))
+(adopt-rule 'simplerule)
+
 ;; Subrules: 
 
 (clearkb true)
@@ -65,3 +79,22 @@
 (adopt-rule 'subruletest)
 (list-terms)
 
+;; test 2
+
+
+(clearkb)
+
+(defrule subruleTest
+  (RootOf pick (every tok (Isa tok Token)))
+  => 
+  (:subrule
+    (TextOf (every pickwd (Isa pickwd Word)) tok)
+    => 
+    (unassert `(~'TextOf ~pickwd ~tok))))
+    
+(assert '(RootOf pick n21))
+(assert '(TextOf picked n21))
+(assert '(Isa n21 Token))
+(assert '(Isa picked Word))
+
+(adopt-rule 'subruleTest)
