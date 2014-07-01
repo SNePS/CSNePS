@@ -533,6 +533,14 @@
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
+;           the symbol whose name is expr
+;       of the given semantic type,
+;     and returns it."
+  [java.lang.Character] [expr semtype substitution]
+  (build (symbol (str expr)) semtype substitution))
+
+(defmethod build
+;  "Creates (if necessary) an atomic term expressed by
 ;           the symbol whose name looks like the integer x
 ;       of the given semantic type,
 ;     and returns it."
