@@ -7,8 +7,10 @@
             [csneps.core.build :as build]
             [csneps.snip :as snip]
             [clojure.set :as set]
+            [clojure.string :as str]
             [csneps.core.snuser :as snuser]))
 
+(declare sneps3kbtocsneps semtypesToObjLang)
 
 (def runtime (atom 0))
 
@@ -42,7 +44,8 @@
 (defn loadkb
   [msgfile rulefile]
   (load-file rulefile)
-  (load-file msgfile))
+  (sneps3kbtocsneps msgfile)
+  (semtypesToObjLang))
 
 (defn synsem-one-file
   [msgfile rulefile]
@@ -71,6 +74,22 @@
     (doseq [t terms]
       (snuser/assert ['Isa t (name (csneps/semantic-type-of t))]))))
 
+(defn sneps3kbtocsneps
+  [filename]
+  (let [filestr (-> (slurp filename)
+                  (str/replace "ct:assert" "csneps.core.snuser/assert")
+                  (str/replace " 'DefaultCT :origintag :hyp" "")
+                  (str/replace "|" "\"")
+                  (str/replace "(load" "(comment")
+                  (str/replace "(in-package :snuser)" "(in-ns 'csneos.core.snuser)"))
+        mgrsstrings (re-seq #"\d+[A-Z]+\d+" filestr)
+        filestr (loop [mgrsstrings mgrsstrings
+                       fs filestr]
+                  (if (seq mgrsstrings)
+                    (recur (rest mgrsstrings)
+                           (str/replace fs (first mgrsstrings) (str \" (first mgrsstrings) \")))
+                    fs))]
+    (load-string filestr)))
     
 
   
