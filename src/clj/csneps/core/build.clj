@@ -359,7 +359,7 @@
                              [built-lhs subs]
                              (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
                                (recur (rest lhs)
-                                      (conj built-lhs (build new-expr :Propositional (set/union subs sub)))
+                                      (conj built-lhs (build new-expr :Proposition (set/union subs sub)))
                                       (set/union subs sub)))))
         actfn (bound-fn [subst] 
                 (when (= (count subs) (count (filter (fn [[k v]] (subst v)) subs)))
