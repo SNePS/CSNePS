@@ -14,7 +14,7 @@
           (let [compat-msgs (filter #(compatible? % new-msg) @(:msg-set this))
                 merged-msgs (map #(merge-messages new-msg %) compat-msgs)
                 new-merged-msgs (set (filter #(not (@(:msg-set this) %)) merged-msgs))]
-            (alter (:msg-set this) union merged-msgs #{new-msg})
+            (alter (:msg-set this) union new-merged-msgs #{new-msg})
             (conj new-merged-msgs new-msg)))))))
 
 (defn make-linear-msg-set
