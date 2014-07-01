@@ -59,5 +59,19 @@
   (doseq [f (file-seq (clojure.java.io/file msgfolder))]
     (synsem-one-file (.getPath f) rulefile)))
 
+
+;;; Util fns
+
+(defn semtypesToObjLang
+  []
+  (doseq [[c ps] (:parents @csneps/semantic-type-hierarchy)
+          p ps]
+    (snuser/assert `(~'Isa (~'every ~'x (~'Isa ~'x ~(name c))) ~(name p))))
+  (let [terms (filter #(not (isa? @csneps/semantic-type-hierarchy (csneps/semantic-type-of %) :Propositional)) (vals @csneps/TERMS))]
+    (doseq [t terms]
+      (snuser/assert ['Isa t (name (csneps/semantic-type-of t))]))))
+
+    
+
   
   
