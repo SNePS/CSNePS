@@ -12,7 +12,7 @@
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
-(def showproofs false)
+(def showproofs true)
 
 (declare initiate-node-task create-message-structure get-rule-use-info open-valve cancel-infer-of)
 
@@ -42,6 +42,8 @@
 
 ;; Priority Blocking Queue to handle the tasks.
 (def queue (PriorityBlockingQueue. 50 task-cmpr))
+
+;(def queue (edu.buffalo.csneps.util.BlockingLifoQueue.))
 
 ;(def queue (LinkedBlockingQueue.))
 
@@ -655,11 +657,16 @@
         inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                 ;; What about shared sub-policies though?
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message)) inst-msgs) ;; using fwd-infer here is a bit of a hack.
+        new-msgs (map #(derivative-message % 
+                                           :origin node 
+                                           :type 'I-INFER 
+                                           :taskid (:taskid message)
+                                           :support-set (os-union (:support-set %) (@support node))) 
+                      inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich (@i-channels node)]
     ;(when showproofs
     (when (seq new-msgs)
-      (send screenprinter (fn [_] (println "Policy " node " satisfied."))))
+      (send screenprinter (fn [_] (println "Policy " node " satisfied." inst-msgs))))
     (apply concat 
            (for [nmsg new-msgs] 
              (zipmap ich (repeat (count ich) nmsg))))))
@@ -703,32 +710,40 @@
                                          :true? true
                                          :type 'I-INFER
                                          :taskid (:taskid message))]
+          
           (dosync 
             (alter support assoc instance (os-concat (@support instance) inst-support))
             (alter instances assoc node (assoc (@instances node) instance (:subst rcm))))
           
+          (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
+            (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
           (doseq [ch cqch]
-            (when (and showproofs (build/pass-message? ch der-msg))
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
             (submit-to-channel ch der-msg)))))
     ;; Instance from unifying term.
     (let [instance (:origin message)
-          outgoing-support (os-union (:support-set message)
-                                     #{['der (set (flatten (map (fn [a] (:name (apply-to-all-restrictions (:subst message) a)))
-                                                               (filter #(arbitraryTerm? %) 
-                                                                       (keys (:subst message))))))]})
+          subst-support (set 
+                          (map (fn [t] (:name t)) 
+                               (flatten 
+                                 (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                      (filter #(arbitraryTerm? %) 
+                                              (keys (:subst message)))))))
+          outgoing-support (if (seq subst-support)
+                             (os-union (:support-set message)
+                                       #{['der subst-support]})
+                             (:support-set message))
           der-msg (derivative-message message
                                       :origin node
                                       :support-set outgoing-support
                                       :type 'I-INFER
                                       :taskid (:taskid message))
           cqch (union (@i-channels node) (@g-channels node))]
+      
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
       (when-not (get (@instances node) instance)
         (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
+        (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
+          (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
         (doseq [ch cqch]
-           (when (and showproofs (build/pass-message? ch der-msg))
-             (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
            (submit-to-channel ch der-msg))))))
               
     
@@ -851,7 +866,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
@@ -952,9 +967,11 @@
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))
       ;; When introduction fails, try backward-in-forward reasoning. 
-      (when (:fwd-infer? message)
+      ;; COMMENTED OUT 6/29 FIX
+      ;(when (:fwd-infer? message)
         ;; TODO: Not quite finished, I think.
-        (backward-infer term #{term} nil)))
+      ;  (backward-infer term #{term} nil))
+      )
     ;; Normal introduction for derivation.
     (and 
       (not (ct/asserted? term (ct/currentContext)))
@@ -981,9 +998,12 @@
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))
       ;; When introduction fails, try backward-in-forward reasoning. 
-      (when (:fwd-infer? message)
+      ;; COMMENTED OUT 6/29 FIX
+      ;(when (:fwd-infer? message)
         ;; TODO: Not quite finished, I think.
-        (backward-infer term #{term} nil))))
+      ;  (backward-infer term #{term} nil))
+      
+      ))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
   (when (:taskid message) 
     (when-not (@infer-status (:taskid message)) (println (:taskid message)))
@@ -1089,4 +1109,9 @@
       (println (:originator u) "-U-" (count @(:waiting-msgs u)) (print-valve u) "->" (:destination u)))
     (doseq [g (@g-channels (second x))]
       (println (:originator g) "-G-" (count @(:waiting-msgs g)) (print-valve g) "->" (:destination g)))))
+
+(defn print-all-waiting-msgs []
+  (doseq [t (vals @TERMS)
+          i (@ant-in-channels t)]
+    (println @(:waiting-msgs i))))
 
