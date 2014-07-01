@@ -649,7 +649,9 @@
                                (str "Isa must take 2 arguments. It doesn't in " expr "."))
           (let [entity (build (second expr) :Entity substitution)
                 category (build (third expr) :Category substitution)
-                genfils (generic-fillers #{entity category})
+                genfils (if (= entity category)
+                          (generic-fillers #{entity})
+                          (generic-fillers #{entity category}))
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
