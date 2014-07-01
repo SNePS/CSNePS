@@ -12,9 +12,10 @@
         (if (@(:msg-set this) new-msg)
           #{}
           (let [compat-msgs (filter #(compatible? % new-msg) @(:msg-set this))
-                merged-msgs (set (map #(merge-messages new-msg %) compat-msgs))]
+                merged-msgs (map #(merge-messages new-msg %) compat-msgs)
+                new-merged-msgs (set (filter #(not (@(:msg-set this) %)) merged-msgs))]
             (alter (:msg-set this) union merged-msgs #{new-msg})
-            (conj merged-msgs new-msg)))))))
+            (conj new-merged-msgs new-msg)))))))
 
 (defn make-linear-msg-set
   []
