@@ -106,6 +106,10 @@
   "Produces a message without the fields which vary without
    actually indicating the messages represent different information."
   [message]
-  (derivative-message message
-                      :priority 10
-                      :fwd-infer? false))
+  (-> message
+    (assoc :priority 10)
+    (assoc :type nil)
+    (assoc :origin nil)
+    (assoc :taskid nil)
+    (assoc :invoke-set nil)
+    (assoc :fwd-infer? false)))
