@@ -162,7 +162,9 @@
         (dosync (alter type-map assoc (:name term) (first gcsub))))
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
-  (when (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
+  (when (or 
+          (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
+          (and (nil? (@support term)) (subtypep newtype :Policy)))
     (dosync (alter support assoc term #{['hyp #{(:name term)}]})))
   term)
 
