@@ -351,7 +351,7 @@
 
 (defn build-rule 
   [rulename lhs forms subrules & {:keys [subs] :or {subs {}}}]
-  (println rulename lhs forms subrules subs)
+  ;(println rulename lhs forms subrules subs)
   (let [[built-lhs subs] (loop [lhs lhs
                                 built-lhs #{}
                                 subs subs]
