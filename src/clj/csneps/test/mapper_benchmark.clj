@@ -27,9 +27,7 @@
   (println "Run Time: " @runtime))
 
 (def adopt-order
-  '[[generalizeNN generalizeNNP generalizeNNPS generalizeNNS generalizeNP generalizeNPS]
-    [generalizeVBD generalizeVBG generalizeVBN generalizeVBP generalizeVB generalizeVBZ]
-    properNounToName
+  '[properNounToName
     organizationHasName
     nnName
     nounPhraseToInstance
@@ -70,7 +68,7 @@
   (doseq [[c ps] (:parents @csneps/semantic-type-hierarchy)
           p ps]
     (snuser/assert `(~'Isa (~'every ~'x (~'Isa ~'x ~(name c))) ~(name p))))
-  (let [terms (filter #(not (isa? @csneps/semantic-type-hierarchy (csneps/semantic-type-of %) :Propositional)) (vals @csneps/TERMS))]
+  (let [terms (filter csneps/atomicTerm? (vals @csneps/TERMS))]
     (doseq [t terms]
       (snuser/assert ['Isa t (name (csneps/semantic-type-of t))]))))
 
@@ -89,12 +87,12 @@
                   (str/replace "(in-package :snuser)" "(in-ns 'csneos.core.snuser)"))
         typestrings (re-seq #"\(Type\s\S+\s\S+?\)" filestr)
         filestr (loop [typestrings typestrings
-                       fs filestr]
-                  (if (seq typestrings)
-                    (recur (rest typestrings)
-                           (str/replace fs (first typestrings) (typeToGeneric (first typestrings))))
-                    fs))
-        mgrsstrings (re-seq #"\d+[A-Z]+\d+" filestr)
+                      fs filestr]
+                 (if (seq typestrings)
+                  (recur (rest typestrings)
+                        (str/replace fs (first typestrings) (typeToGeneric (first typestrings))))
+                  fs))
+        mgrsstrings (set (re-seq #"\d+[A-Z]+\d+" filestr))
         filestr (loop [mgrsstrings mgrsstrings
                        fs filestr]
                   (if (seq mgrsstrings)
