@@ -936,7 +936,8 @@
     ;; Actions should execute their primative action.
     (and
       (= (:type message) 'I-INFER)
-      (= (semantic-type-of term) :Action))
+      (= (semantic-type-of term) :Action)
+      (primaction term))
     ((primaction term) (:subst message))
     ;; AnalyticGeneric terms need to just forward the messages
     ;; on towards the variable term.
