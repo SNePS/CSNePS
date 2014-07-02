@@ -81,7 +81,7 @@
       :true
       (do 
         (set! PRINTED-VARIABLES (conj PRINTED-VARIABLES term))
-        (print-str 
+        (str 
           (condp = (type-of term)
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
             :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set (@csneps/dependencies term) false) ") ")
