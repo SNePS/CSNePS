@@ -88,12 +88,10 @@
   [p ct]
   (let [context (find-context ct)
         cthyps (hyps context)]
-    (or (cthyps p)
-        (when (some 
-                #(set/subset? (map csneps/get-term (second %)) cthyps)
-                (filter #(not= (first %) 'hyp) (@csneps/support p)))
-          context))))
-
-
-
-
+    (cond
+      (cthyps p) 
+      context
+      (some 
+        #(set/subset? (map csneps/get-term (second %)) cthyps)
+        (filter #(not= (first %) 'hyp) (@csneps/support p)))
+      context)))
