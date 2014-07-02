@@ -96,10 +96,18 @@
   [ch orig dest type]
   (dosync
     (condp = type
-      :i-channel (alter i-channels assoc orig (set (conj (@i-channels orig) ch)))
-      :u-channel (alter u-channels assoc orig (set (conj (@u-channels orig) ch)))
-      :g-channel (alter g-channels assoc orig (set (conj (@g-channels orig) ch))))
-    (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch))))
+      :i-channel (if (set? (@i-channels orig))
+                   (alter i-channels assoc orig (conj (@i-channels orig) ch))
+                   (alter i-channels assoc orig (set (conj (@i-channels orig) ch))))
+      :u-channel (if (set? (@u-channels orig))
+                   (alter u-channels assoc orig (conj (@u-channels orig) ch))
+                   (alter u-channels assoc orig (set (conj (@u-channels orig) ch))))
+      :g-channel (if (set? (@g-channels orig))
+                   (alter g-channels assoc orig (conj (@g-channels orig) ch))
+                   (alter g-channels assoc orig (set (conj (@g-channels orig) ch)))))
+    (if (set? (@ant-in-channels dest))
+      (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
+      (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
   ;; Focused forward-in-backward, extension for new in-channels.
   ;; TODO: Temporarily disabled, since it needs fixing to include valve-selector info.
 ;  (when (seq (@future-bw-infer dest))
