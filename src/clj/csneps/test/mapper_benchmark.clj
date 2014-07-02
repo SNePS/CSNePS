@@ -74,6 +74,11 @@
     (doseq [t terms]
       (snuser/assert ['Isa t (name (csneps/semantic-type-of t))]))))
 
+(defn typeToGeneric
+  [typestr]
+  (let [typeseq (read-string typestr)]
+    (str (list 'Isa (list 'every 'x (list 'Isa 'x (second typeseq))) (nth typeseq 2)))))
+
 (defn sneps3kbtocsneps
   [filename]
   (let [filestr (-> (slurp filename)
@@ -82,6 +87,13 @@
                   (str/replace "|" "\"")
                   (str/replace "(load" "(comment")
                   (str/replace "(in-package :snuser)" "(in-ns 'csneos.core.snuser)"))
+        typestrings (re-seq #"\(Type\s\S+\s\S+?\)" filestr)
+        filestr (loop [typestrings typestrings
+                       fs filestr]
+                  (if (seq typestrings)
+                    (recur (rest typestrings)
+                           (str/replace fs (first typestrings) (typeToGeneric (first typestrings))))
+                    fs))
         mgrsstrings (re-seq #"\d+[A-Z]+\d+" filestr)
         filestr (loop [mgrsstrings mgrsstrings
                        fs filestr]
