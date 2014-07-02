@@ -52,65 +52,21 @@
 ;		 (assert `(SyntacticCategoryOf verb ,?tok))
 ;		 (usedRule 'generalizeNounsAndVerbs)))
 
-(defrule generalizeNN
-  (SyntacticCategoryOf NN (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
-  
-(defrule generalizeNNP
-  (SyntacticCategoryOf NNP (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
-  
-(defrule generalizeNNPS
-  (SyntacticCategoryOf NNPS (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
-  
-(defrule generalizeNNS
-  (SyntacticCategoryOf NNS (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
+;; Replace with generic.
 
-(defrule generalizeNP
-  (SyntacticCategoryOf NP (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
-  
-(defrule generalizeNPS
-  (SyntacticCategoryOf NPS (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'noun ~x)))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NN x))))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NNP x))))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NNPS x))))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NNS x))))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NP x))))
+(assert '(SyntacticCategoryOf noun (every x (SyntacticCategoryOf NPS x))))
 
-(defrule generalizeVBD
-  (SyntacticCategoryOf VBD (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
-
-(defrule generalizeVBG
-  (SyntacticCategoryOf VBG (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
-  
-(defrule generalizeVBN
-  (SyntacticCategoryOf VBN (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
-  
-(defrule generalizeVBP
-  (SyntacticCategoryOf VBP (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
-  
-(defrule generalizeVB
-  (SyntacticCategoryOf VB (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
-  
-(defrule generalizeVBZ
-  (SyntacticCategoryOf VBZ (every x Token))
-  =>
-  (assert `(~'SyntacticCategoryOf ~'verb ~x)))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VBD x))))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VBG x))))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VBN x))))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VBP x))))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VB x))))
+(assert '(SyntacticCategoryOf verb (every x (SyntacticCategoryOf VBZ x))))
   
 ;;; Rule 2: properNounToName
 
@@ -291,8 +247,7 @@
 ;  (usedRule 'subjAction))
   
 (defrule subjAction
-  (nsubj (every action Token) (every subj Token))
-  (Isa action Action)
+  (nsubj (every action Token (Isa action Action)) (every subj Token))
   =>
   (assert `(~'agent ~action ~subj))
   (unassert `(~'nsubj ~action ~subj)))
