@@ -28,16 +28,17 @@
 
 (in-ns 'csneps.core.build)
 
-(declare valve-state-changed submit-to-channels new-message create-message-structure)
+(declare valve-state-changed submit-to-channels new-message create-message-structure get-sent-messages)
 
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc satc nm crs bwi fwi]
+  [stc satc nm crs gsm bwi fwi]
   (def submit-to-channel stc)
   (def submit-assertion-to-channels satc)
   (def new-message nm)
   (def create-message-structure crs)
+  (def get-sent-messages gsm)
   (def backward-infer bwi)
   (def forward-infer fwi))
 
@@ -90,7 +91,7 @@
 
 (defn find-channel 
   [originator destination]
-  (some #(when (= (:originator %) originator) %) (@ant-in-channels destination)))
+  (some #(when (= (:name (:originator %)) (:name originator)) %) (@ant-in-channels destination)))
 
 (defn install-channel
   [ch orig dest type]
@@ -112,6 +113,11 @@
   ;; TODO: Temporarily disabled, since it needs fixing to include valve-selector info.
 ;  (when (seq (@future-bw-infer dest))
 ;    (backward-infer dest (@future-bw-infer dest) nil))
+    ;; Send already produced msgs
+  (when (@msgs orig)
+    (doseq [msg (get-sent-messages (@msgs orig) type)]
+      (submit-to-channel ch msg)))
+  
   (when (and (seq (@future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
     (forward-infer orig)))
 
@@ -137,6 +143,7 @@
     ;; Submit a message for the originator. 
     (when-not (variableTerm? originator)
       (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER})))
+    
     ;; When a term has a negation, submit a message saying so.
     (when-let [nor-cs (when (set? (@up-cablesetw originator))
                         ((@up-cablesetw originator) (slot/find-slot 'nor)))]

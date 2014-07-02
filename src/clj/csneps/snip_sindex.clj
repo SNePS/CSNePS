@@ -6,9 +6,10 @@
 ;;;  - Each antecedent uses all the same variables.
 
 (defrecord SIndex
-  [sindex] ;;A ref to a hash-map.
+  [sindex ;;A ref to a hash-map.
+   sent-msgs] ;;A ref to a set.
   MessageStructure
-  (get-rule-use-info [this new-msg]
+  (get-new-messages [this new-msg]
     (let [old-msg (@(:sindex this) (:subst new-msg))]
       (if old-msg
         (let [merged-msg (merge-messages new-msg old-msg)]
@@ -18,8 +19,14 @@
           #{merged-msg})
         (do 
           (dosync (alter (:sindex this) assoc (:subst new-msg) new-msg))
-          #{new-msg})))))
+          #{new-msg}))))
+  (get-sent-messages 
+    [this chtype] 
+    (@(:sent-msgs this) chtype))
+  (add-matched-and-sent-messages
+    [this matched sent]
+    (dosync (alter (:sent-msgs this) (partial merge-with union) sent))))
 
 (defn make-sindex
   []
-  (SIndex. (ref {})))
+  (SIndex. (ref {}) (ref {})))

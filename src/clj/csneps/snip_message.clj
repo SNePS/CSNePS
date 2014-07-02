@@ -3,7 +3,9 @@
 ;;; A message is a container for a substitution. 
 
 (defprotocol MessageStructure
-  (get-rule-use-info [this new-msg]))
+  (get-new-messages [this new-msg])
+  (get-sent-messages [this chtype])
+  (add-matched-and-sent-messages [this matched sent]))
 
 ;; Type options:
 ;; U-INFER

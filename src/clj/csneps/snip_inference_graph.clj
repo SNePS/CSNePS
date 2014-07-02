@@ -14,7 +14,7 @@
 (def debug false)
 (def showproofs true)
 
-(declare initiate-node-task create-message-structure get-rule-use-info open-valve cancel-infer-of)
+(declare initiate-node-task create-message-structure get-new-messages open-valve cancel-infer-of)
 
 (defn priority-partial
   [priority f & more] 
@@ -345,7 +345,7 @@
   [message node]
   ;; new-msgs is used in this case, not because we want to combine messages, but
   ;; because we want to ensure we don't re-produce the same message.
-  (let [new-msgs (get-rule-use-info (@msgs node) message)
+  (let [new-msgs (get-new-messages (@msgs node) message)
         dermsg (derivative-message message
                                    :origin node
                                    :support-set (der-tag (:support-set message))
@@ -362,7 +362,7 @@
 ;(defn negation-introduction
 ;  "Pretty much conjunction-introduction, but with :neg instead of :pos"
 ;  [message node]
-;  (let [new-ruis (get-rule-use-info (:msgs node) message)
+;  (let [new-ruis (get-new-messages (:msgs node) message)
 ;        der-rui (some #(= (:neg %) (count @(:u-channels node))) new-ruis)
 ;        dermsg (derivative-message message
 ;                                   :origin node
@@ -382,7 +382,7 @@
 (defn negation-introduction
   "Reductio ad Absurdum"
   [message node]
-  (let [new-msgs (get-rule-use-info (@msgs node) message)]
+  (let [new-msgs (get-new-messages (@msgs node) message)]
     
     
     
@@ -394,49 +394,52 @@
   "Since the implication is true, send a U-INFER message to each
    of the consequents." 
   [message node]
-  ;; If the node only requires 1 antecedent to be true, any incoming positive
-  ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
-  ;; maintain the RUI structure. 
-  (if (= (:min node) 1)
-    (when (:true? message)
-      ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
-      (let [der-msg (derivative-message message 
-                                        :origin node 
-                                        :type 'U-INFER 
-                                        :support-set (os-union (:support-set message) (@support node))
-                                        :true? true
-                                        :taskid (:taskid message))]
+  (let [new-msgs (get-new-messages (@msgs node) message)]
+    (when (seq new-msgs)
+      ;; If the node only requires 1 antecedent to be true, any incoming positive
+      ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
+      ;; maintain the RUI structure. 
+      (if (= (:min node) 1)
+        (when (:true? message)
+          ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
+          (let [der-msg (derivative-message message 
+                                            :origin node 
+                                            :type 'U-INFER 
+                                            :support-set (os-union (:support-set message) (@support node))
+                                            :true? true
+                                            :taskid (:taskid message))]
+            (add-matched-and-sent-messages (@msgs node) new-msgs {:u-channel #{der-msg}})
+            (when showproofs 
+              (doseq [u (@u-channels node)]
+                (when (build/pass-message? u der-msg)
+                  (send screenprinter (fn [_] (println "Since " node ", I derived: " 
+                                                       (build/apply-sub-to-term (:destination u) (:subst message)) 
+                                                       " by numericalentailment-elimination"))))))
         
-        (when showproofs 
-          (doseq [u (@u-channels node)]
-            (when (build/pass-message? u der-msg)
-              (send screenprinter (fn [_] (println "Since " node ", I derived: " 
-                                                   (build/apply-sub-to-term (:destination u) (:subst message)) 
-                                                   " by numericalentailment-elimination"))))))
+            (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
+        ;; :min > 1
+        (let [match-msgs (filter #(when (>= (:pos %) (:min node))
+                                   %)
+                               new-msgs)
+              match-msg (first match-msgs)]
+          (when match-msg 
+            (let [der-msg (derivative-message match-msg 
+                                              :origin node 
+                                              :type 'U-INFER 
+                                              :support-set (os-union (:support-set message) (@support node))
+                                              :true? true 
+                                              :fwd-infer? (:fwd-infer? message)
+                                              :taskid (:taskid message))]
+              ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
+              (add-matched-and-sent-messages (@msgs node) (set match-msgs) {:u-channel #{der-msg}})
+              (when showproofs 
+                (doseq [u (@u-channels node)]
+                  (when (build/pass-message? u der-msg)
+                    (send screenprinter (fn [_] (println "Since " node ", I derived: " 
+                                                         (build/apply-sub-to-term (:destination u) (:subst message)) 
+                                                         " by numericalentailment-elimination"))))))
         
-        (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
-    ;; :min > 1
-    (let [new-ruis (get-rule-use-info (@msgs node) message)
-          match-msg (some #(when (>= (:pos %) (:min node))
-                              %)
-                           new-ruis)]
-      (when match-msg 
-        (let [der-msg (derivative-message match-msg 
-                                          :origin node 
-                                          :type 'U-INFER 
-                                          :support-set (os-union (:support-set message) (@support node))
-                                          :true? true 
-                                          :fwd-infer? (:fwd-infer? message)
-                                          :taskid (:taskid message))]
-          ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
-          (when showproofs 
-            (doseq [u (@u-channels node)]
-              (when (build/pass-message? u der-msg)
-                (send screenprinter (fn [_] (println "Since " node ", I derived: " 
-                                                     (build/apply-sub-to-term (:destination u) (:subst message)) 
-                                                     " by numericalentailment-elimination"))))))
-        
-          (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))
+              (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))))
 
 (defn numericalentailment-introduction
   ""
@@ -462,7 +465,7 @@
   "We are in an unasserted 'and' node, and would like to know if we now
    can say it is true based on message."
   [message node]
-  (let [new-ruis (get-rule-use-info (@msgs node) message)
+  (let [new-ruis (get-new-messages (@msgs node) message)
         der-rui-t (some #(when (= (:pos %) (count (@u-channels node))) %) new-ruis)
         der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
         dermsg-t (derivative-message (imessage-from-ymessage message node)
@@ -488,7 +491,7 @@
   "Since the andor is true, we may have enough information to do elimination
    on it. "
   [message node]
-  (let [new-ruis (get-rule-use-info (@msgs node) message)
+  (let [new-ruis (get-new-messages (@msgs node) message)
         totparam (totparam node)
         pos-match (some #(when (= (:pos %) (:max node))
                            %) 
@@ -552,7 +555,7 @@
 (defn param2op-introduction
   "Check the RUIs to see if I have enough to be true."
   [message node]
-  (let [new-ruis (get-rule-use-info (@msgs node) message)
+  (let [new-ruis (get-new-messages (@msgs node) message)
         ;merged-rui (when new-ruis (merge-messages new-ruis)) ;; If they contradict, we have other problems...
         totparam (totparam node)
         case1 (some #(when (or (> (:pos %) (:max node))
@@ -587,7 +590,7 @@
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
   [message node]
-  (let [new-ruis (get-rule-use-info (@msgs node) message)
+  (let [new-ruis (get-new-messages (@msgs node) message)
         totparam (totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
         ;; If there are totparam - max - 1 false, then we can make the rest true.
@@ -653,7 +656,7 @@
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
   [message node]
-  (let [new-msgs (get-rule-use-info (@msgs node) message)
+  (let [new-msgs (get-new-messages (@msgs node) message)
         inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                 ;; What about shared sub-policies though?
         inst-msgs (filter #(= (:pos %) inchct) new-msgs)
@@ -692,10 +695,7 @@
   [message node]
   ;; Instance from g-channel
   (if (g-chan-to-node? (:origin message) node)
-    (let [new-combined-messages (get-rule-use-info (@msgs node) message)
-          ;total-parent-generics (count (filter #(or (csneps/arbitraryTerm? (:originator %))
-          ;                                          (build/generic-term? (:originator %)))
-          ;                                     @(:ant-in-channels node)))
+    (let [new-combined-messages (get-new-messages (@msgs node) message)
           rel-combined-messages (when new-combined-messages
                                   (filter #(> (:pos %) 0) new-combined-messages))
           cqch (union (@i-channels node) (@g-channels node))]
@@ -714,6 +714,8 @@
           (dosync 
             (alter support assoc instance (os-concat (@support instance) inst-support))
             (alter instances assoc node (assoc (@instances node) instance (:subst rcm))))
+          
+          (add-matched-and-sent-messages (@msgs node) #{rcm} {:i-channel #{der-msg} :g-channel #{der-msg}})
           
           (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
             (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
@@ -740,6 +742,7 @@
       
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
       (when-not (get (@instances node) instance)
+        (add-matched-and-sent-messages (@msgs node) #{} {:i-channel #{der-msg} :g-channel #{der-msg}})
         (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
         (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
           (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
@@ -751,7 +754,7 @@
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
   (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
-    (let [new-ruis (get-rule-use-info (@msgs node) message)
+    (let [new-ruis (get-new-messages (@msgs node) message)
           resct (count (@restriction-set node))
           der-rui-t (filter #(= (:pos %) resct) new-ruis)
           new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message)) der-rui-t)
@@ -795,7 +798,7 @@
   ;; Only do something if this came from a dep of the ind.
   (when (and ((@dependencies node) (:origin message))
              (seq (:subst message)))
-    (let [new-ruis (get-rule-use-info (@msgs node) message)
+    (let [new-ruis (get-new-messages (@msgs node) message)
           depct (count (@dependencies node))
           der-rui-t (filter #(= (:pos %) depct) new-ruis)
           new-msgs (map #(derivative-message 
@@ -866,7 +869,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+;  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
@@ -1030,7 +1033,7 @@
     :else
     (make-linear-msg-set)))
 
-(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure backward-infer forward-infer)
+(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure get-sent-messages backward-infer forward-infer)
 
 ;;; Reductio
 

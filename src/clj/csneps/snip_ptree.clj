@@ -4,9 +4,10 @@
 
 (defrecord PTree
   [tree
-   term-to-pnode-map]
+   term-to-pnode-map
+   sent-msgs]
   MessageStructure
-  (get-rule-use-info [this new-msg]
+  (get-new-messages [this new-msg]
     (let [new-msg (sanitize-message new-msg)
           starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns new-msg)))
           starting-msgset (:msgset starting-pnode)]
@@ -28,7 +29,11 @@
                 #{}
                 (recur
                   @(:parent currnode)
-                  promote)))))))))
+                  promote))))))))
+  (get-sent-messages [this chtype] (@(:sent-msgs this) chtype))
+  (add-matched-and-sent-messages
+    [this matched sent]
+    (dosync (alter (:sent-msgs this) (partial merge-with union) sent))))
 
 (defrecord PNode
   [parent
@@ -160,7 +165,7 @@
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
         [ptree tpmap] (pat-seq-to-ptree adj-pat-seq ants)]
-    (PTree. ptree tpmap)))
+    (PTree. ptree tpmap (ref {}))))
 
 ;;; Debug and testing
 
