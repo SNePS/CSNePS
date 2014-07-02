@@ -42,11 +42,20 @@
     (= term1 'OMEGA)
     false
     :else
-    (let [rs1 (@restriction-set term1)]
-      (every? #(not (nil? %))
-              (map #(ct/asserted? 
-                      (apply-sub-to-term % {term1 term2} true) 
-                      (ct/currentContext)) rs1)))))
+    (let [rs1 (@restriction-set term1)
+          rs2 (@restriction-set term2)]
+      (cond 
+        (> (count rs1) (count rs2)) 
+        false
+        (and (= (count rs1) (count rs2))
+             (= (syntactic-type-of term1) (syntactic-type-of term2))
+             (not= term1 term2))
+        false
+        :else 
+        (every? #(not (nil? %))
+                (map #(ct/asserted? 
+                        (apply-sub-to-term % {term1 term2} true) 
+                        (ct/currentContext)) rs1))))))
 
 (defn restriction-nodelist-subset
   [nodes term2]
