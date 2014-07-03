@@ -905,25 +905,16 @@
                  :qvar (symbol (str "qvar" (qvar-counter))))
           varterm (case quant
                     :every (new-arbitrary {:name name 
-                                           :var-label var-label
-                                           :msgs (create-message-structure :csneps.core/Arbitrary nil)})
+                                           :var-label var-label})
                     :some (new-indefinite {:name name 
-                                           :var-label var-label
-                                           :msgs (create-message-structure :csneps.core/Indefinite nil)})
+                                           :var-label var-label})
                     :qvar (new-query-variable {:name name 
-                                               :var-label var-label
-                                               :msgs (create-message-structure :csneps.core/QueryVariable nil)}))]
+                                               :var-label var-label}))]
 
        (case quant
-         :every (do 
-                  (inc-arb-counter)
-                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Arbitrary nil))))
-         :some  (do 
-                  (inc-ind-counter)
-                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Indefinite nil))))
-         :qvar  (do 
-                  (inc-qvar-counter)
-                  (dosync (alter msgs assoc varterm (create-message-structure :csneps.core/Indefinite nil)))))
+         :every (inc-arb-counter)
+         :some  (inc-ind-counter)
+         :qvar  (inc-qvar-counter))
        (instantiate-sem-type (:name varterm) :Entity)
         
       varterm)))
@@ -1033,13 +1024,15 @@
       (= quant :qvar) 
       (let [restrictions (clojure.set/union (@restriction-set var)
                                             (set (map #(build % :WhQuestion substitution) rsts)))]
-        (alter restriction-set assoc var restrictions))
+        (alter restriction-set assoc var restrictions)
+        (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil)))
       (and (= quant :some) (not (nil? dependencies)))
       (let [restrictions (set (map #(build % :Propositional substitution) rsts))
             deps (clojure.set/union (@dependencies var)
                                     (set (map #(substitution %) deps)))] 
         (alter dependencies assoc var deps)
         (alter restriction-set assoc var restrictions)
+        (alter msgs assoc var (create-message-structure :csneps.core/Indefinite nil))
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
              ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
@@ -1047,6 +1040,7 @@
       (let [restrictions (clojure.set/union (@restriction-set var)
                                             (set (map #(build % :Propositional substitution) rsts)))] 
         (alter restriction-set assoc var restrictions)
+        (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
         (dosync (doseq [r restrictions]
                   (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
             ; (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))

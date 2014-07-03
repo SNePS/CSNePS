@@ -668,6 +668,9 @@
                       inst-msgs) ;; using fwd-infer here is a bit of a hack.
         ich (@i-channels node)]
     ;(when showproofs
+    
+    (add-matched-and-sent-messages (@msgs node) (set inst-msgs) {:i-channel (set new-msgs)})
+    
     (when (seq new-msgs)
       (send screenprinter (fn [_] (println "Policy " node " satisfied." inst-msgs))))
     (apply concat 
@@ -765,6 +768,9 @@
 ;                                                                         ch gch]
 ;                                                                     [ch msg]))
 ;                                              new-msgs)))
+
+        (add-matched-and-sent-messages (@msgs node) (set der-rui-t) {:g-channel (set new-msgs)})
+
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
                     ch gch]
@@ -1029,7 +1035,7 @@
              (= syntype :csneps.core/Implication))
          (= n (count (first dcs))))
     (make-ptree syntype dcs)
-    (= syntype :csneps.core/Conjunction)
+    (or (= syntype :csneps.core/Conjunction))
     (make-ptree syntype dcs)
     :else
     (make-linear-msg-set)))

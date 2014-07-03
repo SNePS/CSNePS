@@ -161,6 +161,7 @@
   (let [ants (condp = syntype
                :csneps.core/Conjunction (first fillers)
                :csneps.core/Implication (first fillers)
+               :csneps.core/Arbitrary fillers ;; really the restrictions.
                :csneps.core/Numericalentailment (first fillers));; Only and-entailment!
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
