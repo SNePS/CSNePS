@@ -33,7 +33,8 @@
   (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))
         rule (filter #(= rule-name (:name (ffirst (@csneps/down-cableset %)))) rules)]
     (if (first rule)
-      (adopt (first rule))
+      (when-let [taskid (adopt (first rule))]
+        (.await (@snip/infer-status taskid)))
       (error "Rule " rule-name " does not exist."))))
 
 (defn adopt-rules 
@@ -43,9 +44,9 @@
   [order]
   (doseq [row order]
     (if (vector? row)
-      (let [tasks (doall (map #(adopt-rule %) row))]
-        (doall (map #(.await (@snip/infer-status %)) tasks)))
-      (.await (@snip/infer-status (adopt-rule row))))))
+      (let [tasks (doall (map #(future (adopt-rule %)) row))]
+        (doall (map deref tasks)))
+      (adopt-rule row))))
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
