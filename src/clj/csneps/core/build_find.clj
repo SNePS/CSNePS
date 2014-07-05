@@ -80,6 +80,21 @@
                   n)]
         (first ret)))))
 
+(defn find-term-with-subst-applied
+  "Don't build a new term - instead, build a new dcs and try to find-exact a
+   term with it. Not yet designed to work with substitutions in nested terms,
+   as I'm not sure it's needed in use yet."
+  [term subst]
+  (let [new-dcs (loop [dcs (@down-cableset term)
+                       new-dcs '[]]
+                  (if (empty? dcs)
+                    new-dcs
+                    (recur (rest dcs)
+                           (conj new-dcs (set (replace subst (first dcs)))))))]
+    (find-exact (syntactic-type-of term) (@caseframe term) new-dcs)))
+    
+    
+
 ;;; Rewritten 6/21/2012 [DRS]
 (defn contains-new-term-or-cf?
   "Returns true if a restriction contains new terms not already in the KB."
