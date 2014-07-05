@@ -51,7 +51,7 @@
     (println "A context named" name "already exists.")
     (dosync (alter CONTEXTS assoc name (Context. name docstring 
                                                  (doall (map #(find-context %) parents)) 
-                                                 (ref (set (map #(csneps/get-term %) hyps))) 
+                                                 (ref (set hyps))
                                                  false))))
   (find-context name))
 
@@ -69,7 +69,13 @@
 (defn remove-from-context
   "Removes the term from the context (ct) hyps."
   [term ct]
-  (dosync (alter (:hyps ct) disj term)))
+  (let [term (or (:name term) term)]
+    (dosync (alter (:hyps ct) disj term))))
+
+(defn hypothesize
+  [term ct]
+  (let [term (or (:name term) term)]
+    (dosync (alter (:hyps ct) conj term))))
 
 (defn hyps
   "Returns the full set of hyps of ct, both those local to
@@ -89,9 +95,9 @@
   (let [context (find-context ct)
         cthyps (hyps context)]
     (cond
-      (cthyps p) 
+      (cthyps (:name p)) 
       context
       (some 
-        #(set/subset? (map csneps/get-term (second %)) cthyps)
+        #(set/subset? (second %) cthyps)
         (filter #(not= (first %) 'hyp) (@csneps/support p)))
       context)))

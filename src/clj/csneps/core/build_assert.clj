@@ -78,7 +78,7 @@
   [expr context]
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
-      (dosync (alter (:hyps ct) conj expr))
+      (ct/hypothesize expr ct)
       (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
@@ -89,7 +89,7 @@
   [:csneps.core/Term] [expr context]
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
-      (dosync (alter (:hyps ct) conj expr))
+      (ct/hypothesize expr ct)
       (adjustType expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
@@ -111,5 +111,4 @@
 (defn add-to-context
   "Adds the term to the context's hyps."
   [term ctx]
-  (dosync
-    (alter (:hyps ctx) conj (build term :Proposition {}))))
+  (ct/hypothesize (build term :Proposition {}) ctx))

@@ -113,7 +113,7 @@
   ;; We shouldn't continue inference backward if the orig was derived
   ;; because of the dest.
   (when (and (seq (@future-bw-infer dest))
-             (@(:hyps (ct/currentContext)) orig))
+             (ct/asserted? orig (ct/currentContext)))
     (backward-infer dest (@future-bw-infer dest) nil))
     
     ;; Send already produced msgs
@@ -168,7 +168,7 @@
              (or (= (first %) {}) (submap? (first %) (:subst message)))
              (some 
                (fn [supportset] 
-                 (clojure.set/subset? (map get-term (second supportset)) @(:hyps (second %)))) 
+                 (clojure.set/subset? (second supportset) (ct/hyps (second %)))) 
                (:support-set message)))
           @(:valve-selectors channel))))
 

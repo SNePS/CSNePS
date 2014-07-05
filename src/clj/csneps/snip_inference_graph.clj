@@ -177,7 +177,7 @@
     (fn [hyps ct]
       (clojure.set/subset? 
         hyps
-        (set (map (fn [h] (:name h)) @(:hyps ct)))))))
+        @(:hyps ct)))))
 
 ;;; Two different sets of args: 
 ;;; 1) [channel context] to be called by introduction rules, since once a rule has been
@@ -656,26 +656,30 @@
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
   [message node]
-  (let [new-msgs (get-new-messages (@msgs node) message)
-        inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
-                                                ;; What about shared sub-policies though?
-        inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-        new-msgs (map #(derivative-message % 
-                                           :origin node 
-                                           :type 'I-INFER 
-                                           :taskid (:taskid message)
-                                           :support-set (os-union (:support-set %) (@support node))) 
-                      inst-msgs) ;; using fwd-infer here is a bit of a hack.
-        ich (@i-channels node)]
-    ;(when showproofs
+  ;; Before we do anything, we check that the received message fully instantiates
+  ;; at least one of the antecedent generics with a term actually in the KB. If not,
+  ;; discard it. 
+  (when (some #(build/find-term-with-subst-applied (:originator %) (:subst message)) (@ant-in-channels node))
+    (let [new-msgs (get-new-messages (@msgs node) message)
+          inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
+                                                  ;; What about shared sub-policies though?
+          inst-msgs (filter #(= (:pos %) inchct) new-msgs)
+          new-msgs (map #(derivative-message % 
+                                             :origin node 
+                                             :type 'I-INFER 
+                                             :taskid (:taskid message)
+                                             :support-set (os-union (:support-set %) (@support node))) 
+                        inst-msgs) ;; using fwd-infer here is a bit of a hack.
+          ich (@i-channels node)]
+      ;(when showproofs
     
-    (add-matched-and-sent-messages (@msgs node) (set inst-msgs) {:i-channel (set new-msgs)})
+      (add-matched-and-sent-messages (@msgs node) (set inst-msgs) {:i-channel (set new-msgs)})
     
-    (when (seq new-msgs)
-      (send screenprinter (fn [_] (println "Policy " node " satisfied." inst-msgs))))
-    (apply concat 
-           (for [nmsg new-msgs] 
-             (zipmap ich (repeat (count ich) nmsg))))))
+      (when (seq new-msgs)
+        (send screenprinter (fn [_] (println "Policy " node " satisfied." inst-msgs))))
+      (apply concat 
+             (for [nmsg new-msgs] 
+               (zipmap ich (repeat (count ich) nmsg)))))))
 
 (defn g-chan-to-node?
   [orig dest]

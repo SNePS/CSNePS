@@ -13,7 +13,7 @@
   (let [ct (ct/currentContext)
         taskid (gensym "task")]
     (when-not (ct/asserted? policy ct)
-      (dosync (alter (:hyps ct) conj policy))
+      (ct/hypothesize policy ct)
       (when (isa? (syntactic-type-of policy) :csneps.core/CARule)
         (backward-infer policy taskid)
         (doseq [ich (@i-channels policy)]
@@ -32,7 +32,7 @@
   {:pre [(subtypep (semantic-type-of policy) :Policy)]}
   (let [ct (ct/currentContext)]
     (when (ct/asserted? policy ct)
-      (dosync (alter (:hyps ct) disj policy))
+      (ct/remove-from-context policy ct)
       (when (isa? (syntactic-type-of policy) :csneps.core/CARule)
         (cancel-infer-of policy)
         (doseq [ich (@i-channels policy)]
