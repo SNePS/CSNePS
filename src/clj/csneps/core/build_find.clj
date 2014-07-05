@@ -92,8 +92,10 @@
                     (recur (rest dcs)
                            (conj new-dcs (set (replace subst (first dcs)))))))]
     (find-exact (syntactic-type-of term) (@caseframe term) new-dcs)))
-    
-    
+
+(defn specificInstanceOfGeneric? 
+  [genterm term subst]
+  (= term (find-term-with-subst-applied genterm subst)))
 
 ;;; Rewritten 6/21/2012 [DRS]
 (defn contains-new-term-or-cf?
