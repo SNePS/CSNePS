@@ -86,7 +86,7 @@
   [subs]
   (fn [varbinds]
     (if varbinds
-      (clojure.set/subset? subs varbinds)
+      (submap? subs varbinds)
       true)))
 
 (defn find-channel 
@@ -110,9 +110,12 @@
       (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
       (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
   ;; Focused forward-in-backward, extension for new in-channels.
-  ;; TODO: Temporarily disabled, since it needs fixing to include valve-selector info.
-;  (when (seq (@future-bw-infer dest))
-;    (backward-infer dest (@future-bw-infer dest) nil))
+  ;; We shouldn't continue inference backward if the orig was derived
+  ;; because of the dest.
+  (when (and (seq (@future-bw-infer dest))
+             (@(:hyps (ct/currentContext)) orig))
+    (backward-infer dest (@future-bw-infer dest) nil))
+    
     ;; Send already produced msgs
   (when (@msgs orig)
     (doseq [msg (get-sent-messages (@msgs orig) type)]
