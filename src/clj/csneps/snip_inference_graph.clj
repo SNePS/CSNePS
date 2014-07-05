@@ -12,7 +12,7 @@
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
-(def showproofs true)
+(def showproofs false)
 
 (declare initiate-node-task create-message-structure get-new-messages open-valve cancel-infer-of)
 
@@ -703,10 +703,14 @@
                                   (filter #(> (:pos %) 0) new-combined-messages))
           cqch (union (@i-channels node) (@g-channels node))]
       (doseq [rcm rel-combined-messages]
-        (let [instance (build/apply-sub-to-term node (:subst rcm))
-              inst-support (os-concat 
+        (let [instance (if (:fwd-infer message)
+                         (build/apply-sub-to-term node (:subst rcm))
+                         (build/find-term-with-subst-applied node (:subst rcm)))
+              inst-support ;(os-concat 
                              (os-union (:support-set rcm) (@support node))
-                             (os-union (:support-set rcm) (@support instance)))
+                             ;; This can't be minimal, can it? DRS 7/5/14
+                             ;; Would seem (@support instance) would always be more minimal.
+                             ;(os-union (:support-set rcm) (@support instance)))
               der-msg (derivative-message rcm
                                          :origin node
                                          :support-set inst-support
@@ -714,43 +718,47 @@
                                          :type 'I-INFER
                                          :taskid (:taskid message))]
           
-          (dosync 
-            (alter support assoc instance (os-concat (@support instance) inst-support))
-            (alter instances assoc node (assoc (@instances node) instance (:subst rcm))))
+          ;(when instance 
+            ;(println instance (os-union (:support-set rcm) (@support instance)))
+            ;(dosync 
+              ;(alter support assoc instance (os-concat (@support instance) inst-support))
+             ; (alter instances assoc node (assoc (@instances node) instance (:subst rcm)))))
           
           (add-matched-and-sent-messages (@msgs node) #{rcm} {:i-channel #{der-msg} :g-channel #{der-msg}})
           
-          (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
+          (when (and showproofs instance (filter #(build/pass-message? % der-msg) cqch))
             (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
           (doseq [ch cqch]
-            (submit-to-channel ch der-msg)))))
+            (if (and instance (genericAnalyticTerm? instance))
+              nil
+              (submit-to-channel ch der-msg))))))
     ;; Instance from unifying term.
-    (let [instance (:origin message)
-          subst-support (set 
-                          (map (fn [t] (:name t)) 
-                               (flatten 
-                                 (map (fn [a] (apply-to-all-restrictions (:subst message) a))
-                                      (filter #(arbitraryTerm? %) 
-                                              (keys (:subst message)))))))
-          outgoing-support (if (seq subst-support)
-                             (os-union (:support-set message)
-                                       #{['der subst-support]})
-                             (:support-set message))
-          der-msg (derivative-message message
-                                      :origin node
-                                      :support-set outgoing-support
-                                      :type 'I-INFER
-                                      :taskid (:taskid message))
-          cqch (union (@i-channels node) (@g-channels node))]
+    (let [instance (:origin message)]
+      (when-not (get (@instances node) instance)
+        (let [subst-support (set 
+                              (map (fn [t] (:name t)) 
+                                   (flatten 
+                                     (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                          (filter #(arbitraryTerm? %) 
+                                                  (keys (:subst message)))))))
+              outgoing-support (if (seq subst-support)
+                                 (os-union (:support-set message)
+                                           #{['der subst-support]})
+                                 (:support-set message))
+              der-msg (derivative-message message
+                                          :origin node
+                                          :support-set outgoing-support
+                                          :type 'I-INFER
+                                          :taskid (:taskid message))
+              cqch (union (@i-channels node) (@g-channels node))]
       
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
-      (when-not (get (@instances node) instance)
-        (add-matched-and-sent-messages (@msgs node) #{} {:i-channel #{der-msg} :g-channel #{der-msg}})
-        (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
-        (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
-          (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-        (doseq [ch cqch]
-           (submit-to-channel ch der-msg))))))
+       (add-matched-and-sent-messages (@msgs node) #{} {:i-channel #{der-msg} :g-channel #{der-msg}})
+       (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
+       (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
+         (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
+       (doseq [ch cqch]
+          (submit-to-channel ch der-msg)))))))
               
     
 (defn arbitrary-instantiation
@@ -875,11 +883,17 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-;  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
 
+  (when (and 
+          (= (:type message) 'I-INFER)
+          (genericTerm? (:origin message))
+          (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
+    (dosync (alter support assoc term (os-concat (@support term) (:support-set message)))))
+  
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Elimination Rules ---- ;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
