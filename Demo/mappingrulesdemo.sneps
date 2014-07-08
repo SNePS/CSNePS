@@ -1,3 +1,5 @@
+(in-ns 'csneps.core.snuser)
+
 ;;; Utility Functionss
 
 (defn numberTerm? 
@@ -85,39 +87,47 @@
 ;   (unassert `(RootOf ,?root ,?token)))
 ;  (usedRule 'properNounToName))
   
-(defrule properNounToName
+(defrule properNounToName1
      (SyntacticCategoryOf NNP (every x Token))
      (TextOf (every y Word) x)
      =>
      (assert `(~'hasName ~x ~y))
      (unassert `(~'SyntacticCategoryOf ~'NNP ~x))
-     (unassert `(~'TextOf ~y ~x))
-     (unassert `(~'RootOf ~y ~x))
-     (:subrule 
-       (RootOf (every z Word (notSame y z)) x)
-       => 
-       (unassert `(~'RootOf ~z ~x))))
+     (unassert `(~'TextOf ~y ~x)))
+ 
+;(defrule properNounToName1
+;     (SyntacticCategoryOf NNP (every x Token (TextOf (every y Word) x)))
+;     =>
+;     (assert `(~'hasName ~x ~y))
+;     (unassert `(~'SyntacticCategoryOf ~'NNP ~x))
+;     (unassert `(~'TextOf ~y ~x)))
+
+       
+(defrule properNounToName2
+     (SyntacticCategoryOf NNP (every x Token))
+     (RootOf (every z Word) x)
+     =>
+     (unassert `(~'RootOf ~z ~x)))
        
 (comment
 	(clearkb true)
-	(defrule properNounToName
-	     (SyntacticCategoryOf NNP (every x Token))
-	     (TextOf (every y Word) x)
-	     =>
-	     (assert `(~'hasName ~x ~y))
-	     (unassert `(~'SyntacticCategoryOf ~'NNP ~x))
-	     (unassert `(~'TextOf ~y ~x))
-	     (unassert `(~'RootOf ~y ~x))
-	     (:subrule 
-	       (RootOf (every z Word (notSame y z)) x)
-	       => 
-	       (unassert `(~'RootOf ~z ~x))))	
-	(assert '(SyntacticCategoryOf NNP n252))
-	(assert '(TextOf "Daniel" n252))
-	(assert '(RootOf Daniel n252))
-	(assert '(Isa Daniel Root))
-	(assert '(Isa Daniel Text))
-	(assert '(Isa n252 Token))
+   	(defrule properNounToName
+   	     (SyntacticCategoryOf NNP (every x Token))
+   	     (TextOf (every y Word) x)
+   	     =>
+   	     (assert `(~'hasName ~x ~y))
+   	     (unassert `(~'SyntacticCategoryOf ~'NNP ~x))
+   	     (unassert `(~'TextOf ~y ~x))
+   	     (unassert `(~'RootOf ~y ~x))
+   	     (:subrule 
+   	       (RootOf (every z Word (notSame y z)) x)
+   	       => 
+   	       (unassert `(~'RootOf ~z ~x))))	
+   	(assert '(SyntacticCategoryOf NNP n252))
+   	(assert '(TextOf Daniel n252))
+   	(assert '(RootOf Daniel n252))
+   	(assert '(Isa Daniel Word))
+    (assert '(Isa n252 Token))
 )
     
 ;;; Rule 3: organizationHasName
@@ -150,7 +160,7 @@
 	(assert '(Isa n252 Organization))
 	(assert '(TextOf Ford n252))
 	(assert '(Isa n252 Token))
-	(assert '(Isa Ford Text))
+	(assert '(Isa Ford Word))
 )
   
 ;;; Rule 4: nnName
@@ -269,12 +279,12 @@
  
 (defrule eventToInstance
   (SyntacticCategoryOf verb (every event Token))
-  (RootOf (every eventtype Event) event)
+  (RootOf (every eventtype Word (Isa eventtype Event)) event)
   => 
   (assert `(~'Isa ~event ~eventtype))
   (unassert `(~'RootOf eventtype event))
   (:subrule
-    (TextOf (every Text text) event)
+    (TextOf (every text Word) event)
     =>
     (unassert `(~'TextOf ~text ~event))))
     
@@ -367,7 +377,7 @@
 ;  (usedRule 'subjAction))
   
 (defrule subjAction
-  (nsubj (every action Token (Isa action Action)) (every subj Token))
+  (nsubj (every action Token (Isa action Action1)) (every subj Token))
   =>
   (assert `(~'agent ~action ~subj))
   (unassert `(~'nsubj ~action ~subj)))
@@ -375,13 +385,13 @@
 (comment 
 	(clearkb true)
 	(defrule subjAction
-	  (nsubj (every action Token (Isa action Action)) (every subj Token))
+	  (nsubj (every action Token (Isa action Action1)) (every subj Token))
 	  =>
 	  (assert `(~'agent ~action ~subj))
 	  (unassert `(~'nsubj ~action ~subj)))
 	(assert '(nsubj n232 n233))
 	(assert '(Isa n232 Token))
-	(assert '(Isa n232 Action))
+	(assert '(Isa n232 Action1))
 	(assert '(Isa n233 Token))
 )
   
@@ -397,7 +407,7 @@
 ;		   (usedRule 'dobjAction))))
     
 (defrule dobjAction
-  (dobj (every action Token (Isa action Action)) (every obj Token))
+  (dobj (every action Token (Isa action Action1)) (every obj Token))
   =>
   (assert `(~'theme ~action ~obj))
   (unassert `(~'dobj ~action ~obj)))
@@ -405,13 +415,13 @@
 (comment 
 	(clearkb true)
 	(defrule dobjAction
-	  (dobj (every action Token (Isa action Action)) (every obj Token))
+	  (dobj (every action Token (Isa action Action1)) (every obj Token))
 	  =>
 	  (assert `(~'theme ~action ~obj))
 	  (unassert `(~'dobj ~action ~obj)))
 	(assert '(dobj n232 n233))
 	(assert '(Isa n232 Token))
-	(assert '(Isa n232 Action))
+	(assert '(Isa n232 Action1))
 	(assert '(Isa n233 Token))
 )
   
@@ -440,14 +450,14 @@
 ;			   (unassert `(pobj ,?preptok ,?noun2))
 ;			   (usedRule 'prepToRelation)))))
   
-(defrule prepToRelation
-  (prep (every token Token) (every preptok Token))
-  (pobj preptok (every noun2 Token))
-  (RootOf (every prepwd Root) preptok)
-  =>
-  (sameFrame (:name ~prepwd) 'above)
-  (assert `(~prepwd ~token ~noun2))
-  (unassert `(~'pobj ~preptok ~noun2)))
+	(defrule prepToRelation
+	  (prep (every token Token) (every preptok Token))
+	  (pobj preptok (every noun2 Token (notSame noun2 token preptok)))
+	  (RootOf (every prepwd Word) preptok)
+	  =>
+	  (when (:name prepwd) (sameFrame (symbol (:name prepwd)) 'above))
+	  (assert `(~prepwd ~token ~noun2))
+	  (unassert `(~'pobj ~preptok ~noun2)))
   
 (comment
 	(clearkb true)
@@ -498,7 +508,7 @@
 ;				(unassert `(GroupOf ,?m ,?txt))
 ;				(usedRule 'nnToModifier))))
 
-(defrule nnToModifer
+(defrule nnToModifier
   (nn (every tok Token) (every m Token))
   => 
   (:subrule
@@ -514,7 +524,7 @@
     (unassert `(~'nn ~tok ~m))
     (unassert `(~'hasName ~m ~txt)))
   (:subrule
-    (GroupOf m (every txt Word))
+    (GroupOf m (every txt Category))
     => 
     (assert `(~'Modifier ~tok ~txt))
     (unassert `(~'nn ~tok ~m))
@@ -522,7 +532,7 @@
     
 (comment
 	(clearkb true)
-	(defrule nnToModifer
+	(defrule nnToModifier
 	  (nn (every tok Token) (every m Token))
 	  => 
 	  (:subrule
@@ -566,21 +576,21 @@
 ;				(unassert `(TextOf ,?txt ,?m))
 ;				(usedRule 'amodToModifier))))
 
-(defrule amodToModifer
+(defrule amodToModifier
   (amod (every tok Token) (every m Token))
   (TextOf (every txt Word) m)
   =>
-  (assert `(~'Modifer ~tok ~txt))
+  (assert `(~'Modifier ~tok ~txt))
   (unassert `(~'amod ~tok ~m))
   (unassert `(~'TextOf ~txt ~m)))
   
 (comment
 	(clearkb true)
-	(defrule amodToModifer
+	(defrule amodToModifier
 	  (amod (every tok Token) (every m Token))
 	  (TextOf (every txt Word) m)
 	  =>
-	  (assert `(~'Modifer ~tok ~txt))
+	  (assert `(~'Modifier ~tok ~txt))
 	  (unassert `(~'amod ~tok ~m))
 	  (unassert `(~'TextOf ~txt ~m)))
 	(assert '(amod n232 n233))
