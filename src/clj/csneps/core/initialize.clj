@@ -45,7 +45,6 @@
 			(ref-set csneps/g-channels {})
 			(ref-set csneps/ant-in-channels {})
 			(ref-set csneps/future-fw-infer {})
-			(ref-set csneps/future-bw-infer {})
 			(ref-set csneps/instances {})
 			(ref-set csneps/expected-instances {})
 			(ref-set csneps/up-cablesetw {})

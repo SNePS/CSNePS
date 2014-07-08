@@ -92,12 +92,14 @@
   "If p has an origin set which is a subset of the hyps of the
    context ct, then it is asserted."
   [p ct]
-  (let [context (find-context ct)
-        cthyps (hyps context)]
-    (cond
-      (cthyps (:name p)) 
+  (let [context (find-context ct)]
+    (if (@(:hyps context) (:name p)) 
       context
-      (some 
-        #(set/subset? (second %) cthyps)
-        (filter #(not= (first %) 'hyp) (@csneps/support p)))
-      context)))
+      (let [cthyps (hyps context)]
+        (cond
+          (cthyps (:name p)) 
+          context
+          (some 
+            #(set/subset? (second %) cthyps)
+            (filter #(not= (first %) 'hyp) (@csneps/support p)))
+          context)))))

@@ -71,11 +71,11 @@
 (let [waiting-queue (LinkedBlockingQueue.)]
   (defn pause-execute 
     []
-    (.drainTo queue waiting-queue))
+    (.drainTo ^PriorityBlockingQueue queue waiting-queue))
   
   (defn resume-execute
     []
-    (.drainTo waiting-queue queue)))
+    (.drainTo ^LinkedBlockingQueue waiting-queue queue)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Channel Maniupulation ;;;
@@ -96,7 +96,7 @@
         (do 
           (when (:taskid message) 
             ;(send screenprinter (fn [_]  (println "inc-stc" (:taskid message) (derivative-message message :taskid taskid))))
-            (.increment (@infer-status (:taskid message))))
+            (.increment ^CountingLatch (@infer-status (:taskid message))))
           (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
@@ -154,22 +154,22 @@
         subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
         subst (into {} (filter #(vars-in-orig (first %)) subst))
-        valve-selector [subst context]]
+        valve-selector [subst (:name context)]]
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
-    (when (not (@(:valve-selectors channel) valve-selector))
-      (dosync (alter (:valve-selectors channel) conj valve-selector))
-      (doseq [msg @(:waiting-msgs channel)]
-        (when (build/pass-message? channel msg)
-          ;(send screenprinter (fn [_]  (println "Pass")))
-          (dosync (alter (:waiting-msgs channel) disj msg))
-          (if taskid 
-            (do 
-              ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
-              (.increment (@infer-status taskid)))
-            (send screenprinter (fn [_]  (println "no taskid" msg))))
-          (.execute ^ThreadPoolExecutor executorService 
-            (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
+    (when-not (@(:valve-selectors channel) valve-selector)
+     (dosync (commute (:valve-selectors channel) conj valve-selector))
+     (doseq [msg @(:waiting-msgs channel)]
+       (when (build/pass-vs? valve-selector msg)
+         ;(send screenprinter (fn [_]  (println "Pass")))
+         (dosync (commute (:waiting-msgs channel) disj msg))
+         (if taskid 
+           (do 
+             ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
+             (.increment ^CountingLatch (@infer-status taskid)))
+           (send screenprinter (fn [_]  (println "no taskid" msg))))
+         (.execute ^ThreadPoolExecutor executorService 
+           (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
 
 (def hyp-subst-of-ct?
@@ -195,7 +195,8 @@
           ;                             (second %) 
           ;                             (set (map (fn [h] (:name h)) @(:hyps (second vs))))) 
           ;                          hyps))
-          is-rel-vs? (fn [vs] (some #(hyp-subst-of-ct? (second %) (second vs)) hyps))
+          is-rel-vs? (fn [vs] (let [ct (ct/find-context (second vs))]
+                                (some #(hyp-subst-of-ct? (second %) ct) hyps)))
           rel-vses (filter is-rel-vs? @(:valve-selectors channel))
           match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
       ;(if (seq rel-vses)
@@ -231,22 +232,22 @@
    set to track which nodes it has already visited."
   ([term] 
     (let [taskid (gensym "task")] 
-      (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+      (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
       (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term taskid] 
-    (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+    (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
     (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid))
   ([term invoketermset taskid] 
     (let [gt (gensym "task")
           taskid (if taskid 
                    taskid
                    (do 
-                     (dosync (alter infer-status assoc gt (edu.buffalo.csneps.util.CountingLatch.)))
+                     (dosync (commute infer-status assoc gt (edu.buffalo.csneps.util.CountingLatch.)))
                      gt))]
     (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid)))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset subst context taskid] 
-    (dosync (alter future-bw-infer assoc term (union (@future-bw-infer term) invoketermset)))
+    (dosync (commute (:future-bw-infer term) union invoketermset))
     (doseq [ch (@ant-in-channels term)]
       (when (and (not (visited term)) 
                  (not (visited (:originator ch))))
@@ -258,13 +259,13 @@
           
           ;(open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
-          (when taskid (.increment (@infer-status taskid)))
+          (when taskid (.increment ^CountingLatch (@infer-status taskid)))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial depth 
                               (fn [t d v i s c id] 
                                 (backward-infer t d v i s c id) 
                                 ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                (when id (.decrement (@infer-status id))))
+                                (when id (.decrement ^CountingLatch (@infer-status id))))
                               (:originator ch)
                               (dec depth)
                               (conj visited term)
@@ -281,7 +282,7 @@
   ([term cancel-for-term taskid] (cancel-infer term cancel-for-term taskid {} (@support term))) 
   ([term cancel-for-term taskid subst hyps]
     (when cancel-for-term
-      (dosync (alter future-bw-infer assoc term (disj (@future-bw-infer term) cancel-for-term))))
+      (dosync (commute (:future-bw-infer term) disj cancel-for-term)))
     ;(when (empty? @(:future-bw-infer term))
       (let [affected-chs (doall 
                            (for [ch (@ant-in-channels term)
@@ -291,10 +292,10 @@
         (when (seq affected-chs)
           (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
           (doseq [[ch subst] affected-chs]
-            (when taskid (.increment (@infer-status taskid)))
+            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
             (.execute ^ThreadPoolExecutor executorService 
                 (priority-partial Integer/MAX_VALUE 
-                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement (@infer-status id))))
+                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement ^CountingLatch (@infer-status id))))
                                   (:originator ch) 
                                   cancel-for-term 
                                   taskid
@@ -309,11 +310,11 @@
     (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
     ;; We need to pretend that a U-INFER message came in to this node.
     ;(send screenprinter (fn [_]  (println "inc-fwi")))
-    (.increment (@infer-status taskid))
+    (.increment ^CountingLatch (@infer-status taskid))
     (.execute ^ThreadPoolExecutor executorService 
       (priority-partial 1 initiate-node-task term 
                         (new-message {:origin nil, :support-set #{}, :type 'U-INFER, :fwd-infer? true :invoke-set #{term} :taskid taskid})))
-    (.await (@infer-status taskid))))
+    (.await ^CountingLatch (@infer-status taskid))))
 
 (defn cancel-forward-infer
   ([term] (cancel-infer term term))
@@ -321,10 +322,10 @@
     (when cancel-for-term
       (dosync (alter future-fw-infer assoc term (disj (@future-fw-infer term) cancel-for-term))))
     (doseq [ch (concat (@i-channels term) (@u-channels term) (@g-channels term))]
-      (.increment (@infer-status nil))
+      (.increment ^CountingLatch (@infer-status nil))
       (.execute ^ThreadPoolExecutor executorService 
         (priority-partial Integer/MAX_VALUE 
-                          (fn [t c] (cancel-forward-infer t c) (.decrement (@infer-status nil)))
+                          (fn [t c] (cancel-forward-infer t c) (.decrement ^CountingLatch (@infer-status nil)))
                           (:destination ch) cancel-for-term)))))
 
 ;; How do we ensure no re-derivations?
@@ -657,9 +658,11 @@
   ;; Really, a kind of elimination rule.
   [message node]
   ;; Before we do anything, we check that the received message fully instantiates
-  ;; at least one of the antecedent generics with a term actually in the KB. If not,
-  ;; discard it. 
-  (when (some #(build/find-term-with-subst-applied (:originator %) (:subst message)) (@ant-in-channels node))
+  ;; at least the originator with a term actually in the KB and is believed. If not,
+  ;; discard it. We have to do this because unlike normal rules of inference, this rule
+  ;; actually needs to know that's what it's receiving is asserted (the results won't have an OS
+  ;; to make them contingent on the context). 
+  (when (ct/asserted? (build/find-term-with-subst-applied (:origin message) (:subst message)) (ct/currentContext))
     (let [new-msgs (get-new-messages (@msgs node) message)
           inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                   ;; What about shared sub-policies though?
@@ -943,7 +946,7 @@
       
       
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
-      (when (get (@future-bw-infer term) result-term)
+      (when (get @(:future-bw-infer term) result-term)
         (cancel-infer-of term)))
     (when (:true? message)
       ;; Apply elimination rules and report results
@@ -1036,7 +1039,7 @@
   (when (:taskid message) 
     (when-not (@infer-status (:taskid message)) (println (:taskid message)))
     ;(send screenprinter (fn [_]  (println "dec-stc" (:taskid message) message)))
-    (.decrement (@infer-status (:taskid message)))))
+    (.decrement ^CountingLatch (@infer-status (:taskid message)))))
           
   
 ;;; Message Handling ;;;
@@ -1085,7 +1088,7 @@
 (defn backward-infer-derivable [term context]
   (let [taskid (gensym "task")]
     (backward-infer term taskid)
-    (.await (@infer-status taskid))
+    (.await ^CountingLatch (@infer-status taskid))
     (if (ct/asserted? term context)
       #{term}
       #{})))
@@ -1095,7 +1098,7 @@
   [ques context]
   (let [taskid (gensym "task")]
     (backward-infer ques taskid)
-    (.await (@infer-status taskid))
+    (.await ^CountingLatch (@infer-status taskid))
     (into {} (filter #(ct/asserted? (first %) context) (@instances ques)))))
 
 (defn cancel-infer-of [term]
@@ -1113,10 +1116,10 @@
     (cancel-forward-infer term term)))
 
 (defn cancel-focused-infer []
+  (dosync
+    (alter future-fw-infer empty))
   (doseq [t (vals @TERMS)]
-    (dosync 
-      (alter future-fw-infer empty)
-      (alter future-bw-infer empty))))
+    (dosync (alter (:future-bw-infer t) empty))))
   
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;

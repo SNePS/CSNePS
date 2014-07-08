@@ -104,7 +104,6 @@
 (def g-channels (ref {}))
 (def ant-in-channels (ref {}))
 (def future-fw-infer (ref {}))
-(def future-bw-infer (ref {}))
 (def instances (ref {}))
 (def expected-instances (ref {}))
 (def up-cablesetw (ref {}))
@@ -123,6 +122,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    type ::Term])
 
 ;;;Portnote: was named "atom", Clojure doesn't like this.
@@ -132,6 +132,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    type ::Atom])
 
 (defrecord2 Base
@@ -140,6 +141,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    type ::Base])
 
 (defrecord2 Variable
@@ -148,6 +150,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Variable
    var-label nil
    not-same-as (ref #{})
@@ -159,6 +162,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Variable
    var-label nil
    not-same-as (ref #{})
@@ -170,6 +174,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;; Arbitrary specific:
    fully-built (ref false)
    ;;Additions for Variable
@@ -183,6 +188,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;; QueryVariable Specific
    fully-built (ref false)
    ;;Additions for Variable
@@ -196,6 +202,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Molecular])
@@ -206,6 +213,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Carule
@@ -218,6 +226,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Closure
@@ -230,6 +239,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -243,6 +253,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -256,6 +267,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -269,6 +281,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -282,6 +295,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -295,6 +309,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -308,6 +323,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    ;;Additions for Param2op
@@ -321,6 +337,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Conjunction])
@@ -331,6 +348,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Negation])
@@ -341,6 +359,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Negationbyfailure])
@@ -351,6 +370,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Numericalentailment])
@@ -361,6 +381,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Orentailment])
@@ -371,6 +392,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Implication])
@@ -381,6 +403,7 @@
    fired nil
    recorded-firing nil
    activation-marker nil
+   future-bw-infer (ref nil)
    ;;Additions for Molecular
    down-weights (ref '())
    type ::Categorization])

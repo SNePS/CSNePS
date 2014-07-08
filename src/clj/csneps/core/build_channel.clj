@@ -112,9 +112,9 @@
   ;; Focused forward-in-backward, extension for new in-channels.
   ;; We shouldn't continue inference backward if the orig was derived
   ;; because of the dest.
-  (when (and (seq (@future-bw-infer dest))
+  (when (and (seq @(:future-bw-infer dest))
              (ct/asserted? orig (ct/currentContext)))
-    (backward-infer dest (@future-bw-infer dest) nil))
+    (backward-infer dest @(:future-bw-infer dest) nil))
     
     ;; Send already produced msgs
   (when (@msgs orig)
@@ -158,19 +158,23 @@
   [channel]
   @(:valve-open channel))
 
+(defn pass-vs?
+  [[sub ct] message]
+  (let [ct (ct/find-context ct)]
+    (and 
+      ;; Empty map means pass everything in the ct. (Used with qvars)
+      (or (= sub {}) (submap? sub (:subst message)))
+      (some 
+        (fn [supportset] 
+          (clojure.set/subset? (second supportset) (ct/hyps ct))) 
+        (:support-set message)))))
+
 (defn pass-message?
   [channel message]
   (or
     (:fwd-infer? message)
     (valve-open? channel) ;; Kept for legacy reasons for now.
-    (some #(and 
-             ;; Empty map means pass everything in the ct. (Used with qvars)
-             (or (= (first %) {}) (submap? (first %) (:subst message)))
-             (some 
-               (fn [supportset] 
-                 (clojure.set/subset? (second supportset) (ct/hyps (second %)))) 
-               (:support-set message)))
-          @(:valve-selectors channel))))
+    (some #(pass-vs? % message) @(:valve-selectors channel))))
 
 ;; Watch the valve-state for changes. Adjust the operation of the channel as necessary.
 

@@ -23,7 +23,8 @@
         [csneps.core.printer :only (writeKBToTextFile)]
         [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction)]
         [csneps.core.arithmetic]
-        [csneps.util]))
+        [csneps.util])
+  (:import [edu.buffalo.csneps.util CountingLatch]))
 
 (declare askif askifnot defineTerm find-term)
 
@@ -34,7 +35,7 @@
         rule (filter #(= rule-name (:name (ffirst (@csneps/down-cableset %)))) rules)]
     (if (first rule)
       (when-let [taskid (adopt (first rule))]
-        (.await (@snip/infer-status taskid)))
+        (.await ^CountingLatch (@snip/infer-status taskid)))
       (error "Rule " rule-name " does not exist."))))
 
 (defn adopt-rules 
