@@ -68,11 +68,6 @@ Since wft7!: (eats (every x (Isa x Cow)) (every y (Isa y Plant)))
 I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by generic-instantiation.
 
 
-wft7!: (eats (every x  (Isa x Cow) ) (every y  (Isa y Plant) )) , I derived:  wft22!: (eats (every x  (Isa x Bird) ) (every x  (Isa x Wheat) ))  by generic-instantiation
-
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -107,3 +102,42 @@ wft7!: (eats (every x  (Isa x Cow) ) (every y  (Isa y Plant) )) , I derived:  wf
 (assert '(Arrested Azam))
 (assert '(Isa Azam Person))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(clearkb true)
+
+(assert '(Isa Dorothy Person))
+(assert '(Isa Toto Dog))
+(assert '(Owns Dorothy Toto))
+
+;;; Dorothy can either carry the scarecrow, 
+;;;  or carry one or two objects from the list: 
+;;;   her full basket, Toto, oil can.
+(assert '(xor (Carries Dorothy Scarecrow)
+              (andor (1 2) (Carries Dorothy FullBasket) 
+                           (Carries Dorothy Toto) 
+                           (Carries Dorothy OilCan))))
+
+;;; Either Dorothy, the Tin Woodman, or the Scarecrow
+;;;    carry the Oil Can.
+(assert '(xor (Carries Dorothy OilCan) 
+              (Carries TinWoodman OilCan) 
+              (Carries Scarecrow OilCan)))
+
+;;; Either someone carries a dog, or the dog walks.
+(assert '(xor (Carries (some x () Person) (every y Dog))
+              (Walks y)))
+
+;;; A dog is carried by its owner, if and only if the dog is scared.
+(assert '(iff (Scare (every x Dog)) (Carries (every y Person (Owns x)) x)))
+
+;;; Toto gets scared if Dorothy is being chased.
+(assert '(if (Chase Dorothy) (Scare Toto)))
+
+;;; The Tin Woodman is carrying his Oil Can.
+(assert '(Carries TinWoodman OilCan))
+
+;;; Dorothy is being chased.
+(assert '(Chase Dorothy))
+
+(askifnot '(Carries Dorothy Scarecrow))
