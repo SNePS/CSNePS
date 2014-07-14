@@ -9,12 +9,15 @@
   ([term sub] (apply-sub-to-term variable? term sub nil))
   ([term sub ignore-type] (apply-sub-to-term variable? term sub ignore-type))
   ([variable? term sub ignore-type]
-    (term-prewalk (fn [x]
-                          (if-let [s (sub x)]
-                            s
-                            x))
-                         term
-                         :ignore-type ignore-type)))
+    (if (seq sub)
+      (term-prewalk (fn [x]
+                            (if-let [s (sub x)]
+                              s
+                              x))
+                           term
+                           :ignore-type ignore-type
+                           :with-restrictions true)
+      term)))
 
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}
