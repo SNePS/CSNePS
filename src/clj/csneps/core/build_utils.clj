@@ -31,8 +31,21 @@
         (second (first p))
         (:name (first (first (@down-cableset term))))))))
 
+(defn var-walk
+  [inner outer termpart]
+  (outer 
+    (build-variable 
+      (list* 'every 
+             (:var-label termpart) 
+             (binding [csneps.core.printer/PRINTED-VARIABLES #{termpart}]
+               (doall (map #(read-string (csneps.core.printer/print-unnamed-molecular-term %)) 
+                           (map inner (@restriction-set termpart)))))))))
+
+;; Idea: Descend into restrictions, but determine if any arb descending in to is a parent.
+
+
 (defn term-walk
-  [inner outer termpart & {:keys [ignore-type]}]
+  [inner outer termpart & {:keys [ignore-type with-restrictions]}]
   (cond
     (molecularTerm? termpart) (outer (build 
                                        (if-let [fsym (or ((type-of termpart) syntype-fsym-map)
@@ -59,12 +72,56 @@
     :else (error (str "Term contains unknown parts (" termpart ")"))))
 
 (defn term-prewalk
-  [f term & {:keys [ignore-type]}]
-  (term-walk (partial term-prewalk f) identity (f term) :ignore-type ignore-type))
+  [f term & {:keys [ignore-type with-restrictions]}]
+  (term-walk 
+    (fn [t] (term-prewalk f t :ignore-type ignore-type :with-restrictions with-restrictions)) 
+    identity (f term) :ignore-type ignore-type :with-restrictions with-restrictions))
+
+(defn term-walk-with-restricts
+  [inner outer termpart & {:keys [ignore-type with-restrictions seen-vars] :or {seen-vars #{}}}]
+  (cond
+    (molecularTerm? termpart) (outer (build 
+                                       (if-let [fsym (or ((type-of termpart) syntype-fsym-map)
+                                                         (let [p (:print-pattern (@caseframe termpart))]
+                                                           (when (and (seq? (first p)) (= (first (first p)) 'quote))
+                                                             (second (first p)))))]
+                                         (conj (doall (map #(inner % :sv seen-vars) (@down-cableset termpart))) fsym)
+                                         (doall (map #(inner % :sv seen-vars) (@down-cableset termpart))))
+                                       (if ignore-type :Entity (csneps.core/semantic-type-of termpart))
+                                       {}) :sv seen-vars)
+    (and with-restrictions
+         (not (seen-vars termpart))
+         (arbitraryTerm? termpart)) (outer 
+                                       (build-variable 
+                                         (condp (syntactic-type-of termpart)
+                                           :csneps.core/Arbitrary (list* 'every 
+                                                                         (:var-label termpart) 
+                                                                         (binding [csneps.core.printer/PRINTED-VARIABLES #{termpart}]
+                                                                           (doall (map #(read-string (csneps.core.printer/print-unnamed-molecular-term %)) 
+                                                                                       (map #(inner % :sv (conj seen-vars termpart)) (@restriction-set termpart))))))))
+                                       :sv (conj seen-vars termpart))
+    (indefiniteTerm? termpart) (outer termpart :sv seen-vars) ;; Ignoring these for now - they're tricky.
+    (atomicTerm? termpart) (outer termpart :sv seen-vars)
+    (set? termpart) (set (doall (map #(inner % :sv seen-vars) termpart)))
+    :else (error (str "Term contains unknown parts (" termpart ")"))))
+
+(defn term-prewalk-with-restricts
+  [f term & {:keys [ignore-type with-restrictions seen-vars] :or {seen-vars #{}}}]
+  (let [inner (fn [t & {:keys [sv]}] (term-prewalk-with-restricts f t :ignore-type ignore-type :seen-vars sv :with-restrictions with-restrictions))
+        outer (fn [t & {:keys [sv]}] (identity t))
+        termpart (f term)]
+    (term-walk-with-restricts inner outer termpart :ignore-type ignore-type :with-restrictions with-restrictions :seen-vars seen-vars)))
+    
+    
+    
+    
+  
+  
+  
 
 (defn term-prewalk-test
   [term]
-  (term-prewalk (fn [x] (print "Walked: ") (prn x) x) term))
+  (term-prewalk (fn [x] (print "Walked: ") (prn x) x) term :with-restrictions true))
 
 (defn term-prewalk-test2
   [term]
