@@ -132,7 +132,8 @@
 (defn get-terms-from-find-results
   "Given results from a find operation, return all of the terms in the substitutions."
   [findres]
-  (set (apply vals (map second findres))))
+  (when (seq findres)
+    (set (apply vals (map second findres)))))
 
 (defn find-old-var-node
   "If an existing variable node can be found such that:
