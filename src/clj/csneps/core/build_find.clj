@@ -100,12 +100,12 @@
 ;;; Rewritten 6/21/2012 [DRS]
 (defn contains-new-term-or-cf?
   "Returns true if a restriction contains new terms not already in the KB."
-  [var-label restriction]
+  [restriction var-list]
   (loop [arg (rest restriction)]
     (cond 
       (empty? arg)        nil
-      (list? (first arg)) (contains-new-term-or-cf? var-label (first arg))
-      (not (or (= var-label (first arg))
+      (list? (first arg)) (contains-new-term-or-cf? (first arg) var-list)
+      (not (or (var-list (first arg))
                (= (syntactic-type-of (first arg)) :csneps.core/Term)
                (get-term (first arg))))
                           true
@@ -113,11 +113,11 @@
 
 (defn var-requires-new-term?
   "Returns true if resrictions contain new terms not already in the KB."
-  [var-label restrictions]
+  [restrictions var-list]
   (loop [rst restrictions]
     (cond 
       (empty? rst)                                     nil
-      (contains-new-term-or-cf? var-label (first rst)) true
+      (contains-new-term-or-cf? (first rst) var-list)  true
       :else                                            (recur (rest rst)))))
 
 (defn find-vars-of-restriction-set-size
@@ -144,6 +144,7 @@
    that existing node is returned.
    Otherwise nil is returned."
   [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant notsames]
+  (println restrictions arb-rsts)
   (let [distinctres (distinct restrictions)
         var-list (concat (keys arb-rsts) (keys ind-dep-rsts) (keys qvar-rsts))]
     ;; If the variable contains new terms which haven't yet been built,
@@ -151,7 +152,7 @@
     ;; same size as the one we're testing against, then intersect
     ;; that set with the terms in the substitutions resulting from 
     ;; using "find" to look for each of the restrictions of the arb.
-    (when-not (var-requires-new-term? var-label distinctres)
+    (when-not (var-requires-new-term? distinctres (set var-list))
       (let [possibles (loop [rst distinctres
                              possibles (find-vars-of-restriction-set-size (count distinctres) quant)]
                         (cond
