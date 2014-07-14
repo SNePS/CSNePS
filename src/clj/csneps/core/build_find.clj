@@ -132,7 +132,7 @@
 (defn get-terms-from-find-results
   "Given results from a find operation, return all of the terms in the substitutions."
   [findres]
-  (set (map #(val (first %)) (map second findres))))
+  (set (apply vals (map second findres))))
 
 (defn find-old-var-node
   "If an existing variable node can be found such that:
@@ -144,7 +144,6 @@
    that existing node is returned.
    Otherwise nil is returned."
   [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant notsames]
-  (println restrictions arb-rsts)
   (let [distinctres (distinct restrictions)
         var-list (concat (keys arb-rsts) (keys ind-dep-rsts) (keys qvar-rsts))]
     ;; If the variable contains new terms which haven't yet been built,
