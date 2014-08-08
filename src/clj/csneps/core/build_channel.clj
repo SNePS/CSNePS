@@ -110,10 +110,10 @@
       (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
       (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
   ;; Focused forward-in-backward, extension for new in-channels.
-  ;; We shouldn't continue inference backward if the orig was derived
+  ;; TODO: We shouldn't continue inference backward if the orig was derived
   ;; because of the dest.
-  (when (and (seq @(:future-bw-infer dest))
-             (ct/asserted? orig (ct/currentContext)))
+  (when (and (seq @(:future-bw-infer dest)))
+;             (ct/asserted? orig (ct/currentContext))) ;; This doesn't work - assert hasn't been done yet when chs are built.
     (backward-infer dest @(:future-bw-infer dest) nil))
     
     ;; Send already produced msgs
@@ -183,3 +183,18 @@
   (when newvalue
     ;; Handle opened valve
     nil))
+
+;;; Debug functions:
+
+(defn print-channel-and-msgs
+  [from to]
+  (let [from (get-term from)
+        to (get-term to)
+        chs (concat (@i-channels from) (@u-channels from) (@g-channels from))
+        ch (first (filter #(= (:destination %) to) chs))]
+    (println ch)
+    (println @(:waiting-msgs ch))))
+    
+  
+  
+  
