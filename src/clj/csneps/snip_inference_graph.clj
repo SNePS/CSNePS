@@ -12,7 +12,7 @@
 (def print-intermediate-results false)
 (def print-results-on-infer false)
 (def debug false)
-(def showproofs false)
+(def showproofs true)
 
 (declare initiate-node-task create-message-structure get-new-messages open-valve cancel-infer-of)
 
@@ -1126,7 +1126,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn- print-valve [ch]
-  (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (second %)) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
+  (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (ct/find-context (second %))) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
     (cond
       @(:valve-open ch) "-"
       (seq selectors-this-ct) (str "~" (print-str (map #(first %) selectors-this-ct)) "~")
