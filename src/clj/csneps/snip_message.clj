@@ -35,7 +35,8 @@
          " " (:type o) " (" (if (:true? o) "t" "f") ")"
          " pos:" (:pos o) " neg:" (:neg o)
          " support: " (:support-set o)
-         " substitution: " (:subst o))))
+         " substitution: " (:subst o)
+         " forward?: " (:fwd-infer? o))))
 
 (defn message-key [msg]
   (set (keys (:subst msg))))
