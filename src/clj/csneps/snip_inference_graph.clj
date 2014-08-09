@@ -1,5 +1,6 @@
 (in-ns 'csneps.snip)
 
+(load "snip_beliefrevision")
 (load "snip_message")
 (load "snip_linear_msg_set")
 (load "snip_sindex")
@@ -244,6 +245,36 @@
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset subst context taskid] 
     (dosync (commute (:future-bw-infer term) union invoketermset))
+    
+    ;; Some rules need special backward-inferring into. 
+    (when-not (ct/asserted? term context)
+      (cond 
+        (and 
+          (= (syntactic-type-of term) :csneps.core/Implication)
+          (= (count (first (@down-cableset term))) 1))
+        (let [ant (ffirst (@down-cableset term))
+              ct (if ((ct/hyps (ct/currentContext)) ant)
+                   (ct/currentContext)
+                   (ct/defineContext 
+                     (gensym (:name (ct/currentContext))) 
+                     :parents (list (ct/currentContext))
+                     :hyps #{(:name ant)}))]
+          (doseq [cq (second (@down-cableset term))]    
+            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+            (.execute ^ThreadPoolExecutor executorService 
+              (priority-partial depth 
+                                (fn [t d v i s c id] 
+                                  (backward-infer t d v i s c id) 
+                                  (when id (.decrement ^CountingLatch (@infer-status id))))
+                                cq
+                                (dec depth)
+                                (conj visited term)
+                                invoketermset
+                                subst
+                                ct
+                                taskid))))))
+    
+    ;; Propogate backward-infer messages.
     (doseq [ch (@ant-in-channels term)]
       (when (and (not (visited term)) 
                  (not (visited (:originator ch))))
@@ -480,7 +511,17 @@
 
 (defn numericalentailment-introduction
   ""
-  [message node])
+  [message node]
+;  (when (= (count (first (@down-cableset node))) 1)
+;    (let [ant (ffirst (@down-cableset node))
+;          cqs (second (@down-cableset node))]
+;    
+;      (forward-infer ant)
+;      (unassert ant (ct/currentContext))
+;      (when (every #(believed-with-hyps % (conj (ct/hyps (ct/currentContext)) ant)) cqs))
+;      ;;...
+;))
+      )
 
 (defn conjunction-elimination
   "Since the and is true, send a U-INFER message to each of the
@@ -987,7 +1028,7 @@
           (= (:type message) 'I-INFER)
           (genericTerm? (:origin message))
           (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
-    (dosync (alter support assoc term (os-concat (@support term) (:support-set message))))
+    (dosync (alter-support term (os-concat (@support term) (:support-set message))))
     ;; Send this new info onward
     (let [imsg (derivative-message message
                                    :origin term
@@ -1026,13 +1067,19 @@
       
       (when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
       
-      (dosync (alter support assoc result-term (os-concat (@support result-term) (:support-set message))))
+      (dosync (alter-support result-term (os-concat (@support result-term) (:support-set message))))
       ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (and print-intermediate-results
                  (or (:fwd-infer? message)
                      (not (ct/asserted? result-term (ct/currentContext)))))
         (send screenprinter (fn [_]  (println "> " result-term))))
+      
+      ;; If this is a cq of a rule we are introducing by numerical entailment
+      ;; let the rule know.
+      ;;TODO.
+      
+      
       
       ;; Send messages onward that this has been derived.
       (let [imsg (derivative-message message
@@ -1115,10 +1162,10 @@
         (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
         (if true?
           (do 
-            (dosync (alter support assoc term (os-concat (@support term) spt)))
+            (dosync (alter-support term (os-concat (@support term) spt)))
             (when print-intermediate-results (println "> " term)))
           (let [neg (build/variable-parse-and-build (list 'not term) :Propositional)]
-            (dosync (alter support assoc neg (os-concat (@support neg) spt)))
+            (dosync (alter-support neg (os-concat (@support neg) spt)))
             (when print-intermediate-results (println "> " neg))))
         
         
