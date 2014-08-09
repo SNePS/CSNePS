@@ -66,3 +66,9 @@
       :else
       (recur result
              (rest supports2)))))
+
+(defn alter-support
+  [term new-support]
+  (alter support assoc term new-support))
+  
+  
