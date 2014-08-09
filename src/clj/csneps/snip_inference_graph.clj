@@ -444,7 +444,10 @@
                   (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
                                                               (:support-set message)
                                                               node
-                                                              "numericalentailment-elimination"))))))
+                                                              (str (or 
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "numericalentailment")
+                                                                   "-elimination")))))))
         
             (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
         ;; :min > 1
@@ -468,7 +471,10 @@
                     (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
                                                               (:support-set match-msg)
                                                               node
-                                                              "numericalentailment-elimination"))))))
+                                                              (str (or 
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "numericalentailment")
+                                                                   "-elimination")))))))
         
               (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))))
 
@@ -554,7 +560,10 @@
                                                                            :Proposition {})
                                                               (:support-set pos-match)
                                                               node
-                                                              "andor-elimination"))))))
+                                                              (str (or 
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "andor")
+                                                                   "-elimination")))))))
                 
                 
                 ;(send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
@@ -581,7 +590,10 @@
                 (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst neg-match))
                                                               (:support-set neg-match)
                                                               node
-                                                              "andor-elimination"))))))
+                                                              (str (or 
+                                                                      (build/syntype-fsym-map (syntactic-type-of node))
+                                                                      "andor")
+                                                                    "-elimination")))))))
           
           (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
                                                  (not (ct/asserted? (:destination %) (ct/currentContext))))
@@ -620,7 +632,10 @@
           (when showproofs 
             (send screenprinter (fn [_] (print-proof-step node
                                                           (der-tag (:support-set case2))
-                                                          "param2op-introduction"))))
+                                                          (str (or 
+                                                                 (build/syntype-fsym-map (syntactic-type-of node))
+                                                                 "param2op")
+                                                               "-introduction")))))
           [true (der-tag (:support-set case2)) (zipmap ich (repeat (count ich) dermsg))]))
       (isa? (syntactic-type-of node) :csneps.core/Thresh)
       (when case1
@@ -632,7 +647,10 @@
           (when showproofs 
             (send screenprinter (fn [_] (print-proof-step node 
                                                           (der-tag (:support-set case1))
-                                                          "param2op-introduction"))))
+                                                          (str (or 
+                                                                 (build/syntype-fsym-map (syntactic-type-of node))
+                                                                 "param2op")
+                                                               "-introduction")))))
           [true (der-tag (:support-set case1)) (zipmap ich (repeat (count ich) dermsg))])))))
   
 (defn thresh-elimination
@@ -670,7 +688,10 @@
                   (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
                                                               (:support-set more-than-min-true-match)
                                                               node
-                                                              "thresh-elimination")))))))
+                                                              (str (or 
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "thresh")                                                               
+                                                                   "-elimination"))))))))
           
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% der-msg])
@@ -692,7 +713,10 @@
                 (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match )) 
                                                               (:support-set less-than-max-true-match )
                                                               node
-                                                              "thresh-elimination"))))))
+                                                              (str (or 
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "thresh")                                                               
+                                                                   "-elimination")))))))
           
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% der-msg])
