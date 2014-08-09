@@ -1019,46 +1019,47 @@
   [quant var-label rsts substitution notsames & {:keys [deps]}]
   (let [var (substitution var-label)
         nsvars (set (map #(substitution %) (notsames var-label)))]
-    (alter TERMS assoc (:name var) var)
-    (cond 
-      (= quant :qvar) 
-      (let [restrictions (clojure.set/union (@restriction-set var)
-                                            (set (map #(build % :WhQuestion substitution) rsts)))]
-        (alter restriction-set assoc var restrictions)
-        (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil)))
-      (and (= quant :some) (not (nil? dependencies)))
-      (let [restrictions (set (map #(build % :Propositional substitution) rsts))
-            deps (clojure.set/union (@dependencies var)
-                                    (set (map #(substitution %) deps)))] 
-        (alter dependencies assoc var deps)
-        (alter restriction-set assoc var restrictions)
-        (alter msgs assoc var (create-message-structure :csneps.core/Indefinite nil))
-        (dosync (doseq [r restrictions]
-                  (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
-             ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
-      :else
-      (let [restrictions (clojure.set/union (@restriction-set var)
-                                            (set (map #(build % :Propositional substitution) rsts)))] 
-        (alter restriction-set assoc var restrictions)
-        (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
-        (dosync (doseq [r restrictions]
-                  (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
+    (when-not (@restriction-set var) ;; already built!
+      (alter TERMS assoc (:name var) var)
+      (cond 
+        (= quant :qvar) 
+        (let [restrictions (clojure.set/union (@restriction-set var)
+                                              (set (map #(build % :WhQuestion substitution) rsts)))]
+          (alter restriction-set assoc var restrictions)
+          (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil)))
+        (and (= quant :some) (not (nil? dependencies)))
+        (let [restrictions (set (map #(build % :Propositional substitution) rsts))
+              deps (clojure.set/union (@dependencies var)
+                                      (set (map #(substitution %) deps)))] 
+          (alter dependencies assoc var deps)
+          (alter restriction-set assoc var restrictions)
+          (alter msgs assoc var (create-message-structure :csneps.core/Indefinite nil))
+          (dosync (doseq [r restrictions]
+                    (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
+               ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
+        :else
+        (let [restrictions (clojure.set/union (@restriction-set var)
+                                              (set (map #(build % :Propositional substitution) rsts)))] 
+          (alter restriction-set assoc var restrictions)
+          (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
+          (dosync (doseq [r restrictions]
+                    (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
             ; (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
     
             
-    (alter (:not-same-as var) clojure.set/union nsvars)
+      (alter (:not-same-as var) clojure.set/union nsvars)
     
-    (internal-restrict var)
+       (internal-restrict var)
       
-    (alter TERMS assoc (:name var) var)
-    (case quant
-      :every (do 
-               (alter ARBITRARIES conj var)
-               (ref-set (:fully-built var) true))
-      :some  (alter INDEFINITES conj var)
-      :qvar  (do 
-               (alter QVARS conj var)
-               (ref-set (:fully-built var) true)))
+       (alter TERMS assoc (:name var) var)
+       (case quant
+         :every (do 
+                  (alter ARBITRARIES conj var)
+                  (ref-set (:fully-built var) true))
+         :some  (alter INDEFINITES conj var)
+         :qvar  (do 
+                  (alter QVARS conj var)
+                  (ref-set (:fully-built var) true))))
     
     var))
 
