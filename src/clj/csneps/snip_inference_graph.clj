@@ -126,18 +126,7 @@
   ;; Conjunctions have no antecedents if they are true, so the U-INFER messages must be passed on here
   (when (= (type-of term) :csneps.core/Conjunction)
     (let [msg (new-message {:origin term, :support-set #{['der #{(:name term)}]}, :type 'U-INFER, :fwd-infer? fwd-infer})]
-      (doall (map #(submit-to-channel % msg) (@u-channels term)))))
-  ;; Negations:
-  ;; When the assertion makes terms negated, the negated terms need to send out
-  ;; on their i-channels that they are now negated.
-  (let [dcs-map (cf/dcsRelationTermsetMap term)
-        nor-dcs (when dcs-map (dcs-map (slot/find-slot 'nor)))]
-    (when nor-dcs
-      (doseq [negterm nor-dcs]
-        (doall (map #(submit-to-channel 
-                       % 
-                       (new-message {:origin negterm, :support-set #{['der #{(:name term)}]}, :type 'I-INFER, :true? false, :fwd-infer? fwd-infer})) 
-                    (@i-channels negterm)))))))
+      (doall (map #(submit-to-channel % msg) (@u-channels term))))))
 
 ;(defn open-valve 
 ;  [channel taskid]
@@ -259,7 +248,7 @@
       (when (and (not (visited term)) 
                  (not (visited (:originator ch))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
-        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term))))
+        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
         ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
         (let [subst (add-valve-selector ch subst context taskid)]
           ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "vs" subst)))
@@ -382,19 +371,22 @@
   [message node]
   ;; new-msgs is used in this case, not because we want to combine messages, but
   ;; because we want to ensure we don't re-produce the same message.
-  (let [new-msgs (get-new-messages (@msgs node) message)
-        dermsg (derivative-message message
-                                   :origin node
-                                   :support-set (der-tag (:support-set message))
-                                   :true? false
-                                   :type 'U-INFER)
-        uch (@u-channels node)]
-
-    (when showproofs 
-      (doseq [u uch]
-        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
-    (when (seq new-msgs) 
-      (zipmap uch (repeat (count uch) dermsg)))))
+;  (let [new-msgs (get-new-messages (@msgs node) message)
+;        dermsg (derivative-message message
+;                                   :origin node
+;                                   :support-set (der-tag (:support-set message))
+;                                   :true? false
+;                                   :type 'U-INFER)
+;        uch (@u-channels node)]
+;
+;    (when showproofs 
+;      (doseq [u uch]
+;        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
+;    (when (seq new-msgs) 
+;      (zipmap uch (repeat (count uch) dermsg))))
+;  
+;  
+  )
 
 ;(defn negation-introduction
 ;  "Pretty much conjunction-introduction, but with :neg instead of :pos"
@@ -1137,7 +1129,7 @@
     :else
     (make-linear-msg-set)))
 
-(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels new-message create-message-structure get-sent-messages backward-infer forward-infer)
+(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels new-message create-message-structure get-sent-messages backward-infer forward-infer add-matched-and-sent-messages)
 
 ;;; Reductio
 

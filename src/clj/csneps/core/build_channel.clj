@@ -28,12 +28,12 @@
 
 (in-ns 'csneps.core.build)
 
-(declare valve-state-changed submit-to-channels new-message create-message-structure get-sent-messages)
+(declare valve-state-changed submit-to-channels new-message create-message-structure get-sent-messages add-matched-and-sent-messages)
 
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc bstc satc nm crs gsm bwi fwi]
+  [stc bstc satc nm crs gsm bwi fwi amasm]
   (def submit-to-channel stc)
   (def blocking-submit-to-channel bstc)
   (def submit-assertion-to-channels satc)
@@ -41,7 +41,8 @@
   (def create-message-structure crs)
   (def get-sent-messages gsm)
   (def backward-infer bwi)
-  (def forward-infer fwi))
+  (def forward-infer fwi)
+  (def add-matched-and-sent-messages amasm))
 
 (defrecord2 Channel 
   [originator    nil
@@ -96,55 +97,60 @@
 
 (defn install-channel
   [ch orig dest type]
-  (dosync
-    (condp = type
-      :i-channel (if (set? (@i-channels orig))
-                   (alter i-channels assoc orig (conj (@i-channels orig) ch))
-                   (alter i-channels assoc orig (set (conj (@i-channels orig) ch))))
-      :u-channel (if (set? (@u-channels orig))
-                   (alter u-channels assoc orig (conj (@u-channels orig) ch))
-                   (alter u-channels assoc orig (set (conj (@u-channels orig) ch))))
-      :g-channel (if (set? (@g-channels orig))
-                   (alter g-channels assoc orig (conj (@g-channels orig) ch))
-                   (alter g-channels assoc orig (set (conj (@g-channels orig) ch)))))
-    (if (set? (@ant-in-channels dest))
-      (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
-      (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
+  (when-not (find-channel orig dest)
+    (dosync
+      (condp = type
+        :i-channel (if (set? (@i-channels orig))
+                     (alter i-channels assoc orig (conj (@i-channels orig) ch))
+                     (alter i-channels assoc orig (set (conj (@i-channels orig) ch))))
+        :u-channel (if (set? (@u-channels orig))
+                     (alter u-channels assoc orig (conj (@u-channels orig) ch))
+                     (alter u-channels assoc orig (set (conj (@u-channels orig) ch))))
+        :g-channel (if (set? (@g-channels orig))
+                     (alter g-channels assoc orig (conj (@g-channels orig) ch))
+                     (alter g-channels assoc orig (set (conj (@g-channels orig) ch)))))
+      (if (set? (@ant-in-channels dest))
+        (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
+        (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
   
-  ;(println "installing channel:" ch (when (@msgs orig) (get-sent-messages (@msgs orig) type)))
+    ;(println "installing channel:" ch (when (@msgs orig) (get-sent-messages (@msgs orig) type)))
   
   
-  ;; The following section covers the following case: 
-  ;; - originator is a term asserted at some earlier point.
-  ;; - destination is currently being built.
-  ;; Therfore, originator needs to send a message to destination
-  ;; informing it that it is true.
+    ;; The following section covers the following case: 
+    ;; - originator is a term asserted at some earlier point.
+    ;; - destination is currently being built.
+    ;; Therfore, originator needs to send a message to destination
+    ;; informing it that it is true.
   
-  ;; Submit a message for the originator. 
-  (when-not (variableTerm? orig)
-    (submit-to-channel ch (new-message {:origin orig, :support-set #{['hyp #{(:name orig)}]}, :type 'I-INFER})))
+    ;; Submit a message for the originator. 
+    (when (and 
+            (or (= type :i-channel)
+                (= type :g-channel))
+            (not (variableTerm? orig))
+            (not= (syntactic-type-of orig) :csneps.core/Negation))
+      (submit-to-channel ch (new-message {:origin orig, :support-set #{['hyp #{(:name orig)}]}, :type 'I-INFER})))
   
-  ;; When a term has a negation, submit a message saying so.
-  (when-let [nor-cs (when (set? (@up-cablesetw orig))
-                      ((@up-cablesetw orig) (slot/find-slot 'nor)))]
-    (doseq [nor @nor-cs]
-      (submit-to-channel ch (new-message {:origin orig, :support-set #{['der #{(:name nor)}]}, :type 'I-INFER, :true? false}))))
-  
+    ;; Remmember, inner terms are built before outer terms, so to handle negations, they must come when the nor is
+    ;; built. If orig is a nor, send a u-infer message to its arguments.
+    (when (and (= type :u-channel)
+               (= (syntactic-type-of orig) :csneps.core/Negation))
+      (let [new-msg (new-message {:origin orig, :support-set #{['der #{(:name orig)}]}, :type 'U-INFER, :true? false})]
+        (submit-to-channel ch new-msg)))
 
   ;; Focused forward-in-backward, extension for new in-channels.
   ;; TODO: We shouldn't continue inference backward if the orig was derived
   ;; because of the dest.
-  (when (and (seq @(:future-bw-infer dest)))
-;             (ct/asserted? orig (ct/currentContext))) ;; This doesn't work - assert hasn't been done yet when chs are built.
-    (backward-infer dest @(:future-bw-infer dest) nil))
+    (when (and (seq @(:future-bw-infer dest)))
+    ;             (ct/asserted? orig (ct/currentContext))) ;; This doesn't work - assert hasn't been done yet when chs are built.
+      (backward-infer dest @(:future-bw-infer dest) nil))
     
-  (when (@msgs orig)
-    (doseq [msg (get-sent-messages (@msgs orig) type)]
-      ;; We MUST block until the message is processed, otherwise the following can happen:
-      ;; 1) This inference sends a new message to out going channels (of which there are none) and saves it
-      ;; 2) At the same time, a new channel is built, seeing no messages to send.
-      ;; So the new message is never sent on the new channel.
-      (submit-to-channel ch msg))))
+    (when (@msgs orig)
+      (doseq [msg (get-sent-messages (@msgs orig) type)]
+        ;; We MUST block until the message is processed, otherwise the following can happen:
+        ;; 1) This inference sends a new message to out going channels (of which there are none) and saves it
+        ;; 2) At the same time, a new channel is built, seeing no messages to send.
+        ;; So the new message is never sent on the new channel.
+        (submit-to-channel ch msg)))))
 
 (defn build-channel
   [originator destination target-binds source-binds]
@@ -158,8 +164,6 @@
                                 :switch-binds source-binds
                                 :filter-binds target-binds
                                 :valve-open (ref false)}))]
-
-
     channel))
 
 (defn valve-open?
