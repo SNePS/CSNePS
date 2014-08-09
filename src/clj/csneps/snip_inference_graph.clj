@@ -793,7 +793,7 @@
             (send screenprinter (fn [_] (print-proof-step instance
                                                           (:support-set rcm)
                                                           node
-                                                          "generic-instantiation"))))
+                                                          "generic-instantiation (1)"))))
           (doseq [ch (union (@i-channels node) (@g-channels node))]
             (if (and instance (genericAnalyticTerm? instance))
               nil
@@ -827,9 +827,9 @@
          (send screenprinter (fn [_] (print-proof-step instance
                                                        outgoing-support
                                                        node
-                                                       "generic-instantiation"))))
+                                                       "generic-instantiation (2)"))))
        (doseq [ch (union (@i-channels node) (@g-channels node))]
-          (submit-to-channel ch der-msg)))))))
+         (submit-to-channel ch der-msg)))))))
               
     
 (defn arbitrary-instantiation
@@ -963,7 +963,18 @@
           (= (:type message) 'I-INFER)
           (genericTerm? (:origin message))
           (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
-    (dosync (alter support assoc term (os-concat (@support term) (:support-set message)))))
+    (dosync (alter support assoc term (os-concat (@support term) (:support-set message))))
+    ;; Send this new info onward
+    (let [imsg (derivative-message message
+                                   :origin term
+                                   :support-set (:support-set message)
+                                   :type 'I-INFER)]
+      ;; Save the message for future terms which might have channels
+      ;; from this. Sometimes necessary for forward focused reasoning.
+      (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{} {:i-channel #{imsg}}))
+      ;; Do the sending.
+      (doseq [cqch (@i-channels term)] 
+        (submit-to-channel cqch imsg))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Elimination Rules ---- ;;
