@@ -33,8 +33,9 @@
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc satc nm crs gsm bwi fwi]
+  [stc bstc satc nm crs gsm bwi fwi]
   (def submit-to-channel stc)
+  (def blocking-submit-to-channel bstc)
   (def submit-assertion-to-channels satc)
   (def new-message nm)
   (def create-message-structure crs)
@@ -109,6 +110,27 @@
     (if (set? (@ant-in-channels dest))
       (alter ant-in-channels assoc dest (conj (@ant-in-channels dest) ch))
       (alter ant-in-channels assoc dest (set (conj (@ant-in-channels dest) ch)))))
+  
+  ;(println "installing channel:" ch (when (@msgs orig) (get-sent-messages (@msgs orig) type)))
+  
+  
+  ;; The following section covers the following case: 
+  ;; - originator is a term asserted at some earlier point.
+  ;; - destination is currently being built.
+  ;; Therfore, originator needs to send a message to destination
+  ;; informing it that it is true.
+  
+  ;; Submit a message for the originator. 
+  (when-not (variableTerm? orig)
+    (submit-to-channel ch (new-message {:origin orig, :support-set #{['hyp #{(:name orig)}]}, :type 'I-INFER})))
+  
+  ;; When a term has a negation, submit a message saying so.
+  (when-let [nor-cs (when (set? (@up-cablesetw orig))
+                      ((@up-cablesetw orig) (slot/find-slot 'nor)))]
+    (doseq [nor @nor-cs]
+      (submit-to-channel ch (new-message {:origin orig, :support-set #{['der #{(:name nor)}]}, :type 'I-INFER, :true? false}))))
+  
+
   ;; Focused forward-in-backward, extension for new in-channels.
   ;; TODO: We shouldn't continue inference backward if the orig was derived
   ;; because of the dest.
@@ -116,13 +138,13 @@
 ;             (ct/asserted? orig (ct/currentContext))) ;; This doesn't work - assert hasn't been done yet when chs are built.
     (backward-infer dest @(:future-bw-infer dest) nil))
     
-    ;; Send already produced msgs
   (when (@msgs orig)
     (doseq [msg (get-sent-messages (@msgs orig) type)]
-      (submit-to-channel ch msg)))
-  
-  (when (and (seq (@future-fw-infer orig)) (ct/asserted? orig (ct/currentContext)))
-    (forward-infer orig)))
+      ;; We MUST block until the message is processed, otherwise the following can happen:
+      ;; 1) This inference sends a new message to out going channels (of which there are none) and saves it
+      ;; 2) At the same time, a new channel is built, seeing no messages to send.
+      ;; So the new message is never sent on the new channel.
+      (submit-to-channel ch msg))))
 
 (defn build-channel
   [originator destination target-binds source-binds]
@@ -137,21 +159,7 @@
                                 :filter-binds target-binds
                                 :valve-open (ref false)}))]
 
-    ;; The following section covers the following case: 
-    ;; - originator is a term asserted at some earlier point.
-    ;; - destination is currently being built.
-    ;; Therfore, originator needs to send a message to destination
-    ;; informing it that it is true.
-    
-    ;; Submit a message for the originator. 
-    (when-not (variableTerm? originator)
-      (submit-to-channel channel (new-message {:origin originator, :support-set #{['hyp #{(:name originator)}]}, :type 'I-INFER})))
-    
-    ;; When a term has a negation, submit a message saying so.
-    (when-let [nor-cs (when (set? (@up-cablesetw originator))
-                        ((@up-cablesetw originator) (slot/find-slot 'nor)))]
-      (doseq [nor @nor-cs]
-        (submit-to-channel channel (new-message {:origin originator, :support-set #{['der #{(:name nor)}]}, :type 'I-INFER, :true? false}))))
+
     channel))
 
 (defn valve-open?

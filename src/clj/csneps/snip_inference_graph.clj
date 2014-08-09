@@ -103,6 +103,13 @@
         ;; Cache in the waiting-msgs
         (dosync (alter (:waiting-msgs channel) conj message))))))
 
+(defn blocking-submit-to-channel
+  [ch msg]
+  (let [taskid (gensym "task")]
+    (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+    (submit-to-channel ch (assoc msg :taskid taskid))
+    (.await ^CountingLatch (@infer-status taskid))))
+
 (defn submit-assertion-to-channels
   [term & {:keys [fwd-infer] :or {:fwd-infer false}}]
   ;; Send the information about this assertion forward in the graph.
@@ -337,6 +344,35 @@
     (sort-based-derivable p (ct/currentContext))
     (slot-based-derivable p (ct/currentContext) nil)))
 
+
+;;; Printing Proofs
+
+(defn asserted-support-sets
+  [ss]
+  (let [all-asserted (fn [l] (every? #(ct/asserted? (get-term %) (ct/currentContext)) l))]
+    (filter all-asserted (map second ss))))
+
+(defn print-proof-step
+  ([result-term msg-support rule-name]
+    (let [support (first (asserted-support-sets msg-support))]
+      (println)
+      (println "Since:" (get-term (first support)))
+      (doseq [s (rest support)]
+        (println "and:" (get-term s)))
+      (println "I derived:" result-term "by" rule-name)
+      (println)))
+  ([result-term msg-support rule-node rule-name]
+  ;; Find a support set in msg-support where everything
+  ;; is currently believed, and pick it as the one to 
+  ;; report.
+  (let [support (first (asserted-support-sets msg-support))]
+    (println)
+    (println "Since:" rule-node)
+    (doseq [s support]
+      (println "and:" (get-term s)))
+    (println "I derived:" result-term "by" rule-name)
+    (println))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Inference Rules ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -413,9 +449,10 @@
             (when showproofs 
               (doseq [u (@u-channels node)]
                 (when (build/pass-message? u der-msg)
-                  (send screenprinter (fn [_] (println "Since " node ", I derived: " 
-                                                       (build/apply-sub-to-term (:destination u) (:subst message)) 
-                                                       " by numericalentailment-elimination"))))))
+                  (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
+                                                              (:support-set message)
+                                                              node
+                                                              "numericalentailment-elimination"))))))
         
             (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
         ;; :min > 1
@@ -436,9 +473,10 @@
               (when showproofs 
                 (doseq [u (@u-channels node)]
                   (when (build/pass-message? u der-msg)
-                    (send screenprinter (fn [_] (println "Since " node ", I derived: " 
-                                                         (build/apply-sub-to-term (:destination u) (:subst message)) 
-                                                         " by numericalentailment-elimination"))))))
+                    (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
+                                                              (:support-set match-msg)
+                                                              node
+                                                              "numericalentailment-elimination"))))))
         
               (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))))
 
@@ -458,8 +496,11 @@
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
     (when showproofs
       (doseq [u uch]
-        (when (or (build/valve-open? u) (build/pass-message? u dermsg))
-          (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by conjunction-elimination"))))))
+        (when (build/pass-message? u dermsg)
+          (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst dermsg))
+                                                        #{}
+                                                        node
+                                                        "conjunction-elimination"))))))
     (zipmap uch (repeat (count uch) dermsg))))
 
 (defn conjunction-introduction
@@ -480,7 +521,9 @@
     (cond
       der-rui-t (do 
                   (when showproofs
-                    (send screenprinter (fn [_] (println "I derived: " node " by conjunction-introduction"))))
+                    (send screenprinter (fn [_] (print-proof-step node 
+                                                                  (:support-set der-rui-t)
+                                                                  "conjunction-introduction"))))
                   [true (der-tag (:support-set der-rui-t)) (zipmap ich (repeat (count ich) dermsg-t))])
       der-rui-f (do
                   (when showproofs
@@ -515,7 +558,14 @@
               (when (and (not ((:flaggedns pos-match) (:destination u)))
                          (not (negated? (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
+                (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst pos-match)))
+                                                                           :Proposition {})
+                                                              (:support-set pos-match)
+                                                              node
+                                                              "andor-elimination"))))))
+                
+                
+                ;(send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
           
           (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
                                                  (not (negated? (:destination %))))
@@ -532,11 +582,14 @@
                                           :taskid (:taskid message))]
         
           (when showproofs 
-              (doseq [u (@u-channels node)]
-                (when (and (nil? ((:flaggedns neg-match) (:destination u)))
-                           (not (ct/asserted? (:destination u) (ct/currentContext)))
-                           (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                  (send screenprinter (fn [_] (println "Since " node ", I derived: " (build/apply-sub-to-term (:destination u) (:subst neg-match)) " by andor-elimination"))))))
+            (doseq [u (@u-channels node)]
+              (when (and (nil? ((:flaggedns neg-match) (:destination u)))
+                         (not (ct/asserted? (:destination u) (ct/currentContext)))
+                         (or (build/valve-open? u) (build/pass-message? u der-msg)))
+                (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst neg-match))
+                                                              (:support-set neg-match)
+                                                              node
+                                                              "andor-elimination"))))))
           
           (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
                                                  (not (ct/asserted? (:destination %) (ct/currentContext))))
@@ -573,8 +626,9 @@
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
-            (doseq [i ich]
-              (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
+            (send screenprinter (fn [_] (print-proof-step node
+                                                          (der-tag (:support-set case2))
+                                                          "param2op-introduction"))))
           [true (der-tag (:support-set case2)) (zipmap ich (repeat (count ich) dermsg))]))
       (isa? (syntactic-type-of node) :csneps.core/Thresh)
       (when case1
@@ -584,8 +638,9 @@
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
-            (doseq [i ich]
-              (send screenprinter (fn [_] (println "Derived: " node " by param2op-introduction.")))))
+            (send screenprinter (fn [_] (print-proof-step node 
+                                                          (der-tag (:support-set case1))
+                                                          "param2op-introduction"))))
           [true (der-tag (:support-set case1)) (zipmap ich (repeat (count ich) dermsg))])))))
   
 (defn thresh-elimination
@@ -612,6 +667,7 @@
                                           :origin node 
                                           :type 'U-INFER 
                                           :true? true 
+                                          :support-set (:support-set more-than-min-true-match)
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
         
@@ -619,9 +675,10 @@
             (doseq [u (@u-channels node)]
               (when-not ((:flaggedns more-than-min-true-match) (:destination u))
                 (when (or (build/valve-open? u) (build/pass-message? u der-msg))
-                  (send screenprinter (fn [_] (println "Since" node ", I derived:" 
-                                                       (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
-                                                       "by thresh-elimination")))))))
+                  (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
+                                                              (:support-set more-than-min-true-match)
+                                                              node
+                                                              "thresh-elimination")))))))
           
           (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
                                         [% der-msg])
@@ -632,6 +689,7 @@
                                           :origin node 
                                           :type 'U-INFER 
                                           :true? false 
+                                          :support-set (:support-set less-than-max-true-match)
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
         
@@ -639,9 +697,10 @@
             (doseq [u (@u-channels node)]
               (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                 (send screenprinter (fn [_] (println "Since" node ", I derived: " 
-                                                      (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)) 
-                                                      "by thresh-elimination"))))))
+                (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match )) 
+                                                              (:support-set less-than-max-true-match )
+                                                              node
+                                                              "thresh-elimination"))))))
           
           (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
                                         [% der-msg])
@@ -652,7 +711,10 @@
   (when debug (send screenprinter (fn [_]  (println "Deriving answer:" (:subst message)))))
   ;; We don't need RUIs - the received substitutions must be complete since they
   ;; passed unification! Instead, lets use cached-terms.
-  (dosync (alter (@instances node) assoc (build/apply-sub-to-term node (:subst message) true) (:subst message))))
+  (dosync (alter instances assoc node (assoc (@instances node) (build/apply-sub-to-term node (:subst message) true) (:subst message)))))
+  
+  
+  ;(dosync (alter (@instances node) assoc (build/apply-sub-to-term node (:subst message) true) (:subst message))))
 
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
@@ -707,8 +769,7 @@
   (if (g-chan-to-node? (:origin message) node)
     (let [new-combined-messages (get-new-messages (@msgs node) message)
           rel-combined-messages (when new-combined-messages
-                                  (filter #(> (:pos %) 0) new-combined-messages))
-          cqch (union (@i-channels node) (@g-channels node))]
+                                  (filter #(> (:pos %) 0) new-combined-messages))]
       (doseq [rcm rel-combined-messages]
         (let [instance (if (:fwd-infer message)
                          (build/apply-sub-to-term node (:subst rcm))
@@ -723,6 +784,7 @@
                                          :support-set inst-support
                                          :true? true
                                          :type 'I-INFER
+                                         :fwd-infer? (:fwd-infer? message)
                                          :taskid (:taskid message))]
           
           ;(when instance 
@@ -733,9 +795,14 @@
           
           (add-matched-and-sent-messages (@msgs node) #{rcm} {:i-channel #{der-msg} :g-channel #{der-msg}})
           
-          (when (and showproofs instance (filter #(build/pass-message? % der-msg) cqch))
-            (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-          (doseq [ch cqch]
+          (when (and showproofs instance 
+                     (ct/asserted? node (ct/currentContext)) 
+                     (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
+            (send screenprinter (fn [_] (print-proof-step instance
+                                                          (:support-set rcm)
+                                                          node
+                                                          "generic-instantiation"))))
+          (doseq [ch (union (@i-channels node) (@g-channels node))]
             (if (and instance (genericAnalyticTerm? instance))
               nil
               (submit-to-channel ch der-msg))))))
@@ -756,15 +823,20 @@
                                           :origin node
                                           :support-set outgoing-support
                                           :type 'I-INFER
-                                          :taskid (:taskid message))
-              cqch (union (@i-channels node) (@g-channels node))]
+                                          :fwd-infer? (:fwd-infer? message)
+                                          :taskid (:taskid message))]
       
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
        (add-matched-and-sent-messages (@msgs node) #{} {:i-channel #{der-msg} :g-channel #{der-msg}})
        (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
-       (when (and showproofs (filter #(build/pass-message? % der-msg) cqch))
-         (send screenprinter (fn [_] (println "Since " node ", I derived: " instance " by generic-instantiation"))))
-       (doseq [ch cqch]
+       (when (and showproofs 
+                  (ct/asserted? node (ct/currentContext)) 
+                  (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
+         (send screenprinter (fn [_] (print-proof-step instance
+                                                       outgoing-support
+                                                       node
+                                                       "generic-instantiation"))))
+       (doseq [ch (union (@i-channels node) (@g-channels node))]
           (submit-to-channel ch der-msg)))))))
               
     
@@ -774,17 +846,17 @@
   (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
     (let [new-ruis (get-new-messages (@msgs node) message)
           resct (count (@restriction-set node))
-          der-rui-t (filter #(= (:pos %) resct) new-ruis)
-          new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message)) der-rui-t)
+          der-msg-t (filter #(= (:pos %) resct) new-ruis)
+          new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message) :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
       (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
-      (when (seq der-rui-t)
+      (when (seq der-msg-t)
 ;        (send screenprinter (fn [_]  (println "NEWMESSAGE:" (count (for [msg new-msgs
 ;                                                                         ch gch]
 ;                                                                     [ch msg]))
 ;                                              new-msgs)))
 
-        (add-matched-and-sent-messages (@msgs node) (set der-rui-t) {:g-channel (set new-msgs)})
+        (add-matched-and-sent-messages (@msgs node) (set der-msg-t) {:g-channel (set new-msgs)})
 
         (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
@@ -940,6 +1012,10 @@
                                    :origin term
                                    :support-set (@support result-term)
                                    :type 'I-INFER)]
+        ;; Save the message for future terms which might have channels
+        ;; from this. Sometimes necessary for forward focused reasoning.
+        (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{} {:i-channel #{imsg}}))
+        ;; Do the sending.
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       
@@ -1061,7 +1137,7 @@
     :else
     (make-linear-msg-set)))
 
-(build/fix-fn-defs submit-to-channel submit-assertion-to-channels new-message create-message-structure get-sent-messages backward-infer forward-infer)
+(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels new-message create-message-structure get-sent-messages backward-infer forward-infer)
 
 ;;; Reductio
 
