@@ -1,9 +1,11 @@
 (ns csneps.snip
-  (:require [csneps.core.build :as build]
+  (:require [clojure.string :as string]
+            [csneps.core.build :as build]
             [csneps.core.find-utils :as find-utils]
             [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
             [csneps.core.relations :as slot]
+            [csneps.core.printer :as print]
             [clojure.walk :as walk])
 ;  (:refer-clojure :exclude [merge])
   (:use [csneps.core]
