@@ -509,19 +509,43 @@
         
               (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))))
 
+(defn- find-supports-with-without
+  [ss with without]
+  (filter #(and ((second %) (:name with))
+                      (not ((second %) (:name without))))
+        ss))
+
+(defn- remove-from-supports
+  [ss rem]
+  (for [[tag os] ss]
+    [tag (disj os (:name rem))]))
+
 (defn numericalentailment-introduction
   ""
   [message node]
-;  (when (= (count (first (@down-cableset node))) 1)
-;    (let [ant (ffirst (@down-cableset node))
-;          cqs (second (@down-cableset node))]
-;    
-;      (forward-infer ant)
-;      (unassert ant (ct/currentContext))
-;      (when (every #(believed-with-hyps % (conj (ct/hyps (ct/currentContext)) ant)) cqs))
-;      ;;...
-;))
-      )
+  (when (= (count (first (@down-cableset node))) 1)
+    (let [ant (ffirst (@down-cableset node))
+          cqs (second (@down-cableset node))
+          s? (first (find-support-with-without (:support-set message) ant node))]
+      (when s?
+        (let [new-msgs (get-new-messages (@msgs node) message)
+              match-msgs (filter #(when (= (:pos %) (count cqs)) %) new-msgs)
+              match-supports (apply union (map #(:support-set %) match-msgs))
+              good-supports (find-supports-with-without match-supports ant node)
+              adjusted-supports (set (remove-from-supports good-supports ant))]
+          (when match-msgs
+            (dosync (alter-support node (os-concat (@support node) adjusted-supports)))
+            (let [imsg (derivative-message message
+                                           :origin node
+                                           :support-set adjusted-supports
+                                           :type 'I-INFER)]
+              (add-matched-and-sent-messages (@msgs node) (set match-msgs) {:i-channel #{imsg}})
+              (doseq [cqch (@i-channels node)] 
+                (submit-to-channel cqch imsg)))
+            (when showproofs
+              (send screenprinter (fn [_] (print-proof-step node 
+                                                            adjusted-supports
+                                                            "if-introduction"))))))))))
 
 (defn conjunction-elimination
   "Since the and is true, send a U-INFER message to each of the
@@ -1004,8 +1028,8 @@
   (case (type-of node)
     :csneps.core/Negation (negation-introduction message node)
     :csneps.core/Conjunction (conjunction-introduction message node)
-    (:csneps.core/Numericalentailment
-     :csneps.core/Implication) (numericalentailment-introduction message node)
+;    (:csneps.core/Numericalentailment
+;     :csneps.core/Implication) (numericalentailment-introduction message node)
     (:csneps.core/Andor 
      :csneps.core/Disjunction 
      :csneps.core/Xor
@@ -1078,8 +1102,11 @@
       ;; If this is a cq of a rule we are introducing by numerical entailment
       ;; let the rule know.
       ;;TODO.
-      
-      
+      (let [ucs-map (@up-cablesetw term)
+            cq-ucs (when ucs-map (ucs-map (slot/find-slot 'cq)))
+            cq-ucs (when cq-ucs @cq-ucs)]
+        (doseq [rule cq-ucs]
+          (numericalentailment-introduction message rule)))
       
       ;; Send messages onward that this has been derived.
       (let [imsg (derivative-message message
