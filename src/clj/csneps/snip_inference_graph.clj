@@ -526,7 +526,7 @@
   (when (= (count (first (@down-cableset node))) 1)
     (let [ant (ffirst (@down-cableset node))
           cqs (second (@down-cableset node))
-          s? (first (find-support-with-without (:support-set message) ant node))]
+          s? (first (find-supports-with-without (:support-set message) ant node))]
       (when s?
         (let [new-msgs (get-new-messages (@msgs node) message)
               match-msgs (filter #(when (= (:pos %) (count cqs)) %) new-msgs)
@@ -1101,7 +1101,6 @@
       
       ;; If this is a cq of a rule we are introducing by numerical entailment
       ;; let the rule know.
-      ;;TODO.
       (let [ucs-map (@up-cablesetw term)
             cq-ucs (when ucs-map (ucs-map (slot/find-slot 'cq)))
             cq-ucs (when cq-ucs @cq-ucs)]
