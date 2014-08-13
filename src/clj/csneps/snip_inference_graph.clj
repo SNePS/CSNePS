@@ -85,7 +85,6 @@
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
   (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
-  
   ;; Filter
   (when ((:filter-fn channel) (:subst message))
     ;; Switch
@@ -95,7 +94,7 @@
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
         (do 
-          (when (:taskid message) 
+          (when (@infer-status (:taskid message))
             ;(send screenprinter (fn [_]  (println "inc-stc" (:taskid message) (derivative-message message :taskid taskid))))
             (.increment ^CountingLatch (@infer-status (:taskid message))))
           (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
@@ -145,9 +144,36 @@
 ;  [channel]
 ;  (dosync (ref-set (:valve-open channel) false)))
 
+(defn get-antecedents
+  [term]
+  (let [slot-map (cf/dcsRelationTermsetMap term)]
+    (case (type-of term)
+      :csneps.core/Conjunction
+      (get slot-map (slot/find-slot 'and))
+      (:csneps.core/Andor 
+       :csneps.core/Disjunction 
+       :csneps.core/Xor
+       :csneps.core/Nand)
+      (get slot-map (slot/find-slot 'andorargs))
+      (:csneps.core/Thresh
+       :csneps.core/Equivalence)
+      (get slot-map (slot/find-slot 'threshargs))
+      (:csneps.core/Numericalentailment
+       :csneps.core/Implication)
+      (get slot-map (slot/find-slot 'ant))
+      nil)))
+
+(defn get-vars
+  "Returns the vars in the given term, or, if the term is a rule
+   returns the intersection of variables in its antecedents."
+  [term]
+  (if-let [ants (get-antecedents term)]
+    (apply intersection (map #(set (filter build/variable? (build/flatten-term %))) ants))
+    (set (filter build/variable? (build/flatten-term term)))))
+
 (defn add-valve-selector
   [channel subst context taskid]
-  (let [vars-in-orig (set (filter build/variable? (build/flatten-term (:originator channel))))
+  (let [vars-in-orig (get-vars (:originator channel))
         subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
         subst (into {} (filter #(vars-in-orig (first %)) subst))
@@ -160,7 +186,7 @@
        (when (build/pass-vs? valve-selector msg)
          ;(send screenprinter (fn [_]  (println "Pass")))
          (dosync (commute (:waiting-msgs channel) disj msg))
-         (if taskid 
+         (if (@infer-status taskid)
            (do 
              ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
              (.increment ^CountingLatch (@infer-status taskid)))
@@ -184,7 +210,7 @@
 (defn remove-valve-selector
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
-    (let [vars-in-orig (when subst (set (filter build/variable? (build/flatten-term (:originator channel)))))
+    (let [vars-in-orig (when subst (get-vars (:originator channel)))
           subst (when subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                                     (or (:switch-binds channel) #{})))
           subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
@@ -292,7 +318,7 @@
                               (fn [t d v i s c id] 
                                 (backward-infer t d v i s c id) 
                                 ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                (when id (.decrement ^CountingLatch (@infer-status id))))
+                                (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
                               (:originator ch)
                               (dec depth)
                               (conj visited term)
@@ -1212,8 +1238,8 @@
       
       ))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
-  (when (:taskid message) 
-    (when-not (@infer-status (:taskid message)) (println (:taskid message)))
+  (when (@infer-status (:taskid message))
+    ;(when-not (@infer-status (:taskid message)) (println (:taskid message)))
     ;(send screenprinter (fn [_]  (println "dec-stc" (:taskid message) message)))
     (.decrement ^CountingLatch (@infer-status (:taskid message)))))
           
