@@ -11,9 +11,8 @@
     (if (or (= (:type term) :csneps.core/Atom)
             (= subst {}))
       term
-      (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
-        (dosync
-          ;(println term subst)
+      (dosync
+        (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
           (let [expr (read-string (csneps.core.printer/print-unnamed-molecular-term term))
                 [new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
                 [new-expr built-vars substitution] (check-and-build-variables expr :reuse-inds true)
@@ -41,7 +40,7 @@
                 (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
                   (assert rst (ct/find-context 'BaseCT))))
               (build-quantterm-channels v))
-            ;(println new-expr substitution term subst)
+            ;(println new-expr substitution term subst replace-subst)
             (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution)))))))
 
 
