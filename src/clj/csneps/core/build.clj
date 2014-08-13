@@ -13,7 +13,7 @@
   ;(:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.util]
-        [clojure.walk :as walk :only [prewalk prewalk-replace]]
+        [clojure.walk :as walk :only [prewalk prewalk-replace postwalk-replace]]
         [csneps.core.find-utils]))
 
 ;(refer-clojure :exclude '[assert])
@@ -885,7 +885,7 @@
    and modifies the substitution accordingly. Arbitrary individuals may
    have a resriction set slot filled in already if they existed in the KB
    previously. Otherwise, resrtiction sets still need to be built."
-  [quant var-label rsts notsames & {:keys [arb-rsts ind-rsts qvar-rsts]}]
+  [quant var-label rsts notsames & {:keys [arb-rsts ind-rsts qvar-rsts reuse-inds]}]
   (doseq [rst rsts
             :when (not (some #{var-label} (flatten (prewalk (fn [x] 
                                                               (if (set? x) 
@@ -895,10 +895,18 @@
     (error
       (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
+  ;; Testing.
+;  (when (= quant :some) 
+;    (println "Some." var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)
+;    (println (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
+  
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
       (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
+    (and reuse-inds
+         (= quant :some)
+         (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
     (let [name (case quant
                  :every (symbol (str "arb" (arb-counter)))
                  :some (symbol (str "ind" (ind-counter)))
@@ -924,14 +932,14 @@
   "Loops through the arbitrary individuals and builds an initial
    structure, but not the restriction sets. The same is done for the
    indefinite objects."
-  [arb-rsts ind-dep-rsts qvar-rsts notsames]
+  [arb-rsts ind-dep-rsts qvar-rsts notsames & {:keys [reuse-inds]}]
   (into {}
         (concat (for [k (seq (keys arb-rsts))]
-                  [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts)])
+                  [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var :some k (second (get arb-rsts k)) notsames)])
+                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames)]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :reuse-inds reuse-inds)]))))
 
 (defn internal-restrict
   [var]
@@ -1227,13 +1235,13 @@
    Returns three values. The first is the new build expression, the
    second the the built nodes, and the third the substitution between
    var-labels and the AI/IO nodes."
-  [expr]
+  [expr & {:keys [reuse-inds]}]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           arb-rsts (generate-notsames (expand-rsts arb-rsts))
           qvar-rsts (generate-notsames (expand-rsts qvar-rsts))
           ind-dep-rsts (expand-ind-dep-rsts ind-dep-rsts)
           [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
-          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames)
+          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds reuse-inds)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
       [new-expr built-vars substitution])))

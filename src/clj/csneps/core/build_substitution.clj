@@ -2,22 +2,49 @@
 
 (in-ns 'csneps.core.build)
 
-(declare structurally-subsumes-varterm)
+(declare structurally-subsumes-varterm parse-vars-and-rsts check-and-build-variables notsames pre-build-vars build-vars build-quantterm-channels)
 
 (defn apply-sub-to-term
-  "Apply a substitution to a term."
-  ([term sub] (apply-sub-to-term variable? term sub nil))
-  ([term sub ignore-type] (apply-sub-to-term variable? term sub ignore-type))
-  ([variable? term sub ignore-type]
-    (if (seq sub)
-      (term-prewalk (fn [x]
-                            (if-let [s (sub x)]
-                              s
-                              x))
-                           term
-                           :ignore-type ignore-type
-                           :with-restrictions true)
-      term)))
+  ([term subst]
+    (apply-sub-to-term term subst nil))
+  ([term subst ignore-type]
+    (if (or (= (:type term) :csneps.core/Atom)
+            (= subst {}))
+      term
+      (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
+        (dosync
+          ;(println term subst)
+          (let [expr (read-string (csneps.core.printer/print-unnamed-molecular-term term))
+                [new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
+                [new-expr built-vars substitution] (check-and-build-variables expr :reuse-inds true)
+                ;; expr is something like: (Carries (every x (Owns x (every y (Isa y Dog))) (Isa x Person)) y)
+                ;; new-expr is something like: (Carries x y)
+                ;; arb-rsts is something like: {x [[Isa x Person] [Owns x y]], y [[Isa y Dog]]}
+                ;; subst contains something like: {arb1 Toto}
+                ;; substitution contains something like: {y arb1}
+                ;; by combining these we can know which vars we wanted to replace in new-expr and the rsts.
+                replace-subst (into {} (for [[k v] substitution
+                                             :when (subst v)]
+                                         [k (subst v)]))
+                new-expr (postwalk-replace replace-subst new-expr)
+                arb-rsts (into {} (for [[k v] arb-rsts
+                                        :when (not (replace-subst k))]
+                                    [k (prewalk-replace replace-subst v)]))
+                qvar-rsts (into {} (for [[k v] qvar-rsts
+                                         :when (not (replace-subst k))]
+                                     [k (prewalk-replace replace-subst v)]))
+                [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
+                substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true)
+                built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
+            (doseq [v (seq built-vars)]
+              (doseq [rst (seq (@restriction-set v))]
+                (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
+                  (assert rst (ct/find-context 'BaseCT))))
+              (build-quantterm-channels v))
+            ;(println new-expr substitution term subst)
+            (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution)))))))
+
+
 
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}
