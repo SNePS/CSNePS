@@ -86,7 +86,10 @@
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
             :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set (@csneps/dependencies term) false) ") ")
             :csneps.core/QueryVariable (str "(" (:var-label term) " "))
-          (print-set (@csneps/restriction-set term) false) ")")))))
+          (print-set (@csneps/restriction-set term) false) 
+          (when (seq @(:not-same-as term))
+            (str " (notSame " (:var-label term) " " (print-set @(:not-same-as term) false) ")"))
+          ")")))))
 
 (defn print-closure
   [term]
@@ -334,3 +337,11 @@
           (binding [PRINTED-VARIABLES (hash-set)]
             (.write w (str (print-unnamed-molecular-term term)))))
         (.write w (str " 'DefaultCT)\n"))))))
+      
+
+  
+  
+  
+
+
+      
