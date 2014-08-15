@@ -145,6 +145,7 @@
    that existing node is returned.
    Otherwise nil is returned."
   [var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant notsames]
+  (println var-label restrictions arb-rsts ind-dep-rsts qvar-rsts quant notsames)
   (let [distinctres (distinct restrictions)
         var-list (concat (keys arb-rsts) (keys ind-dep-rsts) (keys qvar-rsts))]
     ;; If the variable contains new terms which haven't yet been built,
@@ -164,6 +165,13 @@
                                                                         (map #(get-terms-from-find-results
                                                                                 (find-in (first rst) (@restriction-set %) var-list))
                                                                              possibles))))))
+            possibles (if (= quant :some)
+                        ;; check that the dependencies are the same.
+                        (let [deps (first (ind-dep-rsts var-label))
+                              deps (map #(find-old-var-node % (arb-rsts %) arb-rsts ind-dep-rsts qvar-rsts :every notsames) deps)]
+                          (filter #(and (= (count deps) (count (@dependencies %)))
+                                        (every? (fn [x] (get (@dependencies %) x)) deps)) possibles))
+                        possibles)
             nsct (count (notsames var-label))]
         (when possibles
           ;; If we can find one of the possibles with the same number of notsames,
