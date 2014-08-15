@@ -428,22 +428,19 @@
   [message node]
   ;; new-msgs is used in this case, not because we want to combine messages, but
   ;; because we want to ensure we don't re-produce the same message.
-;  (let [new-msgs (get-new-messages (@msgs node) message)
-;        dermsg (derivative-message message
-;                                   :origin node
-;                                   :support-set (der-tag (:support-set message))
-;                                   :true? false
-;                                   :type 'U-INFER)
-;        uch (@u-channels node)]
-;
-;    (when showproofs 
-;      (doseq [u uch]
-;        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
-;    (when (seq new-msgs) 
-;      (zipmap uch (repeat (count uch) dermsg))))
-;  
-;  
-  )
+  (let [new-msgs (get-new-messages (@msgs node) message)
+        dermsg (derivative-message message
+                                   :origin node
+                                   :support-set (der-tag (:support-set message))
+                                   :true? (not (:true? message))
+                                   :type 'U-INFER)
+        uch (@u-channels node)]
+
+    (when showproofs 
+      (doseq [u uch]
+        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
+    (when (seq new-msgs) 
+      (zipmap uch (repeat (count uch) dermsg)))))
 
 ;(defn negation-introduction
 ;  "Pretty much conjunction-introduction, but with :neg instead of :pos"
@@ -1033,7 +1030,7 @@
   (when debug (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
   (case (type-of node)
     :csneps.core/CARule (policy-instantiation message node)
-    :csneps.core/Negation (negation-elimination message node)
+    ;:csneps.core/Negation (negation-elimination message node)
     :csneps.core/Conjunction (conjunction-elimination message node)
     (:csneps.core/Numericalentailment
      :csneps.core/Implication) (numericalentailment-elimination message node)
@@ -1063,7 +1060,7 @@
      :csneps.core/Thresh
      :csneps.core/Equivalence)  (param2op-introduction message node)
     (:csneps.core/Arbitrary) (arbitrary-instantiation message node)
-    (:csneps.core/Indefinite) (indefinite-instantiation message node)
+    ;(:csneps.core/Indefinite) (indefinite-instantiation message node)
     nil))
 
 (defn initiate-node-task
@@ -1145,7 +1142,11 @@
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       
-      
+      ;; Negations are special
+      (when (= :csneps.core/Negation (type-of term))
+        (when-let [result (negation-elimination message term)]
+        (doseq [[ch msg] result] 
+          (submit-to-channel ch msg))))
       
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
       (when (get @(:future-bw-infer term) result-term)
