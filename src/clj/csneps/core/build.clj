@@ -1026,7 +1026,9 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution notsames & {:keys [deps]}]
   (let [var (substitution var-label)
-        nsvars (set (map #(substitution %) (notsames var-label)))]
+        nsvars (set (map #(or (substitution %)
+                              (get-term %)) ;; Now allows terms to be used in notsames.
+                         (notsames var-label)))]
     (when-not (@restriction-set var) ;; already built!
       (alter TERMS assoc (:name var) var)
       (cond 
