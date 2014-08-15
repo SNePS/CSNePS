@@ -436,9 +436,12 @@
                                    :type 'U-INFER)
         uch (@u-channels node)]
 
-    (when showproofs 
+    (when (and showproofs 
+               (not (:true? message)))
       (doseq [u uch]
-        (send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst dermsg)) " by negation-elimination")))))
+        (send screenprinter (fn [_] (print-proof-step (:destination u) 
+                                                      (:support-set message)
+                                                      "negation-elimination")))))
     (when (seq new-msgs) 
       (zipmap uch (repeat (count uch) dermsg)))))
 
