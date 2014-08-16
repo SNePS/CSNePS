@@ -1109,7 +1109,9 @@
   (let [var-rsts-pairs (vec rsts)]
     (into {}
           (for [[var rsts] var-rsts-pairs]
-            [var (vec (map #(expand-rst var %) rsts))]))))
+            (if (empty? rsts)
+              [var [(list 'Isa var 'Entity)]]
+              [var (vec (map #(expand-rst var %) rsts))])))))
 
 (defn expand-ind-dep-rsts
   [rsts]
@@ -1169,11 +1171,7 @@
           (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest (rest assertion-spec))
                                                         arb-rsts ind-deps-rsts qvar-rsts
                                                         :buildingqvar buildingqvar)
-                ar (assoc ar
-                          (second assertion-spec)
-                          (if (= (rest (rest assertion-spec)) '())
-                            (list (list 'Isa (second assertion-spec) 'Entity)) ;; (every x) is shortcut for (every x (Isa x Entity)) DRS [3/31/12]
-                            aspec))]
+                ar (assoc ar (second assertion-spec) aspec)]
             [(second assertion-spec) ar idr qvr])))
       (synvariable? (first assertion-spec))
       (let [rsts (second (qvar-rsts (first assertion-spec)))]
@@ -1185,11 +1183,7 @@
           (let [[aspec ar idr qvr] (parse-vars-and-rsts (rest assertion-spec) 
                                                         arb-rsts ind-deps-rsts qvar-rsts
                                                         :buildingqvar (conj buildingqvar (first assertion-spec)))
-                qvr (assoc qvar-rsts
-                           (first assertion-spec)
-                           (if (= (rest assertion-spec) '())
-                             (list (list 'Isa (first assertion-spec) 'Entity))
-                             aspec))]
+                qvr (assoc qvar-rsts (first assertion-spec) aspec)]
                 [(first assertion-spec) ar idr qvr])))
       :else
       (loop [assertion-spec assertion-spec
