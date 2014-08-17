@@ -14,6 +14,11 @@
   "Map from function name to caseframe."
   (ref (hash-map)))
 
+(def FrameAliases {'not 'nor
+                   'iff 'thresh
+                   'xor 'andor
+                   'nand 'andor})
+
 (def NoviceCaseframes 
   "Map from the number of slots of a novice caseframe
            to the novice caseframe."
@@ -45,7 +50,9 @@
 
 (defn find-frame
   [fname]
-  (get @FN2CF fname))
+  (or 
+    (get @FN2CF fname)
+    (get @FN2CF (FrameAliases fname))))
 
 (defn description
   [term]
