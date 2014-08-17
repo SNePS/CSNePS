@@ -240,7 +240,7 @@
 (defn build-andor
   "Build a term for andor
        args is the original expression after 'andor'."
-  [args semtype]
+  [args semtype subst]
   (let [cf (cf/find-frame 'andor)]
     (when-not cf (error "There is no frame associated with andor."))
     (when-not (seqable? (first args))
@@ -261,13 +261,13 @@
         (and (zero? min) (= max tot))
           (build 'True semtype {})
         (= tot min max)
-          (build (list* 'and (rest args)) semtype {})
+          (build (list* 'and (rest args)) semtype subst)
         (= 0 min max)
-          (build (list* 'nor (rest args)) semtype {})
+          (build (list* 'nor (rest args)) semtype subst)
         (and (zero? min) (= max (dec tot)))
-          (build (list* 'nand (rest args)) semtype {})
+          (build (list* 'nand (rest args)) semtype subst)
         :else
-          (let [fillers (build (list* 'setof (rest args)) semtype {})
+          (let [fillers (build (list* 'setof (rest args)) semtype subst)
                 term (build-molecular-node
                        cf (list fillers) :csneps.core/Andor semtype
                        :fsemtype (semantic-type-of fillers)
@@ -278,7 +278,7 @@
 (defn build-thresh
   "Build a term for thresh.
        args is the original expression after 'thresh'."
-  [args semtype]
+  [args semtype subst]
   (let [cf (cf/find-frame 'thresh)]
     (when-not cf (error "There is no frame associated with thresh."))
     (when-not (seqable? (first args))
@@ -302,15 +302,15 @@
         (and (zero? min) (= max tot))
           (build 'False semtype {})
         (and (zero? min) (= max (dec tot)))
-          (build (list* 'and (rest args)) semtype {}) 
+          (build (list* 'and (rest args)) semtype subst) 
         (= min max 0)
-          (build (list* 'or (rest args)) semtype {})
+          (build (list* 'or (rest args)) semtype subst)
         (and (= min 1) (= max tot))
-          (build (list* 'nor (rest args)) semtype {})
+          (build (list* 'nor (rest args)) semtype subst)
         (= min tot)
-          (build (list* 'nand (rest args)) semtype {})
+          (build (list* 'nand (rest args)) semtype subst)
         :else 
-          (let [fillers (build (list* 'setof (rest args)) semtype {})
+          (let [fillers (build (list* 'setof (rest args)) semtype subst)
                 term (build-channels 
                        (build-molecular-node
                          cf (list fillers) :csneps.core/Thresh semtype
@@ -748,11 +748,11 @@
 
       andor
        ;; expr is (andor (i j) a1 ... an)
-      (build-andor (rest expr) semtype)
+      (build-andor (rest expr) semtype substitution)
 
       thresh
        ;; expr is  (thresh (i j) a1 ... an)
-      (build-thresh (rest expr) semtype)
+      (build-thresh (rest expr) semtype substitution)
       
       if
         ;; expr is (if a1 a2)
