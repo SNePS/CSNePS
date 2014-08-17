@@ -1099,7 +1099,9 @@
     (function-symbol? rst) [rst var]
     (symbol? rst) ['Isa var rst]
     (and (seqable? rst)
-         (not (some #(= % var) rst))) (into [(first rst) var] (rest rst))
+         (not (some #(= % var) rst))
+         (not= (count (rest rst)) (count (:slots (cf/find-frame (first rst))))))
+    (into [(first rst) var] (rest rst))
     :else rst))
 
 (defn expand-rsts
@@ -1117,8 +1119,11 @@
   [rsts]
   (let [var-rsts-pairs (vec rsts)]
     (into {}
-          (for [[var dep-rsts] var-rsts-pairs]
-            [var (list (first dep-rsts) (vec (map #(expand-rst var %) (second dep-rsts))))]))))
+          (for [[var dep-rsts] var-rsts-pairs
+                :let [[dep rsts] dep-rsts]]
+            (if (empty? rsts)
+              [var (list dep [(list 'Isa var 'Entity)])]
+              [var (list dep (vec (map #(expand-rst var %) rsts)))])))))
 
 (defn- merge-error
   [fir lat]
