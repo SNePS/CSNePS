@@ -18,7 +18,7 @@
         [clojure.set :only (union)]
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
-        [csneps.core.build :only (find *PRECISION* defrule unassert)]
+        [csneps.core.build :only (find *PRECISION* defrule unassert rewrite-propositional-expr)]
         [csneps.core :only (showTypes semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
         [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction)]
@@ -51,10 +51,12 @@
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
+    (rewrite-propositional-expr expr)
     (build/assert expr (currentContext))))
 
 (defn assert! [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
+    (rewrite-propositional-expr expr)
     (let [term (build/assert expr (currentContext))]
       (snip/forward-infer term)
       term)))
@@ -135,7 +137,9 @@
                          (= (first term) 'every)))
     (build/build-variable term)
     (seq? term)
-    (build/variable-parse-and-build term :Propositional)
+    (do 
+      (rewrite-propositional-expr term)
+      (build/variable-parse-and-build term :Propositional))
     :else
     (build/build term (or (first semtype) :Entity) {})))
 
