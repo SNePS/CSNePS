@@ -768,7 +768,7 @@
                                           :origin node 
                                           :type 'U-INFER 
                                           :true? true 
-                                          :support-set (:support-set more-than-min-true-match)
+                                          :support-set (os-union (:support-set more-than-min-true-match) (@support node))
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
         
@@ -793,7 +793,7 @@
                                           :origin node 
                                           :type 'U-INFER 
                                           :true? false 
-                                          :support-set (:support-set less-than-max-true-match)
+                                          :support-set (os-union (:support-set less-than-max-true-match) (@support node)) 
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
         
