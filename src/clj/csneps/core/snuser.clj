@@ -79,6 +79,7 @@
          that are derivable in the current context;
          or the empty set if there are none."
   [exprpat]
+  (rewrite-propositional-expr exprpat)
   (snip/askif (build/variable-parse-and-build exprpat :Proposition)  
               (currentContext) 
               nil))
@@ -88,6 +89,7 @@
          that are derivable in the current context;
          or the empty set if there are none."
   [exprpat]
+  (rewrite-propositional-expr (list 'not exprpat))
   (snip/askif (build/variable-parse-and-build (list 'not exprpat) :Proposition)
               (currentContext)
               nil))
