@@ -633,7 +633,7 @@
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     (or 
       (when pos-match
-        (send screenprinter (fn [_]  (println "msg" (:support-set pos-match) "node" (@support node))))
+        ;(send screenprinter (fn [_]  (println "msg" (:support-set pos-match) "node" (@support node))))
         (let [der-msg (derivative-message pos-match 
                                           :origin node 
                                           :type 'U-INFER 
@@ -915,7 +915,7 @@
               (submit-to-channel ch der-msg))))))
     ;; Instance from unifying term.
     (let [instance (:origin message)]
-      (when-not (get (@instances node) instance)
+      (when-not (seen-message? (@msgs node) message) ;; Don't bother if we've already seen this message.
         (let [subst-support (set 
                               (map (fn [t] (:name t)) 
                                    (flatten 
@@ -932,9 +932,9 @@
                                           :type 'I-INFER
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
-      
+          
       ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
-       (add-matched-and-sent-messages (@msgs node) #{} {:i-channel #{der-msg} :g-channel #{der-msg}})
+       (add-matched-and-sent-messages (@msgs node) #{(sanitize-message message)} {:i-channel #{der-msg} :g-channel #{der-msg}})
        (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
        (when (and showproofs 
                   (ct/asserted? node (ct/currentContext)) 
@@ -1077,8 +1077,10 @@
   (when (and 
           (= (:type message) 'I-INFER)
           (genericTerm? (:origin message))
-          (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
-    (dosync (alter-support term (os-concat (@support term) (:support-set message))))
+          (build/specificInstanceOfGeneric? (:origin message) term (:subst message))
+          (not (seen-message? (@msgs term) message)))
+    (when (:true? message)
+      (dosync (alter-support term (os-concat (@support term) (:support-set message)))))
     ;; Send this new info onward
     (let [imsg (derivative-message message
                                    :origin term
@@ -1086,7 +1088,7 @@
                                    :type 'I-INFER)]
       ;; Save the message for future terms which might have channels
       ;; from this. Sometimes necessary for forward focused reasoning.
-      (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{} {:i-channel #{imsg}}))
+      (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
       ;; Do the sending.
       (doseq [cqch (@i-channels term)] 
         (submit-to-channel cqch imsg))))
@@ -1108,7 +1110,8 @@
   ;; If I have just received a U-INFER message, I must make myself
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
-  (when (= (:type message) 'U-INFER)
+  (when (and (= (:type message) 'U-INFER)
+             (not (seen-message? (@msgs term) message)))
     ;(send screenprinter (fn [_]  (println message term)))
     ;; Update origin sets of result appropriately.
     (let [result-term (if (:true? message)
@@ -1140,7 +1143,7 @@
                                    :type 'I-INFER)]
         ;; Save the message for future terms which might have channels
         ;; from this. Sometimes necessary for forward focused reasoning.
-        (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{} {:i-channel #{imsg}}))
+        (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
         ;; Do the sending.
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
