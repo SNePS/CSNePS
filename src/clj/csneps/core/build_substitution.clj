@@ -37,7 +37,6 @@
                                             :let [[dep expr] v]]
                                         [k (list (remove (set (keys replace-subst)) dep)
                                                  (prewalk-replace replace-subst expr))]))
-                blah (println ind-dep-rsts)
                 [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
                 substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true)
                 built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
