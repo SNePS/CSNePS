@@ -344,106 +344,40 @@ Now the project is imported into Eclipse and we can run it. In the project explo
 
 \subsection{Configuring Emacs}
 
-There are multiple methods for configuring Emacs to run and edit Clojure code. The method described
-here is perhaps the easiest, but debatably not the best. We will use 'lein repl' as an inferior
-lisp, but also use SLIME. We will install clojure-mode to have proper syntax highlighting. 
+There are multiple methods for configuring Emacs to run and edit Clojure code. The method described here is the most desirable as of the time of this writing. These instructions require emacs 24, as it has a package facility we will use. 
 
-\begin{enumerate}
-  \item Either create a directory or change to a directory where you will keep Emacs
-  plugins. We'll call it \texttt{/home/user/tools} here, but you can use whatever 
-  you like.
-  \item Clone SLIME to the current directory by executing:\\
-    \texttt{git clone https://github.com/technomancy/slime.git}. Note this is a customized version of
-    SLIME which plays nice with Clojure.
-  \item Clone clojure-mode to the current directory by executing:\\
-    \texttt{git clone https://github.com/technomancy/clojure-mode.git}.
-  \item Update your .emacs file with the following:\\
-  \begin{verbatim}
-;; A function to load Clojure using lein repl.
-(defun run-clojure ()
-  ;; Invole Clojure with M-x run-clojure
-  (interactive)
-  (setq inferior-lisp-program "lein repl"
-    inferior-lisp-load-command "(load \"%s\")\n"
-    lisp-function-doc-command "(doc %s)\n"
-    lisp-var-doc-command "(doc %s)\n")
-  (slime))
+First, add the following to your emacs initialization file (by default \texttt{~/.emacs.d/init.el}). 
 
-;; Load and configure SLIME
-(add-to-list 'load-path "/home/user/tools/slime")
-(require 'slime)
-(eval-after-load 'slime '(setq slime-protocol-version 'ignore))
-(slime-setup '(slime-repl))
- 
-;; Load a major mode for editing Clojure code.
-(add-to-list 'load-path "/home/user/tools/clojure-mode")
-(require 'clojure-mode)
-  \end{verbatim}
-\end{enumerate}
+\begin{verbatim}
+(require 'package)
+(add-to-list 'package-archives
+  '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives
+  '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
 
+(package-initialize)
 
+(defvar my-packages '(clojure-mode
+                      clojure-test-mode
+                      cider))
+\end{verbatim}
 
-%Your .emacs 
-%file may be configured to run Clojure as an inferior lisp as you would any other, for example:
-%
-%\begin{verbatim}
-%(setq inferior-lisp-program "lein repl"
-%    inferior-lisp-load-command "(load \"%s\")\n"
-%    lisp-function-doc-command "(doc %s)\n"
-%    lisp-var-doc-command "(doc %s)\n")
-%\end{verbatim}
-%
-%This method is pretty standadrd among lisps and won't be discussed further here. We'll 
-%describe the (currently) preferred method of using SLIME and Swank to interact with Clojure. 
-%
-%\begin{itemize}
-%  \item Either create a directory or change to a directory where you will keep Emacs
-%  plugins. We'll call it \texttt{/home/user/tools} here, but you can use whatever 
-%  you like.
-%  \item Clone SLIME to the current directory by executing\\
-%    \texttt{git clone https://github.com/technomancy/slime.git}. Note this is not the version
-%    of SLIME which comes with current versions of Emacs!
-%  \item Clone clojure-mode to the current directory by executing\\
-%    \texttt{git clone https://github.com/technomancy/clojure-mode/}.
-%  \item If you are using Leiningen 1.x, change directories to the Sneps3-Clojure directory, 
-%  then run the command \texttt{lein plugin install swank-clojure 1.4.2}. This is unneccesary for
-%  Leiningen 2.x (currently in beta).
-%  \item Update your .emacs file with the following:\\
-%  \begin{verbatim}
-%;; Load and configure SLIME
-%(add-to-list 'load-path "/home/user/tools/slime")
-%(require 'slime)
-%(eval-after-load 'slime '(setq slime-protocol-version 'ignore))
-%(slime-setup '(slime-repl))
-% 
-%;; Load a major mode for editing Clojure code.
-%(add-to-list 'load-path "/home/user/tools/clojure-mode")
-%(require 'clojure-mode)
-%(require 'clojure-test-mode) ;; requires slime
-%  \end{verbatim}
-%\end{itemize}
-
+Evaluate the buffer with the initialization file in order to download the required packages. 
 
 \subsection{Loading and Running the Project in Emacs}
 
 \begin{enumerate}
-  \item Load Emacs and switch the current directory to the Sneps3-Clojure directory.
+  \item Load Emacs and switch the current directory to the CSNePS directory.
   This is the directory containing the project.clj file which will be used to 
   load the project.
-  \item Execute the \texttt{run-clojure} function we defined in our .emacs file, 
-  \texttt{M-x run-clojure}. Any required 
-  dependencies will be downloaded, Clojure will load, and you will be presented a 
-  Clojure prompt, \texttt{core=>}, indicating we have started in the 'core' namespace.
+  \item Type \texttt{M-x cider-jack-in}. A Clojure REPL will be started in a new buffer, and you will be presented with a 
+  Clojure prompt, \texttt{csneps.core.snuser=>}, indicating we have started in the 'csneps.core.snuser' namespace.
   %\item Execute the clojure-jack-in function, \texttt{M-x clojure-jack-in}. You will
   %then be presented with a Clojure repl displaying \texttt{user=>} indicating we've
   %started in the 'user' package.
   %\item Open the file \texttt{Sneps3-Clojure/src/core.clj}.
   %\item Compile and load the file into the REPL, \texttt{C-c C-k}.
-  \item You may now load CSNePS by typing \texttt{(loadsneps3)} at the prompt and 
-  press enter.
-  \item CSNePS is now loaded, follow the directions presented and switch to the 
-  snuser namespace by typing \texttt{(in-ns 'snuser)} and pressing enter. CSNePS 
-  is now ready to be used.
+  \item CSNePS is now loaded and is ready to be used.
 \end{enumerate}
 
 \chapter{User Commands}
