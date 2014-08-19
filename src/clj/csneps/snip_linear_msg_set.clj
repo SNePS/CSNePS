@@ -18,6 +18,10 @@
                 new-merged-msgs (set (filter #(not (@(:working-msgs this) %)) merged-msgs))]
             (alter (:working-msgs this) union new-merged-msgs #{new-msg})
             (conj new-merged-msgs new-msg))))))
+  (seen-message?
+    [this msg]
+    (let [msg (sanitize-message msg)]
+      (or (@(:working-msgs this) msg) (@(:matched-msgs this) msg))))
   (get-sent-messages
     [this chtype]
     (@(:sent-msgs this) chtype))

@@ -20,6 +20,11 @@
         (do 
           (dosync (alter (:sindex this) assoc (:subst new-msg) new-msg))
           #{new-msg}))))
+  (seen-message?
+    [this msg]
+    (let [msg (sanitize-message msg)
+          old-msg (@(:sindex this) (:subst msg))]
+      (= old-msg msg)))
   (get-sent-messages 
     [this chtype] 
     (@(:sent-msgs this) chtype))

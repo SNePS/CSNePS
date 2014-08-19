@@ -4,6 +4,7 @@
 
 (defprotocol MessageStructure
   (get-new-messages [this new-msg])
+  (seen-message? [this msg]) ;; Sometimes you don't want to combine msgs, just check if you've already seen one.
   (get-sent-messages [this chtype])
   (add-matched-and-sent-messages [this matched sent]))
 

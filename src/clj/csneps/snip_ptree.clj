@@ -30,6 +30,11 @@
                 (recur
                   @(:parent currnode)
                   promote))))))))
+  (seen-message? [this msg]
+    (let [msg (sanitize-message msg)
+          starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns msg)))
+          starting-msgset (:msgset starting-pnode)]
+      (@starting-msgset msg)))
   (get-sent-messages [this chtype] (@(:sent-msgs this) chtype))
   (add-matched-and-sent-messages
     [this matched sent]
