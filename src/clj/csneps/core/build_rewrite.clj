@@ -5,7 +5,7 @@
 
 (defn add-rewrite
   [expr1 expr2]
-  (assert (list 'thresh '(1 1) expr1 expr2) (ct/find-context 'BaseCT)))
+  (assert (list 'iff expr1 expr2) (ct/find-context 'BaseCT)))
 
 (defn reverse-quantifier
   [expr var]
