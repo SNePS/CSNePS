@@ -59,6 +59,7 @@
 
 \author{ \bf
 Stuart C. Shapiro \\ \bf
+Daniel R. Schlegel \\ \bf
 and \\ \bf
 The SNePS Implementation Group \\[2ex] \bf
 Department of Computer Science and Engineering\\ \bf
@@ -264,31 +265,43 @@ path &=& \textit{slotname}\\
 && $\mid$ \textcolor{red}{`(' , `range-restrict' , path , `(' , path , wft , `)' , `)'} ;
 \end{tabular}}
 
-\chapter{Running CSNePS}
+\chapter{Getting and Running CSNePS}
 CSNePS is implemented in the Clojure programming language, a recently developed 
-dialect of lisp witch runs (primarily) on the Java Virtual Machine.
+dialect of lisp which runs (primarily) on the Java Virtual Machine.
 
 \section{Pre-Requisites}
 
 \begin{itemize}
   \item \textbf{git} is a versioning system which will be required. Install it
-  via your preferred package manager if you do not already have it.
+  by following the appropriate directions for your operating system at \url{http://git-scm.com/downloads}.
   \item \textbf{Leiningen} (aka \textbf{lein}) is a dependency manager for 
   Clojure projects. To install Leiningen, follow the directions at 
   \url{https://github.com/technomancy/leiningen}.
 \end{itemize}
 
-\section{Running CSNePS at the Command Line}\label{sec:loadcmd}
+\section{Getting CSNePS}
 
-The preferred method of running CSNePS at the command line is to use the REPL 
-component of Leiningen.
+CSNePS will be cloned from its repository using the \texttt{git} tool.
 
 \begin{enumerate}
-  \item At the command prompt, change directories to the CSNePS directory. 
-  This is the directory containing the project.clj file which Leiningen will use to 
-  load the project.
-  \item Type \texttt{lein repl} at the command prompt and hit enter. Any required 
-  dependencies will be downloaded, Clojure will load, and you will be presented a 
+  \item At the terminal, change directories into the directory which you would like to be the parent of the CSNePS directory. 
+  \item Run the command \texttt{git clone https://github.com/SNePS/CSNePS.git}. This will copy CSNePS to your local machine.
+\end{enumerate}
+
+\section{Initial Configuration}
+
+\begin{enumerate}
+  \item At the command line, run \texttt{chmod 755 /path/of/csneps/csneps.sh}.
+  \item At the command line, run \texttt{chmod 755 /path/of/csneps/csnepsgui.sh}.
+\end{enumerate}
+
+\section{Running CSNePS at the Command Line}\label{sec:loadcmd}
+
+A script has been provided with the CSNePS distribution which loads CSNePS using leiningen.
+
+\begin{enumerate}
+  \item At the command prompt, run the command \texttt{/path/of/csneps/csneps.sh}.
+  \item Clojure will load, and you will be presented a 
   Clojure prompt, \texttt{csneps.core.snuser=>}, indicating that CSNePS has loaded and we are in the 'csneps.core.snuser' namespace.
 \end{enumerate}
 
@@ -306,10 +319,8 @@ The CSNePS GUI may be started with or without pre-loading CSNePS. If you choose 
 \subsection{Without Pre-Loading CSNePS}
 
 \begin{enumerate}
-  \item At the command prompt, change directories to the CSNePS directory. 
-  This is the directory containing the project.clj file which Leiningen will use to 
-  load the project.
-  \item Type \texttt{lein run} at the command prompt and hit enter. This will load CSNePS and its GUI.
+  \item At the command prompt, run the command \texttt{/path/of/csneps/csnepsgui.sh}.
+  \item CSNePS and its GUI will then load.
 \end{enumerate}
 
 \section{Using Eclipse to Run CSNePS}
@@ -544,11 +555,11 @@ Prints a list of all the contexts.
 \docfun{list-slots}{}
 Prints a list of all the SNePS slots.
 
-\docfun{list-terms}{\&key (asserted nil) (types nil)}
-Prints a list of all the terms in the KB.  If \texttt{asserted} is non-null,
+\docfun{list-terms}{\&key (:asserted nil) (:types nil) (:originsets nil)}
+Prints a list of all the terms in the KB.  If \texttt{:asserted} is non-nil,
 only asserted propositions will be printed; otherwise, all terms will
-be printed.  If \texttt{:types} is non-null, the type of
-each term will also be printed.
+be printed.  If \texttt{:types} is non-nil, the type of
+each term will also be printed. If \texttt{:originsets} is non-nil, the origin sets of each term will also be printed.
 
 \docfun{listkb}{}
 Prints the current context and all propositions asserted in it.
