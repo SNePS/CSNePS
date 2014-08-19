@@ -190,7 +190,11 @@
            (do 
              ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
              (.increment ^CountingLatch (@infer-status taskid)))
-           (send screenprinter (fn [_]  (println "no taskid" msg))))
+           (send screenprinter (fn [_]  
+                                  (println) 
+                                  (println "Warning: No taskid when adding valve selector to" channel) 
+                                  (println "This may indicate a bug or race condition in the inference graph.")
+                                  (println))))
          (.execute ^ThreadPoolExecutor executorService 
            (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
     subst))
@@ -312,7 +316,15 @@
           
           ;(open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
-          (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+          (if (and taskid
+                   (@infer-status taskid))
+            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+            (send screenprinter (fn [_]  
+                                  (println) 
+                                  (println "Warning: No taskid during backward infer on" ch) 
+                                  (println "This may indicate a bug or race condition in the inference graph.")
+                                  (println))))
+            
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial depth 
                               (fn [t d v i s c id] 
@@ -626,24 +638,26 @@
   [message node]
   (let [new-ruis (get-new-messages (@msgs node) message)
         totparam (totparam node)
-        pos-match (some #(when (= (:pos %) (:max node))
-                           %) 
-                        new-ruis)
-        neg-match (some #(when (= (- totparam (:neg %)) (:min node)) %) new-ruis)]
+        pos-matches (filter #(= (:pos %) (:max node)) new-ruis)
+        neg-matches (filter #(= (- totparam (:neg %)) (:min node)) new-ruis)]
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
+    
+    (send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
+    
     (or 
-      (when pos-match
-        ;(send screenprinter (fn [_]  (println "msg" (:support-set pos-match) "node" (@support node))))
-        (let [der-msg (derivative-message pos-match 
-                                          :origin node 
-                                          :type 'U-INFER 
-                                          :true? false 
-                                          :support-set (os-union (:support-set pos-match) (@support node))
-                                          :fwd-infer? (:fwd-infer? message)
-                                          :taskid (:taskid message))]
-
+      (when (seq pos-matches)
+        (let [der-msgs (into {} (map #(vector % (derivative-message %
+                                                                    :origin node 
+                                                                    :type 'U-INFER 
+                                                                    :true? false 
+                                                                    :support-set (os-union (:support-set %) (@support node))
+                                                                    :fwd-infer? (:fwd-infer? message)
+                                                                    :taskid (:taskid message))) 
+                                     pos-matches))]
+          
           (when showproofs 
-            (doseq [u (@u-channels node)]
+            (doseq [[pos-match der-msg] der-msgs
+                    u (@u-channels node)]
               (when (and (not ((:flaggedns pos-match) (:destination u)))
                          (not (negated? (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
@@ -655,41 +669,47 @@
                                                                      (build/syntype-fsym-map (syntactic-type-of node))
                                                                      "andor")
                                                                    "-elimination")))))))
+
+        (add-matched-and-sent-messages (@msgs node) (set pos-matches) {:u-channel (set (vals der-msgs))})
                 
-                
-                ;(send screenprinter (fn [_] (println "Since " node ", I derived: ~" (build/apply-sub-to-term (:destination u) (:subst pos-match)) " by andor-elimination"))))))
-          
-          (apply conj {} (doall (map #(when (and (not ((:flaggedns pos-match) (:destination %)))
-                                                 (not (negated? (:destination %))))
-                                        [% der-msg])
-                                     (@u-channels node))))))
-      (when neg-match
-        (send screenprinter (fn [_]  (println "msg" (:support-set neg-match) "node" (@support node))))
-        (let [der-msg (derivative-message neg-match 
-                                          :origin node 
-                                          :type 'U-INFER 
-                                          :true? true 
-                                          :support-set (os-union (:support-set neg-match) (@support node))
-                                          :fwd-infer? (:fwd-infer? message)
-                                          :taskid (:taskid message))]
-        
+        (into {} (for [[pos-match der-msg] der-msgs
+                       u (@u-channels node)
+                       :when (and (nil? ((:flaggedns pos-match) (:destination u)))
+                                  (not (negated? (:destination u))))]
+                   [u der-msg]))))
+      
+      (when (seq neg-matches)
+        (let [der-msgs (into {} (map #(vector % (derivative-message %
+                                                                    :origin node 
+                                                                    :type 'U-INFER 
+                                                                    :true? true
+                                                                    :support-set (os-union (:support-set %) (@support node))
+                                                                    :fwd-infer? (:fwd-infer? message)
+                                                                    :taskid (:taskid message))) 
+                                     neg-matches))]
+
           (when showproofs 
-            (doseq [u (@u-channels node)]
-              (when (and (nil? ((:flaggedns neg-match) (:destination u)))
-                         (not (ct/asserted? (:destination u) (ct/currentContext)))
+            (doseq [[neg-match der-msg] der-msgs
+                    u (@u-channels node)]
+              (when (and (not ((:flaggedns neg-match) (:destination u)))
+                         (not (negated? (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst neg-match))
+                (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst neg-match)))
+                                                                           :Proposition {})
                                                               (:support-set neg-match)
                                                               node
                                                               (str (or 
-                                                                      (build/syntype-fsym-map (syntactic-type-of node))
-                                                                      "andor")
-                                                                    "-elimination")))))))
-          
-          (apply conj {} (doall (map #(when (and (nil? ((:flaggedns neg-match) (:destination %)))
-                                                 (not (ct/asserted? (:destination %) (ct/currentContext))))
-                                        [% der-msg])
-                                     (@u-channels node)))))))))
+                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     "andor")
+                                                                   "-elimination")))))))
+
+        (add-matched-and-sent-messages (@msgs node) (set neg-matches) {:u-channel (set (vals der-msgs))})
+                
+        (into {} (for [[neg-match der-msg] der-msgs
+                       u (@u-channels node)
+                       :when (and (nil? ((:flaggedns neg-match) (:destination u)))
+                                  (not (negated? (:destination u))))]
+                   [u der-msg])))))))
 
 ;     Inference can terminate
 ;        as soon as one of the following is determined to hold:
