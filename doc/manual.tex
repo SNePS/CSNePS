@@ -265,6 +265,39 @@ path &=& \textit{slotname}\\
 && $\mid$ \textcolor{red}{`(' , `range-restrict' , path , `(' , path , wft , `)' , `)'} ;
 \end{tabular}}
 
+\section[Rule Engine Syntax]{Rule Engine Syntax\footnote{This section adapted from \cite{Sch14}}}\label{sec:rulesyntax}
+
+CSNePS implements a rule language loosely based on a subset of the syntax of CLIPS \cite{clipsref07}, and using concepts from the GLAIR Cognitve Architecture \cite{ShaBon10}. A rule definition takes the following general form: 
+
+\texttt{\begin{tabular}{lcl}
+  rule &=& `(defrule', rulename, LHS, `=>' RHS `)';
+\end{tabular}}
+
+\noindent where \texttt{rulename} is a unique name for a rule, \texttt{LHS} is the Left Hand Side of the rule (the ``pattern matching'' component\footnote{Really, inference is performed to derive patterns.}), and \texttt{RHS} is the Right Hand Side of the rule (the firing component). The LHS and RHS are discussed in more detail in Sections~\ref{sec:csnepslhs} and~\ref{sec:csnepsrhs}. 
+
+\subsection{The Left Hand Side} \label{sec:csnepslhs}
+
+The LHS of a rule is a collection of generic terms that must be matched for the rule to fire. This portion of the rule is special in that the quantified terms used take wide scope over the entire rule. Continuing the formal definition of the rule language, the LHS is defined as follows:
+
+\texttt{\begin{tabular}{lcl}
+  LHS &=& genericterm+;
+\end{tabular}}
+
+\noindent where is the definition of a generic term is a term containing an arbitrary term. 
+
+\subsection{The Right Hand Side} \label{sec:csnepsrhs}
+
+The RHS of a rule may contain both Clojure forms and subrules. The set of Clojure forms will be executed in order, and the bindings from the LHS will be substituted in to them. Subrules are rules that are unnamed, and are only executed when the RHS of a rule fires. The subrule is provided the set of LHS bindings, which it may use in its own LHS/RHS. Subrules may themselves have subrules, with no constraint on depth. 
+
+Again continuing the formal definition of the rule language, the RHS is defined as follows:
+
+\texttt{\begin{tabular}{lcl}
+  RHS &=& RHSLine+;\\
+  RHSLine &=& clojureform | subrule;\\
+  subrule &=& `(:subrule' LHS `=>' RHS `)';
+\end{tabular}}
+
+
 \chapter{Getting and Running CSNePS}
 CSNePS is implemented in the Clojure programming language, a recently developed 
 dialect of lisp which runs (primarily) on the Java Virtual Machine.
@@ -526,6 +559,9 @@ omitted, a menu will be presented of available demos.
 %Erases the \textit{term} from the knowledge base completely. Returns 
 %the term if successful, nil if there are dependencies that prevent the 
 %term from being erased.
+
+\docmacro{defrule}{\textit{rulename} \&rest {\textit{body}}}
+Defines a rule in the CSNePS rule engine, as described in Section~\ref{sec:rulesyntax}.
 
 \docfun{find}{\textit{exprpat}}
 Returns a list of vector pairs. In each pair, the first element is an instance of  \textit{exprpat} in the knowledge base, and the second is a substitution, which when applied to
@@ -854,7 +890,7 @@ under the License.\\
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{apalike}
-\bibliography{/u0/csefaculty/shapiro/Util/Latex/bibliography}
+\bibliography{bib}
 
 \cleardoublepage
 \addcontentsline{toc}{chapter}{Index}
