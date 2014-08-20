@@ -198,7 +198,7 @@
             are to be used instead of the type proposition;
        the min parameter, given for andor and thresh;
        the max parameter, given for andor and thresh."
-  [cf dcs syntype semtype & {:keys [fsemtype min max closed-vars]}]
+  [cf dcs syntype semtype & {:keys [fsemtype min max closed-vars properties]}]
   ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
   (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
@@ -225,6 +225,9 @@
                  wft))]
 
     (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
+    
+    (when properties 
+      (dosync (alter property-map assoc term (set/union (@property-map term) properties))))
     
     ;;Now that we made it, add it to the unif tree, unify it, and build appropriate channels.
     (when (and (not existing-term)
@@ -507,12 +510,11 @@
                                        (:slots cf))]
                     (build arg (:type rel) substitution))
           genfills (generic-fillers (set fillers))
-          molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype)]
+          molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype :properties (when (seq genfills) #{:Generic}))]
                                         ;(if (seq genfills)
                                           ;(if (subtypep semtype :Generic) semtype :Generic)
                                           ;semtype))]
       (when (seq genfills)
-        (dosync (alter property-map assoc molnode (set/union (@property-map molnode) #{:Generic})))
         (build-generic-channels molnode genfills))
       molnode)))
 
@@ -664,13 +666,13 @@
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
-                                              semtype)]
+                                              semtype
+                                              :properties (when (seq genfils) #{:Generic}))]
                                               ;(if (seq genfils)
                                               ;  (if (subtypep semtype :Generic) semtype :Generic)
                                               ;  semtype))]
             
             (when (seq genfils)
-              (dosync (alter property-map assoc molnode (set/union (@property-map molnode) #{:Generic})))
               (build-generic-channels molnode genfils))
             molnode))
               
