@@ -111,7 +111,7 @@
     (.await ^CountingLatch (@infer-status taskid))))
 
 (defn submit-assertion-to-channels
-  [term & {:keys [fwd-infer] :or {:fwd-infer false}}]
+  [term & {:keys [fwd-infer] :or {fwd-infer false}}]
   ;; Send the information about this assertion forward in the graph.
   ;; Positive instances:
   (let [msg (new-message {:origin term, 
@@ -495,8 +495,7 @@
   (let [new-msgs (get-new-messages (@msgs node) message)]
     (when (seq new-msgs)
       ;; If the node only requires 1 antecedent to be true, any incoming positive
-      ;; antecedent is enough to fire the rule. In these cases it isn't necessary to
-      ;; maintain the RUI structure. 
+      ;; antecedent is enough to fire the rule.
       (if (= (:min node) 1)
         (when (:true? message)
           ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
@@ -642,7 +641,7 @@
         neg-matches (filter #(= (- totparam (:neg %)) (:min node)) new-ruis)]
     (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     
-    (send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
+    ;(send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
     
     (or 
       (when (seq pos-matches)
@@ -655,12 +654,12 @@
                                                                     :taskid (:taskid message))) 
                                      pos-matches))]
           
-          (when showproofs 
+          (when showproofs
             (doseq [[pos-match der-msg] der-msgs
                     u (@u-channels node)]
               (when (and (not ((:flaggedns pos-match) (:destination u)))
                          (not (negated? (:destination u)))
-                         (or (build/valve-open? u) (build/pass-message? u der-msg)))
+                         (build/pass-message? u der-msg))
                 (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst pos-match)))
                                                                            :Proposition {})
                                                               (:support-set pos-match)
@@ -1261,7 +1260,7 @@
       ;; When introduction fails, try backward-in-forward reasoning. 
       ;; COMMENTED OUT 6/29 FIX
       ;(when (:fwd-infer? message)
-        ;; TODO: Not quite finished, I think.
+       ;; TODO: Not quite finished, I think.
       ;  (backward-infer term #{term} nil))
       
       ))
