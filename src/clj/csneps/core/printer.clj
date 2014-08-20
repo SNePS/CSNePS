@@ -33,19 +33,19 @@
 
 (defn print-negation
   [args]
-  (str (cons (if (= (count args) 1) 'not 'nor) (args-str args))))
+  (print-str (list* (if (= (count args) 1) 'not 'nor) (args-str args))))
 
 (defn print-negationbyfailure
   [args]
-  (str (cons (if (= (count args) 1) 'thnot 'thnor) (args-str args))))
+  (print-str (list* (if (= (count args) 1) 'thnot 'thnor) (args-str args))))
 
 (defn print-param2op
   [fcn min max args]
-  (str (list fcn (list min max) (args-str args))))
+  (print-str (list* fcn (list min max) (args-str args))))
 
 (defn print-nary
   [fcn args]
-  (str (cons fcn (args-str args))))
+  (print-str (list* fcn (args-str args))))
 
 (defn print-molecular
   [cf cs]
