@@ -412,7 +412,7 @@
 
 (defn print-proof-step
   ([result-term msg-support rule-name]
-    (let [support (first (asserted-support-sets msg-support))]
+    (when-let [support (first (asserted-support-sets msg-support))]
       (println)
       (println "Since:" (get-term (first support)))
       (doseq [s (rest support)]
@@ -423,7 +423,7 @@
   ;; Find a support set in msg-support where everything
   ;; is currently believed, and pick it as the one to 
   ;; report.
-  (let [support (first (asserted-support-sets msg-support))]
+  (when-let [support (first (asserted-support-sets msg-support))]
     (println)
     (println "Since:" rule-node)
     (doseq [s support]
@@ -1089,7 +1089,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
@@ -1111,7 +1111,8 @@
       (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
       ;; Do the sending.
       (doseq [cqch (@i-channels term)] 
-        (submit-to-channel cqch imsg))))
+        (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
+          (submit-to-channel cqch imsg)))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- Elimination Rules ---- ;;
