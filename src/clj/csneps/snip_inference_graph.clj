@@ -492,7 +492,11 @@
   "Since the implication is true, send a U-INFER message to each
    of the consequents." 
   [message node]
-  (let [new-msgs (get-new-messages (@msgs node) message)]
+  (let [new-msgs (cond 
+                   (= (:type message) 'I-INFER)
+                   (get-new-messages (@msgs node) message)
+                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
+                   (get-matched-messages (@msgs node)))]
     (when (seq new-msgs)
       ;; If the node only requires 1 antecedent to be true, any incoming positive
       ;; antecedent is enough to fire the rule.
@@ -1117,10 +1121,11 @@
   ;; ---- Elimination Rules ---- ;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-  ;; If I'm already asserted, and I just received an I-INFER message,
+  ;; If I just received an I-INFER message,
   ;; I should attempt to eliminate myself.
+  ;; This happens whether or not term is asserted, since we're reasoning in all
+  ;; contexts.
   (when (and (not (isa? (syntactic-type-of term) :csneps.core/Variable))
-             (ct/asserted? term (ct/currentContext))
              (= (:type message) 'I-INFER))
     (when-let [result (elimination-infer message term)]
       (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
@@ -1178,7 +1183,10 @@
       (when (get @(:future-bw-infer term) result-term)
         (cancel-infer-of term)))
     (when (:true? message)
-      ;; Apply elimination rules and report results
+      ;; Elimination after a U-INFER message is different. 
+      ;; Need to look at already matched messages, and combine with the new support, and relay that. 
+      ;; Since we reason in all contexts, it won't result in any new derivations, just new reasons for old ones.
+      ;; Each of the elimination rules should have a condition for U-INFER messages to do this.
       (when-let [result (elimination-infer message term)]
         (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
         (doseq [[ch msg] result] 
