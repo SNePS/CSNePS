@@ -436,8 +436,9 @@
 (defn build-generic-channels
   [gnode ants]
   ;; Build the g-channels
-  (doseq [a ants :let [ch (build-channel a gnode nil nil)]] 
-    (install-channel ch a gnode :g-channel)))
+  (doseq [a ants :let [ch (build-channel a gnode nil nil)]]
+    (when-not (and (arbitraryTerm? a) (not @(:fully-built a))) ;; Don't build var -> restriction channels (var won't be fully built yet).
+      (install-channel ch a gnode :g-channel))))
 
 (defn build-channels
   [rnode]
@@ -1046,7 +1047,6 @@
           (alter msgs assoc var (create-message-structure :csneps.core/Indefinite nil))
           (dosync (doseq [r restrictions]
                     (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
-               ;(set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
         :else
         (let [restrictions (clojure.set/union (@restriction-set var)
                                               (set (map #(build % :Propositional substitution) rsts)))] 
@@ -1054,7 +1054,6 @@
           (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
           (dosync (doseq [r restrictions]
                     (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
-            ; (set (map #(adjustType % :Propositional :AnalyticGeneric) restrictions))))
     
             
       (alter (:not-same-as var) clojure.set/union nsvars)
