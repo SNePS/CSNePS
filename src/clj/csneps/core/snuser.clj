@@ -163,7 +163,7 @@
 
 (defn list-focused-inference-tasks
   []
-  (let [fw-tasks (apply union (map #(deref (:future-fw-infer %)) (vals @csneps/TERMS)))
+  (let [fw-tasks (apply union (vals @csneps/future-fw-infer))
         bw-tasks (apply union (map #(deref (:future-bw-infer %)) (vals @csneps/TERMS)))]
     (when (seq bw-tasks) (println "Attempting to derive:"))
     (doseq [t bw-tasks]
