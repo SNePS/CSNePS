@@ -641,6 +641,22 @@ the propositions asserted in the current KB will be asserted in the new KB.  If
 the \cv{headerfile} is included, a load of that file will be written before any
 of the asserts.
 
+\chapter{Debug Commands}
+
+The commands listed in this chapter may be useful if you experience issues with CSNePS and wish to attempt to resolve the problem. 
+
+\docfun{build/print-all-trees}{}
+Prints all unification term trees to the terminal in a human-readable format.
+
+\docfun{build/print-channel-and-msgs}{\textit{from} \textit{to}}
+Given the names of two terms, \textit{from} and \textit{to}, prints the channel (if it exists) from the \textit{from} term to the \textit{to} term. Also prints all messages which are waiting in that channel.
+
+\docfun{snip/ig-status}{}
+Prints all channels in the Inference Graph, including their type, number of waiting messages, and any valve selectors.
+
+\docfun{snip/print-ptree}{\textit{ptree}}
+Given a P-Tree, \textit{ptree}, prints it to the terminal in a human readable form.
+
 \backmatter
 \appendix
 
