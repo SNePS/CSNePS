@@ -639,7 +639,11 @@
   "Since the andor is true, we may have enough information to do elimination
    on it. "
   [message node]
-  (let [new-ruis (get-new-messages (@msgs node) message)
+  (let [new-ruis (cond 
+                   (= (:type message) 'I-INFER)
+                   (get-new-messages (@msgs node) message)
+                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
+                   (get-matched-messages (@msgs node)))
         totparam (totparam node)
         pos-matches (filter #(= (:pos %) (:max node)) new-ruis)
         neg-matches (filter #(= (- totparam (:neg %)) (:min node)) new-ruis)]
@@ -647,7 +651,7 @@
     
     ;(send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
     
-    (or 
+    (merge 
       (when (seq pos-matches)
         (let [der-msgs (into {} (map #(vector % (derivative-message %
                                                                     :origin node 
@@ -770,7 +774,11 @@
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
   [message node]
-  (let [new-ruis (get-new-messages (@msgs node) message)
+  (let [new-ruis (cond 
+                   (= (:type message) 'I-INFER)
+                   (get-new-messages (@msgs node) message)
+                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
+                   (get-matched-messages (@msgs node)))
         totparam (totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
         ;; If there are totparam - max - 1 false, then we can make the rest true.
@@ -1268,7 +1276,7 @@
       ;; When introduction fails, try backward-in-forward reasoning. 
       ;; COMMENTED OUT 6/29 FIX
       ;(when (:fwd-infer? message)
-       ;; TODO: Not quite finished, I think.
+      ;; TODO: Not quite finished, I think.
       ;  (backward-infer term #{term} nil))
       
       ))
