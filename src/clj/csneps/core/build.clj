@@ -602,7 +602,8 @@
           (dosync 
             (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype)
-            (alter support assoc term #{['hyp #{(:name term)}]}))
+            (alter support assoc term #{['hyp #{(:name term)}]})
+            (alter msgs assoc term (create-message-structure :csneps.core/Atom nil)))
           (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)))
           (when (= expr 'False)
@@ -1155,7 +1156,8 @@
       (= (first assertion-spec) 'some)
       (let [rsts (rest (ind-deps-rsts (second assertion-spec)))]
         (cond
-          (and rsts (not (clojure.set/difference rsts (rest (rest (rest assertion-spec))))))
+          (and rsts (not (clojure.set/difference (set rsts) 
+                                                 (set (rest (rest (rest assertion-spec)))))))
           (error (str "Restriction sets: " rsts " and " (rest (rest assertion-spec)) " cannot be applied to
                       the same variable."))
           :else 
@@ -1182,7 +1184,8 @@
       (synvariable? (first assertion-spec))
       (let [rsts (second (qvar-rsts (first assertion-spec)))]
         (cond
-          (and rsts (not (clojure.set/difference rsts (rest assertion-spec))))
+          (and rsts (not (clojure.set/difference (set rsts) 
+                                                 (set (rest assertion-spec)))))
           (error (str "Restriction sets: " rsts " and " (rest assertion-spec) " cannot be applied to
                       the same variable."))
           :else
