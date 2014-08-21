@@ -5,6 +5,7 @@
 (defrecord PTree
   [tree
    term-to-pnode-map
+   matched-msgs
    sent-msgs]
   MessageStructure
   (get-new-messages [this new-msg]
@@ -36,9 +37,14 @@
           starting-msgset (:msgset starting-pnode)]
       (@starting-msgset msg)))
   (get-sent-messages [this chtype] (@(:sent-msgs this) chtype))
+  (get-matched-messages
+    [this]
+    @(:matched-msgs this))
   (add-matched-and-sent-messages
     [this matched sent]
-    (dosync (alter (:sent-msgs this) (partial merge-with union) sent))))
+    (dosync
+      (alter (:matched-msgs this) union matched)
+      (alter (:sent-msgs this) (partial merge-with union) sent))))
 
 (defrecord PNode
   [parent
@@ -171,7 +177,7 @@
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
         [ptree tpmap] (pat-seq-to-ptree adj-pat-seq ants)]
-    (PTree. ptree tpmap (ref {}))))
+    (PTree. ptree tpmap (ref {}) (ref {}))))
 
 ;;; Debug and testing
 

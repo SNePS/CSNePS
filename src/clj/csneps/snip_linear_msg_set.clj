@@ -25,6 +25,9 @@
   (get-sent-messages
     [this chtype]
     (@(:sent-msgs this) chtype))
+  (get-matched-messages
+    [this]
+    @(:matched-msgs this))
   (add-matched-and-sent-messages
     [this matched sent]
     (dosync

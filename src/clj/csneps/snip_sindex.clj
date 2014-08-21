@@ -7,6 +7,7 @@
 
 (defrecord SIndex
   [sindex ;;A ref to a hash-map.
+   matched-msgs
    sent-msgs] ;;A ref to a set.
   MessageStructure
   (get-new-messages [this new-msg]
@@ -28,10 +29,15 @@
   (get-sent-messages 
     [this chtype] 
     (@(:sent-msgs this) chtype))
+  (get-matched-messages
+    [this]
+    @(:matched-msgs this))
   (add-matched-and-sent-messages
     [this matched sent]
-    (dosync (alter (:sent-msgs this) (partial merge-with union) sent))))
+    (dosync 
+      (alter (:matched-msgs this) union matched)
+      (alter (:sent-msgs this) (partial merge-with union) sent))))
 
 (defn make-sindex
   []
-  (SIndex. (ref {}) (ref {})))
+  (SIndex. (ref {}) (ref {}) (ref {})))
