@@ -1102,7 +1102,7 @@
 (defn initiate-node-task
   [term message]
   (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
-  (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
+  ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
@@ -1172,22 +1172,21 @@
           (numericalentailment-introduction message rule)))
       
       ;; Send messages onward that this has been derived.
-      (let [imsg (derivative-message message
-                                   :origin term
-                                   :support-set (@support result-term)
-                                   :type 'I-INFER)]
-        ;; Save the message for future terms which might have channels
-        ;; from this. Sometimes necessary for forward focused reasoning.
-        (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
-        ;; Do the sending.
-        (doseq [cqch (@i-channels term)] 
-          (submit-to-channel cqch imsg)))
-      
-      ;; Negations are special
-      (when (= :csneps.core/Negation (type-of term))
+      (if-not (= :csneps.core/Negation (type-of term))
+        (let [imsg (derivative-message message
+                                     :origin term
+                                     :support-set (@support result-term)
+                                     :type 'I-INFER)]
+          ;; Save the message for future terms which might have channels
+          ;; from this. Sometimes necessary for forward focused reasoning.
+          (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
+          ;; Do the sending.
+          (doseq [cqch (@i-channels term)] 
+            (submit-to-channel cqch imsg)))
+        ;; Negations are special
         (when-let [result (negation-elimination message term)]
-        (doseq [[ch msg] result] 
-          (submit-to-channel ch msg))))
+          (doseq [[ch msg] result] 
+            (submit-to-channel ch msg))))
       
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
       (when (get @(:future-bw-infer term) result-term)
