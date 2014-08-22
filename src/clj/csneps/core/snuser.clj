@@ -195,11 +195,11 @@
   ;; Then print molecular terms;
   [& {:keys [asserted types originsets properties]}]
   (let [terms (vals @csneps/TERMS)
-        atoms (filter #(= (:type %) :csneps.core/Atom) terms)
-        arbs (filter csneps/arbitraryTerm? terms)
-        inds (filter csneps/indefiniteTerm? terms)
-        qvars (filter csneps/queryTerm? terms)
-        mols (filter csneps/molecularTerm? terms)]
+        atoms (sort-by :name (filter #(= (:type %) :csneps.core/Atom) terms))
+        arbs (sort-by :name (filter csneps/arbitraryTerm? terms))
+        inds (sort-by :name (filter csneps/indefiniteTerm? terms))
+        qvars (sort-by :name (filter csneps/queryTerm? terms))
+        mols (sort-by :name (filter csneps/molecularTerm? terms))]
     (doseq [x (concat atoms arbs inds qvars mols)]
       (when (or (not asserted)
                 (and asserted
