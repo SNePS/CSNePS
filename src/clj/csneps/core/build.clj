@@ -429,12 +429,19 @@
 
 (defn build-internal-channels
   [rnode ants cqs]
-  ;; Build the i-channels
-  (doseq [a ants :let [ch (build-channel a rnode nil nil)]] 
-    (install-channel ch a rnode :i-channel))
+  ;; You have to build u-channels before i-channels, because of the following situation:
+  ;; 1) p is asserted with forward inference.
+  ;; 2) p->q is asserted (or defined)
+  ;; 3) the p to p->q channel is built before the p->q to q channel, causing showproofs
+  ;;    not to print the derivation, since it doesn't know about the consequent. 
+  ;; The worst thing that can happen with this ordering is that backward-infer needs to be
+  ;; continued by focused backward reasoning, which isn't terrible.
   ;; Build the u-channels
   (doseq [c cqs :let [ch (build-channel rnode c nil nil)]]
-    (install-channel ch rnode c :u-channel)))
+    (install-channel ch rnode c :u-channel))
+  ;; Build the i-channels
+  (doseq [a ants :let [ch (build-channel a rnode nil nil)]] 
+    (install-channel ch a rnode :i-channel)))
 
 (defn build-generic-channels
   [gnode ants]
