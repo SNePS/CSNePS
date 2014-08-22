@@ -508,7 +508,8 @@
                                             :type 'U-INFER 
                                             :support-set (os-union (:support-set message) (@support node))
                                             :true? true
-                                            :taskid (:taskid message))]
+                                            :taskid (:taskid message)
+                                            :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true))]
             (add-matched-and-sent-messages (@msgs node) new-msgs {:u-channel #{der-msg}})
             (when showproofs 
               (doseq [u (@u-channels node)]
@@ -533,7 +534,7 @@
                                               :type 'U-INFER 
                                               :support-set (os-union (:support-set message) (@support node))
                                               :true? true 
-                                              :fwd-infer? (:fwd-infer? message)
+                                              :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                               :taskid (:taskid message))]
               ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
               (add-matched-and-sent-messages (@msgs node) (set match-msgs) {:u-channel #{der-msg}})
@@ -595,6 +596,7 @@
   (let [dermsg (derivative-message message 
                                    :origin node
                                    :support-set (der-tag (@support node)) ;(conj (:support-set message) node)
+                                   :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                    :type 'U-INFER)
         uch (@u-channels node)]
     (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
@@ -658,7 +660,7 @@
                                                                     :type 'U-INFER 
                                                                     :true? false 
                                                                     :support-set (os-union (:support-set %) (@support node))
-                                                                    :fwd-infer? (:fwd-infer? message)
+                                                                    :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                                                     :taskid (:taskid message))) 
                                      pos-matches))]
           
@@ -691,7 +693,7 @@
                                                                     :type 'U-INFER 
                                                                     :true? true
                                                                     :support-set (os-union (:support-set %) (@support node))
-                                                                    :fwd-infer? (:fwd-infer? message)
+                                                                    :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                                                     :taskid (:taskid message))) 
                                      neg-matches))]
 
@@ -800,7 +802,7 @@
                                           :type 'U-INFER 
                                           :true? true 
                                           :support-set (os-union (:support-set more-than-min-true-match) (@support node))
-                                          :fwd-infer? (:fwd-infer? message)
+                                          :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                           :taskid (:taskid message))]
         
           (when showproofs 
@@ -825,7 +827,7 @@
                                           :type 'U-INFER 
                                           :true? false 
                                           :support-set (os-union (:support-set less-than-max-true-match) (@support node)) 
-                                          :fwd-infer? (:fwd-infer? message)
+                                          :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                           :taskid (:taskid message))]
         
           (when showproofs 
@@ -1275,11 +1277,9 @@
           (submit-to-channel ch msg)))
       ;; When introduction fails, try backward-in-forward reasoning. 
       ;; COMMENTED OUT 6/29 FIX
-      ;(when (:fwd-infer? message)
+      (when (:fwd-infer? message)
       ;; TODO: Not quite finished, I think.
-      ;  (backward-infer term #{term} nil))
-      
-      ))
+        (backward-infer term #{term} nil))))
   ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
   (when (@infer-status (:taskid message))
     ;(when-not (@infer-status (:taskid message)) (println (:taskid message)))
