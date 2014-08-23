@@ -846,28 +846,15 @@
         (if (= (count set) 1) (first set) set))
       
       close
-      (let [vars-in-closure @(let [vars (ref #{})] 
-                               (csneps.core.build/term-prewalk (fn [x] (when (csneps.core.build/variable? x) 
-                                                                         (dosync (alter vars conj x))) 
-                                                                 x) 
-                                                               (get-term 'wft1)) 
-                               vars)
-            vars-name-map (into {} (map (fn [x] [(:var-label x) x]) vars-in-closure))
-            closed-var-names (if (seq? (second expr)) (second expr) (list (second expr)))
-            closed-vars (map vars-name-map closed-var-names)
+      (let [closed-var-labels (if (seq? (second expr)) (second expr) (list (second expr)))
+            closed-vars (map substitution closed-var-labels)
             fillers (build (set (rest (rest expr))) :Proposition substitution)]
-        
         (build-molecular-node (cf/find-frame 'close)
 	                            (list fillers)
 	                            :csneps.core/Closure
 	                            semtype
                               :closed-vars closed-vars))
-        
-	      ;(build-molecular-node (cf/find-frame 'close)
-	      ;                      (list (build (set closed-vars) :Entity substitution)
-	      ;                            (build (third expr) :Proposition substitution))
-	      ;                      :csneps.core/Molecular
-	      ;                      semtype))
+
       rule 
       (let [rulename (second expr)
             lhs (nth expr 2)
