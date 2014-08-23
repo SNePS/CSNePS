@@ -1068,7 +1068,6 @@
   [message node new-msgs]
   (when debug (send screenprinter (fn [_]  (println "INFER: (intro) Inferring in:" node))))
   (case (type-of node)
-    :csneps.core/Negation (negation-introduction message node new-msgs)
     :csneps.core/Conjunction (conjunction-introduction message node new-msgs)
     (:csneps.core/Andor 
      :csneps.core/Disjunction 
