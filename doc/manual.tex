@@ -190,7 +190,7 @@ non-negative integers such that $i \leq j \leq k$.  Material in
 \textcolor{red}{red} has not yet been implemented.
 
 \section{Syntax of Well-Formed Terms}\index{syntax}
-The language in which SNePS~3 well-formed terms are expressed is a version of
+The language in which CSNePS well-formed terms are expressed is a version of
 Common Logic Interchange Format (CLIF) \cite{ISO24707}.  
 
 \texttt{\begin{tabular}{lcl}
@@ -425,6 +425,12 @@ Evaluate the buffer with the initialization file in order to download the requir
 \end{enumerate}
 
 \chapter{User Commands}
+\docfun{adopt-rule}{\textit{rule-name}}
+Adopts the rule with the symbol rule-name as its name.
+
+\docfun{adopt-rules}{\textit{rule-names}}
+Takes a list of symbolic rule names to be adopted in order, one after the other. Rows may take the form of a single rule name, or a vector of rule names. A vector of rule names will be adopted simultaneously.
+
 \docfun{allTerms}{}
 Returns a set of all the terms in the knowledge base.
 
