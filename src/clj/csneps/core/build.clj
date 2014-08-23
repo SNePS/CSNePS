@@ -846,7 +846,7 @@
         (if (= (count set) 1) (first set) set))
       
       close
-      (let [closed-var-labels (if (seq? (second expr)) (second expr) (list (second expr)))
+      (let [closed-var-labels (if (seqable? (second expr)) (second expr) (list (second expr)))
             closed-vars (map substitution closed-var-labels)
             fillers (build (set (rest (rest expr))) :Proposition substitution)]
         (build-molecular-node (cf/find-frame 'close)
@@ -898,6 +898,8 @@
 ;    (println "Some." var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)
 ;    (println (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
   
+(if (= quant :some) (println var-label rsts arb-rsts ind-rsts (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
+
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
@@ -935,9 +937,9 @@
         (concat (for [k (seq (keys arb-rsts))]
                   [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
+                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :reuse-inds reuse-inds)]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)]))))
 
 (defn internal-restrict
   [var]
