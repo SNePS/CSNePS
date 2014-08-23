@@ -898,8 +898,6 @@
 ;    (println "Some." var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)
 ;    (println (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
   
-(if (= quant :some) (println var-label rsts arb-rsts ind-rsts (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
-
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
