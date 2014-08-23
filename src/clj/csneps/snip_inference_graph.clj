@@ -491,65 +491,60 @@
 (defn numericalentailment-elimination
   "Since the implication is true, send a U-INFER message to each
    of the consequents." 
-  [message node]
-  (let [new-msgs (cond 
-                   (= (:type message) 'I-INFER)
-                   (get-new-messages (@msgs node) message)
-                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
-                   (get-matched-messages (@msgs node)))]
-    (when (seq new-msgs)
-      ;; If the node only requires 1 antecedent to be true, any incoming positive
-      ;; antecedent is enough to fire the rule.
-      (if (= (:min node) 1)
-        (when (:true? message)
-          ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
-          (let [der-msg (derivative-message message 
+  [message node new-msgs]
+  (when (seq new-msgs)
+    ;; If the node only requires 1 antecedent to be true, any incoming positive
+    ;; antecedent is enough to fire the rule.
+    (if (= (:min node) 1)
+      (when (:true? message)
+        ;(cancel-infer node nil (:taskid message) (:subst message) (:support-set message))
+        (let [der-msg (derivative-message message 
+                                          :origin node 
+                                          :type 'U-INFER 
+                                          :support-set (os-union (:support-set message) (@support node))
+                                          :true? true
+                                          :taskid (:taskid message)
+                                          :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true))]
+          (add-matched-and-sent-messages (@msgs node) new-msgs {:u-channel #{der-msg}})
+          (when showproofs 
+            (doseq [u (@u-channels node)]
+              (when (build/pass-message? u der-msg)
+                (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
+                                                            (:support-set message)
+                                                            node
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "numericalentailment")
+                                                                 "-elimination")))))))
+        
+          (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
+      ;; :min > 1
+      (let [match-msgs (filter #(when (>= (:pos %) (:min node))
+                                 %)
+                             new-msgs)
+            match-msg (first match-msgs)]
+        (when match-msg 
+          (let [der-msg (derivative-message match-msg 
                                             :origin node 
                                             :type 'U-INFER 
                                             :support-set (os-union (:support-set message) (@support node))
-                                            :true? true
-                                            :taskid (:taskid message)
-                                            :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true))]
-            (add-matched-and-sent-messages (@msgs node) new-msgs {:u-channel #{der-msg}})
+                                            :true? true 
+                                            :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
+                                            :taskid (:taskid message))]
+            ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
+            (add-matched-and-sent-messages (@msgs node) (set match-msgs) {:u-channel #{der-msg}})
             (when showproofs 
               (doseq [u (@u-channels node)]
                 (when (build/pass-message? u der-msg)
                   (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
-                                                              (:support-set message)
-                                                              node
-                                                              (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
-                                                                     "numericalentailment")
-                                                                   "-elimination")))))))
+                                                            (:support-set match-msg)
+                                                            node
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "numericalentailment")
+                                                                 "-elimination")))))))
         
-            (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))
-        ;; :min > 1
-        (let [match-msgs (filter #(when (>= (:pos %) (:min node))
-                                   %)
-                               new-msgs)
-              match-msg (first match-msgs)]
-          (when match-msg 
-            (let [der-msg (derivative-message match-msg 
-                                              :origin node 
-                                              :type 'U-INFER 
-                                              :support-set (os-union (:support-set message) (@support node))
-                                              :true? true 
-                                              :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
-                                              :taskid (:taskid message))]
-              ;(cancel-infer node nil (:taskid message) (:subst der-msg) (:support-set der-msg))
-              (add-matched-and-sent-messages (@msgs node) (set match-msgs) {:u-channel #{der-msg}})
-              (when showproofs 
-                (doseq [u (@u-channels node)]
-                  (when (build/pass-message? u der-msg)
-                    (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst message))
-                                                              (:support-set match-msg)
-                                                              node
-                                                              (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
-                                                                     "numericalentailment")
-                                                                   "-elimination")))))))
-        
-              (apply conj {} (doall (map #(vector % der-msg) (@u-channels node)))))))))))
+            (apply conj {} (doall (map #(vector % der-msg) (@u-channels node))))))))))
 
 (defn- find-supports-with-without
   [ss with without]
@@ -592,7 +587,7 @@
 (defn conjunction-elimination
   "Since the and is true, send a U-INFER message to each of the
    consequents."
-  [message node]
+  [message node new-msgs]
   (let [dermsg (derivative-message message 
                                    :origin node
                                    :support-set (der-tag (@support node)) ;(conj (:support-set message) node)
@@ -612,8 +607,8 @@
 (defn conjunction-introduction
   "We are in an unasserted 'and' node, and would like to know if we now
    can say it is true based on message."
-  [message node]
-  (let [new-ruis (get-new-messages (@msgs node) message)
+  [message node new-msgs]
+  (let [new-ruis new-msgs
         der-rui-t (some #(when (= (:pos %) (count (@u-channels node))) %) new-ruis)
         der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
         dermsg-t (derivative-message (imessage-from-ymessage message node)
@@ -640,12 +635,8 @@
 (defn andor-elimination
   "Since the andor is true, we may have enough information to do elimination
    on it. "
-  [message node]
-  (let [new-ruis (cond 
-                   (= (:type message) 'I-INFER)
-                   (get-new-messages (@msgs node) message)
-                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
-                   (get-matched-messages (@msgs node)))
+  [message node new-msgs]
+  (let [new-ruis new-msgs
         totparam (totparam node)
         pos-matches (filter #(= (:pos %) (:max node)) new-ruis)
         neg-matches (filter #(= (- totparam (:neg %)) (:min node)) new-ruis)]
@@ -732,9 +723,8 @@
 ;                        and in case (2) the derivation fails.
 (defn param2op-introduction
   "Check the RUIs to see if I have enough to be true."
-  [message node]
-  (let [new-ruis (get-new-messages (@msgs node) message)
-        ;merged-rui (when new-ruis (merge-messages new-ruis)) ;; If they contradict, we have other problems...
+  [message node new-msgs]
+  (let [new-ruis new-msgs
         totparam (totparam node)
         case1 (some #(when (or (> (:pos %) (:max node))
                                (> (:neg %) (- totparam (:min node)))) %) new-ruis)
@@ -775,12 +765,8 @@
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
-  [message node]
-  (let [new-ruis (cond 
-                   (= (:type message) 'I-INFER)
-                   (get-new-messages (@msgs node) message)
-                   (= (:type message) 'U-INFER) ;; U-INFER means that we have a new support set, so we need to send new messages.
-                   (get-matched-messages (@msgs node)))
+  [message node new-msgs]
+  (let [new-ruis new-msgs
         totparam (totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
         ;; If there are totparam - max - 1 false, then we can make the rest true.
@@ -858,15 +844,14 @@
 
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
-  [message node]
+  [message node new-msgs]
   ;; Before we do anything, we check that the received message fully instantiates
   ;; at least the originator with a term actually in the KB and is believed. If not,
   ;; discard it. We have to do this because unlike normal rules of inference, this rule
   ;; actually needs to know that's what it's receiving is asserted (the results won't have an OS
   ;; to make them contingent on the context). 
   (when (ct/asserted? (build/find-term-with-subst-applied (:origin message) (:subst message)) (ct/currentContext))
-    (let [new-msgs (get-new-messages (@msgs node) message)
-          inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
+    (let [inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                   ;; What about shared sub-policies though?
           inst-msgs (filter #(= (:pos %) inchct) new-msgs)
           new-msgs (map #(derivative-message % 
@@ -1062,41 +1047,35 @@
 
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
-  [message node]
+  [message node new-msgs]
   (when debug (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
   (case (type-of node)
-    :csneps.core/CARule (policy-instantiation message node)
-    ;:csneps.core/Negation (negation-elimination message node)
-    :csneps.core/Conjunction (conjunction-elimination message node)
+    :csneps.core/CARule (policy-instantiation message node new-msgs)
+    :csneps.core/Conjunction (conjunction-elimination message node new-msgs)
     (:csneps.core/Numericalentailment
-     :csneps.core/Implication) (numericalentailment-elimination message node)
+     :csneps.core/Implication) (numericalentailment-elimination message node new-msgs)
     (:csneps.core/Andor 
      :csneps.core/Disjunction 
      :csneps.core/Xor
-     :csneps.core/Nand)  (andor-elimination message node)
+     :csneps.core/Nand)  (andor-elimination message node new-msgs)
     (:csneps.core/Thresh
-     :csneps.core/Equivalence) (thresh-elimination message node)
-    :csneos.core/Closure (closure-elimination message node)
-    nil ;default
-    ))
+     :csneps.core/Equivalence) (thresh-elimination message node new-msgs)
+    :csneos.core/Closure (closure-elimination message node new-msgs)
+    nil))
 
 (defn introduction-infer
   ""
-  [message node]
+  [message node new-msgs]
   (when debug (send screenprinter (fn [_]  (println "INFER: (intro) Inferring in:" node))))
   (case (type-of node)
-    :csneps.core/Negation (negation-introduction message node)
-    :csneps.core/Conjunction (conjunction-introduction message node)
-;    (:csneps.core/Numericalentailment
-;     :csneps.core/Implication) (numericalentailment-introduction message node)
+    :csneps.core/Negation (negation-introduction message node new-msgs)
+    :csneps.core/Conjunction (conjunction-introduction message node new-msgs)
     (:csneps.core/Andor 
      :csneps.core/Disjunction 
      :csneps.core/Xor
      :csneps.core/Nand
      :csneps.core/Thresh
-     :csneps.core/Equivalence)  (param2op-introduction message node)
-    (:csneps.core/Arbitrary) (arbitrary-instantiation message node)
-    ;(:csneps.core/Indefinite) (indefinite-instantiation message node)
+     :csneps.core/Equivalence)  (param2op-introduction message node new-msgs)
     nil))
 
 (defn initiate-node-task
@@ -1107,61 +1086,29 @@
   (when (:fwd-infer? message)
     (dosync (alter future-fw-infer assoc term (union (@future-fw-infer term) (:invoke-set message)))))
 
-  (when (and 
-          (= (:type message) 'I-INFER)
-          (genericTerm? (:origin message))
-          (build/specificInstanceOfGeneric? (:origin message) term (:subst message))
-          (not (seen-message? (@msgs term) message)))
-    (when (:true? message)
-      (dosync (alter-support term (os-concat (@support term) (:support-set message)))))
-    ;; Send this new info onward
-    (let [imsg (derivative-message message
-                                   :origin term
-                                   :support-set (:support-set message)
-                                   :type 'I-INFER)]
-      ;; Save the message for future terms which might have channels
-      ;; from this. Sometimes necessary for forward focused reasoning.
-      (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
-      ;; Do the sending.
-      (doseq [cqch (@i-channels term)] 
-        (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
-          (submit-to-channel cqch imsg)))))
-  
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; ---- Elimination Rules ---- ;;
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
-  ;; If I just received an I-INFER message,
-  ;; I should attempt to eliminate myself.
-  ;; This happens whether or not term is asserted, since we're reasoning in all
-  ;; contexts.
-  (when (and (not (isa? (syntactic-type-of term) :csneps.core/Variable))
-             (= (:type message) 'I-INFER))
-    (when-let [result (elimination-infer message term)]
-      (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
-      (doseq [[ch msg] result] 
-        (submit-to-channel ch msg))))
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; ---- U-INFER Rules ---- ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   ;; If I have just received a U-INFER message, I must make myself
   ;; either true or false according to the message, report that
   ;; new belief, and attempt elimination.
   (when (and (= (:type message) 'U-INFER)
              (not (seen-message? (@msgs term) message)))
-    ;(send screenprinter (fn [_]  (println message term)))
-    ;; Update origin sets of result appropriately.
     (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
       
       (when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
       
-      (dosync (alter-support result-term (os-concat (@support result-term) (:support-set message))))
-      ;(send screenprinter (fn [_]  (println result-term (:support result-term))))
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (and print-intermediate-results
                  (or (:fwd-infer? message)
                      (not (ct/asserted? result-term (ct/currentContext)))))
         (send screenprinter (fn [_]  (println "> " result-term))))
+      
+      ;; Update origin sets of result appropriately.
+      (dosync (alter-support result-term (os-concat (@support result-term) (:support-set message))))
       
       ;; If this is a cq of a rule we are introducing by numerical entailment
       ;; let the rule know.
@@ -1191,98 +1138,100 @@
       ;; If I've now derived the goal of a future bw-infer process, it can be cancelled.
       (when (get @(:future-bw-infer term) result-term)
         (cancel-infer-of term)))
+    
     (when (:true? message)
       ;; Elimination after a U-INFER message is different. 
       ;; Need to look at already matched messages, and combine with the new support, and relay that. 
       ;; Since we reason in all contexts, it won't result in any new derivations, just new reasons for old ones.
       ;; Each of the elimination rules should have a condition for U-INFER messages to do this.
-      (when-let [result (elimination-infer message term)]
+      (when-let [result (elimination-infer message term (get-matched-messages (@msgs term)))]
         (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))))
-    
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  ;; ---- Introduction Rules ---- ;;
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
-  (cond 
-    ;; Actions should execute their primative action.
-    (and
-      (= (:type message) 'I-INFER)
-      (= (semantic-type-of term) :Action)
-      (primaction term))
-    ((primaction term) (:subst message))
-    ;; AnalyticGeneric terms need to just forward the messages
-    ;; on towards the variable term.
-    (and
-      (= (:type message) 'I-INFER)
-      (genericAnalyticTerm? term))
-    (let [imsg (derivative-message message :origin term)]
-      (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
-      (doseq [cqch (@i-channels term)] 
-        (submit-to-channel cqch imsg)))
-    ;; "Introduction" of a WhQuestion is really just collecting answers.
-    (and
-      (= (:type message) 'I-INFER)
-      (= (semantic-type-of term) :WhQuestion))
-    (whquestion-infer message term)
-    ;; "Introduction of a Generic is the collection of instances, 
-    ;;   assertion of the instance, and forwarding the substitution
-    ;;   through i-channels. Unlike wh-question, incoming message
-    ;;   may be I-INFER or U-INFER. A message with an empty substitution
-    ;;   means the generic has been inferred, and should just be treated
-    ;;   as usual.
-    (and 
-      (genericTerm? term)
-      (seq (:subst message)))
-    (generic-infer message term)
-    ;; Arbs
-    (and (arbitraryTerm? term)
-         (= (:type message) 'I-INFER))
-    (if-let [[true? result] (introduction-infer message term)]
-      (when result 
-        (doseq [[ch msg] result] 
-          (submit-to-channel ch msg)))
-      ;; When introduction fails, try backward-in-forward reasoning. 
-      ;; COMMENTED OUT 6/29 FIX
-      ;(when (:fwd-infer? message)
-        ;; TODO: Not quite finished, I think.
-      ;  (backward-infer term #{term} nil))
-      )
-    ;; Normal introduction for derivation.
-    (and 
-      (not (ct/asserted? term (ct/currentContext)))
-      (= (:type message) 'I-INFER))
-    (if-let [[true? spt result] (introduction-infer message term)]
-      (when result 
-        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
-        (if true?
-          (do 
-            (dosync (alter-support term (os-concat (@support term) spt)))
-            (when print-intermediate-results (println "> " term)))
-          (let [neg (build/variable-parse-and-build (list 'not term) :Propositional)]
-            (dosync (alter-support neg (os-concat (@support neg) spt)))
-            (when print-intermediate-results (println "> " neg))))
-        
-        
-;        (if true?
-;          (if print-intermediate-results
-;            (send screenprinter (fn [_]  (println "> " (build/assert term (ct/currentContext)))))
-;            (build/assert term (ct/currentContext)))
-;          (if print-intermediate-results
-;            (send screenprinter (fn [_] (println "> " (build/assert (list 'not term) (ct/currentContext)))))
-;            (build/assert (list 'not term) (ct/currentContext))))
-        (doseq [[ch msg] result] 
-          (submit-to-channel ch msg)))
-      ;; When introduction fails, try backward-in-forward reasoning. 
-      ;; COMMENTED OUT 6/29 FIX
-      (when (:fwd-infer? message)
-      ;; TODO: Not quite finished, I think.
-        (backward-infer term #{term} nil))))
-  ;(send screenprinter (fn [_]  (println "dec-nt" (:taskid message))))
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; ---- I-INFER Rules ---- ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  ;; I-INFER can result in both introduction and elimination.
+  
+  (when (and (= (:type message) 'I-INFER)
+             (not (seen-message? (@msgs term) message)))
+    (cond 
+      ;; Actions should execute their primative action.
+      (and
+        (= (semantic-type-of term) :Action)
+        (primaction term))
+      ((primaction term) (:subst message))
+      ;; AnalyticGeneric terms need to just forward the messages
+      ;; on towards the variable term.
+      (genericAnalyticTerm? term)
+      (let [imsg (derivative-message message :origin term)]
+        (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
+        (doseq [cqch (@i-channels term)] 
+          (submit-to-channel cqch imsg)))
+      ;; "Introduction" of a WhQuestion is really just collecting answers.
+      (= (semantic-type-of term) :WhQuestion)
+      (whquestion-infer message term)
+      ;; Generic inference.
+      (and 
+        (genericTerm? term)
+        (seq (:subst message)))
+      (generic-infer message term)
+      ;; Specific instance building.
+      (and 
+        (genericTerm? (:origin message))
+        (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
+      (do 
+        (when (:true? message)
+          (dosync (alter-support term (os-concat (@support term) (:support-set message)))))
+        ;; Send this new info onward
+        (let [imsg (derivative-message message
+                                       :origin term
+                                       :support-set (:support-set message)
+                                       :type 'I-INFER)]
+          ;; Save the message for future terms which might have channels
+          ;; from this. Sometimes necessary for forward focused reasoning.
+          (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg}}))
+          ;; Do the sending.
+          (doseq [cqch (@i-channels term)] 
+            (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
+              (submit-to-channel cqch imsg)))))
+      ;; Arbs
+      (arbitraryTerm? term)
+      (if-let [[true? result] (arbitrary-instantiation message term)]
+        (when result 
+          (doseq [[ch msg] result] 
+            (submit-to-channel ch msg)))
+        ;; When introduction fails, try backward-in-forward reasoning. 
+        (when (:fwd-infer? message)
+          (backward-infer term #{term} nil)))
+      ;; Otherwise...
+      :else
+      (let [new-msgs (get-new-messages (@msgs term) message)]
+        ;; Try elimination
+        (when-let [result (elimination-infer message term new-msgs)]
+          (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
+          (doseq [[ch msg] result] 
+            (submit-to-channel ch msg)))
+        ;; Then try introduction
+        (if-let [[true? spt result] (introduction-infer message term new-msgs)]
+          (when result 
+            (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
+            ;; Update support.
+            (let [resterm (if true?
+                            term
+                            (build/variable-parse-and-build (list 'not term) :Propositional))]
+              (dosync (alter-support resterm (os-concat (@support resterm) spt)))
+              (when print-intermediate-results (println "> " resterm)))
+            ;; Send results.
+            (doseq [[ch msg] result] 
+              (submit-to-channel ch msg)))
+          ;; When introduction fails, try backward-in-forward reasoning. 
+          (when (:fwd-infer? message)
+            (backward-infer term #{term} nil))))))
+
   (when (@infer-status (:taskid message))
-    ;(when-not (@infer-status (:taskid message)) (println (:taskid message)))
-    ;(send screenprinter (fn [_]  (println "dec-stc" (:taskid message) message)))
     (.decrement ^CountingLatch (@infer-status (:taskid message)))))
           
   
