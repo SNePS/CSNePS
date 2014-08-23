@@ -51,7 +51,7 @@
 (assert '(eats (every x (Isa x Lion)) (every y (Isa y Animal))))
 
 ;; An Antelope is an Animal
-(assert '(Isa Antelope Animal))
+(assert '(Isa (every z Antelope) Animal))
 
 (assert! '(Isa (every x (Isa x Wheat)) Grain))
 
@@ -105,6 +105,7 @@ I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by gener
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (clearkb true)
+(krnovice true)
 
 (assert '(Isa Dorothy Person))
 (assert '(Isa Toto Dog))
@@ -125,8 +126,9 @@ I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by gener
               (Carries Scarecrow OilCan)))
 
 ;;; Either someone carries a dog, or the dog walks.
-(assert '(xor (Carries (some x () Person) (every y Dog))
-              (Walks y)))
+(assert '(xor (Walks (every y (Isa y Dog)))
+              (close x (Carries (some x (y) (Isa x Person))
+                                y))))
 
 ;;; A dog is carried by its owner, if and only if the dog is scared.
 (assert '(iff (Scare (every x Dog)) (Carries (every y Person (Owns x)) x)))
