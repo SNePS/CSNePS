@@ -262,8 +262,12 @@
       (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
       (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term taskid] 
-    (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
-    (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid))
+    (let [gt (gensym "task")
+          taskid (if taskid 
+                   taskid
+                   gt)]
+      (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+      (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term invoketermset taskid] 
     (let [gt (gensym "task")
           taskid (if taskid 
@@ -766,71 +770,82 @@
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
   [message node new-msgs]
-  (let [new-ruis new-msgs
-        totparam (totparam node)
+  (let [totparam (totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
         ;; If there are totparam - max - 1 false, then we can make the rest true.
-        more-than-min-true-match (some #(when (and (>= (:pos %) (:min node))
-                                                   (= (:neg %) (- totparam (:max node) 1)))
-                                          %)
-                                       new-ruis)
+        more-than-min-true-match (filter #(and (>= (:pos %) (:min node))
+                                               (= (:neg %) (- totparam (:max node) 1)))
+                                         new-msgs)
         ;; Case 2: There are enough false cases such that maximum could not be true.
         ;; Therefore the minimum must be true. If enough of them are already, the rest
         ;; are false.
-        less-than-max-true-match (some #(when (and (>= (:neg %) (- totparam (:max node)))
-                                                   (= (:pos %) (dec (:min node))))
-                                          %)
-                                          new-ruis)]
-    (or 
-      (when more-than-min-true-match
-        (let [der-msg (derivative-message more-than-min-true-match 
-                                          :origin node 
-                                          :type 'U-INFER 
-                                          :true? true 
-                                          :support-set (os-union (:support-set more-than-min-true-match) (@support node))
-                                          :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
-                                          :taskid (:taskid message))]
+        less-than-max-true-match (filter #(and (>= (:neg %) (- totparam (:max node)))
+                                               (= (:pos %) (dec (:min node))))
+                                          new-msgs)]
+    (merge
+      (when (seq more-than-min-true-match)
+        (let [der-msgs (into {} (map #(vector % (derivative-message %
+                                                                   :origin node 
+                                                                   :type 'U-INFER 
+                                                                   :true? true 
+                                                                   :support-set (os-union (:support-set %) (@support node))
+                                                                   :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
+                                                                   :taskid (:taskid message)))
+                                     more-than-min-true-match))]
         
           (when showproofs 
-            (doseq [u (@u-channels node)]
-              (when-not ((:flaggedns more-than-min-true-match) (:destination u))
-                (when (or (build/valve-open? u) (build/pass-message? u der-msg))
+            (doseq [[more-than-min-true-match der-msg] der-msgs
+                    u (@u-channels node)
+                    :when (and (not ((:flaggedns more-than-min-true-match) (:destination u)))
+                               (build/pass-message? u der-msg))]
+              (when (and (not ((:flaggedns more-than-min-true-match) (:destination u)))
+                         (build/pass-message? u der-msg))
                   (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
                                                               (:support-set more-than-min-true-match)
                                                               node
                                                               (str (or 
                                                                      (build/syntype-fsym-map (syntactic-type-of node))
                                                                      "thresh")                                                               
-                                                                   "-elimination"))))))))
+                                                                   "-elimination")))))))
           
-          (apply conj {} (doall (map #(when-not ((:flaggedns more-than-min-true-match) (:destination %))
-                                        [% der-msg])
-                                     (@u-channels node))))))
+          (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))})
+          
+          (into {} (for [[more-than-min-true-match der-msg] der-msgs
+                         u (@u-channels node)
+                         :when (not ((:flaggedns more-than-min-true-match) (:destination u)))]
+                     [u der-msg]))))
       
-      (when less-than-max-true-match
-        (let [der-msg (derivative-message less-than-max-true-match 
-                                          :origin node 
-                                          :type 'U-INFER 
-                                          :true? false 
-                                          :support-set (os-union (:support-set less-than-max-true-match) (@support node)) 
-                                          :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
-                                          :taskid (:taskid message))]
+      (when (seq less-than-max-true-match)
+        (let [der-msgs (into {} (map #(vector % (derivative-message %
+                                                                   :origin node 
+                                                                   :type 'U-INFER 
+                                                                   :true? true 
+                                                                   :support-set (os-union (:support-set %) (@support node))
+                                                                   :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
+                                                                   :taskid (:taskid message)))
+                                     less-than-max-true-match))]
         
           (when showproofs 
-            (doseq [u (@u-channels node)]
-              (when (and (nil? ((:flaggedns less-than-max-true-match) (:destination u)))
-                         (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match )) 
-                                                              (:support-set less-than-max-true-match )
+            (doseq [[less-than-max-true-match der-msg] der-msgs
+                    u (@u-channels node)
+                    :when (and (not ((:flaggedns less-than-max-true-match) (:destination u)))
+                               (build/pass-message? u der-msg))]
+              (when (and (not ((:flaggedns less-than-max-true-match) (:destination u)))
+                         (build/pass-message? u der-msg))
+                  (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)) 
+                                                              (:support-set less-than-max-true-match)
                                                               node
                                                               (str (or 
                                                                      (build/syntype-fsym-map (syntactic-type-of node))
                                                                      "thresh")                                                               
                                                                    "-elimination")))))))
           
-          (apply conj {} (doall (map #(when (nil? ((:flaggedns less-than-max-true-match) (:destination %)))
-                                        [% der-msg])
-                                     (@u-channels node)))))))))
+          (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))})
+          
+          (into {} (for [[less-than-max-true-match der-msg] der-msgs
+                         u (@u-channels node)
+                         :when (not ((:flaggedns less-than-max-true-match) (:destination u)))]
+                     [u der-msg])))))))
 
 (defn whquestion-infer 
   [message node]
@@ -1155,7 +1170,8 @@
   ;; I-INFER can result in both introduction and elimination.
   
   (when (and (= (:type message) 'I-INFER)
-             (not (seen-message? (@msgs term) message)))
+             (or (not (@msgs term))
+                 (not (seen-message? (@msgs term) message))))
     (cond 
       ;; Actions should execute their primative action.
       (and
