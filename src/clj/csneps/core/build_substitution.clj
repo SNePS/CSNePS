@@ -28,15 +28,15 @@
                 new-expr (postwalk-replace replace-subst new-expr)
                 arb-rsts (into {} (for [[k v] arb-rsts
                                         :when (not (replace-subst k))]
-                                    [k (prewalk-replace replace-subst v)]))
+                                    [k (postwalk-replace replace-subst v)]))
                 qvar-rsts (into {} (for [[k v] qvar-rsts
                                          :when (not (replace-subst k))]
-                                     [k (prewalk-replace replace-subst v)]))
+                                     [k (postwalk-replace replace-subst v)]))
                 ind-dep-rsts (into {} (for [[k v] ind-dep-rsts
                                             :when (not (replace-subst k))
                                             :let [[dep expr] v]]
                                         [k (list (remove (set (keys replace-subst)) dep)
-                                                 (prewalk-replace replace-subst expr))]))
+                                                 (postwalk-replace replace-subst expr))]))
                 [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
                 substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true)
                 built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
