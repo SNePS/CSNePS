@@ -893,11 +893,6 @@
     (error
       (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
-  ;; Testing.
-;  (when (= quant :some) 
-;    (println "Some." var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)
-;    (println (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
-  
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
