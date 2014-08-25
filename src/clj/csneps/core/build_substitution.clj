@@ -11,48 +11,47 @@
     (if (or (= (:type term) :csneps.core/Atom)
             (= subst {}))
       term
-      (dosync
-        (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
-          (let [expr (read-string (csneps.core.printer/print-unnamed-molecular-term term))
-                [new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
-                [new-expr built-vars substitution] (check-and-build-variables expr :reuse-inds true)
-                ;; expr is something like: (Carries (every x (Owns x (every y (Isa y Dog))) (Isa x Person)) y)
-                ;; new-expr is something like: (Carries x y)
-                ;; arb-rsts is something like: {x [[Isa x Person] [Owns x y]], y [[Isa y Dog]]}
-                ;; subst contains something like: {arb1 Toto}
-                ;; substitution contains something like: {y arb1}
-                ;; by combining these we can know which vars we wanted to replace in new-expr and the rsts.
-                replace-subst (into {} (for [[k v] substitution
-                                             :when (and (subst v)
-                                                        (not (variableTerm? (subst v))))]
-                                         [k (subst v)]))
-                new-expr (postwalk-replace replace-subst new-expr)
-                arb-rsts (into {} (for [[k v] arb-rsts
-                                        :when (not (replace-subst k))]
-                                    [k (postwalk-replace replace-subst v)]))
-                qvar-rsts (into {} (for [[k v] qvar-rsts
-                                         :when (not (replace-subst k))]
-                                     [k (postwalk-replace replace-subst v)]))
-                ind-dep-rsts (into {} (for [[k v] ind-dep-rsts
-                                            :when (not (replace-subst k))
-                                            :let [[dep expr] v]]
-                                        [k (list (remove (set (keys replace-subst)) dep)
-                                                 (postwalk-replace replace-subst expr))]))
-                [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
-                substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true)
-                substitution (into {} (for [[k v] substitution]
-                                        (if (and 
-                                              (subst v)
-                                              (variableTerm? (subst v)))
-                                          [k (subst v)]
-                                          [k v])))
-                built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
-            (doseq [v (seq built-vars)]
-              (doseq [rst (seq (@restriction-set v))]
-                (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
-                  (assert rst (ct/find-context 'BaseCT))))
-              (build-quantterm-channels v))
-            (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution)))))))
+      (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
+        (let [expr (read-string (csneps.core.printer/print-unnamed-molecular-term term))
+              [new-expr arb-rsts ind-dep-rsts qvar-rsts] (dosync (parse-vars-and-rsts expr {} {} {}))
+              [new-expr built-vars substitution] (dosync (check-and-build-variables expr :reuse-inds true))
+              ;; expr is something like: (Carries (every x (Owns x (every y (Isa y Dog))) (Isa x Person)) y)
+              ;; new-expr is something like: (Carries x y)
+              ;; arb-rsts is something like: {x [[Isa x Person] [Owns x y]], y [[Isa y Dog]]}
+              ;; subst contains something like: {arb1 Toto}
+              ;; substitution contains something like: {y arb1}
+              ;; by combining these we can know which vars we wanted to replace in new-expr and the rsts.
+              replace-subst (into {} (for [[k v] substitution
+                                           :when (and (subst v)
+                                                      (not (variableTerm? (subst v))))]
+                                       [k (subst v)]))
+              new-expr (postwalk-replace replace-subst new-expr)
+              arb-rsts (into {} (for [[k v] arb-rsts
+                                      :when (not (replace-subst k))]
+                                  [k (postwalk-replace replace-subst v)]))
+              qvar-rsts (into {} (for [[k v] qvar-rsts
+                                       :when (not (replace-subst k))]
+                                   [k (postwalk-replace replace-subst v)]))
+              ind-dep-rsts (into {} (for [[k v] ind-dep-rsts
+                                          :when (not (replace-subst k))
+                                          :let [[dep expr] v]]
+                                      [k (list (remove (set (keys replace-subst)) dep)
+                                               (postwalk-replace replace-subst expr))]))
+              [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
+              substitution (dosync (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true))
+              substitution (into {} (for [[k v] substitution]
+                                      (if (and 
+                                            (subst v)
+                                            (variableTerm? (subst v)))
+                                        [k (subst v)]
+                                        [k v])))
+              built-vars (dosync (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames))]
+          (doseq [v (seq built-vars)]
+            (doseq [rst (seq (@restriction-set v))]
+              (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
+                (assert rst (ct/find-context 'BaseCT))))
+            (build-quantterm-channels v))
+          (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution))))))
 
 
 
