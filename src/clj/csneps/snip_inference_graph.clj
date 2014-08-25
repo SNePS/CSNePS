@@ -278,6 +278,7 @@
     (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid)))
   ;; Opens appropriate in-channels, sends messages to their originators.
   ([term depth visited invoketermset subst context taskid] 
+    
     (dosync (commute (:future-bw-infer term) union invoketermset))
     
     ;; Some rules need special backward-inferring into. 
@@ -311,7 +312,8 @@
     ;; Propogate backward-infer messages.
     (doseq [ch (@ant-in-channels term)]
       (when (and (not (visited term)) 
-                 (not (visited (:originator ch))))
+                 (not (visited (:originator ch)))
+                 (not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
         ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
@@ -797,16 +799,15 @@
             (doseq [[more-than-min-true-match der-msg] der-msgs
                     u (@u-channels node)
                     :when (and (not ((:flaggedns more-than-min-true-match) (:destination u)))
-                               (build/pass-message? u der-msg))]
-              (when (and (not ((:flaggedns more-than-min-true-match) (:destination u)))
-                         (build/pass-message? u der-msg))
-                  (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match)) 
-                                                              (:support-set more-than-min-true-match)
-                                                              node
-                                                              (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
-                                                                     "thresh")                                                               
-                                                                   "-elimination")))))))
+                               (build/pass-message? u der-msg))
+                    :let [result-term (build/apply-sub-to-term (:destination u) (:subst more-than-min-true-match))]]
+              (send screenprinter (fn [_] (print-proof-step result-term
+                                                            (:support-set more-than-min-true-match)
+                                                            node
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "thresh")                                                               
+                                                                 "-elimination"))))))
           
           (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))})
           
@@ -829,16 +830,15 @@
             (doseq [[less-than-max-true-match der-msg] der-msgs
                     u (@u-channels node)
                     :when (and (not ((:flaggedns less-than-max-true-match) (:destination u)))
-                               (build/pass-message? u der-msg))]
-              (when (and (not ((:flaggedns less-than-max-true-match) (:destination u)))
-                         (build/pass-message? u der-msg))
-                  (send screenprinter (fn [_] (print-proof-step (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)) 
-                                                              (:support-set less-than-max-true-match)
-                                                              node
-                                                              (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
-                                                                     "thresh")                                                               
-                                                                   "-elimination")))))))
+                               (build/pass-message? u der-msg))
+                    :let [result-term (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match))]]
+              (send screenprinter (fn [_] (print-proof-step result-term 
+                                                            (:support-set less-than-max-true-match)
+                                                            node
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "thresh")                                                               
+                                                                 "-elimination"))))))
           
           (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))})
           
@@ -1164,6 +1164,21 @@
           (submit-to-channel ch msg)))))
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; ---- I/U-INFER Rules ---- ;;
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  
+  ;; I have an old note to myself that this should be I/U. I'm not sure the rationale for that.
+  ;; I think it should be just I-INFER.
+  ;; Generic inference.
+  (when 
+    (and 
+      (= (:type message) 'I-INFER)
+      (genericTerm? term)
+      (not (genericAnalyticTerm? term))
+      (seq (:subst message)))
+    (generic-infer message term))
+  
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; ---- I-INFER Rules ---- ;;
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
@@ -1182,17 +1197,13 @@
       ;; on towards the variable term.
       (genericAnalyticTerm? term)
       (let [imsg (derivative-message message :origin term)]
+        (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg} :g-channel #{imsg}}))
         (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       ;; "Introduction" of a WhQuestion is really just collecting answers.
       (= (semantic-type-of term) :WhQuestion)
       (whquestion-infer message term)
-      ;; Generic inference.
-      (and 
-        (genericTerm? term)
-        (seq (:subst message)))
-      (generic-infer message term)
       ;; Specific instance building.
       (and 
         (genericTerm? (:origin message))
