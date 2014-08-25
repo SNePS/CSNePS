@@ -23,7 +23,8 @@
                 ;; substitution contains something like: {y arb1}
                 ;; by combining these we can know which vars we wanted to replace in new-expr and the rsts.
                 replace-subst (into {} (for [[k v] substitution
-                                             :when (subst v)]
+                                             :when (and (subst v)
+                                                        (not (variableTerm? (subst v))))]
                                          [k (subst v)]))
                 new-expr (postwalk-replace replace-subst new-expr)
                 arb-rsts (into {} (for [[k v] arb-rsts
@@ -39,13 +40,18 @@
                                                  (postwalk-replace replace-subst expr))]))
                 [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
                 substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds true)
+                substitution (into {} (for [[k v] substitution]
+                                        (if (and 
+                                              (subst v)
+                                              (variableTerm? (subst v)))
+                                          [k (subst v)]
+                                          [k v])))
                 built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
             (doseq [v (seq built-vars)]
               (doseq [rst (seq (@restriction-set v))]
                 (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
                   (assert rst (ct/find-context 'BaseCT))))
               (build-quantterm-channels v))
-            ;(println new-expr substitution term subst replace-subst)
             (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution)))))))
 
 
