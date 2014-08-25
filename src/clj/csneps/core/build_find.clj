@@ -104,7 +104,8 @@
   (loop [arg (rest restriction)]
     (cond 
       (empty? arg)        nil
-      (seqable? (first arg)) (contains-new-term-or-cf? (first arg) var-list)
+      (and (seqable? (first arg))
+           (not (record? (first arg)))) (contains-new-term-or-cf? (first arg) var-list)
       (not (or (var-list (first arg))
                (= (syntactic-type-of (first arg)) :csneps.core/Term)
                (get-term (first arg))))
@@ -232,7 +233,8 @@
     (pattern-term-set-match (set (rest expr)) term var-list subs)
     ;; Check if expr is a seq. If it is, we'll need to compare it with the
     ;; dcs of the term we're comparing against.
-    (seqable? expr)
+    (and (seqable? expr)
+         (not (record? expr)))
     (pattern-term-match expr (@down-cableset term) var-list subs)
     ;; Check if expr is a variable. If so, we need to verify that any new
     ;; substitution we create will be valid.
