@@ -846,28 +846,15 @@
         (if (= (count set) 1) (first set) set))
       
       close
-      (let [vars-in-closure @(let [vars (ref #{})] 
-                               (csneps.core.build/term-prewalk (fn [x] (when (csneps.core.build/variable? x) 
-                                                                         (dosync (alter vars conj x))) 
-                                                                 x) 
-                                                               (get-term 'wft1)) 
-                               vars)
-            vars-name-map (into {} (map (fn [x] [(:var-label x) x]) vars-in-closure))
-            closed-var-names (if (seq? (second expr)) (second expr) (list (second expr)))
-            closed-vars (map vars-name-map closed-var-names)
+      (let [closed-var-labels (if (seqable? (second expr)) (second expr) (list (second expr)))
+            closed-vars (map substitution closed-var-labels)
             fillers (build (set (rest (rest expr))) :Proposition substitution)]
-        
         (build-molecular-node (cf/find-frame 'close)
 	                            (list fillers)
 	                            :csneps.core/Closure
 	                            semtype
                               :closed-vars closed-vars))
-        
-	      ;(build-molecular-node (cf/find-frame 'close)
-	      ;                      (list (build (set closed-vars) :Entity substitution)
-	      ;                            (build (third expr) :Proposition substitution))
-	      ;                      :csneps.core/Molecular
-	      ;                      semtype))
+
       rule 
       (let [rulename (second expr)
             lhs (nth expr 2)
@@ -906,11 +893,6 @@
     (error
       (str "The variable label, " var-label ", is not part of the restriction proposition, " rst ".")))
 
-  ;; Testing.
-;  (when (= quant :some) 
-;    (println "Some." var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)
-;    (println (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames)))
-  
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
@@ -948,9 +930,9 @@
         (concat (for [k (seq (keys arb-rsts))]
                   [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
+                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :reuse-inds reuse-inds)]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)]))))
 
 (defn internal-restrict
   [var]

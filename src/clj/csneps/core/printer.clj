@@ -73,6 +73,12 @@
          ")"))
 
 
+(defn print-ind-deps
+  [ind]
+  (let [deps (@csneps/dependencies ind)
+        labels (map :var-label deps)]
+    (apply str (interpose " " labels))))
+
 (defn print-unnamed-variable-term
   [term]
   (str
@@ -84,7 +90,7 @@
         (str 
           (condp = (type-of term)
             :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
-            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-set (@csneps/dependencies term) false) ") ")
+            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-ind-deps term) ") ")
             :csneps.core/QueryVariable (str "(" (:var-label term) " "))
           (print-set (@csneps/restriction-set term) false) 
           (when (seq @(:not-same-as term))

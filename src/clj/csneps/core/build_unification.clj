@@ -554,16 +554,30 @@
                   :targetbind sourcebind})
       :else nil)))
 
+(defn clean-matches
+  "Removes ind/ind from source and target bindings. These bindings were needed for 
+   subsumption testing, but now that that's done they can go."
+  [match]
+  (let [clean-binds (fn [binds] 
+                      (into {} (for [[k v] binds
+                                     :when (not (and (indefiniteTerm? k) (indefiniteTerm? v)))]
+                                 [k v])))]
+    (for [m match]
+      (-> m 
+        (assoc :targetbind (clean-binds (:targetbind m)))
+        (assoc :sourcebind (clean-binds (:sourcebind m)))))))
+
 (defn match
   "Given a term, matches the term against the unificationt tree, and returns
    the set of unifiers along with bindings which unify, satisfy type constraints,
    and satisfy subsumption constraints. If term may be both the source and target
    of a unified term, both versions are returned."
   [term]
-  (let [unifiers (getUnifiers term)]
+  (let [unifiers (getUnifiers term)
+        matches (apply concat (map match-single-unifier unifiers))]
     ;(println "UNIFIERS" unifiers)
-    ;(println "MATCHES" (apply concat (map match-single-unifier unifiers)))
-    (apply concat (map match-single-unifier unifiers))))
+    ;(println "MATCHES" (clean-matches matches))
+    (clean-matches matches)))
 
 (defn unify?
   "Returns the unifiers if term1 unifies with term2. Creates a temporary
