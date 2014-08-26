@@ -70,5 +70,22 @@
 (defn alter-support
   [term new-support]
   (alter support assoc term new-support))
-  
-  
+
+(defn ss-contains-os
+  [ss os]
+  (some #(= (second %) os) ss))
+
+(defn has-shared-os?
+  "Takes a variable list of of sets of support. Determines if any OS is used in
+   each set of support."
+  [supports]
+  (let [ss (first supports)
+        rs (rest supports)]
+    (loop [s ss]
+      (if (empty? s)
+        nil
+        (let [[t o] (first s)
+              check-rs (filter #(ss-contains-os % o) rs)]
+          (if (= (set check-rs) (set rs))
+            true
+            (recur (rest s))))))))
