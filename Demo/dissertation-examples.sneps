@@ -131,7 +131,7 @@ I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by gener
                                 y))))
 
 ;;; A dog is carried by its owner, if and only if the dog is scared.
-(assert '(iff (Scare (every x Dog)) (Carries (every y Person (Owns x)) x)))
+(assert '(iff (Scare (every z Dog)) (Carries (every y Person (Owns z)) z)))
 
 ;;; Toto gets scared if Dorothy is being chased.
 (assert '(if (Chase Dorothy) (Scare Toto)))
