@@ -21,6 +21,7 @@
    priority 1
    subst {}
    support-set #{}
+   antecedent-support-sets #{}
    type nil
    true? true
    fwd-infer? false
@@ -65,6 +66,8 @@
                   :pos (count (filter true? (vals new-flaggedns)))
                   :neg (count (filter false? (vals new-flaggedns)))
                   :support-set (os-union (:support-set msg1) (:support-set msg2))
+                  :antecedent-support-sets (union (:antecedent-support-sets msg1) (:antecedent-support-sets msg2)
+                                                  #{(:support-set msg1)} #{(:support-set msg2)})
                   :flaggedns new-flaggedns
                   :priority (max (:priority msg1) (:priority msg2))
                   :fwd-infer? (or (:fwd-infer? msg1) (:fwd-infer? msg2))
@@ -88,6 +91,7 @@
     (assoc :priority (or priority (inc (:priority message))))
     (assoc :subst (or subst (:subst message)))
     (assoc :support-set (or support-set (:support-set message)))
+    (assoc :antecedent-support-sets #{})
     (assoc :type (or type (:type message)))
     (assoc :true? (if (nil? true?) (:true? message) true?))
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
