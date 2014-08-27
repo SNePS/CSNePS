@@ -76,7 +76,7 @@
   (some #(= (second %) os) ss))
 
 (defn has-shared-os?
-  "Takes a variable list of of sets of support. Determines if any OS is used in
+  "Takes a list of of sets of support. Determines if any OS is used in
    each set of support."
   [supports]
   (let [ss (first supports)
