@@ -689,14 +689,27 @@
           (cond
             (rest (rest expr)) ;;>1 conjunct
               (let [fillers (build (set (rest expr)) semtype substitution)]
-                (build-channels (build-molecular-node cf (list fillers) :csneps.core/Conjunction semtype :fsemtype (semantic-type-of fillers))))
+                (build-channels (build-molecular-node cf 
+                                                      (list fillers) 
+                                                      :csneps.core/Conjunction 
+                                                      semtype 
+                                                      :fsemtype (semantic-type-of fillers)
+                                                      :min (count fillers)
+                                                      :max (count fillers))))
             (rest expr) ;;1 conjunct
                (if (or (and (seqable? (second expr)) (= (first (second expr)) 'setof))
                        (set? (second expr)))
                 ;; if the argument is a set, treat it as the set of conjuncts
                 (if (= (count (second expr)) 1)
                   (first (second expr))
-                  (build-channels (build-molecular-node cf (rest expr) :csneps.core/Conjunction semtype :fsemtype (semantic-type-of (second expr)))))
+                  (build-channels (build-molecular-node cf 
+                                                        (rest expr) 
+                                                        :csneps.core/Conjunction 
+                                                        semtype 
+                                                        :fsemtype 
+                                                        (semantic-type-of (second expr))
+                                                        :min (count (rest expr))
+                                                        :max (count (rest expr)))))
                 ;; otherwise, just build the conjunct.
                 (build (second expr) semtype substitution))
             :else
