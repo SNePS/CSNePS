@@ -1273,21 +1273,22 @@
           (doseq [[ch msg] result] 
             (submit-to-channel ch msg)))
         ;; Then try introduction
-        (if-let [[true? spt result] (introduction-infer message term new-msgs)]
-          (when result 
-            (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
-            ;; Update support.
-            (let [resterm (if true?
-                            term
-                            (build/variable-parse-and-build (list 'not term) :Propositional))]
-              (dosync (alter-support resterm (os-concat (@support resterm) spt)))
-              (when print-intermediate-results (println "> " resterm)))
-            ;; Send results.
-            (doseq [[ch msg] result] 
-              (submit-to-channel ch msg)))
-          ;; When introduction fails, try backward-in-forward reasoning. 
-          (when (:fwd-infer? message)
-            (backward-infer term #{term} nil))))))
+        (let [results (introduction-infer message term new-msgs)]
+          (if (seq results)
+            (doseq [[true? spt result] results]
+              (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
+              ;; Update support.
+              (let [resterm (if true?
+                              term
+                              (build/variable-parse-and-build (list 'not term) :Propositional))]
+                (dosync (alter-support resterm (os-concat (@support resterm) spt)))
+                (when print-intermediate-results (println "> " resterm)))
+              ;; Send results.
+              (doseq [[ch msg] result] 
+                (submit-to-channel ch msg)))
+            ;; When introduction fails, try backward-in-forward reasoning. 
+            (when (:fwd-infer? message)
+              (backward-infer term #{term} nil)))))))
 
   (when (@infer-status (:taskid message))
     (.decrement ^CountingLatch (@infer-status (:taskid message)))))
