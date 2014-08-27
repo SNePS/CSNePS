@@ -614,38 +614,48 @@
   "We are in an unasserted 'and' node, and would like to know if we now
    can say it is true based on message."
   [message node new-msgs]
-  (let [new-ruis new-msgs
-        der-rui-t (some #(when (= (:pos %) (count (@u-channels node))) %) new-ruis)
-        der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
-        dermsg-t (derivative-message message
-                                     :origin node
-                                     :support-set (if (has-shared-os? (:antecedent-support-sets der-rui-t))
-                                            (der-tag (:support-set der-rui-t))
-                                            (ext-tag (:support-set der-rui-t)))
-                                     :type 'I-INFER
-                                     :true? true)
-        dermsg-f (derivative-message message 
-                                   :origin node
-                                   :support-set (if (has-shared-os? (:antecedent-support-sets der-rui-f))
-                                            (der-tag (:support-set der-rui-f))
-                                            (ext-tag (:support-set der-rui-f)))
-                                   :type 'I-INFER
-                                   :true? false)
+  (let [true-msgs (filter #(= (:pos %) (count (@u-channels node))) new-msgs)
+        false-msgs(filter #(pos? (:neg %)) new-msgs)
+        dermsgs-t (into {} (map #(vector % (derivative-message 
+                                             message
+                                             :origin node
+                                             :support-set (if (has-shared-os? (:antecedent-support-sets %))
+                                                            (der-tag (:support-set %))
+                                                            (ext-tag (:support-set %)))
+                                             :type 'I-INFER
+                                             :true? true))
+                                true-msgs))
+        dermsgs-f (into {} (map #(vector % (derivative-message 
+                                             message
+                                             :origin node
+                                             :support-set (if (has-shared-os? (:antecedent-support-sets %))
+                                                            (der-tag (:support-set %))
+                                                            (ext-tag (:support-set %)))
+                                             :type 'I-INFER
+                                             :true? false))
+                                false-msgs))
         ich (@i-channels node)]
-    (cond
-      der-rui-t (do 
-                  (when showproofs
-                    (send screenprinter (fn [_] (print-proof-step node 
-                                                                  (:support-set der-rui-t)
-                                                                  "conjunction-introduction"))))
-                  (add-matched-and-sent-messages (@msgs node) #{der-rui-t} {:i-channel #{dermsg-t}})
-                  [true (:support-set dermsg-t) (zipmap ich (repeat (count ich) dermsg-t))])
-      der-rui-f (do
-                  (when showproofs
-                    (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction"))))
-                  (add-matched-and-sent-messages (@msgs node) #{der-rui-f} {:i-channel #{dermsg-f}})
-                  [false (:support-set dermsg-f) (zipmap ich (repeat (count ich) dermsg-f))])
-      :else nil)))
+    (concat
+      (when (seq true-msgs)
+        (when showproofs
+          (doseq [[tmsg dermsg] dermsgs-t]
+            (send screenprinter (fn [_] (print-proof-step node 
+                                                          (:support-set tmsg)
+                                                          "conjunction-introduction")))))
+        (add-matched-and-sent-messages (@msgs node) (set true-msgs) {:i-channel (set (vals dermsgs-t))})
+        (doall
+          (for [[_ dermsg] dermsgs-t]
+            [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))
+      (when (seq false-msgs)
+        (when showproofs
+          (doseq [[fmsg dermsg] dermsgs-f]
+            (send screenprinter (fn [_] (print-proof-step (build/variable-parse-and-build (list 'not node) :Propositional)
+                                                          (:support-set fmsg)
+                                                          "conjunction-introduction")))))
+        (add-matched-and-sent-messages (@msgs node) (set false-msgs) {:i-channel (set (vals dermsgs-f))})
+        (doall
+          (for [[_ dermsg] dermsgs-f]
+            [false (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))))))
 
 (defn andor-elimination
   "Since the andor is true, we may have enough information to do elimination
@@ -739,48 +749,57 @@
 (defn param2op-introduction
   "Check the RUIs to see if I have enough to be true."
   [message node new-msgs]
-  (let [new-ruis new-msgs
-        totparam (totparam node)
-        case1 (some #(when (or (> (:pos %) (:max node))
-                               (> (:neg %) (- totparam (:min node)))) %) new-ruis)
-        case2 (some #(when (and (>= (:pos %) (:min node))
-                                (>= (:neg %) (- totparam (:max node)))) %) new-ruis)
+  (let [totparam (totparam node)
+        case1s (filter #(or (> (:pos %) (:max node))
+                            (> (:neg %) (- totparam (:min node)))) new-msgs)
+        case2s (filter #(and (>= (:pos %) (:min node))
+                             (>= (:neg %) (- totparam (:max node)))) new-msgs)
         ich (@i-channels node)]
     (cond
       (isa? (syntactic-type-of node) :csneps.core/Andor)
-      (when case2
-        (let [dermsg (derivative-message message 
-                                         :origin node
-                                         :support-set (if (has-shared-os? (:antecedent-support-sets case2))
-                                                        (der-tag (:support-set case2))
-                                                        (ext-tag (:support-set case2)))
-                                         :type 'I-INFER
-                                         :true? true)]
+      (when (seq case2s)
+        (let [dermsgs (into {} (map #(vector % (derivative-message 
+                                                 message 
+                                                 :origin node
+                                                 :support-set (if (has-shared-os? (:antecedent-support-sets %))
+                                                                (der-tag (:support-set %))
+                                                                (ext-tag (:support-set %)))
+                                                 :type 'I-INFER
+                                                 :true? true))
+                                    case2s))]
           (when showproofs 
-            (send screenprinter (fn [_] (print-proof-step node
-                                                          (der-tag (:support-set case2))
-                                                          (str (or 
-                                                                 (build/syntype-fsym-map (syntactic-type-of node))
-                                                                 "param2op")
-                                                               "-introduction")))))
-          [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))
+            (doseq [[case2 dermsg] dermsgs]
+              (send screenprinter (fn [_] (print-proof-step node
+                                                            (:support-set case2)
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "param2op")
+                                                                 "-introduction"))))))
+          (doall 
+            (for [[_ dermsg] dermsgs]
+              [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))))
       (isa? (syntactic-type-of node) :csneps.core/Thresh)
-      (when case1
-        (let [dermsg (derivative-message message 
-                                         :origin node
-                                         :support-set (if (has-shared-os? (:antecedent-support-sets case1))
-                                                        (der-tag (:support-set case1))
-                                                        (ext-tag (:support-set case1)))
-                                         :type 'I-INFER
-                                         :true? true)]
+      (when (seq case1s)
+        (let [dermsgs (into {} (map #(vector % (derivative-message 
+                                                 message 
+                                                 :origin node
+                                                 :support-set (if (has-shared-os? (:antecedent-support-sets %))
+                                                                (der-tag (:support-set %))
+                                                                (ext-tag (:support-set %)))
+                                                 :type 'I-INFER
+                                                 :true? true))
+                                    case1s))]
           (when showproofs 
-            (send screenprinter (fn [_] (print-proof-step node 
-                                                          (der-tag (:support-set case1))
-                                                          (str (or 
-                                                                 (build/syntype-fsym-map (syntactic-type-of node))
-                                                                 "param2op")
-                                                               "-introduction")))))
-          [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))))
+            (doseq [[case1 dermsg] dermsgs]
+              (send screenprinter (fn [_] (print-proof-step node
+                                                            (:support-set case1)
+                                                            (str (or 
+                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   "param2op")
+                                                                 "-introduction"))))))
+          (doall 
+            (for [[_ dermsg] dermsgs]
+              [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))))))
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
