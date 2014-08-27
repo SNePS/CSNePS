@@ -631,10 +631,12 @@
                     (send screenprinter (fn [_] (print-proof-step node 
                                                                   (:support-set der-rui-t)
                                                                   "conjunction-introduction"))))
+                  (add-matched-and-sent-messages (@msgs node) #{der-rui-t} {:i-channel #{dermsg-t}})
                   [true (der-tag (:support-set der-rui-t)) (zipmap ich (repeat (count ich) dermsg-t))])
       der-rui-f (do
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction"))))
+                  (add-matched-and-sent-messages (@msgs node) #{der-rui-f} {:i-channel #{dermsg-f}})
                   [false (der-tag (:support-set der-rui-f)) (zipmap ich (repeat (count ich) dermsg-f))])
       :else nil)))
 
