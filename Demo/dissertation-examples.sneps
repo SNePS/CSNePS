@@ -128,7 +128,7 @@ I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by gener
 ;;; Either someone carries a dog, or the dog walks.
 (assert '(xor (Walks (every y (Isa y Dog)))
               (close x (Carries (some x (y) (Isa x Person))
-                                y))))
+                                (every y (Isa y Dog))))))
 
 ;;; A dog is carried by its owner, if and only if the dog is scared.
 (assert '(iff (Scare (every z Dog)) (Carries (every y Person (Owns z)) z)))
