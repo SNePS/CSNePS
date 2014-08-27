@@ -617,11 +617,18 @@
   (let [new-ruis new-msgs
         der-rui-t (some #(when (= (:pos %) (count (@u-channels node))) %) new-ruis)
         der-rui-f (some #(when (pos? (:neg %)) %)new-ruis)
-        dermsg-t (derivative-message (imessage-from-ymessage message node)
-                                     :support-set (der-tag (:support-set der-rui-t)))
+        dermsg-t (derivative-message message
+                                     :origin node
+                                     :support-set (if (has-shared-os? (:antecedent-support-sets der-rui-t))
+                                            (der-tag (:support-set der-rui-t))
+                                            (ext-tag (:support-set der-rui-t)))
+                                     :type 'I-INFER
+                                     :true? true)
         dermsg-f (derivative-message message 
                                    :origin node
-                                   :support-set (der-tag (:support-set der-rui-f))
+                                   :support-set (if (has-shared-os? (:antecedent-support-sets der-rui-f))
+                                            (der-tag (:support-set der-rui-f))
+                                            (ext-tag (:support-set der-rui-f)))
                                    :type 'I-INFER
                                    :true? false)
         ich (@i-channels node)]
@@ -632,12 +639,12 @@
                                                                   (:support-set der-rui-t)
                                                                   "conjunction-introduction"))))
                   (add-matched-and-sent-messages (@msgs node) #{der-rui-t} {:i-channel #{dermsg-t}})
-                  [true (der-tag (:support-set der-rui-t)) (zipmap ich (repeat (count ich) dermsg-t))])
+                  [true (:support-set dermsg-t) (zipmap ich (repeat (count ich) dermsg-t))])
       der-rui-f (do
                   (when showproofs
                     (send screenprinter (fn [_] (println "I derived: ~" node " by conjunction-introduction"))))
                   (add-matched-and-sent-messages (@msgs node) #{der-rui-f} {:i-channel #{dermsg-f}})
-                  [false (der-tag (:support-set der-rui-f)) (zipmap ich (repeat (count ich) dermsg-f))])
+                  [false (:support-set dermsg-f) (zipmap ich (repeat (count ich) dermsg-f))])
       :else nil)))
 
 (defn andor-elimination
@@ -744,7 +751,9 @@
       (when case2
         (let [dermsg (derivative-message message 
                                          :origin node
-                                         :support-set (der-tag (:support-set case2))
+                                         :support-set (if (has-shared-os? (:antecedent-support-sets case2))
+                                                        (der-tag (:support-set case2))
+                                                        (ext-tag (:support-set case2)))
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
@@ -754,12 +763,14 @@
                                                                  (build/syntype-fsym-map (syntactic-type-of node))
                                                                  "param2op")
                                                                "-introduction")))))
-          [true (der-tag (:support-set case2)) (zipmap ich (repeat (count ich) dermsg))]))
+          [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))
       (isa? (syntactic-type-of node) :csneps.core/Thresh)
       (when case1
         (let [dermsg (derivative-message message 
                                          :origin node
-                                         :support-set (der-tag (:support-set case1))
+                                         :support-set (if (has-shared-os? (:antecedent-support-sets case1))
+                                                        (der-tag (:support-set case1))
+                                                        (ext-tag (:support-set case1)))
                                          :type 'I-INFER
                                          :true? true)]
           (when showproofs 
@@ -769,7 +780,7 @@
                                                                  (build/syntype-fsym-map (syntactic-type-of node))
                                                                  "param2op")
                                                                "-introduction")))))
-          [true (der-tag (:support-set case1)) (zipmap ich (repeat (count ich) dermsg))])))))
+          [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))))
   
 (defn thresh-elimination
   "Thesh is true if less than min or more than max."
