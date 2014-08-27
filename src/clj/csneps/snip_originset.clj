@@ -17,6 +17,10 @@
   [ss]
   (set (map #(vector (combine-origin-tags (first %) 'der) (second %)) ss)))
 
+(defn ext-tag
+  [ss]
+  (set (map #(vector 'ext (second %)) ss)))
+
 (defn os-union 
   "When two sets of sets are unioned, the result is a set of sets 
    which has size |supports1|*|supports2|, and represents every 
