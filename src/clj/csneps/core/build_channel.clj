@@ -81,8 +81,6 @@
   "Removes any irrelevant substitutions (those not in the destination of the channel) from the passing message."
   [subst ch]
   (let [vars (set (filter variable? (flatten-term (:destination ch))))]
-    (when (not= subst (into {} (filter #(get vars (first %)) subst)))
-      (println subst vars (into {} (filter #(get vars (first %)) subst))))
     (into {} (filter #(get vars (first %)) subst))))
 
 (defn switch-fn
