@@ -941,11 +941,11 @@
   [arb-rsts ind-dep-rsts qvar-rsts notsames & {:keys [reuse-inds]}]
   (into {}
         (concat (for [k (seq (keys arb-rsts))]
-                  [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
+                  [k (pre-build-var :every k (get arb-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :qvar-rsts qvar-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys ind-dep-rsts))]
-                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)])
+                  [k (pre-build-var :some k (second (get ind-dep-rsts k)) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :qvar-rsts qvar-rsts :reuse-inds reuse-inds)])
                 (for [k (seq (keys qvar-rsts))]
-                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :reuse-inds reuse-inds)]))))
+                  [k (pre-build-var :qvar k (get qvar-rsts k) notsames :arb-rsts arb-rsts :ind-rsts ind-dep-rsts :qvar-rsts qvar-rsts :reuse-inds reuse-inds)]))))
 
 (defn internal-restrict
   [var]
