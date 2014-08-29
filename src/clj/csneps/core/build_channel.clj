@@ -77,6 +77,14 @@
 
 ;; Use agents for channels? Like message passing in Erlang?
 
+(defn clean-subst
+  "Removes any irrelevant substitutions (those not in the destination of the channel) from the passing message."
+  [subst ch]
+  (let [vars (set (filter variable? (flatten-term (:destination ch))))]
+    (when (not= subst (into {} (filter #(get vars (first %)) subst)))
+      (println subst vars (into {} (filter #(get vars (first %)) subst))))
+    (into {} (filter #(get vars (first %)) subst))))
+
 (defn switch-fn
   [sub]
   (fn [varbinds]
@@ -154,7 +162,9 @@
 
 (defn build-channel
   [originator destination target-binds source-binds]
-  (let [target-binds (into {} (filter #(not (queryTerm? (second %))) target-binds))
+  (let [qvar-targets (into {} (filter #(queryTerm? (second %)) target-binds))
+        source-binds (merge source-binds (set/map-invert qvar-targets))
+        target-binds (apply dissoc target-binds (keys qvar-targets))
         channel (or 
                   (find-channel originator destination)
                   (new-channel {:originator originator

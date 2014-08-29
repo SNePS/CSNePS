@@ -393,11 +393,11 @@
         props (get slot-map (slot/find-slot 'condition))
         acts (get slot-map (slot/find-slot 'action))
         subrules (get slot-map (slot/find-slot 'subrule))]
-    (doseq [p props :let [ch (build-channel p carule nil nil)]] 
+    (doseq [p props :let [ch (build-channel p carule {} {})]] 
       (install-channel ch p carule :i-channel))
-    (doseq [a acts :let [ch (build-channel carule a nil nil)]] 
+    (doseq [a acts :let [ch (build-channel carule a {} {})]] 
       (install-channel ch carule a :i-channel))
-    (doseq [s subrules :let [ch (build-channel carule s nil nil)]] 
+    (doseq [s subrules :let [ch (build-channel carule s {} {})]] 
       (install-channel ch carule s :i-channel))))
 
 (defn build-quantterm-channels
@@ -406,26 +406,25 @@
   [quantterm]
   (if (variable? quantterm)
     (doseq [r (@restriction-set quantterm)
-            :let [ch (build-channel r quantterm nil nil)]]
+            :let [ch (build-channel r quantterm {} {})]]
       (install-channel ch r quantterm :i-channel))
     (doseq [d (@dependencies quantterm)
-            :let [ch (build-channel d quantterm nil nil)]]
+            :let [ch (build-channel d quantterm {} {})]]
       (install-channel ch d quantterm :g-channel))))
 
 (defn build-unifier-channels
   "Channels built between unifiable terms."
   [unif]
-  (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
-    (cond 
-      (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
-      (install-channel s->t (:source unif) (:target unif) :i-channel)
-      
-      (= (semantic-type-of (:source unif)) :WhQuestion)
-      nil
-      
-      (or (not (@property-map (:source unif)))
-          (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic))))
-      (install-channel s->t (:source unif) (:target unif) :i-channel))))
+  ;; No unifier channels should originate from a WhQuestion.
+  (when-not (= (semantic-type-of (:source unif)) :WhQuestion)
+    (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
+      (cond 
+        (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
+        (install-channel s->t (:source unif) (:target unif) :i-channel)
+
+        (or (not (@property-map (:source unif)))
+            (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic))))
+        (install-channel s->t (:source unif) (:target unif) :i-channel)))))
 
 (defn build-internal-channels
   [rnode ants cqs]
@@ -437,16 +436,16 @@
   ;; The worst thing that can happen with this ordering is that backward-infer needs to be
   ;; continued by focused backward reasoning, which isn't terrible.
   ;; Build the u-channels
-  (doseq [c cqs :let [ch (build-channel rnode c nil nil)]]
+  (doseq [c cqs :let [ch (build-channel rnode c {} {})]]
     (install-channel ch rnode c :u-channel))
   ;; Build the i-channels
-  (doseq [a ants :let [ch (build-channel a rnode nil nil)]] 
+  (doseq [a ants :let [ch (build-channel a rnode {} {})]] 
     (install-channel ch a rnode :i-channel)))
 
 (defn build-generic-channels
   [gnode ants]
   ;; Build the g-channels
-  (doseq [a ants :let [ch (build-channel a gnode nil nil)]]
+  (doseq [a ants :let [ch (build-channel a gnode {} {})]]
     (when-not (and (arbitraryTerm? a) (not @(:fully-built a))) ;; Don't build var -> restriction channels (var won't be fully built yet).
       (install-channel ch a gnode :g-channel))))
 

@@ -89,7 +89,8 @@
   (when ((:filter-fn channel) (:subst message))
     ;; Switch
     (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) (:subst message))))))
-    (let [message (derivative-message message :subst ((:switch-fn channel) (:subst message)))]
+    (let [message (derivative-message message :subst 
+                                      (build/clean-subst ((:switch-fn channel) (:subst message)) channel))]
       (if (build/pass-message? channel message)
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
