@@ -35,6 +35,11 @@
   (when-let [pset (@property-map o)]
     (and (pset :Generic) (pset :Analytic))))
 
+(defn analyticTerm? 
+  [o]
+  (when-let [pset (@property-map o)]
+    (and (pset :Analytic))))
+
 ;;; Functions on Semantic Types
 ;;; ============================
 
@@ -88,7 +93,7 @@
 (defn initialize-default-hierarchy []
   (dosync (ref-set semantic-type-hierarchy (make-hierarchy))
 	  (define-type :Propositional '(:Entity))
-	  (define-type :WhQuestion '(:Propositional))
+	  ;(define-type :WhQuestion '(:Propositional))
 	  (define-type :Proposition '(:Propositional))
 	  (define-type :Act '(:Entity))
 	  (define-type :Policy '(:Entity))

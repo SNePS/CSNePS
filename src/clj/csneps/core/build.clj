@@ -76,27 +76,33 @@
   (when-let [pmap (@property-map term)]
     (pmap :Generic)))
 
-(defn filler-generic?
-  "The filler of a slot is generic if:
-     1) It is a term with semantic type Generic, or
+(defn generic-fillers
+  "Returns the generic fillers in term-or-termset. 
+   The filler of a slot is generic if:
+     1) It is a term with property :Generic,
      2) It is a term with syntactic type Arbitrary, or
      3) It is a set of terms in which any one term satisfies 1 or 2."
-  [term-or-termset] 
-  (let [gt? (fn [term] (or (generic-term? term) (isa? (type-of term) :csneps.core/Arbitrary)))]
-    (if (set? term-or-termset)
-      (some gt? term-or-termset)
-      (gt? term-or-termset))))
-
-(defn fillers-generic?
-  "Given a list of fillers for slots, if any one of them satisfies the
-     conditions of filler-generic?, then we say they all do."
-  [fillers]
-  (some filler-generic? fillers))
-
-(defn generic-fillers
-  "Returns the generic fillers in term-or-termset"
   [term-or-termset]
   (let [gt (fn [term] (when (or (generic-term? term) (isa? (type-of term) :csneps.core/Arbitrary))
+                         term))]
+    (if (set? term-or-termset)
+      (remove nil? (doall (map gt term-or-termset)))
+      (remove nil? (list (gt term-or-termset))))))
+
+(defn whquestion-term?
+  "A term is a whquestion if it has the property of being :WhQuestion."
+  [term]
+  (when-let [pmap (@property-map term)]
+    (pmap :WhQuestion)))
+
+(defn whquestion-fillers
+  "Returns the whquestion fillers in term-or-termset. 
+   The filler of a slot is a whquestion if:
+     1) It is a term with property :WhQuestion,
+     2) It is a term with syntactic type QueryVariable, or
+     3) It is a set of terms in which any one term satisfies 1 or 2."
+  [term-or-termset]
+  (let [gt (fn [term] (when (or (whquestion-term? term) (isa? (type-of term) :csneps.core/QueryVariable))
                          term))]
     (if (set? term-or-termset)
       (remove nil? (doall (map gt term-or-termset)))
@@ -146,6 +152,11 @@
          @(:fully-built term)
          (not (subtypep oldtype newtype)))
     (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
+    ;; Can't adjust WhQuestion to a subtype of Proposition.
+    (and (whquestion-term? term)
+         (subtypep newtype :Proposition))
+    (error "Cannot adjust a WhQuestion to Proposition or lower.")
+    
     ;; Newtype is a subtype of oldtype
     (subtypep newtype oldtype)
     (dosync (alter type-map assoc (:name term) newtype))
@@ -416,7 +427,7 @@
   "Channels built between unifiable terms."
   [unif]
   ;; No unifier channels should originate from a WhQuestion.
-  (when-not (= (semantic-type-of (:source unif)) :WhQuestion)
+  (when-not (and (@property-map (:source unif)) ((@property-map (:source unif)) :WhQuestion))
     (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
       (cond 
         (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
@@ -447,6 +458,13 @@
   ;; Build the g-channels
   (doseq [a ants :let [ch (build-channel a gnode {} {})]]
     (when-not (and (arbitraryTerm? a) (not @(:fully-built a))) ;; Don't build var -> restriction channels (var won't be fully built yet).
+      (install-channel ch a gnode :g-channel))))
+
+(defn build-whquestion-channels
+  [gnode ants]
+  ;; Build the g-channels
+  (doseq [a ants :let [ch (build-channel a gnode {} {})]]
+    (when-not (and (queryTerm? a) (not @(:fully-built a))) ;; Don't build var -> restriction channels (var won't be fully built yet).
       (install-channel ch a gnode :g-channel))))
 
 (defn build-channels
@@ -515,13 +533,23 @@
                                          fixed-expr)
                                        (:slots cf))]
                     (build arg (:type rel) substitution))
+          whfills (whquestion-fillers (set fillers))
           genfills (generic-fillers (set fillers))
-          molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype :properties (when (seq genfills) #{:Generic}))]
+          properties (cond
+                       (and (seq whfills) (seq genfills))
+                       #{:Generic :WhQuestion}
+                       (seq whfills)
+                       #{:WhQuestion}
+                       (seq genfills) 
+                       #{:Generic})
+          molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype :properties properties)]
                                         ;(if (seq genfills)
                                           ;(if (subtypep semtype :Generic) semtype :Generic)
                                           ;semtype))]
       (when (seq genfills)
         (build-generic-channels molnode genfills))
+      (when (seq whfills)
+        (build-whquestion-channels molnode whfills))
       molnode)))
 
 (defmulti build
@@ -667,20 +695,28 @@
                                (str "Isa must take 2 arguments. It doesn't in " expr "."))
           (let [entity (build (second expr) :Entity substitution)
                 category (build (third expr) :Category substitution)
-                genfils (if (= entity category)
-                          (generic-fillers #{entity})
-                          (generic-fillers #{entity category}))
+                genfills (if (= entity category)
+                           (generic-fillers #{entity})
+                           (generic-fillers #{entity category}))
+                whfills (if (= entity category)
+                          (whquestion-fillers #{entity})
+                          (whquestion-fillers #{entity category}))
+                properties (cond
+                             (and (seq whfills) (seq genfills))
+                             #{:Generic :WhQuestion}
+                             (seq whfills)
+                             #{:WhQuestion}
+                             (seq genfills) 
+                             #{:Generic})
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
                                               semtype
-                                              :properties (when (seq genfils) #{:Generic}))]
-                                              ;(if (seq genfils)
-                                              ;  (if (subtypep semtype :Generic) semtype :Generic)
-                                              ;  semtype))]
-            
-            (when (seq genfils)
-              (build-generic-channels molnode genfils))
+                                              :properties properties)]
+            (when (seq genfills)
+              (build-generic-channels molnode genfills))
+            (when (seq whfills)
+              (build-whquestion-channels molnode whfills))
             molnode))
               
       and
@@ -1039,9 +1075,11 @@
       (cond 
         (= quant :qvar) 
         (let [restrictions (clojure.set/union (@restriction-set var)
-                                              (set (map #(build % :WhQuestion substitution) rsts)))]
+                                              (set (map #(build % :Propositional substitution) rsts)))]
           (alter restriction-set assoc var restrictions)
-          (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil)))
+          (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil))
+          (dosync (doseq [r restrictions]
+                    (alter property-map assoc r (set/union (@property-map r) #{:WhQuestion :Analytic})))))
         (and (= quant :some) (not (nil? dependencies)))
         (let [restrictions (set (map #(build % :Propositional substitution) rsts))
               deps (clojure.set/union (@dependencies var)

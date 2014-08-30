@@ -880,15 +880,36 @@
                          :when (not ((:flaggedns less-than-max-true-match) (:destination u)))]
                      [u der-msg])))))))
 
+(defn g-chan-to-node?
+  [orig dest]
+  (some #(= (:destination %) dest) (@g-channels orig)))
+
 (defn whquestion-infer 
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Deriving answer:" (:subst message)))))
-  ;; We don't need RUIs - the received substitutions must be complete since they
-  ;; passed unification! Instead, lets use cached-terms.
-  (dosync (alter instances assoc node (assoc (@instances node) (build/apply-sub-to-term node (:subst message) true) (:subst message)))))
+  (if (g-chan-to-node? (:origin message) node)
+    ;; Msgs from restrictions.
+    (let [new-combined-messages (get-new-messages (@msgs node) message)
+          rel-combined-messages (when new-combined-messages
+                                  (filter #(> (:pos %) 0) new-combined-messages))]
+      (doseq [rcm rel-combined-messages
+              :let [instance (build/find-term-with-subst-applied node (:subst rcm))]]
+        ;; {subst inst} added, even if inst is nil! We'll find it later if it shows up.
+        (dosync (alter instances assoc node (assoc (@instances node) (:subst rcm) instance)))))
+    ;; Msgs from unifiers.
+    (when (and (@instances node)
+            (nil? ((@instances node) (:subst message))))
+      (dosync (alter instances assoc node (assoc (@instances node) (:subst message) (build/apply-sub-to-term node (:subst message) true)))))))
+    
+              
   
   
-  ;(dosync (alter (@instances node) assoc (build/apply-sub-to-term node (:subst message) true) (:subst message))))
+;  
+;    (when debug (send screenprinter (fn [_]  (println "Deriving answer:" (:subst message)))))
+;
+;    (dosync (alter instances assoc node (assoc (@instances node) (build/apply-sub-to-term node (:subst message) true) (:subst message)))))
+  
+  
+    ;(dosync (alter (@instances node) assoc (build/apply-sub-to-term node (:subst message) true) (:subst message))))
 
 (defn policy-instantiation
   ;; Really, a kind of elimination rule.
@@ -919,9 +940,7 @@
              (for [nmsg new-msgs] 
                (zipmap ich (repeat (count ich) nmsg)))))))
 
-(defn g-chan-to-node?
-  [orig dest]
-  (some #(= (:destination %) dest) (@g-channels orig)))
+
 
 (defn apply-to-all-restrictions
   [subst arb]
@@ -976,7 +995,7 @@
                                                           node
                                                           "generic-instantiation (1)"))))
           (doseq [ch (union (@i-channels node) (@g-channels node))]
-            (if (and instance (genericAnalyticTerm? instance))
+            (if (and instance (analyticTerm? instance))
               nil
               (submit-to-channel ch der-msg))))))
     ;; Instance from unifying term.
@@ -1013,7 +1032,7 @@
          (submit-to-channel ch der-msg)))))))
               
     
-(defn arbitrary-instantiation
+(defn arbqvar-instantiation
   [message node]
   (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
   (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
@@ -1207,7 +1226,7 @@
     (and 
       (= (:type message) 'I-INFER)
       (genericTerm? term)
-      (not (genericAnalyticTerm? term))
+      (not (analyticTerm? term))
       (seq (:subst message)))
     (generic-infer message term))
   
@@ -1228,14 +1247,14 @@
       ((primaction term) (:subst message))
       ;; AnalyticGeneric terms need to just forward the messages
       ;; on towards the variable term.
-      (genericAnalyticTerm? term)
+      (analyticTerm? term)
       (let [imsg (derivative-message message :origin term)]
         (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg} :g-channel #{imsg}}))
         (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       ;; "Introduction" of a WhQuestion is really just collecting answers.
-      (= (semantic-type-of term) :WhQuestion)
+      (and (@property-map term) ((@property-map term) :WhQuestion))
       (whquestion-infer message term)
       ;; Specific instance building.
       (and 
@@ -1257,8 +1276,8 @@
             (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
               (submit-to-channel cqch imsg)))))
       ;; Arbs
-      (arbitraryTerm? term)
-      (if-let [[true? result] (arbitrary-instantiation message term)]
+      (or (arbitraryTerm? term) (queryTerm? term))
+      (if-let [[true? result] (arbqvar-instantiation message term)]
         (when result 
           (doseq [[ch msg] result] 
             (submit-to-channel ch msg)))
@@ -1352,7 +1371,7 @@
   (let [taskid (gensym "task")]
     (backward-infer ques taskid)
     (.await ^CountingLatch (@infer-status taskid))
-    (into {} (filter #(ct/asserted? (first %) context) (@instances ques)))))
+    (into {} (filter #(ct/asserted? (second %) context) (@instances ques)))))
 
 (defn cancel-infer-of [term]
   (let [term (if (seq? term)

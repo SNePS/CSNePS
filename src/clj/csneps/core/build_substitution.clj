@@ -48,7 +48,7 @@
               built-vars (dosync (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames))]
           (doseq [v (seq built-vars)]
             (doseq [rst (seq (@restriction-set v))]
-              (when-not (isa? (semantic-type-of rst) :WhQuestion) ;; It doesn't make sense to assert a WhQuestion.
+              (when-not (whquestion-term? rst) ;; It doesn't make sense to assert a WhQuestion.
                 (assert rst (ct/find-context 'BaseCT))))
             (build-quantterm-channels v))
           (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution))))))
