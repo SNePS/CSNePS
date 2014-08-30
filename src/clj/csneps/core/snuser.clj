@@ -70,9 +70,11 @@
         that are derivable in the current context;
         or the empty set if there are none."
   [exprpat]
-  (setOr				; Until exprpat can be non-ground --- then set:union
-    (askif exprpat)
-    (askifnot exprpat)))
+  (if (some build/synvariable? (flatten exprpat))
+    (snip/askwh-instances exprpat (ct/currentContext))
+    (setOr				
+      (askif exprpat)
+      (askifnot exprpat))))
 
 (defn askif
   "Returns a set of instances of the term pattern exprpat

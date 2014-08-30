@@ -59,11 +59,17 @@
 
 (defn askwh [ques context]
   "If the WhQuestion ques can be answered in context, 
-      return a list of pairs, where the first element 
-      is a satisfying term, and the second is a substitution.
+      return a list of substitutions for the qvars,
       else return the empty set."
   (let [q (build/variable-parse-and-build ques :WhQuestion)]
     (vals (backward-infer-answer q context))))
+
+(defn askwh-instances [ques context]
+  "If the WhQuestion ques can be answered in context, 
+      return a list of satisfying terms,
+      else return the empty set."
+  (let [q (build/variable-parse-and-build ques :WhQuestion)]
+    (set (keys (backward-infer-answer q context)))))
 
 (defn assertTrace
   [rule antecedents consequent reason context]
