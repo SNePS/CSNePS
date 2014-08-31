@@ -1,9 +1,6 @@
 CSNePS - Concurrent SNePS
 ======
 
-Usage
-------
+CSNePS is an implementation (and extension of) of the SNePS 3 knowledge representation and reasoning system specification.
 
-To use CSNePS with its GUI, simply run it using Leiningen. Change into the CSNePS directory and type 'lein run'. 
-
-To use CSNePS from the command line, use Leiningen's REPL. Change into the CSNePS directory and type 'lein repl'. 
+CSNePS is still under heavy development. Some documentation (including setup instructions) is provided in the manual.pdf file in the doc folder, but more will be forthcoming.
