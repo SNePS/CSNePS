@@ -63,8 +63,10 @@
   (.write ^java.io.Writer w 
     (str (print/term-printer (:originator o)) " -(" (count @(:waiting-msgs o)) ")"
          (cond
+           (seq @(:valve-selectors o)) 
+           (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (ct/find-context (second %))) @(:hyps (ct/currentContext))) @(:valve-selectors o))]
+             (str "~" (print-str (map #(first %) selectors-this-ct)) "~"))
            (not @(:valve-open o)) "/"
-           (seq @(:valve-selectors o)) "~"
            :else "-")
          "> " (print/term-printer (:destination o))
          " F: " (:filter-binds o)
@@ -212,7 +214,7 @@
         to (get-term to)
         chs (concat (@i-channels from) (@u-channels from) (@g-channels from))
         ch (first (filter #(= (:destination %) to) chs))]
-    (println ch)
+    (println "Channel" ch)
     (println @(:waiting-msgs ch))))
     
   
