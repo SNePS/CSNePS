@@ -175,10 +175,16 @@
 (defn add-valve-selector
   [channel subst context taskid]
   (let [vars-in-orig (get-vars (:originator channel))
+        ;; selector subst is the same, doesn't have the filtered parts, since those have already
+        ;; been checked!
+        selector-subst (build/substitution-application-nomerge subst
+                                                               (or (:switch-binds channel) #{}))
+        selector-subst (into {} (filter #(vars-in-orig (first %)) subst))
+        ;; subst is the subst to pass onward. (needs filtered parts too)
         subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
                                                       (or (:switch-binds channel) #{}))
         subst (into {} (filter #(vars-in-orig (first %)) subst))
-        valve-selector [subst (:name context)]]
+        valve-selector [selector-subst (:name context)]]
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
     (if-not (@(:valve-selectors channel) valve-selector)
@@ -218,9 +224,13 @@
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
     (let [vars-in-orig (when subst (get-vars (:originator channel)))
-          subst (when subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
-                                                                    (or (:switch-binds channel) #{})))
-          subst (when subst (into {} (filter #(vars-in-orig (first %)) subst)))
+          selector-subst (build/substitution-application-nomerge subst
+                                                                 (or (:switch-binds channel) #{}))
+          selector-subst (into {} (filter #(vars-in-orig (first %)) subst))
+          ;; subst is the subst to pass onward. (needs filtered parts too)
+          subst (build/substitution-application-nomerge (merge subst (:filter-binds channel))
+                                                        (or (:switch-binds channel) #{}))
+          subst (into {} (filter #(vars-in-orig (first %)) subst))
           ;is-rel-vs? (fn [vs] (some #(clojure.set/subset? 
           ;                             (second %) 
           ;                             (set (map (fn [h] (:name h)) @(:hyps (second vs))))) 
@@ -228,11 +238,11 @@
           is-rel-vs? (fn [vs] (let [ct (ct/find-context (second vs))]
                                 (some #(hyp-subst-of-ct? (second %) ct) hyps)))
           rel-vses (filter is-rel-vs? @(:valve-selectors channel))
-          match-vses (when subst (filter #(submap? subst (first %)) rel-vses))]
+          match-vses (when selector-subst (filter #(submap? selector-subst (first %)) rel-vses))]
       ;(if (seq rel-vses)
       ;(send screenprinter (fn [_] (println channel vars-in-orig subst "VSes" (map first @(:valve-selectors channel)))));)
       
-      (if subst
+      (if selector-subst
         (dosync (alter (:valve-selectors channel) difference match-vses))
         (dosync (alter (:valve-selectors channel) difference rel-vses)))
       ;(if subst
@@ -319,12 +329,7 @@
                  ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
-        ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
         (let [subst (add-valve-selector ch subst context taskid)]
-          ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "vs" subst)))
-          
-          ;(open-valve ch taskid)
-          ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
           (when subst ;; Will be nil if this is an old VS.
             (if (and taskid
                      (@infer-status taskid))
@@ -966,6 +971,7 @@
           rel-combined-messages (when new-combined-messages
                                   (filter #(> (:pos %) 0) new-combined-messages))]
       (doseq [rcm rel-combined-messages]
+        
         (let [instance (if (:fwd-infer message)
                          (build/apply-sub-to-term node (:subst rcm))
                          (build/find-term-with-subst-applied node (:subst rcm)))
@@ -981,6 +987,8 @@
                                          :type 'I-INFER
                                          :fwd-infer? (:fwd-infer? message)
                                          :taskid (:taskid message))]
+          
+          (send screenprinter (fn [_] (println node (:subst rcm) (build/find-term-with-subst-applied node (:subst rcm)))))
           
           ;(when instance 
             ;(println instance (os-union (:support-set rcm) (@support instance)))
@@ -1259,10 +1267,20 @@
       ;; "Introduction" of a WhQuestion is really just collecting answers.
       (and (@property-map term) ((@property-map term) :WhQuestion))
       (whquestion-infer message term)
+      ;; Arbs
+      (or (arbitraryTerm? term) (queryTerm? term))
+      (if-let [[true? result] (arbqvar-instantiation message term)]
+        (when result 
+          (doseq [[ch msg] result] 
+            (submit-to-channel ch msg)))
+        ;; When introduction fails, try backward-in-forward reasoning. 
+        (when (:fwd-infer? message)
+          (backward-infer term #{term} nil)))
       ;; Specific instance building.
       (and 
         (genericTerm? (:origin message))
-        (build/specificInstanceOfGeneric? (:origin message) term (:subst message)))
+        (not (rule? term))
+        (not (variableTerm? term)))
       (do 
         (when (:true? message)
           (dosync (alter-support term (os-concat (@support term) (:support-set message)))))
@@ -1278,15 +1296,6 @@
           (doseq [cqch (@i-channels term)] 
             (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
               (submit-to-channel cqch imsg)))))
-      ;; Arbs
-      (or (arbitraryTerm? term) (queryTerm? term))
-      (if-let [[true? result] (arbqvar-instantiation message term)]
-        (when result 
-          (doseq [[ch msg] result] 
-            (submit-to-channel ch msg)))
-        ;; When introduction fails, try backward-in-forward reasoning. 
-        (when (:fwd-infer? message)
-          (backward-infer term #{term} nil)))
       ;; Otherwise...
       :else
       (let [new-msgs (get-new-messages (@msgs term) message)]

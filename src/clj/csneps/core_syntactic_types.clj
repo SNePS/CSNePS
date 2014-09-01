@@ -85,6 +85,14 @@
   [o]
   (when (:type o) (isa? (:type o) ::Atom)))
 
+(defn rule?
+  [o]
+  (and (:type o)
+       (or (isa? (:type o) ::Param2op)
+           (isa? (:type o) ::Numericalentailment)
+           (isa? (:type o) ::Negation))))
+              
+
 ;;; Syntactic Types
 ;;; ===============
 
