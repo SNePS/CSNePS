@@ -988,8 +988,6 @@
                                          :fwd-infer? (:fwd-infer? message)
                                          :taskid (:taskid message))]
           
-          (send screenprinter (fn [_] (println node (:subst rcm) (build/find-term-with-subst-applied node (:subst rcm)))))
-          
           ;(when instance 
             ;(println instance (os-union (:support-set rcm) (@support instance)))
             ;(dosync 
