@@ -181,24 +181,26 @@
         valve-selector [subst (:name context)]]
     ;; Only add the selector and check for new matching messages if this is actually a new selector.
     ;; New messages will otherwise be checked upon being submitted to the channel.
-    (when-not (@(:valve-selectors channel) valve-selector)
-     (dosync (commute (:valve-selectors channel) conj valve-selector))
-     (doseq [msg @(:waiting-msgs channel)]
-       (when (build/pass-vs? valve-selector msg)
-         ;(send screenprinter (fn [_]  (println "Pass")))
-         (dosync (commute (:waiting-msgs channel) disj msg))
-         (if (@infer-status taskid)
-           (do 
-             ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
-             (.increment ^CountingLatch (@infer-status taskid)))
-           (send screenprinter (fn [_]  
-                                  (println) 
-                                  (println "Warning: No taskid when adding valve selector to" channel) 
-                                  (println "This may indicate a bug or race condition in the inference graph.")
-                                  (println))))
-         (.execute ^ThreadPoolExecutor executorService 
-           (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid))))))
-    subst))
+    (if-not (@(:valve-selectors channel) valve-selector)
+      (do 
+        (dosync (commute (:valve-selectors channel) conj valve-selector))
+        (doseq [msg @(:waiting-msgs channel)]
+          (when (build/pass-vs? valve-selector msg)
+            ;(send screenprinter (fn [_]  (println "Pass")))
+            (dosync (commute (:waiting-msgs channel) disj msg))
+            (if (@infer-status taskid)
+              (do 
+                ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
+                (.increment ^CountingLatch (@infer-status taskid)))
+              (send screenprinter (fn [_]  
+                                     (println) 
+                                     (println "Warning: No taskid when adding valve selector to" channel) 
+                                     (println "This may indicate a bug or race condition in the inference graph.")
+                                     (println))))
+            (.execute ^ThreadPoolExecutor executorService 
+              (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid)))))
+        subst)
+      nil)))
 
 (def hyp-subst-of-ct?
   (memo
@@ -313,8 +315,8 @@
     ;; Propogate backward-infer messages.
     (doseq [ch (@ant-in-channels term)]
       (when (and (not (visited term)) 
-                 (not (visited (:originator ch)))
-                 (not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
+                 (not (visited (:originator ch))))
+                 ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
         ;(send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term)))
@@ -323,28 +325,29 @@
           
           ;(open-valve ch taskid)
           ;(send screenprinter (fn [_]  (println "inc-bwi" taskid)))
-          (if (and taskid
-                   (@infer-status taskid))
-            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
-            (send screenprinter (fn [_]  
-                                  (println) 
-                                  (println "Warning: No taskid during backward infer on" ch) 
-                                  (println "This may indicate a bug or race condition in the inference graph.")
-                                  (println))))
+          (when subst ;; Will be nil if this is an old VS.
+            (if (and taskid
+                     (@infer-status taskid))
+              (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+              (send screenprinter (fn [_]  
+                                    (println) 
+                                    (println "Warning: No taskid during backward infer on" ch) 
+                                    (println "This may indicate a bug or race condition in the inference graph.")
+                                    (println))))
             
-          (.execute ^ThreadPoolExecutor executorService 
-            (priority-partial depth 
-                              (fn [t d v i s c id] 
-                                (backward-infer t d v i s c id) 
-                                ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
-                              (:originator ch)
-                              (dec depth)
-                              (conj visited term)
-                              invoketermset
-                              subst
-                              context
-                              taskid)))))))
+            (.execute ^ThreadPoolExecutor executorService 
+              (priority-partial depth 
+                                (fn [t d v i s c id] 
+                                  (backward-infer t d v i s c id) 
+                                  ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
+                                  (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
+                                (:originator ch)
+                                (dec depth)
+                                (conj visited term)
+                                invoketermset
+                                subst
+                                context
+                                taskid))))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
