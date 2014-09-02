@@ -400,10 +400,20 @@ First, add the following to your emacs initialization file (by default \texttt{~
   '("melpa-stable" . "http://melpa-stable.milkbox.net/packages/"))
 
 (package-initialize)
+\end{verbatim}
 
+Evaluate the buffer with the initialization file, then run \texttt{M-x package-refresh-contents} to pull in the contents of the added package repositories. 
+
+Now, add the following to your initialization file after what you added above. 
+
+\begin{verbatim}
 (defvar my-packages '(clojure-mode
                       clojure-test-mode
                       cider))
+                      
+(dolist (p my-packages)
+  (unless (package-installed-p p)
+    (package-install p)))
 \end{verbatim}
 
 Evaluate the buffer with the initialization file in order to download the required packages. 
