@@ -62,14 +62,16 @@
       return a list of substitutions for the qvars,
       else return the empty set."
   (let [q (build/variable-parse-and-build ques :Entity)]
-    (keys (backward-infer-answer q context))))
+    (for [[k v] (backward-infer-answer q context)
+          :when (not (analyticTerm? v))]
+      k)))
 
 (defn askwh-instances [ques context]
   "If the WhQuestion ques can be answered in context, 
       return a list of satisfying terms,
       else return the empty set."
   (let [q (build/variable-parse-and-build ques :Entity)]
-    (set (vals (backward-infer-answer q context)))))
+    (set (remove analyticTerm? (vals (backward-infer-answer q context))))))
 
 (defn assertTrace
   [rule antecedents consequent reason context]
