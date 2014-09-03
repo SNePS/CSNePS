@@ -324,8 +324,12 @@
     
     ;; Propogate backward-infer messages.
     (doseq [ch (@ant-in-channels term)]
-      (when (and (not (visited term)) 
-                 (not (visited (:originator ch))))
+      (when (and (not (visited term)))
+;                 (if-let [oppositech (build/find-channel (:destination ch) (:originator ch))]
+;                   (not (visited (:originator ch)))
+;                   true))
+                 
+                 ;(not (visited (:originator ch))))
                  ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
@@ -897,16 +901,26 @@
   (if (g-chan-to-node? (:origin message) node)
     ;; Msgs from restrictions.
     (let [new-combined-messages (get-new-messages (@msgs node) message)
+          querytermct (count (filter queryTerm? (build/flatten-term node)))
           rel-combined-messages (when new-combined-messages
-                                  (filter #(> (:pos %) 0) new-combined-messages))]
+                                  (filter #(= (:pos %) querytermct) new-combined-messages))]
       (doseq [rcm rel-combined-messages
               :let [instance (build/find-term-with-subst-applied node (:subst rcm))]]
         ;; {subst inst} added, even if inst is nil! We'll find it later if it shows up.
         (dosync (alter instances assoc node (assoc (@instances node) (:subst rcm) instance)))))
     ;; Msgs from unifiers.
     (when (and (@instances node)
-            (nil? ((@instances node) (:subst message))))
-      (dosync (alter instances assoc node (assoc (@instances node) (:subst message) (build/apply-sub-to-term node (:subst message) true)))))))
+            (nil? ((@instances node) (:subst message)))) 
+      ;; The instance we have received may not be built yet.
+      (let [instance (or (build/find-term-with-subst-applied node (:subst message))
+                         (build/apply-sub-to-term node (:subst message)))]
+        (dosync (alter instances assoc node (assoc (@instances node) (:subst message) instance))))))
+      
+  (when (analyticTerm? node) ;; This is a restriction.
+    (let [imsg (derivative-message message :origin node)]
+      (add-matched-and-sent-messages (@msgs node) #{(sanitize-message message)} {:i-channel #{imsg} :g-channel #{imsg}}) ;; Just gchans?
+      (doseq [cqch (@i-channels node)] 
+        (submit-to-channel cqch imsg)))))
     
               
   
@@ -1254,6 +1268,9 @@
         (= (semantic-type-of term) :Action)
         (primaction term))
       ((primaction term) (:subst message))
+      ;; "Introduction" of a WhQuestion is really just collecting answers.
+      (and (@property-map term) ((@property-map term) :WhQuestion))
+      (whquestion-infer message term)
       ;; AnalyticGeneric terms need to just forward the messages
       ;; on towards the variable term.
       (analyticTerm? term)
@@ -1262,9 +1279,6 @@
         (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
-      ;; "Introduction" of a WhQuestion is really just collecting answers.
-      (and (@property-map term) ((@property-map term) :WhQuestion))
-      (whquestion-infer message term)
       ;; Arbs
       (or (arbitraryTerm? term) (queryTerm? term))
       (if-let [[true? result] (arbqvar-instantiation message term)]
