@@ -148,10 +148,14 @@
     (= (type-of term) (type-of newtype)) nil
     ;; Arbitrary terms can be adjusted down only while they're being built.
     ;; They can't ever be adjusted down below their highest-level restriction.
-    (and (or (arbitraryTerm? term) (queryTerm? term))
+    (and (arbitraryTerm? term)
          @(:fully-built term)
          (not (subtypep oldtype newtype)))
     (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
+    (and (queryTerm? term)
+         @(:fully-built term)
+         (not (subtypep oldtype newtype)))
+    (error "Cannot adjust a query term " (:name term) " from type " oldtype " to more specific type " newtype ".")
     ;; Can't adjust WhQuestion to a subtype of Proposition.
     (and (whquestion-term? term)
          (subtypep newtype :Proposition))
