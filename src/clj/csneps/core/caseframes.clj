@@ -17,7 +17,10 @@
 (def FrameAliases {'not 'nor
                    'iff 'thresh
                    'xor 'andor
-                   'nand 'andor})
+                   'nand 'andor
+                   'or 'andor})
+
+(def ReservedNames #{'not 'iff 'or 'xor 'nand 'sequence 'setof})
 
 (def NoviceCaseframes 
   "Map from the number of slots of a novice caseframe
@@ -174,6 +177,20 @@
     (error "A caseframe with type = " typename " and slots = " slots " already exists."))
   true)
 
+(defn reservedName? 
+  "Given a print-pattern for a new caseframe, checks if either the 
+   name or first slot position argument use a reserved name."
+  [new-print-pattern]
+  (cond
+    (and (seq? (first new-print-pattern)) 
+         (= (ffirst new-print-pattern) 'quote)
+         (ReservedNames (second (first new-print-pattern))))
+    true
+    (ReservedNames (first new-print-pattern))
+    true
+    :else 
+    false))
+
 ;Molecular Terms, Caseframes, Caseframe Print-Patterns, Parsing, and
 ;Generating.
 ;
@@ -243,6 +260,7 @@
 (defn define-caseframe
   [typename slots & {:keys [docstring print-pattern fsymbols] :or {docstring ""}}]
   {:pre [(csneps/semantic-type-p (keyword typename))
+         (not (reservedName? print-pattern))
          (check-new-caseframe typename slots)
          (string? docstring)
          (seq? print-pattern)
