@@ -255,6 +255,8 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setFSymbolsRef(RT.var("csneps.core.caseframes", "FN2CF"));
 		model.initializeCaseframes();
 		model.setTermsRef(RT.var("csneps.core", "TERMS")); //Ref to Map of name -> Term.
+		model.setCaseframeRef(RT.var("csneps.core", "caseframe"));
+		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
 		model.initializeTerms();
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
@@ -270,6 +272,8 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setFSymbolsRef(RT.var("csneps.core.caseframes", "FN2CF"));
 		model.initializeCaseframes();
 		model.setTermsRef(RT.var("csneps.core.sneps3", "TERMS")); //Ref to Map of name -> Term.
+		model.setCaseframeRef(RT.var("csneps.core", "caseframe"));
+		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
 		model.initializeTerms(termset);
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));

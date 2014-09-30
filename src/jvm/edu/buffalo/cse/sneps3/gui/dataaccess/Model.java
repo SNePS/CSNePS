@@ -30,9 +30,7 @@ import edu.buffalo.cse.sneps3.gui.business.Term;
  * @author dan
  */
 public class Model {
-	
-	//New stuff:
-	
+
 	ArrayList<IView> views;
 	
     Var slots_ref;
@@ -42,6 +40,17 @@ public class Model {
     Var contexts_ref;
     Var curr_context_ref;
     Var types_ref;
+    
+    // Parts of terms which have been abstracted away from Terms themselves.
+    Var i_channels_ref;
+    Var u_channels_ref;
+    Var g_channels_ref;
+    Var ant_in_channels_ref;
+    Var up_cableset_w_ref;
+    Var restriction_set_ref;
+    Var dependencies_ref;
+    Var down_cableset_ref;
+    Var caseframe_ref;   
 
     public Model(){ 
         views = new ArrayList<IView>();
@@ -84,6 +93,42 @@ public class Model {
     	curr_context_ref = v;
     }
     
+    public void setIChannelsRef(Var v){
+    	i_channels_ref = v;
+    }
+    
+    public void setUChannelsRef(Var v){
+    	u_channels_ref = v;
+    }
+    
+    public void setGChannelsRef(Var v){
+    	g_channels_ref = v;
+    }
+    
+    public void setAntInChannelsRef(Var v){
+    	ant_in_channels_ref = v;
+    }
+    
+    public void setUpCablesetWRef(Var v){
+    	up_cableset_w_ref = v;
+    }
+    
+    public void setRestrictionSetWRef(Var v){
+    	restriction_set_ref = v;
+    }
+    
+    public void setDependenciesRef(Var v){
+    	dependencies_ref = v;
+    }
+    
+    public void setDownCablesetRef(Var v){
+    	down_cableset_ref = v;
+    }
+    
+    public void setCaseframeRef(Var v){
+    	caseframe_ref = v;
+    }
+    
     /********************************
      *** Initialization Functions ***
      ********************************/
@@ -117,6 +162,11 @@ public class Model {
     public void initializeTerms(APersistentSet termset){
     	Collection<Term> t = Term.reinitializeTerms(termset);
     	
+    	for (Term term : t){
+    		term.setCaseframe(getCaseframe(term.getClojureTerm()));
+    		term.setDownCableset(getDownCableset(term));
+    	}
+    	
     	for(IView i : views){
     		i.termUpdate(t, false);
         }
@@ -140,6 +190,14 @@ public class Model {
     		return;
     	}
     	ArrayList<Term> t = new ArrayList<Term>(Term.createTerms(changedterms));
+    	
+    	for (Term term : t){
+    		// What takes longer - doing the deref in getCaseframe for all terms changed,
+    		// or building an arraylist of names of terms changed, and using the function
+    		// for that?
+    		term.setCaseframe(getCaseframe(term.getClojureTerm()));
+    		term.setDownCableset(getDownCableset(term));
+    	}
     	for(IView i : views){
     		i.termUpdate(t, clear);
         }
@@ -217,5 +275,83 @@ public class Model {
     	
     	//System.out.println("Type added: " + types.toString());
     }
+    
+    public void termNameIChannelMapChanged(IPersistentMap changed, Boolean reset){
+    	System.out.println("Ich" + changed.toString());
+    }
+    
+    public void termNameGChannelMapChanged(IPersistentMap changed, Boolean reset){
+    	
+    }
+
+    public void termNameUChannelMapChanged(IPersistentMap changed, Boolean reset){
+	
+    }
+    
+    /****************
+     * Pull Methods *
+     ****************/
+    
+    // Some things are better "pulled" then "pushed". 
+    
+    public Caseframe getCaseframe(IPersistentMap term){
+    	IPersistentMap namecfmap = (IPersistentMap)((Ref)caseframe_ref.get()).deref();
+    	if(namecfmap.containsKey(term)){
+    		return Caseframe.create((IPersistentMap)namecfmap.entryAt(term).getValue());
+    	}
+    	return null;
+    }
+    
+    public HashMap<IPersistentMap, Caseframe> getPartialNameCFMap(ArrayList<IPersistentMap> terms){
+    	IPersistentMap namecfmap = (IPersistentMap)((Ref)caseframe_ref.get()).deref();
+    	
+    	HashMap<IPersistentMap, Caseframe> namecfmapret = new HashMap<IPersistentMap, Caseframe>();
+    	
+    	for(IPersistentMap i : terms){
+    		if(namecfmap.containsKey(i)){
+    			namecfmapret.put(i, Caseframe.create((IPersistentMap)namecfmap.entryAt(i).getValue()));
+    		}
+    	}
+    	
+    	return namecfmapret;
+    }
+    
+    public HashMap<IPersistentMap, Caseframe> getNameCFMap(){
+    	IPersistentMap namecfmap = (IPersistentMap)((Ref)caseframe_ref.get()).deref();
+    	
+    	HashMap<IPersistentMap, Caseframe> namecfmapret = new HashMap<IPersistentMap, Caseframe>();
+    	
+    	for (Iterator<Map.Entry> iter = namecfmap.iterator(); iter.hasNext(); ){
+			Map.Entry e = iter.next();
+			namecfmapret.put((IPersistentMap)e.getKey(),
+					         Caseframe.create((IPersistentMap)e.getValue()));
+		}
+    	return namecfmapret;
+    }
+    
+    public HashMap<Slot, Set<Term>> getDownCableset(Term term){
+    	if (!term.isMolecular()) return null;
+    	
+    	HashMap<Slot, Set<Term>> downcableset = new HashMap<Slot, Set<Term>>();
+    	
+    	ArrayList<Slot> termslots = term.getCaseframe().getSlots();
+
+    	IPersistentMap namedcsmap = (IPersistentMap)((Ref)down_cableset_ref.get()).deref();
+    	
+    	List dcs = (List)namedcsmap.valAt(term.getClojureTerm());
+    	
+		for(int i = 0; i < dcs.size(); i++){
+			List terms = (List)((APersistentSet)dcs.get(i)).seq();
+			HashSet<Term> termset = new HashSet<Term>();
+			for(int j = 0; j < terms.size(); j++){
+				termset.add(Term.create((IPersistentMap)terms.get(j)));
+			}
+			downcableset.put(termslots.get(i), termset);
+		}
+    	
+    	return downcableset;
+    }
+    
+    
 }
 

@@ -41,7 +41,19 @@
                                                                                 newvalue)
                                    (remove-watch (:hyps oldvalue) :currhyps)
                                    (add-watch (:hyps newvalue) :currhyps currentcontexthypschangefn))
-          ] 
+          ;; Refs removed from terms.
+          ichannelschangefn (fn [ref key oldvalue newvalue] 
+                              (.termNameIChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                                (map-difference newvalue oldvalue)
+                                (empty? newvalue)))
+          uchannelschangefn (fn [ref key oldvalue newvalue] 
+                              (.termNameUChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                                (map-difference newvalue oldvalue)
+                                (empty? newvalue)))
+          gchannelschangefn (fn [ref key oldvalue newvalue] 
+                              (.termNameGChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                                (map-difference newvalue oldvalue)
+                                (empty? newvalue)))] 
       (add-watch csneps/semantic-type-hierarchy :types typechangefn)
       (add-watch csneps/TERMS :terms termchangefn)
       (add-watch ct/CONTEXTS :contexts contextchangefn)
@@ -51,8 +63,9 @@
       (add-watch ct/CONTEXTS :cts contextchangefn)
       (add-watch ct/*CurrentContext* :currct currentcontextchangefn)
       (add-watch (:hyps (ct/currentContext)) :currhyps currentcontexthypschangefn)
-      
-      )))
+      (add-watch csneps/i-channels :ichannels ichannelschangefn)
+      (add-watch csneps/g-channels :gchannels gchannelschangefn)
+      (add-watch csneps/u-channels :uchannels uchannelschangefn))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helpers for the REPL ;;;

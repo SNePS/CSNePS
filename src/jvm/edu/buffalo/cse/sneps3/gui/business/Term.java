@@ -16,30 +16,44 @@ import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.RT;
 import clojure.lang.Ref;
+import clojure.lang.Var;
 
 public class Term {
 
 	private static HashMap<String, Term> terms = new HashMap<String, Term>();
+	private static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
+	private static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
+	private static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
+	private static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
+	
+
+	Var i_channels_ref;
+    Var u_channels_ref;
+    Var g_channels_ref;
+    Var ant_in_channels_ref;
+    Var up_cableset_w_ref;
+    Var restriction_set_ref;
+    Var dependencies_ref;
+    Var down_cableset_ref;
+    Var caseframe_ref;   
+	
+	
 	
 	private static Keyword name_key = Keyword.intern("name");
 	private static Keyword type_key = Keyword.intern("type");
-	private static Keyword caseframe_key = Keyword.intern("caseframe");
-	private static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
-	private static Keyword downcableset_key = Keyword.intern("down-cableset");
+	//private static Keyword caseframe_key = Keyword.intern("caseframe");
+	//private static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
+	//private static Keyword downcableset_key = Keyword.intern("down-cableset");
 	private static Keyword activation_key = Keyword.intern("activation-value");
-	private static Keyword i_channels_key = Keyword.intern("i-channels");
-	private static Keyword u_channels_key = Keyword.intern("u-channels");
-	private static Keyword g_channels_key = Keyword.intern("g-channels");
+	//private static Keyword i_channels_key = Keyword.intern("i-channels");
+	//private static Keyword u_channels_key = Keyword.intern("u-channels");
+	//private static Keyword g_channels_key = Keyword.intern("g-channels");
 	
 	private IPersistentMap term;
 	
-	private Caseframe cf;
 	private ArrayList<Term> upcablesetterms;
-	private HashMap<Slot, Set<Term>> upcableset;
+	private Caseframe caseframe;
 	private HashMap<Slot, Set<Term>> downcableset;
-	private ArrayList<Channel> ichannels = new ArrayList<Channel>();
-	private ArrayList<Channel> uchannels = new ArrayList<Channel>();
-	private ArrayList<Channel> gchannels = new ArrayList<Channel>();
 	
 	
 	private String termstring;
@@ -80,7 +94,7 @@ public class Term {
 		return getTerms();
 	}
 	
-	IPersistentMap getClojureTerm(){
+	public IPersistentMap getClojureTerm(){
 		return term;
 	}
 	
@@ -106,12 +120,11 @@ public class Term {
 	}
 	
 	public Caseframe getCaseframe(){
-		if(cf != null) return cf;
-		
-		Object caseframe = term.valAt(caseframe_key);
-		if(caseframe == null) return null;
-		cf = Caseframe.create((IPersistentMap)caseframe); //Will return already created cf if it exists.
-		return cf;
+		return caseframe;
+	}
+	
+	public void setCaseframe(Caseframe c){
+		caseframe = c;
 	}
 	
 	public ArrayList<Term> getUpCablesetTerms(){
@@ -120,103 +133,95 @@ public class Term {
 		upcablesetterms = new ArrayList<Term>();
 		
 		//The up-cablesetw is a map from slot to set of terms.
-		IPersistentMap ucmap = (IPersistentMap)term.valAt(upcablesetw_key);
-		ASeq sets = (ASeq)RT.vals(ucmap);
-		for(Iterator iter = sets.iterator(); iter.hasNext(); ){
-			IPersistentSet termset = (IPersistentSet)iter.next();
-			ASeq seq = (ASeq)termset.seq();
-			for(Iterator iter2 = seq.iterator(); iter2.hasNext(); )
-				upcablesetterms.add(Term.create((IPersistentMap)iter2.next()));
-		}
-		
+//		IPersistentMap ucmap = (IPersistentMap)term.valAt(upcablesetw_key);
+//		ASeq sets = (ASeq)RT.vals(ucmap);
+//		for(Iterator iter = sets.iterator(); iter.hasNext(); ){
+//			IPersistentSet termset = (IPersistentSet)iter.next();
+//			ASeq seq = (ASeq)termset.seq();
+//			for(Iterator iter2 = seq.iterator(); iter2.hasNext(); )
+//				upcablesetterms.add(Term.create((IPersistentMap)iter2.next()));
+//		}
 		return upcablesetterms;
 	}
 	
 	public HashMap<Slot, Set<Term>> getUpCableset(){
-		if(upcableset != null) return upcableset;
-		
-		upcableset = new HashMap<Slot, Set<Term>>();
-		
-		//The up-cablesetw is a map from slot to set of terms.
-		IPersistentMap ucmap = (IPersistentMap)((Ref)term.valAt(upcablesetw_key)).deref();
-		for(Iterator<MapEntry> iter = ucmap.iterator(); iter.hasNext(); ){
-			MapEntry e = iter.next();
-			Slot relation = Slot.create((IPersistentMap)e.key());
-			ASeq termset = (ASeq)((IPersistentSet)e.val()).seq();
-			HashSet<Term> val = new HashSet<Term>();
-			for(Iterator<IPersistentMap> iter2 = termset.iterator(); iter2.hasNext(); )
-				val.add(Term.create((IPersistentMap)iter2.next()));
-			upcableset.put(relation, val);
-		}
-		
-		return upcableset;
+//		if(upcableset != null) return upcableset;
+//		
+//		upcableset = new HashMap<Slot, Set<Term>>();
+//		
+//		//The up-cablesetw is a map from slot to set of terms.
+//		IPersistentMap ucmap = (IPersistentMap)((Ref)term.valAt(upcablesetw_key)).deref();
+//		for(Iterator<MapEntry> iter = ucmap.iterator(); iter.hasNext(); ){
+//			MapEntry e = iter.next();
+//			Slot relation = Slot.create((IPersistentMap)e.key());
+//			ASeq termset = (ASeq)((IPersistentSet)e.val()).seq();
+//			HashSet<Term> val = new HashSet<Term>();
+//			for(Iterator<IPersistentMap> iter2 = termset.iterator(); iter2.hasNext(); )
+//				val.add(Term.create((IPersistentMap)iter2.next()));
+//			upcableset.put(relation, val);
+//		}
+//		
+//		return upcableset;
+		return null;
 	}
 	
 	public HashMap<Slot, Set<Term>> getDownCableset(){
-		if (!isMolecular()) return null;
-		if (downcableset != null) return downcableset;
-		
-		downcableset = new HashMap<Slot, Set<Term>>();
-		
-		List dcs = (List)term.valAt(downcableset_key);
-		ArrayList<Slot> termslots = getCaseframe().getSlots();
-		
-		for(int i = 0; i < dcs.size(); i++){
-			List terms = (List)((APersistentSet)dcs.get(i)).seq();
-			HashSet<Term> termset = new HashSet<Term>();
-			for(int j = 0; j < terms.size(); j++){
-				termset.add(Term.create((IPersistentMap)terms.get(j)));
-			}
-			downcableset.put(termslots.get(i), termset);
-		}
-		
 		return downcableset;
-		
+	}
+	
+	public void setDownCableset(HashMap<Slot, Set<Term>> dcs){
+		downcableset = dcs;
 	}
 	
 	//The number of i-channels can increase. Compare arity of cache with the one in the term
 	//to determine if we have to do real work.
 	public ArrayList<Channel> getIChannels(){
-		APersistentSet i = (APersistentSet)((Ref)term.valAt(i_channels_key)).deref();
-		if(i.count() == ichannels.size()) return ichannels;
+//		APersistentSet i = (APersistentSet)((Ref)term.valAt(i_channels_key)).deref();
+//		if(i.count() == ichannels.size()) return ichannels;
+//		
+//		//Do the real work.
+//		for (Iterator<IPersistentMap> iter = i.iterator(); iter.hasNext(); ){
+//			Channel c = Channel.create(iter.next());
+//			if(ichannels.contains(c)) continue;
+//			ichannels.add(c);
+//		}
+//		return ichannels;
 		
-		//Do the real work.
-		for (Iterator<IPersistentMap> iter = i.iterator(); iter.hasNext(); ){
-			Channel c = Channel.create(iter.next());
-			if(ichannels.contains(c)) continue;
-			ichannels.add(c);
-		}
-		return ichannels;
+		return null;
 	}
 	
 	//The number of u-channels can increase. Compare arity of cache with the one in the term
 	//to determine if we have to do real work.
 	public ArrayList<Channel> getUChannels(){
-		APersistentSet u = (APersistentSet)((Ref)term.valAt(u_channels_key)).deref();
-		if(u.count() == uchannels.size()) return uchannels;
+//		APersistentSet u = (APersistentSet)((Ref)term.valAt(u_channels_key)).deref();
+//		if(u.count() == uchannels.size()) return uchannels;
+//		
+//		//Do the real work.
+//		for (Iterator<IPersistentMap> iter = u.iterator(); iter.hasNext(); ){
+//			Channel c = Channel.create(iter.next());
+//			if(uchannels.contains(c)) continue;
+//			uchannels.add(c);
+//		}
+//		return uchannels;
 		
-		//Do the real work.
-		for (Iterator<IPersistentMap> iter = u.iterator(); iter.hasNext(); ){
-			Channel c = Channel.create(iter.next());
-			if(uchannels.contains(c)) continue;
-			uchannels.add(c);
-		}
-		return uchannels;
+		return null;
 	}
 	
 	//The number of u-channels can increase. Compare arity of cache with the one in the term
 	//to determine if we have to do real work.
 	public ArrayList<Channel> getGChannels(){
-		APersistentSet g = (APersistentSet)((Ref)term.valAt(g_channels_key)).deref();
-		if(g.count() == gchannels.size()) return gchannels;
+//		APersistentSet g = (APersistentSet)((Ref)term.valAt(g_channels_key)).deref();
+//		if(g.count() == gchannels.size()) return gchannels;
+//		
+//		//Do the real work.
+//		for (Iterator<IPersistentMap> iter = g.iterator(); iter.hasNext(); ){
+//			Channel c = Channel.create(iter.next());
+//			if(gchannels.contains(c)) continue;
+//			gchannels.add(c);
+//		}
+//		return gchannels;
 		
-		//Do the real work.
-		for (Iterator<IPersistentMap> iter = g.iterator(); iter.hasNext(); ){
-			Channel c = Channel.create(iter.next());
-			if(gchannels.contains(c)) continue;
-			gchannels.add(c);
-		}
-		return gchannels;
+		return null;
 	}
 	
 	public Boolean isMolecular(){
