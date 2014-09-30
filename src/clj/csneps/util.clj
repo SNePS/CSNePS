@@ -354,16 +354,16 @@
   (for [[idx elt] (indexed coll) :when (pred elt)] idx))
 
 (defn map-difference [m1 m2]
-  (let [ks1 (set (keys m1))
-        ks2 (set (keys m2))
-        ks1-ks2 (set/difference ks1 ks2)
-        ks2-ks1 (set/difference ks2 ks1)
-        ks1*ks2 (set/intersection ks1 ks2)]
-    (merge (select-keys m1 ks1-ks2)
-           (select-keys m2 ks2-ks1)
-           (select-keys m1
-                        (remove (fn [k] (= (m1 k) (m2 k)))
-                                ks1*ks2)))))
+  (loop [m (transient {})
+         ks (concat (keys m1) (keys m2))]
+    (if-let [k (first ks)]
+      (let [e1 (find m1 k)
+            e2 (find m2 k)]
+        (cond (and e1 e2 (not= (e1 1) (e2 1))) (recur (assoc! m k (e1 1)) (next ks))
+              (not e1) (recur (assoc! m k (e2 1)) (next ks))
+              (not e2) (recur (assoc! m k (e1 1)) (next ks))
+              :else    (recur m (next ks))))
+      (persistent! m))))
 
 (defn seqable? 
   [x]
