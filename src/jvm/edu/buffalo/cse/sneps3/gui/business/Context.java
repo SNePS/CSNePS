@@ -12,6 +12,7 @@ import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.Ref;
+import clojure.lang.Symbol;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 
 /**
@@ -97,8 +98,8 @@ public class Context implements Comparable{
     	HashSet<Term> hyps = new HashSet<Term>();
     	APersistentSet cljhyps = (APersistentSet)((Ref)context.valAt(hyps_key)).deref();
     	//System.out.println(cljhyps);
-    	for (Iterator<IPersistentMap> itr = cljhyps.iterator(); itr.hasNext(); ){
-    		hyps.add(Term.create(itr.next())); 
+    	for (Iterator<Symbol> itr = cljhyps.iterator(); itr.hasNext(); ){
+    		hyps.add(Term.getTerm(itr.next().toString())); 
     	}
     	return hyps;
     }

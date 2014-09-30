@@ -206,7 +206,9 @@ public class Model {
     public void currentContextHypsChanged(APersistentSet hyps){
     	System.err.println(PersistentVector.create(hyps.seq()));
     	for (Iterator itr = hyps.iterator(); itr.hasNext(); ){
-    		Term.create((IPersistentMap)itr.next()).resetAsserted();
+    		Term.getTerm(itr.next().toString()).resetAsserted();
+    	
+    		//Term.create((IPersistentMap)itr.next()).resetAsserted();
     	}
     }
     
