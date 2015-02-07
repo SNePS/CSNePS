@@ -75,4 +75,4 @@
 
 (defn assertTrace
   [rule antecedents consequent reason context]
-  (build/assert consequent context :der))
+  (build/assert consequent context))
