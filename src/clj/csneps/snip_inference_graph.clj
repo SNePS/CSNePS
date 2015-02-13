@@ -48,12 +48,10 @@
 
 ;(def queue (LinkedBlockingQueue.))
 
-(def cpus-to-use (/ (.availableProcessors (Runtime/getRuntime)) 2))
-
 ;; Fixed Thread Pool of size 2 * processors, using queue as it's queue.
 (def executorService (ThreadPoolExecutor.
-                       cpus-to-use
-                       cpus-to-use
+                       ig-cpus-to-use
+                       ig-cpus-to-use
                        (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
 (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
 
@@ -62,8 +60,8 @@
   (.clear ^PriorityBlockingQueue queue)
   (.shutdown ^ThreadPoolExecutor executorService)
   (def executorService (ThreadPoolExecutor.
-                         cpus-to-use
-                         cpus-to-use
+                         ig-cpus-to-use
+                         ig-cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
   (def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)})))
