@@ -55,7 +55,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2013.06.02";
+	public static final String version = "2015.04.13";
 	
     public static final boolean DEBUG = true;
 
@@ -99,7 +99,7 @@ public class GUI2 extends javax.swing.JFrame{
     //boolean hideFind = true;
 
 
-    ExportDialog export = new ExportDialog();
+    ExportDialog export;
     boolean doingSave = false;
 
     //static ArrayList<Caseframe> hide_cf_list = new ArrayList<Caseframe>();
@@ -109,6 +109,8 @@ public class GUI2 extends javax.swing.JFrame{
         initComponents();
 
         this.setTitle("CSNePS GUI Version " + version);
+        
+        export = new ExportDialog();
 
         //Use this to redirect output from the repl eventually...
         //Var.pushThreadBindings(RT.map(RT.OUT), <outstreamwriter>)
