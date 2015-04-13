@@ -57,7 +57,7 @@ public class GUI2 extends javax.swing.JFrame{
 
 	public static final String version = "2015.04.13";
 	
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 
     //The public model for the MVC design pattern.
     public static Model model = new Model();

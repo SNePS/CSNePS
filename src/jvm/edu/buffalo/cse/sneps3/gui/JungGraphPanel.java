@@ -412,50 +412,6 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	public boolean isShowingAll() {
 		return showing_all;
 	}
-
-/*	public String displayOnlyNodeSet(ArrayList<String> nn) {
-		hideAll();
-		//on_graph_expanded_nodenames = new ArrayList<String>();
-		return displayNodeSet(nn);
-	}
-
-	public String displayNodeSet(ArrayList<String> nn) {
-		ArrayList<ITermNode<IEdge>> interestingNodes = new ArrayList<ITermNode<IEdge>>();
-		String fail = "";
-		for (String j : nn) {
-			ITermNode<IEdge> t = nodeName_node_map.get(j);
-			if (t != null) {
-				interestingNodes.add(t);
-			} else {
-				fail += " \"" + j + "\"";
-			}
-		}
-
-		if (!fail.equals(""))
-			return fail;
-
-		//on_graph_expanded_nodenames.addAll(nn);
-
-		for (ITermNode<IEdge> n : interestingNodes) {
-			// If it isn't already on the graph, add it.
-			if (!n.isVisible()) {
-				showNode(n);
-				for (IEdge e : edges) {
-					if (e.getFrom() == n && dsg.containsVertex(e.getTo()))
-						dsg.addEdge(e, e.getFrom(), e.getTo(),
-								EdgeType.DIRECTED);
-				}
-			}
-		}
-
-		highlightedNodes.clear();
-		for (ITermNode<IEdge> n : interestingNodes)
-			highlightedNodes.add(n);
-
-		//if (collapsed)
-		//	semanticCollapse(interestingNodes);
-		return null;
-	}*/
 	
 	public void displayOnlyTermSet(Set<Term> terms){
 		hideAll();
