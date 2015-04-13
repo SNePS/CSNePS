@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.collections15.Factory;
 
+import edu.buffalo.cse.sneps3.gui.GUI2;
 import edu.buffalo.cse.sneps3.gui.business.Caseframe;
 import edu.uci.ics.jung.graph.AbstractTypedGraph;
 import edu.uci.ics.jung.graph.DirectedGraph;
@@ -492,7 +493,7 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
 	public boolean collapseVertex(V vertex){
 		CollapsedEdge e = vertex.getCollapsedEdge();
 		
-		System.out.println("Attempting to collapse: " + vertex + " (" + e + ")");
+		if (GUI2.DEBUG) System.out.println("Attempting to collapse: " + vertex + " (" + e + ")");
 		
 		if(e != null){
 			collapsedVertices.put(vertex, e);

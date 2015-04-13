@@ -420,11 +420,11 @@ public class QBEBasePanel extends javax.swing.JFrame {
         if(cf == null) return; //This is really more for debug purposes.
         ArrayList<Slot> slots = cf.getSlots();
 
-        if(!cf.getType().getName().equals("Proposition")){
+        if(!cf.getType().getName().equals("Propositional")){
             jCheckBox_asserted.setSelected(false);
             jCheckBox_asserted.setEnabled(false);
         }
-        else if (cf.getType().hasAncestor(SemanticType.getSemanticType("Proposition"))){ //Check to make sure it isnt a child of Proposition
+        else if (cf.getType().hasAncestor(SemanticType.getSemanticType("Propositional"))){ //Check to make sure it isnt a child of Proposition
         	jCheckBox_asserted.setEnabled(true);
         }
 
