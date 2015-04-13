@@ -10,6 +10,7 @@
 ;  (:refer-clojure :exclude [merge])
   (:use [csneps.core]
         [csneps.util]
+        [csneps.configuration]
         [csneps.snip.util]
         [csneps.core.build :only (term-prewalk variable?)]
         [clojure.core.memoize :only (memo)]
@@ -75,4 +76,4 @@
 
 (defn assertTrace
   [rule antecedents consequent reason context]
-  (build/assert consequent context :der))
+  (build/assert consequent context))
