@@ -132,37 +132,31 @@ public class Term {
 		
 		upcablesetterms = new ArrayList<Term>();
 		
-		//The up-cablesetw is a map from slot to set of terms.
-//		IPersistentMap ucmap = (IPersistentMap)term.valAt(upcablesetw_key);
-//		ASeq sets = (ASeq)RT.vals(ucmap);
-//		for(Iterator iter = sets.iterator(); iter.hasNext(); ){
-//			IPersistentSet termset = (IPersistentSet)iter.next();
-//			ASeq seq = (ASeq)termset.seq();
-//			for(Iterator iter2 = seq.iterator(); iter2.hasNext(); )
-//				upcablesetterms.add(Term.create((IPersistentMap)iter2.next()));
-//		}
 		return upcablesetterms;
 	}
 	
 	public HashMap<Slot, Set<Term>> getUpCableset(){
-//		if(upcableset != null) return upcableset;
-//		
-//		upcableset = new HashMap<Slot, Set<Term>>();
-//		
-//		//The up-cablesetw is a map from slot to set of terms.
-//		IPersistentMap ucmap = (IPersistentMap)((Ref)term.valAt(upcablesetw_key)).deref();
-//		for(Iterator<MapEntry> iter = ucmap.iterator(); iter.hasNext(); ){
-//			MapEntry e = iter.next();
-//			Slot relation = Slot.create((IPersistentMap)e.key());
-//			ASeq termset = (ASeq)((IPersistentSet)e.val()).seq();
-//			HashSet<Term> val = new HashSet<Term>();
-//			for(Iterator<IPersistentMap> iter2 = termset.iterator(); iter2.hasNext(); )
-//				val.add(Term.create((IPersistentMap)iter2.next()));
-//			upcableset.put(relation, val);
-//		}
-//		
-//		return upcableset;
+		if (upcableset.get(this.getName()) != null){
+			return upcableset.get(this.getName());
+		}
 		return null;
+	}
+	
+	private void addToUpCableset(Slot s, Term t){
+		if (upcableset.get(this.getName()) == null)
+			upcableset.put(this.getName(), new HashMap<Slot,Set<Term>>());
+		
+		HashMap<Slot, Set<Term>> ucs = upcableset.get(this.getName());
+		
+		if(ucs.get(s) == null)
+			ucs.put(s, new HashSet<Term>());
+		
+		Set<Term> slotterms = ucs.get(s);
+		
+		slotterms.add(t);
+		
+		if(upcablesetterms == null) upcablesetterms = new ArrayList<Term>();
+		upcablesetterms.add(t);
 	}
 	
 	public HashMap<Slot, Set<Term>> getDownCableset(){
@@ -170,7 +164,15 @@ public class Term {
 	}
 	
 	public void setDownCableset(HashMap<Slot, Set<Term>> dcs){
+		if (dcs == null) return;
+		
 		downcableset = dcs;
+		
+		for (Slot s : dcs.keySet()){
+			for (Term t : dcs.get(s)){
+				t.addToUpCableset(s, this);
+			}
+		}
 	}
 	
 	//The number of i-channels can increase. Compare arity of cache with the one in the term
