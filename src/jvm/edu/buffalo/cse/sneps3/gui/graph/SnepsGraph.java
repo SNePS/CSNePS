@@ -404,12 +404,26 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
 				showVertex((V)e.getFrom());
 	}
 	
+	public void showInEdges(V vertex, String relation){
+		for(E e : getIncoming_internal(vertex))
+			if(e.getFrom().getTerm().getFSymbol().equals(relation))
+				showVertex((V)e.getFrom());
+	}
+	
 	public Set<Caseframe> getInHiddenCaseframes(V vertex){
 		HashSet<Caseframe> hiddencfs = new HashSet<Caseframe>();
 		for(E e : getIncoming_internal(vertex))
 			if(!e.getFrom().isVisible() || e.getFrom().inCollapsedForm())
 				hiddencfs.add(e.getFrom().getTerm().getCaseframe());
 		return hiddencfs;
+	}
+	
+	public Set<String> getInHiddenFSymbols(V vertex){
+		HashSet<String> hiddenfsyms = new HashSet<String>();
+		for(E e : getIncoming_internal(vertex))
+			if(!e.getFrom().isVisible() || e.getFrom().inCollapsedForm())
+				hiddenfsyms.add(e.getFrom().getTerm().getFSymbol());
+		return hiddenfsyms;
 	}
 	
 	public void hideInEdges(V vertex){
@@ -423,12 +437,26 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
 				hideVertex((V)e.getFrom());
 	}
 	
+	public void hideInEdges(V vertex, String relation){
+		for(E e : getIncoming_internal(vertex))
+			if(e.getFrom().getTerm().getFSymbol() == relation)
+				hideVertex((V)e.getFrom());
+	}
+	
 	public Set<Caseframe> getInShownCaseframes(V vertex){
 		HashSet<Caseframe> showncfs = new HashSet<Caseframe>();
 		for(E e : getIncoming_internal(vertex))
 			if(e.getFrom().isVisible() && !e.getFrom().inCollapsedForm())
 				showncfs.add(e.getFrom().getTerm().getCaseframe());
 		return showncfs;
+	}
+	
+	public Set<String> getInShownFSymbols(V vertex){
+		HashSet<String> shownfsyms = new HashSet<String>();
+		for(E e : getIncoming_internal(vertex))
+			if(e.getFrom().isVisible() || !e.getFrom().inCollapsedForm())
+				shownfsyms.add(e.getFrom().getTerm().getFSymbol());
+		return shownfsyms;
 	}
 	
 	public void showOutEdges(V vertex){

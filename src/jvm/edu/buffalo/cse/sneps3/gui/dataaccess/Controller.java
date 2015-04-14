@@ -25,6 +25,7 @@ public class Controller {
 	private static Var sneps3_define_type_fn;
 	private static Var build_add_to_context_fn;
 	private static Var build_find_fn;
+	private static Var build_term_predicate_fn;
 	private static Var build_unassert_fn;
 	private static Var caseframes_caseframe_name_fn;
 	private static Var caseframes_quotedpp_qmark_fn;
@@ -39,6 +40,15 @@ public class Controller {
 			build_find_fn = RT.var("csneps.core.build", "find");
 		try {
 			return (IPersistentMap)build_find_fn.invoke(pattern);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	public static String build_term_predicate(IPersistentMap term){
+		if (build_term_predicate_fn == null) 
+			build_term_predicate_fn = RT.var("csneps.core.build", "term-predicate");
+		try {
+			return build_term_predicate_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}

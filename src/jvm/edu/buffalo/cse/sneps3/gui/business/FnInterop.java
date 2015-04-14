@@ -170,6 +170,10 @@ public class FnInterop {
 		return results;
 	}
 	
+	public static String getTermPredicate(Term term){
+		return Controller.build_term_predicate(term.getClojureTerm());
+	}
+	
 	public static void unassertTerm(Term term){
 		Controller.build_unassert(term.getClojureTerm());
 	}

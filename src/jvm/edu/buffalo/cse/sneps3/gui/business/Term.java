@@ -59,6 +59,8 @@ public class Term {
 	private String termstring;
 	private String termname;
 	
+	private String fsymbol;
+	
 	private Boolean isasserted = null;
 	
 	private Term(IPersistentMap term){
@@ -125,6 +127,12 @@ public class Term {
 	
 	public void setCaseframe(Caseframe c){
 		caseframe = c;
+	}
+	
+	public String getFSymbol(){
+		if (fsymbol != null) return fsymbol;
+		fsymbol = FnInterop.getTermPredicate(this);
+		return fsymbol;
 	}
 	
 	public ArrayList<Term> getUpCablesetTerms(){

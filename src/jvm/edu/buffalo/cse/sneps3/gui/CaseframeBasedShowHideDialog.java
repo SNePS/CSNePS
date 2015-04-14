@@ -11,32 +11,23 @@
 
 package edu.buffalo.cse.sneps3.gui;
 
-import edu.buffalo.cse.sneps3.gui.business.Caseframe;
-import edu.buffalo.cse.sneps3.gui.business.Slot;
-import edu.buffalo.cse.sneps3.gui.business.SemanticType;
-import java.awt.Component;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
-import javax.swing.ListSelectionModel;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-
 
 public class CaseframeBasedShowHideDialog extends javax.swing.JDialog {
 
     CaseframeBasedShowHide panel;
 
-    public CaseframeBasedShowHideDialog(Frame f, ArrayList<Caseframe> cflist){
+    public CaseframeBasedShowHideDialog(Frame f, ArrayList<String> fsymlist){
         super(f, true);
         setTitle("Local Graph Filter");
         setSize(265, 400);
-        panel = new CaseframeBasedShowHide(cflist);
+        panel = new CaseframeBasedShowHide(fsymlist);
 
         panel.getOKButton().addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -54,7 +45,7 @@ public class CaseframeBasedShowHideDialog extends javax.swing.JDialog {
         add(panel);
     }
 
-    public ArrayList<Caseframe> getResult(){
+    public ArrayList<String> getResult(){
         return panel.result;
     }
 
@@ -72,18 +63,18 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
 
     static GlobalGraphFilter instance;
 
-    DefaultListModel<Caseframe> listModel;
+    DefaultListModel<String> listModel;
 
-    ArrayList<Caseframe> result = new ArrayList<Caseframe>();
+    ArrayList<String> result = new ArrayList<String>();
 
     /** Creates new form GlobalGraphFilter */
-    public CaseframeBasedShowHide(ArrayList<Caseframe> cflist) {
+    public CaseframeBasedShowHide(ArrayList<String> fsymlist) {
         initComponents();
-        listModel = new DefaultListModel<Caseframe>();
+        listModel = new DefaultListModel<String>();
         jList1.setSelectionModel(new CBListSelectionModel());
 
-        for(Caseframe cf : cflist)
-            listModel.addElement(cf);
+        for(String fsym : fsymlist)
+            listModel.addElement(fsym);
 
         jList1.setModel(listModel);
     }
@@ -103,7 +94,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
     protected void perfomOK(){
 
         for(Object o : jList1.getSelectedValuesList()){
-            result.add((Caseframe)o);
+            result.add((String)o);
         }
         
     }
@@ -120,7 +111,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
         jButton_cancel = new javax.swing.JButton();
         jButton_ok = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jList1 = new javax.swing.JList<Caseframe>();
+        jList1 = new javax.swing.JList<String>();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
 
@@ -141,7 +132,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
         jTextArea1.setFont(new java.awt.Font("Dialog", 1, 12));
         jTextArea1.setLineWrap(true);
         jTextArea1.setRows(2);
-        jTextArea1.setText("  Select the Caseframes you do    not wish to show in the graph.");
+        jTextArea1.setText("  Select the function symbols you do    not wish to show in the graph.");
         jTextArea1.setWrapStyleWord(true);
         jScrollPane2.setViewportView(jTextArea1);
 
@@ -179,7 +170,7 @@ class CaseframeBasedShowHide extends javax.swing.JPanel{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton_cancel;
     private javax.swing.JButton jButton_ok;
-    private javax.swing.JList<Caseframe> jList1;
+    private javax.swing.JList<String> jList1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextArea jTextArea1;

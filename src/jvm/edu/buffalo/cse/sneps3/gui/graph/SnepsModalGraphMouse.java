@@ -88,13 +88,13 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
 
                         public void actionPerformed(ActionEvent e) {
                         	CaseframeBasedShowHideDialog cd = 
-                        			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<Caseframe>(GUI2.getInstance().getGraph().getInHiddenCaseframes(node)));
+                        			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInHiddenFSymbols(node)));
 
                             cd.setHelpText("   Select the Caseframes you        wish to show in the graph.");
                             cd.setVisible(true);
 
-                            for (Caseframe c : cd.getResult()) {
-                            	GUI2.getInstance().getGraph().showInEdges(node, c);
+                            for (String fsym : cd.getResult()) {
+                            	GUI2.getInstance().getGraph().showInEdges(node, fsym);
                             }
 
                             vv.repaint();
@@ -138,13 +138,13 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
 
                         public void actionPerformed(ActionEvent e) {
                         	CaseframeBasedShowHideDialog cd = 
-                        			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<Caseframe>(GUI2.getInstance().getGraph().getInShownCaseframes(node)));
+                        			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInShownFSymbols(node)));
 
                             cd.setHelpText("   Select the Caseframes you       wish to hide from the graph.");
                             cd.setVisible(true);
 
-                            for (Caseframe c : cd.getResult()) {
-                            	GUI2.getInstance().getGraph().hideInEdges(node, c);
+                            for (String fsym : cd.getResult()) {
+                            	GUI2.getInstance().getGraph().hideInEdges(node, fsym);
                             }
 
                             vv.repaint();
