@@ -150,9 +150,9 @@ public class NodeFind extends javax.swing.JPanel {
         nodeSelectPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         nodeSelectPane.add(Box.createHorizontalGlue());
         nodeSelectPane.add(jScrollPane1);
-        nodeSelectPane.add(jTextField1);
         nodeSelectPane.add(jLabel1);
-
+        nodeSelectPane.add(jTextField1);
+        
         JPanel contextSelectPane = new JPanel();
         
         jLabel_beginContextLabel = new JLabel();
