@@ -204,7 +204,7 @@ public class Model {
     }
     
     public void currentContextHypsChanged(APersistentSet hyps){
-    	System.err.println(PersistentVector.create(hyps.seq()));
+    	if(GUI2.DEBUG) System.err.println(PersistentVector.create(hyps.seq()));
     	for (Iterator itr = hyps.iterator(); itr.hasNext(); ){
     		Term.getTerm(itr.next().toString()).resetAsserted();
     	
@@ -279,7 +279,7 @@ public class Model {
     }
     
     public void termNameIChannelMapChanged(IPersistentMap changed, Boolean reset){
-    	System.out.println("Ich" + changed.toString());
+    	if(GUI2.DEBUG) System.out.println("Ich" + changed.toString());
     }
     
     public void termNameGChannelMapChanged(IPersistentMap changed, Boolean reset){
