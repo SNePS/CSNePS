@@ -90,7 +90,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                         	CaseframeBasedShowHideDialog cd = 
                         			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInHiddenFSymbols(node)));
 
-                            cd.setHelpText("   Select the Caseframes you        wish to show in the graph.");
+                            cd.setHelpText("   Select the relations you        wish to show in the graph.");
                             cd.setVisible(true);
 
                             for (String fsym : cd.getResult()) {
@@ -140,7 +140,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                         	CaseframeBasedShowHideDialog cd = 
                         			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInShownFSymbols(node)));
 
-                            cd.setHelpText("   Select the Caseframes you       wish to hide from the graph.");
+                            cd.setHelpText("   Select the relations you       wish to hide from the graph.");
                             cd.setVisible(true);
 
                             for (String fsym : cd.getResult()) {
