@@ -177,7 +177,7 @@ public class GUI2 extends javax.swing.JFrame{
     
     public GUI2(int portnum){
     	this();
-    	System.out.println("Port: " + portnum);
+    	if (DEBUG) System.out.println("Port: " + portnum);
     	try {
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
@@ -190,7 +190,7 @@ public class GUI2 extends javax.swing.JFrame{
     
     public GUI2(int portnum, PersistentHashSet termset){
     	this();
-    	System.out.println("Port: " + portnum + " Terms: " + termset);
+    	if (DEBUG) System.out.println("Port: " + portnum + " Terms: " + termset);
     	try {
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
