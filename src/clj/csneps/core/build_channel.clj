@@ -101,7 +101,16 @@
 
 (defn find-channel 
   [originator destination]
-  (some #(when (= (:name (:originator %)) (:name originator)) %) (@ant-in-channels destination)))
+  (let [inch (@ant-in-channels destination)
+        out-ich (@i-channels originator)
+        out-uch (@u-channels originator)
+        out-gch (@g-channels originator)]
+    (if (< (count inch) (+ (count out-ich) (count out-uch) (count out-gch)))
+      (some #(when (= (:name (:originator %)) (:name originator)) %) inch)
+      (or 
+        (some #(when (= (:name (:destination %)) (:name destination)) %) out-ich)
+        (some #(when (= (:name (:destination %)) (:name destination)) %) out-gch)
+        (some #(when (= (:name (:destination %)) (:name destination)) %) out-uch)))))
 
 (defn install-channel
   [ch orig dest type]
