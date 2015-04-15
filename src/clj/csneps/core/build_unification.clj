@@ -250,43 +250,46 @@
 
 (defn unifySets [set1 set2 binds idx & {:keys [varfn] :or {varfn variable?}}]
   ;(println "Unifying sets: " set1 "\nand: \n" set2) 
-  (let [unifiers (disj (set (findSetUnifiers set1 set2)) [nil nil]) ;; Step 1.
-        unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
-        reduction (fn [permutation]
-                    ;(println "!!!" (ffirst permutation) (second (first permutation)))
-                    (let [binds (if (seq (ffirst permutation))
-                                  (reduce 
-                                    #(unify-variable varfn (first (ffirst %2)) (second (ffirst %2)) %1 0)
-                                    binds
-                                    permutation)
-                                  binds)]
-                      (if (seq (second (first permutation)))
-                        (reduce 
-                          #(unify-variable varfn (ffirst (second %2)) (second (first (second %2))) %1 1)
-                          binds
-                          permutation)
-                        binds)))]
-    ;(binding [*print-level* 6] 
-    ;  (println "Set Unifiers " unifiers)
-    ;  (println "Permutations" unifpermute)) 
-    (remove nil? 
-            (loop [unifpermute unifpermute
-                   sub (map #(extract-permutation (first unifpermute) %) 
-                            (cb/permutations (range (count (first unifpermute)))))
-                   result []]
-              (cond 
-                (and (empty? sub)
-                     (<= (count unifpermute) 1)) result
-                (empty? sub) (recur (rest unifpermute)
-                                    (map #(extract-permutation (first (rest unifpermute)) %) 
-                                         (cb/permutations (range (count (first (rest unifpermute))))))
-                                    result)
-                (not (some nil? (flatten sub))) (recur unifpermute
-                                                       (rest sub)
-                                                       (conj result (reduction (first sub))))
-                :else (recur unifpermute
-                             (rest sub)
-                             result))))))
+  ;; There are clearly bugs here. Just quit if there's no variables.
+  (if (and (= (filter variable? set1) '()) (= (filter variable? set2) '()) (not= set1 set2))
+    nil
+    (let [unifiers (set/difference (set (findSetUnifiers set1 set2)) #{[nil nil] nil}) ;; Step 1.
+          unifpermute (permute-subset (count set2) unifiers) ;; Step 2.
+          reduction (fn [permutation]
+                      ;(println "!!!" (ffirst permutation) (second (first permutation)))
+                      (let [binds (if (seq (ffirst permutation))
+                                    (reduce 
+                                      #(unify-variable varfn (first (ffirst %2)) (second (ffirst %2)) %1 0)
+                                      binds
+                                      permutation)
+                                    binds)]
+                        (if (seq (second (first permutation)))
+                          (reduce 
+                            #(unify-variable varfn (ffirst (second %2)) (second (first (second %2))) %1 1)
+                            binds
+                            permutation)
+                          binds)))]
+      ;(binding [*print-level* 6] 
+      ;  (println "Set Unifiers " unifiers)
+      ;  (println "Permutations" unifpermute)) 
+      (remove nil? 
+              (loop [unifpermute unifpermute
+                     sub (map #(extract-permutation (first unifpermute) %) 
+                              (cb/permutations (range (count (first unifpermute)))))
+                     result []]
+                (cond 
+                  (and (empty? sub)
+                       (<= (count unifpermute) 1)) result
+                  (empty? sub) (recur (rest unifpermute)
+                                      (map #(extract-permutation (first (rest unifpermute)) %) 
+                                           (cb/permutations (range (count (first (rest unifpermute))))))
+                                      result)
+                  (not (some nil? (flatten sub))) (recur unifpermute
+                                                         (rest sub)
+                                                         (conj result (reduction (first sub))))
+                  :else (recur unifpermute
+                               (rest sub)
+                               result)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Unification Tree Structure ;;;
