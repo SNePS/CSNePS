@@ -40,8 +40,8 @@
   [[sbinds tbinds] qterm expr]
   (let [expr-binders-sbinds (filter #(= (second %) expr) sbinds)
         expr-binders-tbinds (filter #(= (second %) expr) tbinds)
-        expr-binders (concat (map #(first %) expr-binders-sbinds) 
-                             (map #(first %) expr-binders-tbinds))
+        expr-binders (into (map #(first %) expr-binders-sbinds) 
+                           (map #(first %) expr-binders-tbinds))
         qtnsa @(:not-same-as qterm) ]
     (loop [binders expr-binders]
       (cond 
@@ -183,7 +183,7 @@
       #(let [s (split-at (inc %2) xs)
              ps (permute-subset (dec n) (last s))
              a (last (first s))]
-         (concat %1 (map (fn [p] (cons a p)) ps)))
+         (into %1 (map (fn [p] (cons a p)) ps)))
       '() (range 0 (inc (- (count xs) n))))))
 
 (defn findSetUnifiers [set1 set2]
@@ -211,7 +211,7 @@
 ;; with idx = 1
 (defn getbinds
   [unifier idx]
-  (vec (map #(nth % idx) unifier)))
+  (mapv #(nth % idx) unifier))
 
 ;;; The Set-Based Unification Process
 ;;; Illustrated with the example: #{'?x '?y '(caregiver ?y)} (source) unified with #{'?z 'Alex} (target)

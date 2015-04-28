@@ -1006,7 +1006,7 @@
                                        (empty? rsts)
                                        [seen #{}]
                                        (= (ffirst rsts) 'notSame)
-                                       [(concat (rest rsts) seen) (rest (first rsts))]
+                                       [(into (rest rsts) seen) (rest (first rsts))]
                                        :else
                                        (recur (rest rsts)
                                               (conj seen (first rsts)))))
@@ -1062,7 +1062,7 @@
                                                   `[~'notSame ~@nsvars ~(ffirst remrsts)])]))))]
         (recur
           remaining
-          (concat rsts-done finished))))))
+          (into rsts-done finished))))))
 
 (defn build-var
   "Build a variable node of type quant with label var-label and
@@ -1158,7 +1158,7 @@
           (for [[var rsts] var-rsts-pairs]
             (if (empty? rsts)
               [var [(list 'Isa var 'Entity)]]
-              [var (vec (map #(expand-rst var %) rsts))])))))
+              [var (mapv #(expand-rst var %) rsts)])))))
 
 (defn expand-ind-dep-rsts
   [rsts]
@@ -1168,7 +1168,7 @@
                 :let [[dep rsts] dep-rsts]]
             (if (empty? rsts)
               [var (list dep [(list 'Isa var 'Entity)])]
-              [var (list dep (vec (map #(expand-rst var %) rsts)))])))))
+              [var (list dep (mapv #(expand-rst var %) rsts))])))))
 
 (defn- merge-error
   [fir lat]
