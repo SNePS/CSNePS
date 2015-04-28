@@ -7,7 +7,8 @@
             [csneps.core :as csneps]
             [csneps.core.build :as build]
             [csneps.snip :as snip]
-            [csneps.gui :as gui])
+            [csneps.gui :as gui]
+            [csneps.utils.ontology :as onto-tools])
   (:use clojure.stacktrace)
   (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load])
   (:use [clojure.pprint :only (cl-format)]
