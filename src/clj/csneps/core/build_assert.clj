@@ -74,6 +74,10 @@
   [clojure.lang.PersistentVector] [expr context]
   (assert (variable-parse-and-build (seq expr) :Proposition) context))
 
+(defmethod assert
+  [clojure.lang.PersistentHashSet] [expr context]
+  (set (map #(assert % context) expr)))
+
 (defn assert-term
   [expr context]
   (clojure.core/assert (not (whquestion-term? expr)) "Cannot assert a WhQuestion.")
