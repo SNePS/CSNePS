@@ -24,6 +24,7 @@ import clojure.tools.nrepl.Connection.Response;
 //Jung 2.0
 import edu.buffalo.cse.sneps3.gui.dataaccess.Model;
 import edu.buffalo.cse.sneps3.gui.graph.SnepsGraph;
+import edu.buffalo.cse.sneps3.gui.util.OSTools;
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
@@ -46,6 +47,9 @@ import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JToggleButton;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import org.freehep.util.export.ExportDialog;
 
 /**
@@ -110,7 +114,7 @@ public class GUI2 extends javax.swing.JFrame{
 
         this.setTitle("CSNePS GUI Version " + version);
         
-        export = new ExportDialog();
+        if (!OSTools.isMac()) export = new ExportDialog();
 
         //Use this to redirect output from the repl eventually...
         //Var.pushThreadBindings(RT.map(RT.OUT), <outstreamwriter>)
@@ -141,7 +145,7 @@ public class GUI2 extends javax.swing.JFrame{
 
                 //System.out.println(e.getKeyCode() + " " + e.isControlDown() + " " + e.isShiftDown());
 
-                if(e.isControlDown() && e.isShiftDown() && e.getKeyCode() == 83){
+                if(e.isControlDown() && e.isShiftDown() && e.getKeyCode() == 83 && !OSTools.isMac()){
                     if(doingSave) return false;
                     doingSave = true;
 
@@ -858,7 +862,7 @@ public class GUI2 extends javax.swing.JFrame{
                 jMenuItem10ActionPerformed(evt);
             }
         });
-        jMenu4.add(jMenuItem10);
+        if (!OSTools.isMac()) jMenu4.add(jMenuItem10);
 
         jMenu1.add(jMenu4);
 
@@ -1322,6 +1326,15 @@ public class GUI2 extends javax.swing.JFrame{
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
+            	try {
+					UIManager.setLookAndFeel(
+							UIManager.getSystemLookAndFeelClassName());
+				} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+						| UnsupportedLookAndFeelException e) {
+					e.printStackTrace();
+				}
+            		if (OSTools.isMac()) System.setProperty("apple.laf.useScreenMenuBar", "true");
+            	
                 instance = new GUI2();
                 instance.setVisible(true);
             }
