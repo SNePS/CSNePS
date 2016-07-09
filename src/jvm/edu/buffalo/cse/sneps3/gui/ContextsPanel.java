@@ -215,8 +215,6 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     		rootNode = new DefaultMutableTreeNode("Contexts");
     		treeModel = new DefaultTreeModel(rootNode);
     		jTree_contexts.setModel(treeModel);
-    		jTree_contexts.repaint();
-    		return;
     	}
         repopulate(Context.getContexts());
         jTree_contexts.repaint();

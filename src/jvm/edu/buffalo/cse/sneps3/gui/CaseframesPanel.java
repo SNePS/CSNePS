@@ -231,7 +231,6 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView{
     public void slotUpdate(Collection<Slot> slots, Boolean clear) {
     	if(clear && cff!=null){
     		cff.clearSlots();
-    		return;
     	}
         if(cff!=null) cff.addSlot(slots);
     }
