@@ -215,15 +215,11 @@ public class Model {
     public void contextsChanged(IPersistentMap addedcontexts, Boolean clear){
     	if(clear){
     		Context.clearContexts();
-    		for(IView i : views){
-        		i.ctUpdate(new ArrayList<Context>(), true);
-            }
-    		return;
     	}
     	
     	ArrayList<Context> newcts = Context.createContexts(addedcontexts);
     	for(IView i : views){
-    		i.ctUpdate(newcts, false);
+    		i.ctUpdate(newcts, clear);
         }
     }
     
@@ -237,31 +233,23 @@ public class Model {
     public void slotsChanged(IPersistentMap addedslots, Boolean clear){
     	if(clear){
     		Slot.clearSlots();
-    		for(IView i : views){
-        		i.slotUpdate(new ArrayList<Slot>(), true);
-            }
-    		return;
     	}
 
     	ArrayList<Slot> s = new ArrayList<Slot>();
     	s.add(Slot.create(addedslots));
     	for(IView i : views){
-    		i.slotUpdate(s, false);
+    		i.slotUpdate(s, clear);
         }
     }
     
     public void caseframesChanged(APersistentSet addedcfs, Boolean clear){
     	if(clear){
     		Caseframe.clearCaseframes();
-    		for(IView i : views){
-        		i.cfUpdate(new ArrayList<Caseframe>(), true);
-            }
-    		return;
     	}
     	
     	ArrayList<Caseframe> c = Caseframe.createCaseframes(addedcfs);
     	for(IView i : views){
-    		i.cfUpdate(c, false);
+    		i.cfUpdate(c, clear);
         }
     }
     

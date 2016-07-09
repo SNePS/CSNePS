@@ -207,14 +207,14 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView{
     	if(clear){
     		//rootNode.removeAllChildren();
 	        rootNode = new DefaultMutableTreeNode("Caseframes");
-	        treeModel.setRoot(rootNode);
+	        treeModel = new SortedTreeModel(rootNode);
     		
 	        for(Caseframe c : cfc){
 	            DefaultMutableTreeNode n = new DefaultMutableTreeNode(c);
 	            treeModel.insertNodeInto(n, rootNode);
 	        }
 	        jTree1.expandRow(0); //Expand the root node.
-
+	        
 	        jTree1.setModel(treeModel);
 	        jTree1.repaint();
     	}

@@ -14,8 +14,7 @@
 (clearkb true)
 (defineSlot actNoAgent :type Thing)
 (defineSlot theme :type Entity)
-(defineCaseframe 'Propositional '(actNoAgent theme)
- :fsymbols '(Scare Carry))
+(defineCaseframe 'Propositional '(actNoAgent theme) :fsymbols '(Scare Carry))
 
 (assert '(Carry (every x (Isa x Dog) (Scare x))))
 (assert '(Isa Fido Dog))
