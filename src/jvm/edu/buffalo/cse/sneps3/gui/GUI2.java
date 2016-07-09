@@ -59,7 +59,7 @@ import org.freehep.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2015.04.13";
+	public static final String version = "2016.06.09";
 	
     public static final boolean DEBUG = false;
 
@@ -263,6 +263,8 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setTermsRef(RT.var("csneps.core", "TERMS")); //Ref to Map of name -> Term.
 		model.setCaseframeRef(RT.var("csneps.core", "caseframe"));
 		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
+		model.setRestrictionSetWRef(RT.var("csneps.core", "restriction-set"));
+		model.setRestrictionSetWRef(RT.var("csneps.core", "dependencies"));
 		model.initializeTerms();
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
@@ -280,6 +282,8 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setTermsRef(RT.var("csneps.core.sneps3", "TERMS")); //Ref to Map of name -> Term.
 		model.setCaseframeRef(RT.var("csneps.core", "caseframe"));
 		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
+		model.setRestrictionSetWRef(RT.var("csneps.core", "restriction-set"));
+		model.setRestrictionSetWRef(RT.var("csneps.core", "dependencies"));
 		model.initializeTerms(termset);
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));

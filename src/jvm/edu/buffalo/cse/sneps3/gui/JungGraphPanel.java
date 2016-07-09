@@ -911,56 +911,49 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			return;
 		}
 		
+		ITermNode<IEdge> tn = null;
+		
+		// Put all the term nodes on the graph.
 		for(Term t : term){
-	        ITermNode<IEdge> tn = dsg.getVertex(t.getName());
-	        
+			// Try to find the term in the graph.
+			tn = dsg.getVertex(t.getName());
 	        if(tn != null){
-	            //if(e.getTerm().isAsserted() != asserted) e.getTerm().setAsserted(asserted);
 	            if(showNewTerms && !tn.isVisible()){
-	                //showNode(tn);
 	            	dsg.addVertex(tn);
 	            	showNode(tn);
 	            }
 	            return;
 	        }
-	        
-		    tn = new TermNode<IEdge>(t);
-		    if(showNewTerms && !tn.isVisible()){
-		        if(GUI2.DEBUG) System.err.println("Adding node: " + tn);
-		     	dsg.addVertex(tn);
-		       	showNode(tn);
-		        	
-	               //addNode(tn);
-	               //tn.show();
-		    }
-
-	        //nodeName_node_map.put(t.getName(), tn);
-	        
+	        else{
+		        // Term not already in the graph, and we are showing new terms.
+			    tn = new TermNode<IEdge>(t);
+			    if(showNewTerms && !tn.isVisible()){
+			        if(GUI2.DEBUG) System.err.println("Adding node: " + tn);
+			     	dsg.addVertex(tn);
+			       	showNode(tn);
+			    }
+	        }
+		}
+		
+		for(Term t : term){
+			tn = dsg.getVertex(t.getName());
+			
+		    // Deal with edges within molecular terms.
 	        if(t.isMolecular()){
 	        	HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
-	        	//Build edges:
 	        	for(Iterator<Entry<Slot, Set<Term>>> itr = dcs.entrySet().iterator(); itr.hasNext(); ){
 	        		Entry<Slot, Set<Term>> entry = itr.next();
 	        		for(Term endterm : entry.getValue()){
-	        			//There's a chance that endterm isn't yet on the graph. 
-	        			if(dsg.getVertex(endterm.getName()) == null){
-	        				TermNode<IEdge> newtn = new TermNode<IEdge>(endterm);
-	        				if(GUI2.DEBUG) System.err.println("Adding node: " + newtn);
-	        				dsg.addVertex(newtn);
-	                        showNode(newtn);
-	                        newtn.show();
-	                        //nodeName_node_map.put(endterm.getName(), newtn);
-	        			}
-	        			
 		        		Edge edge = new Edge(entry.getKey().toString(), tn, dsg.getVertex(endterm.getName()));
-		        		if(GUI2.DEBUG) System.err.println("Adding edge from: " + tn + " to: " + endterm);
+		        		if(GUI2.DEBUG) System.out.println("Adding edge from: " + tn.getTerm().getName() + " to: " + endterm.getName());
 		        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + endterm);
-		        		//edges.add(edge);
 	        		}
-	        		
 	        	}
+	        }
+	        
+	        // Deal with "metaedges" within variable terms (restriction + depends edges). 
+	        else if(t.isVariable()){
 	        	
-	        	//System.out.println(dcs);
 	        }
 		}
 		

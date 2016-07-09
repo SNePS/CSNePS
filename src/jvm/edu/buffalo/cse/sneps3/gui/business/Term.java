@@ -22,6 +22,7 @@ public class Term {
 
 	private static HashMap<String, Term> terms = new HashMap<String, Term>();
 	private static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
+	private static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
 	private static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
 	private static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
 	private static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
@@ -183,6 +184,16 @@ public class Term {
 		}
 	}
 	
+	public Set<Term> getRestrictionset(){
+		return restrictionset.get(this.getName());
+	}
+	
+	public void setRestrictionset(Set<Term> rs){
+		if (rs == null) return;
+		
+		restrictionset.put(this.getName(), rs);
+	}
+	
 	//The number of i-channels can increase. Compare arity of cache with the one in the term
 	//to determine if we have to do real work.
 	public ArrayList<Channel> getIChannels(){
@@ -236,6 +247,10 @@ public class Term {
 	
 	public Boolean isMolecular(){
 		return FnInterop.molecularTermQ(term);
+	}
+	
+	public Boolean isVariable(){
+		return FnInterop.variableTermQ(term);
 	}
 	
 	public void resetAsserted(){

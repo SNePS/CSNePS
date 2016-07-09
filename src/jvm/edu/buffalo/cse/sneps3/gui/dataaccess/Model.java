@@ -197,6 +197,7 @@ public class Model {
     		// for that?
     		term.setCaseframe(getCaseframe(term.getClojureTerm()));
     		term.setDownCableset(getDownCableset(term));
+    		term.setRestrictionset(getRestrictionset(term));
     	}
     	for(IView i : views){
     		i.termUpdate(t, clear);
@@ -316,7 +317,7 @@ public class Model {
     	return namecfmapret;
     }
     
-    public HashMap<Slot, Set<Term>> getDownCableset(Term term){
+    private HashMap<Slot, Set<Term>> getDownCableset(Term term){
     	if (!term.isMolecular()) return null;
     	
     	HashMap<Slot, Set<Term>> downcableset = new HashMap<Slot, Set<Term>>();
@@ -337,6 +338,26 @@ public class Model {
 		}
     	
     	return downcableset;
+    }
+    
+    private Set<Term> getRestrictionset(Term term){
+    	if (!term.isVariable()) return null;
+    	
+    	HashSet<Term> restrictionset = new HashSet<Term>();
+    	
+    	IPersistentMap namersmap = (IPersistentMap)((Ref)restriction_set_ref.get()).deref();
+    	
+    	System.out.println("Term: " + term.getName() + " RSMap: " + namersmap);
+    	
+    	List rs = (List)namersmap.valAt(term.getClojureTerm());
+    	
+    	if (rs == null) return restrictionset;
+    	
+    	for(int i = 0; i < rs.size(); i++){
+			restrictionset.add(Term.create((IPersistentMap)rs.get(i)));
+		}
+    	
+    	return restrictionset;
     }
     
     
