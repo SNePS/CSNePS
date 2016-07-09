@@ -347,15 +347,13 @@ public class Model {
     	
     	IPersistentMap namersmap = (IPersistentMap)((Ref)restriction_set_ref.get()).deref();
     	
-    	System.out.println("Term: " + term.getName() + " RSMap: " + namersmap);
+    	APersistentSet rs = (APersistentSet)namersmap.valAt(term.getClojureTerm());
     	
-    	List rs = (List)namersmap.valAt(term.getClojureTerm());
+    	if(GUI2.DEBUG) System.out.println("Term: " + term.getName() + " RS: " + rs);
     	
-    	if (rs == null) return restrictionset;
-    	
-    	for(int i = 0; i < rs.size(); i++){
-			restrictionset.add(Term.create((IPersistentMap)rs.get(i)));
-		}
+    	for (Iterator itr = rs.iterator(); itr.hasNext(); ){
+    		restrictionset.add(Term.create((IPersistentMap)itr.next()));
+    	}
     	
     	return restrictionset;
     }
