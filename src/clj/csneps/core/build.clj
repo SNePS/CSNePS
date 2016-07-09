@@ -1211,7 +1211,7 @@
                            (second assertion-spec) 
                            (list (nth assertion-spec 2) aspec))]
             [(second assertion-spec) ar idr qvr])))
-      (= (first assertion-spec) 'every)
+      (#{'every 'any} (first assertion-spec))
       (let [rsts (arb-rsts (second assertion-spec))]
         (cond
           (and rsts (not (empty? (clojure.set/difference (set rsts)
