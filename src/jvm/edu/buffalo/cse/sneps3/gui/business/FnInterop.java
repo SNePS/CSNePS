@@ -97,12 +97,16 @@ public class FnInterop {
 			parentsyms.add(Symbol.intern(t.getName()));
 		}
 		
-		Controller.sneps3_define_type(Symbol.intern(newtype), PersistentList.create(parentsyms));
+		Controller.csneps_core_define_type(Symbol.intern(newtype), PersistentList.create(parentsyms));
 		return SemanticType.create(newtype, parentstrings);
 	}
 	
 	public static Boolean molecularTermQ(IPersistentMap term){
-		return Controller.sneps3_molecular_term_qmark(term);
+		return Controller.csneps_core_molecular_term_qmark(term);
+	}
+	
+	public static Boolean variableTermQ(IPersistentMap term){
+		return Controller.csneps_core_variable_term_qmark(term);
 	}
 	
 	//////////////////
@@ -122,7 +126,7 @@ public class FnInterop {
 	//////////////////////
 	
 	public static String termString(IPersistentMap term){
-		return Controller.sneps3_printer_term_printer(term);
+		return Controller.csneps_core_printer_term_printer(term);
 	}
 	
 	/////////////////
@@ -183,11 +187,11 @@ public class FnInterop {
 	//////////////////////
 	
 	public static void writeKBToTextFile(String fname, String headerfname){
-		Controller.sneps3_printer_print_kb_to_text_file(fname, headerfname);
+		Controller.csneps_printer_print_kb_to_text_file(fname, headerfname);
 	}
 	
 	public static void writeKBToTextFile(String fname){
-		Controller.sneps3_printer_print_kb_to_text_file(fname);
+		Controller.csneps_printer_print_kb_to_text_file(fname);
 	}
 	
 }

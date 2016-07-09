@@ -22,7 +22,7 @@ public class Controller {
 	private static Var snuser_define_term_fn;
 	private static Var snuser_define_caseframe_fn;
 	private static Var relations_define_slot_fn;
-	private static Var sneps3_define_type_fn;
+	private static Var csneps_define_type_fn;
 	private static Var build_add_to_context_fn;
 	private static Var build_find_fn;
 	private static Var build_term_predicate_fn;
@@ -31,9 +31,10 @@ public class Controller {
 	private static Var caseframes_quotedpp_qmark_fn;
 	private static Var contexts_define_context_fn;
 	private static Var contexts_set_current_context_fn;
-	private static Var sneps3_molecular_term_qmark_fn;
-	private static Var sneps3_printer_term_printer_fn;
-	private static Var sneps3_print_print_kb_to_text_file_fn;
+	private static Var csneps_core_molecular_term_qmark_fn;
+	private static Var csneps_core_variable_term_qmark_fn;
+	private static Var csneps_core_printer_term_printer_fn;
+	private static Var csneps_print_print_kb_to_text_file_fn;
 	
 	public static IPersistentMap build_find(ISeq pattern){
 		if (build_find_fn == null) 
@@ -86,19 +87,19 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public static void sneps3_printer_print_kb_to_text_file(String fname){
-		if (sneps3_print_print_kb_to_text_file_fn == null)
-			sneps3_print_print_kb_to_text_file_fn = RT.var("csneps.core.printer", "writeKBToTextFile");
+	public static void csneps_printer_print_kb_to_text_file(String fname){
+		if (csneps_print_print_kb_to_text_file_fn == null)
+			csneps_print_print_kb_to_text_file_fn = RT.var("csneps.core.printer", "writeKBToTextFile");
 		try{
-			sneps3_print_print_kb_to_text_file_fn.invoke(fname);
+			csneps_print_print_kb_to_text_file_fn.invoke(fname);
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public static void sneps3_printer_print_kb_to_text_file(String fname, String header){
-		if (sneps3_print_print_kb_to_text_file_fn == null)
-			sneps3_print_print_kb_to_text_file_fn = RT.var("csneps.core.printer", "writeKBToTextFile");
+	public static void csneps_printer_print_kb_to_text_file(String fname, String header){
+		if (csneps_print_print_kb_to_text_file_fn == null)
+			csneps_print_print_kb_to_text_file_fn = RT.var("csneps.core.printer", "writeKBToTextFile");
 		try{
-			sneps3_print_print_kb_to_text_file_fn.invoke(fname, header);
+			csneps_print_print_kb_to_text_file_fn.invoke(fname, header);
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
@@ -183,28 +184,37 @@ public class Controller {
 		return null;
 	}
 	
-	public static Boolean sneps3_molecular_term_qmark(IPersistentMap term){
-		if (sneps3_molecular_term_qmark_fn == null)
-			sneps3_molecular_term_qmark_fn = RT.var("csneps.core", "molecularTerm?");
+	public static Boolean csneps_core_molecular_term_qmark(IPersistentMap term){
+		if (csneps_core_molecular_term_qmark_fn == null)
+			csneps_core_molecular_term_qmark_fn = RT.var("csneps.core", "molecularTerm?");
 		try{
-			return (Boolean)sneps3_molecular_term_qmark_fn.invoke(term);
+			return (Boolean)csneps_core_molecular_term_qmark_fn.invoke(term);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
 	
-	public static void sneps3_define_type(Symbol newtype, IPersistentList parents){
-		if(sneps3_define_type_fn == null)
-			sneps3_define_type_fn = RT.var("csneps.core", "define-type");
+	public static Boolean csneps_core_variable_term_qmark(IPersistentMap term){
+		if (csneps_core_variable_term_qmark_fn == null)
+			csneps_core_variable_term_qmark_fn = RT.var("csneps.core", "variableTerm?");
 		try{
-			sneps3_define_type_fn.invoke(newtype, parents);
+			return (Boolean)csneps_core_variable_term_qmark_fn.invoke(term);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	public static void csneps_core_define_type(Symbol newtype, IPersistentList parents){
+		if(csneps_define_type_fn == null)
+			csneps_define_type_fn = RT.var("csneps.core", "define-type");
+		try{
+			csneps_define_type_fn.invoke(newtype, parents);
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public static String sneps3_printer_term_printer(IPersistentMap term){
-		if(sneps3_printer_term_printer_fn == null)
-			sneps3_printer_term_printer_fn = RT.var("csneps.core.printer", "print-term");
+	public static String csneps_core_printer_term_printer(IPersistentMap term){
+		if(csneps_core_printer_term_printer_fn == null)
+			csneps_core_printer_term_printer_fn = RT.var("csneps.core.printer", "print-term");
 		try{ 
-			return sneps3_printer_term_printer_fn.invoke(term).toString();
+			return csneps_core_printer_term_printer_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
