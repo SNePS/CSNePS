@@ -110,7 +110,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 	GraphType type = GraphType.FR2d;
 
-	QuadCurve quadcurve = new EdgeShape.QuadCurve<ITermNode<IEdge>, IEdge>();
+	QuadCurve<ITermNode<IEdge>, IEdge> quadcurve = new EdgeShape.QuadCurve<ITermNode<IEdge>, IEdge>();
 	Line<ITermNode<IEdge>, IEdge> line = new EdgeShape.Line<ITermNode<IEdge>, IEdge>();
 
 	SnepsGraph<ITermNode<IEdge>, IEdge> dsg;
@@ -423,177 +423,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		for(Term t : terms){
 			dsg.showVertex(dsg.getVertex(t.getName()));
 			highlightedNodes.add(dsg.getVertex(t.getName()));
-			for(ITermNode n : dsg.getSuccessors(dsg.getVertex(t.getName())))
+			for(ITermNode<IEdge> n : dsg.getSuccessors(dsg.getVertex(t.getName())))
 				highlightedNodes.add(n);
 		}
 		vv.repaint();
 	}
-
-	/*
-	 * Iterate through the nodes in the graph looking for the wft nodes. When
-	 * one is found check that it is a binary relation and the wft node doesnt
-	 * have any other edges attached to it. If this is the case the nodes may be
-	 * collapsed in the following way: Cat <--member-- WFT1 --class--> Animal
-	 * ==> Cat --Isa--> Animal
-	 */
-/*	public void semanticCollapse(Collection<ITermNode<IEdge>> c) {
-		// semantic_addedEdges = new ArrayList<IEdge>();
-		// semantic_removedEdges = new ArrayList<IEdge>();
-		// semantic_removedNodes = new ArrayList<ITermNode<IEdge>>();
-
-		ArrayList<ITermNode<IEdge>> toRemove = new ArrayList<ITermNode<IEdge>>();
-		// Collection c = dsg.getVertices();
-		for (ITermNode<IEdge> n : c) {
-			System.out.println(n + " " + n.getOutEdges());
-			
-			if (n.getTerm().isMolecular()
-					&& n.getTerm().getCaseframe().getType()
-							.equals(SemanticType.getSemanticType("Proposition"))
-					&& n.getOutEdges().size() == 2 && n.getInEdges().isEmpty()) {
-				if (GUI2.DEBUG)
-					System.err.println("Found a WFT node with "
-							+ n.getOutEdges().size() + " out edges and "
-							+ n.getInEdges().size() + " in edges.");
-
-				// Those conditions are out of the way. Now do the actual work. 
-				IEdge e1 = n.getOutEdges().get(0); 
-				IEdge e2 = n.getOutEdges().get(1);
-
-				if (e1.getTo() == e2.getTo())
-					continue; // Don't have circular edges.
-
-				toRemove.add(n);
-
-				dsg.removeEdge(e1);
-				dsg.removeEdge(e2);
-				// Now connect c1 and c2 with the label as the cf of n.
-				// We need a proper ordering.
-				Caseframe cf = n.getTerm().getCaseframe();
-				CollapsedEdge newEdge = null;
-				String newEdgeText = cf.getName()
-						+ (n.getTerm().isAsserted() ? "!" : "");
-				if (cf.getSlots().get(0).toString().equals(e1.toString())) {
-					newEdge = new CollapsedEdge(newEdgeText, e1.getTo(),
-							e2.getTo(), n);
-					// newEdge.collapsed = true;
-					dsg.addEdge(newEdge, e1.getTo(), e2.getTo());
-				} else {
-					newEdge = new CollapsedEdge(newEdgeText, e2.getTo(),
-							e1.getTo(), n);
-					// newEdge.collapsed = true;
-					dsg.addEdge(newEdge, e2.getTo(), e1.getTo());
-				}
-
-				semantic_addedEdges.add(newEdge);
-				semantic_removedEdges.add(e2);
-				semantic_removedEdges.add(e1);
-				semantic_removedNodes.add(n);
-			}
-		}
-
-		// Handling nodes for which there is a slot in the first position of the
-		// cf and size is 3.
-		for (ITermNode<IEdge> n : c) {
-			if (n.getTerm().isMolecular()
-					&& n.getTerm().getCaseframe().getType()
-							.equals("Proposition")
-					&& n.getInEdges().isEmpty()
-					&& n.getOutEdges().size() == 3
-					&& Slot.getSlot(n.getTerm().getCaseframe()
-							.getName()) != null
-					&& !n.getTerm().getCaseframe().getFSymbols().isEmpty()) {
-				if (GUI2.DEBUG)
-					System.out.println("Found a slot-named cf to collapse: "
-							+ n.toString() + " with edges " + n.getOutEdges());
-				IEdge labelEdge = null;
-				IEdge e1 = null;
-				IEdge e2 = null;
-
-				for (IEdge e : n.getOutEdges()) {
-					if (e.toString().equals(
-							n.getTerm().getCaseframe().getName())) {
-						labelEdge = e;
-					} else {
-						if (e1 == null)
-							e1 = e;
-						else
-							e2 = e;
-					}
-				}
-
-				if (e1.getTo() == e2.getTo())
-					continue; // Don't have circular edges.
-
-				// We want to collapse a wft with 3 out edges, where one of them
-				// is an fsymbol
-				// as long as the fsymbol is only pointed to by edges from other
-				// wft nodes which
-				// also treat it as an fsymbol. It also cannot have out edges.
-				boolean remove_slot_node = true;
-
-				if (!labelEdge.getTo().getOutEdges().isEmpty())
-					remove_slot_node = false;
-				for (IEdge e : labelEdge.getTo().getInEdges()) {
-					if (!e.toString().equals(labelEdge.toString()))
-						remove_slot_node = false;
-				}
-
-				if (remove_slot_node) {
-					toRemove.add(labelEdge.getTo());
-				}
-				toRemove.add(n);
-				// Remove the edge we're making into the label of the new edge:
-				String newEdgeLabel = "";
-				if (!labelEdge.getTo().getTerm().isMolecular()) { // Function
-																	// sym.
-					newEdgeLabel = labelEdge.getTo().toString()
-							+ (n.getTerm().isAsserted() ? "!" : "");
-				} else { // Function-valued function
-					newEdgeLabel = labelEdge.getTo().getTerm().toString()
-							+ (n.getTerm().isAsserted() ? "!" : "");
-				}
-
-				dsg.removeEdge(labelEdge);
-
-				toRemove.add(n);
-
-				dsg.removeEdge(e1);
-				dsg.removeEdge(e2);
-				// Now connect c1 and c2 with the label as the labelEdge name.
-				// We need a proper ordering.
-				Caseframe cf = n.getTerm().getCaseframe();
-				CollapsedEdge newEdge = null;
-				// System.out.println("cf.slots.firstElement().toString()" +
-				// cf.slots.firstElement().toString());
-				if (cf.getSlots().get(1).toString().equals(e1.toString())) {
-					newEdge = new CollapsedEdge(newEdgeLabel, e1.getTo(),
-							e2.getTo(), n);
-					// newEdge.collapsed = true;
-					dsg.addEdge(newEdge, e1.getTo(), e2.getTo());
-				} else {
-					newEdge = new CollapsedEdge(newEdgeLabel, e2.getTo(),
-							e1.getTo(), n);
-					// newEdge.collapsed = true;
-					dsg.addEdge(newEdge, e2.getTo(), e1.getTo());
-				}
-
-				semantic_addedEdges.add(newEdge);
-				semantic_removedEdges.add(e2);
-				semantic_removedEdges.add(e1);
-				semantic_removedNodes.add(n);
-				semantic_removedNodes.add(labelEdge.getTo());
-				semantic_removedEdges.add(labelEdge);
-
-			}
-		}
-
-		for (ITermNode<IEdge> n : toRemove) {
-			dsg.removeVertex(n);
-			n.hide();
-		}
-		vv.repaint();
-	}*/
-
 
 	public void hideNode(ITermNode<IEdge> n ){
 		dsg.hideVertex(n);
@@ -624,18 +458,18 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		jButton_hideAll = new javax.swing.JButton();
 		jButton_showAll = new javax.swing.JButton();
 		jLabel2 = new javax.swing.JLabel();
-		jComboBox_graphMode = new javax.swing.JComboBox();
-		jComboBox_layout = new javax.swing.JComboBox();
+		jComboBox_graphMode = new javax.swing.JComboBox<String>();
+		//jComboBox_layout = new javax.swing.JComboBox();
 		jSeparator2 = new javax.swing.JToolBar.Separator();
 		jSeparator3 = new javax.swing.JToolBar.Separator();
-		jSeparator4 = new javax.swing.JToolBar.Separator();
+		//jSeparator4 = new javax.swing.JToolBar.Separator();
 		jLabel1 = new javax.swing.JLabel();
 		jToggleButton_lens = new javax.swing.JToggleButton();
 		jToggleButton_collapse = new javax.swing.JToggleButton();
 		jPanel1 = new javax.swing.JPanel();
 		jToolBar2 = new javax.swing.JToolBar();
 		jLabel3 = new javax.swing.JLabel();
-		jLabel_layout = new javax.swing.JLabel();
+		//jLabel_layout = new javax.swing.JLabel();
 		jButton_scalePlus = new javax.swing.JButton();
 		jButton_scaleMinus = new javax.swing.JButton();
 		jButton_scaleReset = new javax.swing.JButton();
@@ -688,7 +522,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		jLabel2.setText("Mouse:");
 		jToolBar1.add(jLabel2);
 
-		jComboBox_graphMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] {
+		jComboBox_graphMode.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] {
 				"Picking", "Transforming" }));
 		jComboBox_graphMode.addActionListener(new java.awt.event.ActionListener() {
 			public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -843,11 +677,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			graphMouse.setMode(Mode.TRANSFORMING);
 	}
 	
-	private void jComboBox_layoutActionPerformed(java.awt.event.ActionEvent evt) {
-		//vm.setGraphLayout(new edu.uci.ics.jung.algorithms.layout.DAGLayout<ITermNode<IEdge>, IEdge>(dsg));
-		
-		//new edu.uci.ics.jung.algorithms.layout.FRLayout<ITermNode<IEdge>, IEdge>(dsg))
-	}
+//	private void jComboBox_layoutActionPerformed(java.awt.event.ActionEvent evt) {
+//		//vm.setGraphLayout(new edu.uci.ics.jung.algorithms.layout.DAGLayout<ITermNode<IEdge>, IEdge>(dsg));
+//		
+//		//new edu.uci.ics.jung.algorithms.layout.FRLayout<ITermNode<IEdge>, IEdge>(dsg))
+//	}
 
 	private void jToggleButton_lensActionPerformed(
 			java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jToggleButton_lensActionPerformed
@@ -902,17 +736,17 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	private javax.swing.JButton jButton_scaleReset;
 	private javax.swing.JButton jButton_showAll;
 	private javax.swing.JButton jButton_showInGraph;
-	private javax.swing.JComboBox jComboBox_graphMode;
-	private javax.swing.JComboBox jComboBox_layout;
+	private javax.swing.JComboBox<String> jComboBox_graphMode;
+	//private javax.swing.JComboBox jComboBox_layout;
 	private javax.swing.JLabel jLabel1;
 	private javax.swing.JLabel jLabel2;
 	private javax.swing.JLabel jLabel3;
 	private javax.swing.JLabel jLabel_status;
 	private javax.swing.JPanel jPanel1;
-	private javax.swing.JLabel jLabel_layout;
+	//private javax.swing.JLabel jLabel_layout;
 	private javax.swing.JToolBar.Separator jSeparator2;
 	private javax.swing.JToolBar.Separator jSeparator3;
-	private javax.swing.JToolBar.Separator jSeparator4;
+	//private javax.swing.JToolBar.Separator jSeparator4;
 	private javax.swing.JToggleButton jToggleButton_collapse;
 	private javax.swing.JToggleButton jToggleButton_lens;
 	private javax.swing.JToolBar jToolBar1;

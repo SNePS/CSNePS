@@ -17,7 +17,7 @@ import edu.uci.ics.jung.graph.MultiGraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 import edu.uci.ics.jung.graph.util.Pair;
 
-public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTypedGraph<V,E> implements DirectedGraph<V,E>, MultiGraph<V,E> {
+public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends AbstractTypedGraph<V,E> implements DirectedGraph<V,E>, MultiGraph<V,E> {
 	private static final long serialVersionUID = 1L;
 	
 	private HashMap<String, V> vertices;
@@ -25,7 +25,6 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
 	
 	private boolean collapsed = false;
 
-	//We are choosing to cache the visible nodes and edges, with the understanding that 
 	//when things are added, removed, shown, or hidden it will make the graph "dirty."
 	private boolean VisibleNodesEdgesDirty;
 	Collection<E> visibleEdges;
@@ -51,7 +50,7 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
      * @param <V> the vertex type for the graph factory
      * @param <E> the edge type for the graph factory
      */
-	public static <V extends ITermNode,E extends IEdge> Factory<DirectedGraph<V,E>> getFactory() {
+	public static <V extends ITermNode<E>,E extends IEdge> Factory<DirectedGraph<V,E>> getFactory() {
 		return new Factory<DirectedGraph<V,E>> () {
 			public DirectedGraph<V,E> create() {
 				return new SnepsGraph<V,E>();
@@ -87,13 +86,11 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
     	return edges.contains(edge);
     }
 
-    @SuppressWarnings("unchecked")
 	protected Collection<E> getIncoming_internal(V vertex)
     {
         return vertices.get(vertex.getTerm().getName()).getInEdges(); 
     }
     
-    @SuppressWarnings("unchecked")
 	protected Collection<E> getOutgoing_internal(V vertex)
     {
         return vertices.get(vertex.getTerm().getName()).getOutEdges();
@@ -311,10 +308,8 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
         return null;
     }
     
-	@Override
-  public boolean addEdge(E edge, Pair<? extends V> endpoints, EdgeType edgeType) 
-	{
-		this.validateEdgeType(edgeType);
+    private boolean addEdge_Helper(E edge, Pair<? extends V> endpoints, EdgeType edgeType, boolean metaEdge){
+    	this.validateEdgeType(edgeType);
         Pair<V> new_endpoints = getValidatedEndpoints(edge, endpoints);
         if (new_endpoints == null)
             return false;
@@ -330,14 +325,27 @@ public class SnepsGraph<V extends ITermNode, E extends IEdge> extends AbstractTy
         if (!containsVertex(dest))
             this.addVertex(dest);
         
-        getIncoming_internal(dest).add(edge);
-        getOutgoing_internal(source).add(edge);
-        
-        if(collapsed) collapseMolecule(source);
+        if(!metaEdge){
+	        getIncoming_internal(dest).add(edge);
+	        getOutgoing_internal(source).add(edge);
+
+	        if(collapsed) collapseMolecule(source);
+        }
         
         VisibleNodesEdgesDirty = true;
         
         return true;
+    }
+    
+	@Override
+    public boolean addEdge(E edge, Pair<? extends V> endpoints, EdgeType edgeType) 
+	{
+		return addEdge_Helper(edge, endpoints, edgeType, false);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public boolean addRestrictionEdge(RestrictionEdge edge, Pair<? extends V> endpoints){
+		return addEdge_Helper((E)edge, endpoints, EdgeType.DIRECTED, true);
 	}
 	
 	public boolean addCollapsedEdge(E edge, Pair<? extends V> endpoints, EdgeType edgeType) 
