@@ -384,6 +384,9 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	}
 
 	public boolean addEdge(Edge e) {
+		if (e instanceof RestrictionEdge)
+			return dsg.addRestrictionEdge((RestrictionEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
+		
 		return dsg.addEdge(e, e.getFrom(), e.getTo(), EdgeType.DIRECTED);
 	}
 
@@ -953,7 +956,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	        
 	        // Deal with "metaedges" within variable terms (restriction + depends edges). 
 	        else if(t.isVariable()){
-	        	
+	        	Set<Term> rs = t.getRestrictionset();
+	        	for (Term r : rs){
+	        		RestrictionEdge edge = new RestrictionEdge(tn, dsg.getVertex(r.getName()));
+	        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + r.getName());
+	        	}
 	        }
 		}
 		
