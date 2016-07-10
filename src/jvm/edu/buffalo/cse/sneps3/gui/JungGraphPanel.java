@@ -27,7 +27,7 @@ import edu.buffalo.cse.sneps3.gui.graph.SnepsModalGraphMouse;
 import edu.buffalo.cse.sneps3.gui.graph.TermNode;
 import edu.buffalo.cse.sneps3.gui.graph.Edge;
 import edu.buffalo.cse.sneps3.gui.graph.CollapsedEdge;
-
+import edu.buffalo.cse.sneps3.gui.graph.DependencyEdge;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Graph;
@@ -217,7 +217,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 							new Transformer<Context<Graph<ITermNode<IEdge>, IEdge>, IEdge>, Shape>() {
 								public Shape transform(
 										Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
-									if (i.element instanceof RestrictionEdge) {
+									if (i.element instanceof RestrictionEdge || i.element instanceof DependencyEdge) {
 										return quadcurve.transform(i);
 									}
 
@@ -242,7 +242,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 				new Transformer<IEdge, Stroke>() {
 
 					public Stroke transform(IEdge i) {
-						if (i instanceof RestrictionEdge) {
+						if (i instanceof RestrictionEdge || i instanceof DependencyEdge) {
 							return dashStroke;
 						}
 						else if (i instanceof ChannelEdge) {
@@ -386,6 +386,9 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	public boolean addEdge(Edge e) {
 		if (e instanceof RestrictionEdge)
 			return dsg.addRestrictionEdge((RestrictionEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
+		
+		if (e instanceof DependencyEdge)
+			return dsg.addDependencyEdge((DependencyEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
 		
 		return dsg.addEdge(e, e.getFrom(), e.getTo(), EdgeType.DIRECTED);
 	}
@@ -944,7 +947,6 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		    // Deal with edges within molecular terms.
 	        if(t.isMolecular()){
 	        	HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
-	        	System.out.println(dcs);
 	        	for(Iterator<Entry<Slot, Set<Term>>> itr = dcs.entrySet().iterator(); itr.hasNext(); ){
 	        		Entry<Slot, Set<Term>> entry = itr.next();
 	        		for(Term endterm : entry.getValue()){	        			
@@ -961,6 +963,12 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	        	for (Term r : rs){
 	        		RestrictionEdge edge = new RestrictionEdge(tn, dsg.getVertex(r.getName()));
 	        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + r.getName());
+	        	}
+	        	
+	        	Set<Term> deps = t.getDependencies();
+	        	for (Term d : deps){
+	        		DependencyEdge edge = new DependencyEdge(tn, dsg.getVertex(d.getName()));
+	        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + d.getName());
 	        	}
 	        }
 		}

@@ -198,6 +198,7 @@ public class Model {
     		term.setCaseframe(getCaseframe(term.getClojureTerm()));
     		term.setDownCableset(getDownCableset(term));
     		term.setRestrictionset(getRestrictionset(term));
+    		term.setDependencies(getDepends(term));
     	}
     	for(IView i : views){
     		i.termUpdate(t, clear);
@@ -356,6 +357,26 @@ public class Model {
     	}
     	
     	return restrictionset;
+    }
+    
+    private Set<Term> getDepends(Term term){
+    	if (!term.isVariable()) return null;
+    	
+    	HashSet<Term> depset = new HashSet<Term>();
+    	
+    	IPersistentMap namedepmap = (IPersistentMap)((Ref)dependencies_ref.get()).deref();
+    	
+    	APersistentSet deps = (APersistentSet)namedepmap.valAt(term.getClojureTerm());
+    	
+    	if (deps == null) return depset;
+    	
+    	if(GUI2.DEBUG) System.out.println("Term: " + term.getName() + " Deps: " + deps);
+    	
+    	for (Iterator itr = deps.iterator(); itr.hasNext(); ){
+    		depset.add(Term.create((IPersistentMap)itr.next()));
+    	}
+    	
+    	return depset;
     }
     
     

@@ -23,6 +23,7 @@ public class Term {
 	private static HashMap<String, Term> terms = new HashMap<String, Term>();
 	private static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
 	private static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
+	private static HashMap<String, Set<Term>> dependenciesset = new HashMap<String, Set<Term>>();
 	private static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
 	private static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
 	private static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
@@ -192,6 +193,16 @@ public class Term {
 		if (rs == null) return;
 		
 		restrictionset.put(this.getName(), rs);
+	}
+	
+	public Set<Term> getDependencies(){
+		return dependenciesset.get(this.getName());
+	}
+	
+	public void setDependencies(Set<Term> rs){
+		if (rs == null) return;
+		
+		dependenciesset.put(this.getName(), rs);
 	}
 	
 	//The number of i-channels can increase. Compare arity of cache with the one in the term

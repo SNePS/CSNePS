@@ -348,6 +348,11 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 		return addEdge_Helper((E)edge, endpoints, EdgeType.DIRECTED, true);
 	}
 	
+	@SuppressWarnings("unchecked")
+	public boolean addDependencyEdge(DependencyEdge edge, Pair<? extends V> endpoints){
+		return addEdge_Helper((E)edge, endpoints, EdgeType.DIRECTED, true);
+	}
+	
 	public boolean addCollapsedEdge(E edge, Pair<? extends V> endpoints, EdgeType edgeType) 
 		{
 			this.validateEdgeType(edgeType);
