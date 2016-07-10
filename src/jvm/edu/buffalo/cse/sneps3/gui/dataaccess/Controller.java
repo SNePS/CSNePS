@@ -212,7 +212,7 @@ public class Controller {
 	
 	public static String csneps_core_printer_term_printer(IPersistentMap term){
 		if(csneps_core_printer_term_printer_fn == null)
-			csneps_core_printer_term_printer_fn = RT.var("csneps.core.printer", "print-term");
+			csneps_core_printer_term_printer_fn = RT.var("csneps.core.printer", "term-printer");
 		try{ 
 			return csneps_core_printer_term_printer_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
