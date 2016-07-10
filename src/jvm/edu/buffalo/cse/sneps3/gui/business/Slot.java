@@ -44,8 +44,8 @@ public class Slot implements Comparable{
 		slots.clear();
 	}
 	
-	public static Collection<Slot> reinitializeSlots(IPersistentMap sls){
-		slots.clear();
+	public static Collection<Slot> reinitializeSlots(IPersistentMap sls, Boolean clear){
+		if(clear) slots.clear();
 		for (Iterator<IPersistentMap> iter = ((ASeq)RT.vals(sls)).iterator(); iter.hasNext(); ){
 			createHelper(iter.next());
 			//Slot s = new Slot((IPersistentMap)iter.next());

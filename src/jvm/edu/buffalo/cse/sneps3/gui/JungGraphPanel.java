@@ -944,9 +944,10 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		    // Deal with edges within molecular terms.
 	        if(t.isMolecular()){
 	        	HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
+	        	System.out.println(dcs);
 	        	for(Iterator<Entry<Slot, Set<Term>>> itr = dcs.entrySet().iterator(); itr.hasNext(); ){
 	        		Entry<Slot, Set<Term>> entry = itr.next();
-	        		for(Term endterm : entry.getValue()){
+	        		for(Term endterm : entry.getValue()){	        			
 		        		Edge edge = new Edge(entry.getKey().toString(), tn, dsg.getVertex(endterm.getName()));
 		        		if(GUI2.DEBUG) System.out.println("Adding edge from: " + tn.getTerm().getName() + " to: " + endterm.getName());
 		        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + endterm);

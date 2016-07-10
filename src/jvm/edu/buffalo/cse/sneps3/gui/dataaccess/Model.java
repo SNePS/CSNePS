@@ -142,7 +142,7 @@ public class Model {
     }
     
     public void initializeSlots(){
-    	Slot.reinitializeSlots((IPersistentMap)((Ref)slots_ref.get()).deref());
+    	Slot.reinitializeSlots((IPersistentMap)((Ref)slots_ref.get()).deref(), true);
     }
     
     public void initializeCaseframes(){
@@ -234,7 +234,7 @@ public class Model {
     	if(clear)
     		Slot.clearSlots();
     	
-    	ArrayList<Slot> s = new ArrayList<Slot>(Slot.reinitializeSlots(addedslots));
+    	ArrayList<Slot> s = new ArrayList<Slot>(Slot.reinitializeSlots(addedslots, clear));
     	
     	for(IView i : views){
     		i.slotUpdate(s, clear);
