@@ -17,6 +17,7 @@ import javax.swing.text.Element;
 import javax.swing.text.Utilities;
 
 import clojure.lang.RT;
+import edu.buffalo.cse.sneps3.gui.util.ClojureTools;
 
 /**
  *
@@ -28,24 +29,19 @@ public class DemoMode extends javax.swing.JFrame {
 
     int currOffset = 0;
     int currRow = 0;
+    
+    String buffer;
 
     /** Creates new form DemoMode */
     public DemoMode() {
         initComponents();
         // Get the default toolkit
-	Toolkit toolkit = Toolkit.getDefaultToolkit();
+        Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-	// Get the current screen size
-	Dimension scrnsize = toolkit.getScreenSize();
+        // Get the current screen size
+        Dimension scrnsize = toolkit.getScreenSize();
 
-        //this.setLocation(((int)scrnsize.getWidth()-this.getWidth())/2, (int)scrnsize.getHeight()-this.getHeight()-25);
         this.setLocation(((int)scrnsize.getWidth()-this.getWidth())/2, this.getY());
-
-        /*if(GUI2.DEBUG){
-            this.jTextArea1.setText("Hi\ntest\nthree\nfour\nfive\nthere\nwoot\nagain\ntest\nthree\nfour");
-            this.jTextArea1.setCaretPosition(0);
-            executeNextRow();
-        }*/
     }
 
     public void setupDemo(String s, GUI2 p){
@@ -54,7 +50,7 @@ public class DemoMode extends javax.swing.JFrame {
         parent = p;
         executeNextRow();
     }
-
+    
     public void executeNextRow(){
         Element elem = Utilities.getParagraphElement(jTextArea1, currOffset);
         int start = elem.getStartOffset();
@@ -62,9 +58,12 @@ public class DemoMode extends javax.swing.JFrame {
         jTextArea1.select(start, end);
         currOffset = jTextArea1.getCaretPosition();
 
-        GUI2.getInstance().clojureEval(jTextArea1.getSelectedText());
+        buffer += jTextArea1.getSelectedText();
+        if (ClojureTools.matchingParens(buffer)){
+        	GUI2.getInstance().clojureEval(buffer);
+        	buffer = "";
+        }
         
-        //if(parent!=null) parent.makeLispCall(jTextArea1.getSelectedText());
         currRow++;
         if(jTextArea1.getLineCount() == currRow){
             jButton1.setEnabled(false);
