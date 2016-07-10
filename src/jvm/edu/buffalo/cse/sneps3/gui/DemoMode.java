@@ -59,7 +59,7 @@ public class DemoMode extends javax.swing.JFrame {
         currOffset = jTextArea1.getCaretPosition();
 
         buffer += jTextArea1.getSelectedText();
-        if (ClojureTools.matchingParens(buffer)){
+        if (!buffer.equals("") && ClojureTools.matchingParens(buffer)){
         	GUI2.getInstance().clojureEval(buffer);
         	buffer = "";
         }
