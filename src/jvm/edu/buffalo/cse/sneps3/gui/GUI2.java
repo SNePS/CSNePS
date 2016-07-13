@@ -114,7 +114,7 @@ public class GUI2 extends javax.swing.JFrame{
 
         this.setTitle("CSNePS GUI Version " + version);
         
-        if (!OSTools.isMac()) export = new ExportDialog();
+        //if (!OSTools.isMac()) export = new ExportDialog();
 
         //Use this to redirect output from the repl eventually...
         //Var.pushThreadBindings(RT.map(RT.OUT), <outstreamwriter>)
@@ -145,20 +145,20 @@ public class GUI2 extends javax.swing.JFrame{
 
                 //System.out.println(e.getKeyCode() + " " + e.isControlDown() + " " + e.isShiftDown());
 
-                if(e.isControlDown() && e.isShiftDown() && e.getKeyCode() == 83 && !OSTools.isMac()){
-                    if(doingSave) return false;
-                    doingSave = true;
-
-                    Component parent = e.getComponent();
-                    while(parent.getParent()!=null){
-                        parent = parent.getParent();
-                    }
-
-                    //ExportDialog export = new ExportDialog();
-                    export.showExportDialog(parent, "Take Screenshot...", parent, "guiscr");
-                    doingSave = false;
-                    return true;
-                }
+//                if(e.isControlDown() && e.isShiftDown() && e.getKeyCode() == 83 && !OSTools.isMac()){
+//                    if(doingSave) return false;
+//                    doingSave = true;
+//
+//                    Component parent = e.getComponent();
+//                    while(parent.getParent()!=null){
+//                        parent = parent.getParent();
+//                    }
+//
+//                    //ExportDialog export = new ExportDialog();
+//                    export.showExportDialog(parent, "Take Screenshot...", parent, "guiscr");
+//                    doingSave = false;
+//                    return true;
+//                }
                 return false;
             }
         };
@@ -866,7 +866,7 @@ public class GUI2 extends javax.swing.JFrame{
                 jMenuItem10ActionPerformed(evt);
             }
         });
-        if (!OSTools.isMac()) jMenu4.add(jMenuItem10);
+        //if (!OSTools.isMac()) jMenu4.add(jMenuItem10);
 
         jMenu1.add(jMenu4);
 
