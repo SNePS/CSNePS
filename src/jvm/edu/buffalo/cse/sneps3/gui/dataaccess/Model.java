@@ -155,6 +155,13 @@ public class Model {
         }
     }
     
+    private void initializeTerm(Term term){
+    	term.setCaseframe(getCaseframe(term.getClojureTerm()));
+		term.setDownCableset(getDownCableset(term));
+		term.setRestrictionset(getRestrictionset(term));
+		term.setDependencies(getDepends(term));
+    }
+    
     public void initializeTerms(){
     	initializeTerms(PersistentHashSet.create(RT.vals((IPersistentMap)((Ref)terms_ref.get()).deref())));
     }
@@ -163,8 +170,7 @@ public class Model {
     	Collection<Term> t = Term.reinitializeTerms(termset);
     	
     	for (Term term : t){
-    		term.setCaseframe(getCaseframe(term.getClojureTerm()));
-    		term.setDownCableset(getDownCableset(term));
+    		initializeTerm(term);
     	}
     	
     	for(IView i : views){
@@ -192,14 +198,9 @@ public class Model {
     	ArrayList<Term> t = new ArrayList<Term>(Term.createTerms(changedterms));
     	
     	for (Term term : t){
-    		// What takes longer - doing the deref in getCaseframe for all terms changed,
-    		// or building an arraylist of names of terms changed, and using the function
-    		// for that?
-    		term.setCaseframe(getCaseframe(term.getClojureTerm()));
-    		term.setDownCableset(getDownCableset(term));
-    		term.setRestrictionset(getRestrictionset(term));
-    		term.setDependencies(getDepends(term));
+    		initializeTerm(term);
     	}
+    	
     	for(IView i : views){
     		i.termUpdate(t, clear);
         }

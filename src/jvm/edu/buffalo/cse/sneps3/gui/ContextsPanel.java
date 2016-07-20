@@ -70,7 +70,6 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     }
 
     public void repopulate(Collection<Context> c){
-    	System.out.println("Repopulating.." + c);
     	rootNode = new DefaultMutableTreeNode("Contexts");
         treeModel = new DefaultTreeModel(rootNode);
     	
