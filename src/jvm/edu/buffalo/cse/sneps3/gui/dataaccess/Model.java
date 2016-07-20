@@ -173,7 +173,7 @@ public class Model {
     }
     
     public void initializeContexts(){
-    	contextsChanged((IPersistentMap)((Ref)contexts_ref.get()).deref(), false);
+    	contextsChanged((IPersistentMap)((Ref)contexts_ref.get()).deref(), true);
     	currentContextChanged((IPersistentMap)((Ref)curr_context_ref.get()).deref());
     } 
     
@@ -207,6 +207,7 @@ public class Model {
     
     public void currentContextHypsChanged(APersistentSet hyps){
     	if(GUI2.DEBUG) System.err.println(PersistentVector.create(hyps.seq()));
+    	System.out.println("Changed: " + PersistentVector.create(hyps.seq()));
     	for (Iterator itr = hyps.iterator(); itr.hasNext(); ){
     		Term.getTerm(itr.next().toString()).resetAsserted();
     	
@@ -219,6 +220,7 @@ public class Model {
     		Context.clearContexts();
     	
     	ArrayList<Context> newcts = Context.createContexts(addedcontexts);
+    	
     	for(IView i : views){
     		i.ctUpdate(newcts, clear);
         }

@@ -205,7 +205,6 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView{
 
     public void cfUpdate(Collection<Caseframe> cfc, boolean clear) {
     	if(clear){
-    		//rootNode.removeAllChildren();
 	        rootNode = new DefaultMutableTreeNode("Caseframes");
 	        treeModel = new SortedTreeModel(rootNode);
     		

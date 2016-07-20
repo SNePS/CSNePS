@@ -19,7 +19,7 @@ import edu.buffalo.cse.sneps3.gui.GUI2;
  * Java wrapper for CSNePS Contexts.
  * @author Daniel R. Schlegel
  */
-public class Context implements Comparable{
+public class Context implements Comparable<Context>{
 
 	private static HashMap<String,Context> contexts = new HashMap<String,Context>();
 	
@@ -38,8 +38,8 @@ public class Context implements Comparable{
     
     public static Context create(IPersistentMap context){
     	Context c = new Context(context);
-    	if(contexts.get(c.getName()) != null) 
-    		return contexts.get(c.getName());
+    	if(contexts.get(c.getName()) != null) {
+    		return contexts.get(c.getName());}
     	else{
     		contexts.put(c.getName(), c);
     		if(GUI2.DEBUG) 
@@ -48,6 +48,7 @@ public class Context implements Comparable{
     	}
     }
     
+    @SuppressWarnings("unchecked")
     public static ArrayList<Context> createContexts(IPersistentMap cljcts){
     	ArrayList<Context> cts = new ArrayList<Context>();
     	for (Iterator<MapEntry> itr = cljcts.iterator(); itr.hasNext(); ){
@@ -58,6 +59,7 @@ public class Context implements Comparable{
     
     public static void clearContexts(){
     	contexts.clear();
+    	currentContext=null;
     }
     
     public static Context getContext(String name){
@@ -123,7 +125,7 @@ public class Context implements Comparable{
     }
 
 	@Override
-	public int compareTo(Object arg0) {
+	public int compareTo(Context arg0) {
 		return this.toString().compareTo(arg0.toString());
 	}
 }

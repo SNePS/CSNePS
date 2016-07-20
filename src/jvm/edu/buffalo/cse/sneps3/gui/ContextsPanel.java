@@ -39,7 +39,12 @@ import javax.swing.tree.TreeSelectionModel;
  */
 public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSelectionListener {
 
-    DefaultTreeModel treeModel;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 327228274883745064L;
+	
+	DefaultTreeModel treeModel;
     DefaultMutableTreeNode rootNode;
 
     CreateContextForm ccf;
@@ -76,6 +81,7 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     }
 
     public void repopulate(Collection<Context> c){
+    	System.out.println("Repopulating.." + c);
         for(Context ct : c){
             if(ct.getParents().isEmpty()){
                 ComparableTreeNode t = new ComparableTreeNode(ct);
@@ -213,8 +219,8 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     public void ctUpdate(ArrayList<Context> v, Boolean clear) {
     	if(clear){
     		rootNode = new DefaultMutableTreeNode("Contexts");
-    		treeModel = new DefaultTreeModel(rootNode);
-    		jTree_contexts.setModel(treeModel);
+            treeModel = new DefaultTreeModel(rootNode);
+            jTree_contexts.setModel(treeModel);
     	}
         repopulate(Context.getContexts());
         jTree_contexts.repaint();

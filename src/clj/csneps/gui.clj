@@ -24,9 +24,16 @@
           termchangefn (fn [ref key oldvalue newvalue] (.termsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
                                                                       (map-difference oldvalue newvalue)
                                                                       (empty? newvalue)))
-          contextchangefn (fn [ref key oldvalue newvalue] (.contextsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
-                                                                            (map-difference oldvalue newvalue)
-                                                                            (if (>= (count oldvalue) (count newvalue)) true false)))
+          contextchangefn (fn [ref key oldvalue newvalue] (let [clear? (>= (count oldvalue) (count newvalue))]
+                                                            (if clear? 
+                                                              (.contextsChanged 
+                                                                (edu.buffalo.cse.sneps3.gui.GUI2/getModel)
+                                                                newvalue
+                                                                true)
+                                                              (.contextsChanged 
+                                                                (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                                                                (map-difference oldvalue newvalue)
+                                                                false))))
           slotchangefn (fn [ref key oldvalue newvalue] (.slotsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
                                                                       (map-difference oldvalue newvalue)
                                                                       (if (>= (count oldvalue) (count newvalue)) true false)))
