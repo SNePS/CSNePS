@@ -20,6 +20,7 @@ import edu.buffalo.cse.sneps3.gui.business.repl.REPLView;
 
 //import com.franz.jlinker.*;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
 import java.util.Stack;
 
 
@@ -36,9 +37,15 @@ public class REPLPanel extends javax.swing.JPanel {
 	private Stack<Character> parens;
 	private String inputText = "";
 	
+	private ArrayList<String> history;
+	
+	private int historyLoc = -1;
+	
 	//public REPLFrame parent;
 	/** Creates new form REPLPanel */
 	public REPLPanel() {
+		history = new ArrayList<String>();
+		
 		initComponents();
 		this.setLayout(new BorderLayout());
 		add(jSplitPane1, BorderLayout.CENTER);
@@ -168,12 +175,31 @@ public class REPLPanel extends javax.swing.JPanel {
 		if(evt.getKeyCode() == KeyEvent.VK_ENTER){
 			String text = jTextField1.getText();
 
-			//appendText("=> " + text + "\n");
 			makeClojureCall(text);
-			//replView.eval(text);
+			history.add(text);
 
 			jTextField1.setText("");
 		}
+		else if (evt.getKeyCode() == KeyEvent.VK_UP){
+			if (history.size() == 0) return;
+			if (historyLoc == -1) historyLoc = history.size()-1;
+			else if (historyLoc > 0) historyLoc--;
+			
+			jTextField1.setText(history.get(historyLoc));
+ 		}
+		else if (evt.getKeyCode() == KeyEvent.VK_DOWN){
+			if (historyLoc == -1) return;
+			if (historyLoc == history.size()-1){
+				jTextField1.setText("");
+				historyLoc++;
+				return;
+			}
+			else if (historyLoc > history.size()-1){
+				return;
+			}
+			else jTextField1.setText(history.get(++historyLoc));
+ 		}
+		else historyLoc = -1;
 
 	}
 
