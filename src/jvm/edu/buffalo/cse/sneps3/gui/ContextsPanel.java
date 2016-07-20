@@ -1,9 +1,4 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
  * SemanticTypesPanel.java
  *
  * Created on Feb 27, 2010, 3:27:49 PM
@@ -31,17 +26,11 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-
-
 /**
- *
- * @author dan
+ * @author Daniel R. Schlegel
  */
 public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSelectionListener {
 
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = 327228274883745064L;
 	
 	DefaultTreeModel treeModel;
@@ -49,7 +38,7 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
 
     CreateContextForm ccf;
 
-    /** Creates new form SemanticTypesPanel */
+    /** Creates new ContextsPanel */
     public ContextsPanel() {
         initComponents();
 
@@ -199,12 +188,12 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
         );
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {
         ccf = new CreateContextForm();
         ccf.setVisible(true);
-}//GEN-LAST:event_jButton1ActionPerformed
+}
 
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;

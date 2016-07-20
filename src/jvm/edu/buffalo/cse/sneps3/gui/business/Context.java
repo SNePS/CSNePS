@@ -8,9 +8,11 @@ import java.util.Iterator;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
+import clojure.lang.IPersistentVector;
 import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
+import clojure.lang.PersistentVector;
 import clojure.lang.Ref;
 import clojure.lang.Symbol;
 import edu.buffalo.cse.sneps3.gui.GUI2;
@@ -87,10 +89,10 @@ public class Context implements Comparable<Context>{
     
     public ArrayList<Context> getParents(){
     	ArrayList<Context> p = new ArrayList<Context>();
-    	ISeq cljp = (ISeq)context.valAt(parents_key);
-	    while(cljp.next() != null){
-	    	p.add(create((IPersistentMap)cljp.first()));
-	    	cljp = cljp.next();
+    	IPersistentVector v = PersistentVector.create((ISeq)context.valAt(parents_key));
+    	for (int i = 0; i < v.length(); i++){
+    		if(v.nth(i) != null) // Vector created from empty list contains nil.
+    			p.add(create((IPersistentMap)v.nth(i)));
 	    }
     	return p;
     }
