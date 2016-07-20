@@ -71,6 +71,9 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
 
     public void repopulate(Collection<Context> c){
     	System.out.println("Repopulating.." + c);
+    	rootNode = new DefaultMutableTreeNode("Contexts");
+        treeModel = new DefaultTreeModel(rootNode);
+    	
         for(Context ct : c){
             if(ct.getParents().isEmpty()){
                 ComparableTreeNode t = new ComparableTreeNode(ct);
@@ -78,6 +81,8 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
                 populateChildrenOf(t, c);  
             }
         }
+
+        jTree_contexts.setModel(treeModel);
         expandAll(jTree_contexts);
     }
 
@@ -206,11 +211,6 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     private javax.swing.JTree jTree_contexts;
 
     public void ctUpdate(ArrayList<Context> v, Boolean clear) {
-    	if(clear){
-    		rootNode = new DefaultMutableTreeNode("Contexts");
-            treeModel = new DefaultTreeModel(rootNode);
-            jTree_contexts.setModel(treeModel);
-    	}
         repopulate(Context.getContexts());
         jTree_contexts.repaint();
     }
