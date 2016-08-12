@@ -1142,7 +1142,7 @@
   [var rst]
   (cond
     (function-symbol? rst) [rst var]
-    (symbol? rst) ['Isa var rst]
+    (or (symbol? rst) (string? rst)) ['Isa var rst]
     (and (seqable? rst)
          (not (some #(= % var) rst))
          (not= (count (rest rst)) (count (:slots (cf/find-frame (first rst))))))
