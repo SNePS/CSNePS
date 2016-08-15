@@ -534,7 +534,8 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 	public boolean collapseVertex(V vertex){
 		CollapsedEdge e = vertex.getCollapsedEdge();
 		
-		if (GUI2.DEBUG) System.out.println("Attempting to collapse: " + vertex + " (" + e + ")");
+		//if (GUI2.DEBUG) 
+		//	System.out.println("Attempting to collapse: " + vertex + " (" + e + ")");
 		
 		if(e != null){
 			collapsedVertices.put(vertex, e);

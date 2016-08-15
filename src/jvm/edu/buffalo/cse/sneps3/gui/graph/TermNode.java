@@ -227,7 +227,8 @@ public class TermNode<E extends IEdge> implements ITermNode<E> {
     	if(getOutEdges().size() == 2
     			&& getInEdges().isEmpty()
     			&& getTerm().getCaseframe().getSlots().size() == 2
-    			&& getTerm().getCaseframe().getType().equals(SemanticType.getSemanticType("Propositional"))){
+    			&& (getTerm().getCaseframe().getType().equals(SemanticType.getSemanticType("Propositional")) ||
+    				getTerm().getCaseframe().getType().getAncestors().contains(SemanticType.getSemanticType("Propositional")))){
     		Caseframe termcf = getTerm().getCaseframe();
     		return new CollapsedEdge(getTerm().getCaseframe().getName(), 
     				getOutNodesForRelation(termcf.getSlotNames().get(0)).get(0),
@@ -236,7 +237,8 @@ public class TermNode<E extends IEdge> implements ITermNode<E> {
     	}
     	else if (getOutEdges().size() == 3
     			&& getInEdges().isEmpty()
-    			&& getTerm().getCaseframe().getType().equals(SemanticType.getSemanticType("Propositional"))
+    			&& (getTerm().getCaseframe().getType().equals(SemanticType.getSemanticType("Propositional")) ||
+    				getTerm().getCaseframe().getType().getAncestors().contains(SemanticType.getSemanticType("Propositional")))
     			&& !getTerm().getCaseframe().getFSymbols().isEmpty()){
     		Caseframe termcf = getTerm().getCaseframe();
     		CollapsedEdge e = new CollapsedEdge(getOutNodesForRelation(termcf.getSlotNames().get(0)).get(0).toString(),
