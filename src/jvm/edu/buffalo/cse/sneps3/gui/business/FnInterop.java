@@ -9,11 +9,13 @@ import edu.buffalo.cse.sneps3.gui.business.InteropUtils;
 import edu.buffalo.cse.sneps3.gui.dataaccess.Controller;
 import clojure.lang.IPersistentList;
 import clojure.lang.IPersistentMap;
+import clojure.lang.IPersistentVector;
 import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.PersistentHashSet;
 import clojure.lang.PersistentList;
+import clojure.lang.PersistentVector;
 import clojure.lang.IPersistentMap;
 import clojure.lang.RT;
 import clojure.lang.Symbol;
@@ -166,10 +168,19 @@ public class FnInterop {
 	
 	public static Set<Term> find(String pattern){
 		Set<Term> results = new HashSet<Term>();
-		IPersistentMap clores = Controller.build_find((ISeq)RT.readString(pattern));
-		for(Iterator<MapEntry> itr = clores.iterator(); itr.hasNext(); ){
-			results.add(Term.create((IPersistentMap)itr.next().key()));
+		// Seq of vector pairs - ([wft1!: (Isa x y) {?q y}] [wft2!: (Isa x z) {?q z}])
+		ISeq clores = Controller.build_find((ISeq)RT.readString(pattern));
+		
+		while(clores != null && clores.count() > 0){
+			IPersistentVector item = (IPersistentVector)clores.first();
+			results.add(Term.create((IPersistentMap)item.nth(0)));
+			clores = clores.next();
+			System.out.println(results);
 		}
+		
+//		for(Iterator<MapEntry> itr = clores.iterator(); itr.hasNext(); ){
+//			results.add(Term.create((IPersistentMap)itr.next().key()));
+//		}
 		
 		return results;
 	}

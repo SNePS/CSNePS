@@ -36,11 +36,11 @@ public class Controller {
 	private static Var csneps_core_printer_term_printer_fn;
 	private static Var csneps_print_print_kb_to_text_file_fn;
 	
-	public static IPersistentMap build_find(ISeq pattern){
+	public static ISeq build_find(ISeq pattern){
 		if (build_find_fn == null) 
 			build_find_fn = RT.var("csneps.core.build", "find");
 		try {
-			return (IPersistentMap)build_find_fn.invoke(pattern);
+			return (ISeq)build_find_fn.invoke(pattern);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}

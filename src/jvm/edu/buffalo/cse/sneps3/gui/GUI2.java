@@ -59,7 +59,7 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2016.07.20";
+	public static final String version = "2016.08.16";
 	
     public static final boolean DEBUG = false;
 
