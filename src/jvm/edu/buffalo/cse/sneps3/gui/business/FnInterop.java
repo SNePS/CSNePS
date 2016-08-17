@@ -178,10 +178,6 @@ public class FnInterop {
 			System.out.println(results);
 		}
 		
-//		for(Iterator<MapEntry> itr = clores.iterator(); itr.hasNext(); ){
-//			results.add(Term.create((IPersistentMap)itr.next().key()));
-//		}
-		
 		return results;
 	}
 	

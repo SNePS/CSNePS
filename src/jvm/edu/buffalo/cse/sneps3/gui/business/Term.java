@@ -20,13 +20,13 @@ import clojure.lang.Var;
 
 public class Term {
 
-	private static HashMap<String, Term> terms = new HashMap<String, Term>();
-	private static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
-	private static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
-	private static HashMap<String, Set<Term>> dependenciesset = new HashMap<String, Set<Term>>();
-	private static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
-	private static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
-	private static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
+	private final static HashMap<String, Term> terms = new HashMap<String, Term>();
+	private final static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
+	private final static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
+	private final static HashMap<String, Set<Term>> dependenciesset = new HashMap<String, Set<Term>>();
+	private final static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
+	private final static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
+	private final static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
 	
 
 	Var i_channels_ref;
@@ -41,15 +41,17 @@ public class Term {
 	
 	
 	
-	private static Keyword name_key = Keyword.intern("name");
-	private static Keyword type_key = Keyword.intern("type");
-	//private static Keyword caseframe_key = Keyword.intern("caseframe");
-	//private static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
-	//private static Keyword downcableset_key = Keyword.intern("down-cableset");
-	private static Keyword activation_key = Keyword.intern("activation-value");
-	//private static Keyword i_channels_key = Keyword.intern("i-channels");
-	//private static Keyword u_channels_key = Keyword.intern("u-channels");
-	//private static Keyword g_channels_key = Keyword.intern("g-channels");
+	private final static Keyword name_key = Keyword.intern("name");
+	private final static Keyword type_key = Keyword.intern("type");
+	private final static Keyword min_key = Keyword.intern("min");
+	private final static Keyword max_key = Keyword.intern("max");
+	//private final static Keyword caseframe_key = Keyword.intern("caseframe");
+	//private final static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
+	//private final static Keyword downcableset_key = Keyword.intern("down-cableset");
+	private final static Keyword activation_key = Keyword.intern("activation-value");
+	//private final static Keyword i_channels_key = Keyword.intern("i-channels");
+	//private final static Keyword u_channels_key = Keyword.intern("u-channels");
+	//private final static Keyword g_channels_key = Keyword.intern("g-channels");
 	
 	private IPersistentMap term;
 	
@@ -90,7 +92,7 @@ public class Term {
 	}
 	
 	public static Collection<Term> reinitializeTerms(APersistentSet sts){
-		terms = new HashMap<String, Term>();
+		terms.clear();
 		for (Iterator<IPersistentMap> iter = sts.iterator(); iter.hasNext(); ){
 			create(iter.next());
 		}
@@ -121,6 +123,14 @@ public class Term {
 	
 	public Double getActivation(){
 		return (Double)term.valAt(activation_key);
+	}
+	
+	public Integer getMin(){
+		return (Integer)term.valAt(min_key);
+	}
+	
+	public Integer getMax(){
+		return (Integer)term.valAt(max_key);
 	}
 	
 	public Caseframe getCaseframe(){

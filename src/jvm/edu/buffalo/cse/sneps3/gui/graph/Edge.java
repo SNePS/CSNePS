@@ -6,12 +6,20 @@ public class Edge implements IEdge{
 
 	private ITermNode<IEdge> from;
 	private ITermNode<IEdge> to;
-	private String relation;
+	private Slot slot; 
+	private String relationName;
 	
-	public Edge(String relation, ITermNode<IEdge> from, ITermNode<IEdge> to) {
+	public Edge(Slot slot, ITermNode<IEdge> from, ITermNode<IEdge> to) {
         this.from = from;
         this.to = to;
-        this.relation = relation;
+        this.slot = slot;
+        this.relationName = slot.getName();
+	}
+	
+	Edge(String relation, ITermNode<IEdge> from, ITermNode<IEdge> to) {
+        this.from = from;
+        this.to = to;
+        this.relationName = relation;
 	}
 	
 	/* (non-Javadoc)
@@ -30,22 +38,26 @@ public class Edge implements IEdge{
 		return to;
 	}
 	
+	public Slot getRelation(){
+		return slot;
+	}
+	
 	/* (non-Javadoc)
 	 * @see edu.buffalo.cse.sneps3.gui.graph.IEdge#getRelation()
 	 */
 	@Override
-	public String getRelation(){
-		return relation;
+	public String getRelationName(){
+		return relationName;
 	}
 	
 	public String toString(){
-		return relation.toString();
+		return relationName;
 	}
 	
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 89 * hash + (this.relation != null ? this.relation.hashCode() : 0);
+        hash = 89 * hash + (this.relationName != null ? this.relationName.hashCode() : 0);
         hash = 89 * hash + (this.from != null ? this.from.hashCode() : 0);
         hash = 89 * hash + (this.from != null ? this.from.hashCode() : 0);
         return hash;
@@ -61,7 +73,7 @@ public class Edge implements IEdge{
         }
         final Edge other = (Edge)obj;
 
-        if(this.from.equals(other.from) && this.to.equals(other.to) && this.relation.equals(other.relation)) return true;
+        if(this.from.equals(other.from) && this.to.equals(other.to) && this.relationName.equals(other.relationName)) return true;
 
         return false;
     }

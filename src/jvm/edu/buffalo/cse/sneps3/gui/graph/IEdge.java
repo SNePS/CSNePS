@@ -6,6 +6,6 @@ public interface IEdge {
 
 	public ITermNode<IEdge> getTo();
 
-	public String getRelation();
+	public String getRelationName();
 
 }

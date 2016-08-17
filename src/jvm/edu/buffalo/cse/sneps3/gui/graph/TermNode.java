@@ -213,7 +213,7 @@ public class TermNode<E extends IEdge> implements ITermNode<E> {
     private ArrayList<ITermNode<IEdge>> getOutNodesForRelation(String relation){
     	ArrayList<ITermNode<IEdge>> relnodes = new ArrayList<ITermNode<IEdge>>();
     	for(IEdge e : getOutEdges()){
-    		if(e.getRelation().equals(relation)) relnodes.add(e.getTo());
+    		if(e.getRelationName().equals(relation)) relnodes.add(e.getTo());
     	}
     	return relnodes;
     }
