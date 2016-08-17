@@ -125,12 +125,12 @@ public class Term {
 		return (Double)term.valAt(activation_key);
 	}
 	
-	public Integer getMin(){
-		return (Integer)term.valAt(min_key);
+	public Long getMin(){
+		return (Long)term.valAt(min_key);
 	}
 	
-	public Integer getMax(){
-		return (Integer)term.valAt(max_key);
+	public Long getMax(){
+		return (Long)term.valAt(max_key);
 	}
 	
 	public Caseframe getCaseframe(){

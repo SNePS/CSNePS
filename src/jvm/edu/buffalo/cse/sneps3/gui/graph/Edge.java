@@ -51,6 +51,19 @@ public class Edge implements IEdge{
 	}
 	
 	public String toString(){
+		if (slot == Slot.getSlot("andorargs")){
+			String type = this.getFrom().getTerm().getType();
+			if(type.equals("Param2op") || type.equals("Andor")) 
+				return relationName + " (" + this.getFrom().getTerm().getMin() + ", " + this.getFrom().getTerm().getMax() +")";
+			return type.toLowerCase();
+		}
+		if (slot == Slot.getSlot("threshargs")){
+			String type = this.getFrom().getTerm().getType();
+			if(type.equals("Param2op") || type.equals("Thresh")) 
+				return relationName + " (" + this.getFrom().getTerm().getMin() + ", " + this.getFrom().getTerm().getMax() +")";
+			return type.toLowerCase();
+		}
+		
 		return relationName;
 	}
 	
