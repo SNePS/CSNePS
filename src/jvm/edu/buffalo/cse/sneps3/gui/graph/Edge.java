@@ -1,6 +1,7 @@
 package edu.buffalo.cse.sneps3.gui.graph;
 
 import edu.buffalo.cse.sneps3.gui.business.Slot;
+import edu.buffalo.cse.sneps3.gui.business.Term;
 
 public class Edge implements IEdge{
 
@@ -63,6 +64,11 @@ public class Edge implements IEdge{
 				return relationName + " (" + this.getFrom().getTerm().getMin() + ", " + this.getFrom().getTerm().getMax() +")";
 			return type.toLowerCase();
 		}
+		if (slot == Slot.getSlot("nor")){
+			Term wft = this.getFrom().getTerm();
+			if(wft.getDownCableset().get(slot).size() == 1) return "not";
+		}
+		
 		
 		return relationName;
 	}
