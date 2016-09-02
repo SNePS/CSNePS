@@ -216,11 +216,13 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
             }
             return;
         }
-        String sbtext = "   " + node.toString();
+        String sbtext = "   ";
 
-        if(node.getTerm().isMolecular()){
-            sbtext += " " + node.getTerm().toString();
-        }
+        if(node.getTerm().isMolecular())
+            sbtext += node.getTerm().toString();
+        else 
+        	sbtext += node.toString();
+        
         if(!node.getInEdges().isEmpty()){
             sbtext += " is in relation" + (node.getInEdges().size() == 1 ? "" : "s") + ": " + new HashSet(node.getRelationsPartOf()); //Use a HashSet to eliminate duplicates.
         }
