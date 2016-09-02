@@ -14,7 +14,8 @@
       (ct/defineContext 'DefaultCT
         :docstring "The default current context."
         :parents '(BaseCT))
-      (ct/setCurrentContext 'DefaultCT)
+      ;; Set current context after the dosync, since 
+      ;; it's side-effect producing. 
 
       ;;Remove term-type maps from semantic types.
       (ref-set csneps/type-map (hash-map))
@@ -160,8 +161,12 @@
         (defineCaseframe 'Policy '('rule rulename condition action subrule)
           :docstring "for the rule [name] to fire, [condition] must be matched,
                       then [action] may occur, and [subrule] may be matched."))
+      ))
   
-      ;; Output message.
-      (if clearall
-        (println "Knowledge Base cleared. Contexts, slots, caseframes, and semantic types reinitialized.")
-        (println "Knowledge Base cleared. Contexts reinitialized.")))))
+  ;; Do this outside the dosync (see above).
+  (ct/setCurrentContext 'DefaultCT)
+
+  ;; Output message.
+  (if (first clear?)
+    (println "Knowledge Base cleared. Contexts, slots, caseframes, and semantic types reinitialized.")
+    (println "Knowledge Base cleared. Contexts reinitialized.")))
