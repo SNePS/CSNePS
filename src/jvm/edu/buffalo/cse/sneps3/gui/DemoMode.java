@@ -48,6 +48,7 @@ public class DemoMode extends javax.swing.JFrame {
         jTextArea1.setText(s);
         this.jTextArea1.setCaretPosition(0);
         parent = p;
+        buffer = "";
         executeNextRow();
     }
     
@@ -58,7 +59,9 @@ public class DemoMode extends javax.swing.JFrame {
         jTextArea1.select(start, end);
         currOffset = jTextArea1.getCaretPosition();
 
-        buffer += jTextArea1.getSelectedText();
+        if (jTextArea1.getSelectedText() != null)
+        	buffer += jTextArea1.getSelectedText();
+        
         if (!buffer.equals("") && ClojureTools.matchingParens(buffer)){
         	GUI2.getInstance().clojureEval(buffer);
         	buffer = "";
