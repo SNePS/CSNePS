@@ -16,7 +16,6 @@ import java.awt.Toolkit;
 import javax.swing.text.Element;
 import javax.swing.text.Utilities;
 
-import clojure.lang.RT;
 import edu.buffalo.cse.sneps3.gui.util.ClojureTools;
 
 /**
@@ -25,12 +24,14 @@ import edu.buffalo.cse.sneps3.gui.util.ClojureTools;
  */
 public class DemoMode extends javax.swing.JFrame {
 
-    GUI2 parent;
+	private static final long serialVersionUID = 6945617409033295743L;
 
-    int currOffset = 0;
-    int currRow = 0;
+	GUI2 parent;
+
+    private int currOffset = 0;
+    private int currRow = 0;
     
-    String buffer;
+    private String buffer;
 
     /** Creates new form DemoMode */
     public DemoMode() {
@@ -69,17 +70,21 @@ public class DemoMode extends javax.swing.JFrame {
         
         currRow++;
         if(jTextArea1.getLineCount() == currRow){
-            jButton1.setEnabled(false);
-            jButton2.setEnabled(false);
+            jButton_next.setEnabled(false);
+            jButton_runToEnd.setEnabled(false);
         }
+    }
+    
+    public boolean isFinished(){
+    	return !jButton_next.isEnabled();
     }
     
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
+        jButton_next = new javax.swing.JButton();
+        jButton_runToEnd = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -87,15 +92,15 @@ public class DemoMode extends javax.swing.JFrame {
         jTextArea1.setRows(5);
         jScrollPane1.setViewportView(jTextArea1);
 
-        jButton1.setText("Next");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton_next.setText("Next");
+        jButton_next.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
-        jButton2.setText("Run To End");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        jButton_runToEnd.setText("Run To End");
+        jButton_runToEnd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton2ActionPerformed(evt);
             }
@@ -110,9 +115,9 @@ public class DemoMode extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 768, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(jButton_next)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton2)))
+                        .addComponent(jButton_runToEnd)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -122,8 +127,8 @@ public class DemoMode extends javax.swing.JFrame {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 144, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2)))
+                    .addComponent(jButton_next)
+                    .addComponent(jButton_runToEnd)))
         );
 
         pack();
@@ -150,8 +155,8 @@ public class DemoMode extends javax.swing.JFrame {
         });
     }
 
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton_next;
+    private javax.swing.JButton jButton_runToEnd;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextArea jTextArea1;
 

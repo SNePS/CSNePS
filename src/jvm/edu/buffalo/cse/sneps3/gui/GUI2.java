@@ -46,6 +46,7 @@ import java.util.logging.Logger;
 import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -59,7 +60,7 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2016.08.16";
+	public static final String version = "2016.09.02";
 	
     public static final boolean DEBUG = false;
 
@@ -105,6 +106,8 @@ public class GUI2 extends javax.swing.JFrame{
 
     ExportDialog export;
     boolean doingSave = false;
+    
+    private DemoMode demoMode;
 
     //static ArrayList<Caseframe> hide_cf_list = new ArrayList<Caseframe>();
 
@@ -1203,7 +1206,14 @@ public class GUI2 extends javax.swing.JFrame{
 
     private void loadDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadDemoActionPerformed
         try{
-            DemoMode dm = new DemoMode();
+        	if (demoMode != null && !demoMode.isFinished()){
+        		int dialogResult = JOptionPane.showConfirmDialog(null, 
+        				"A demo is already running, would you like to load a new demo?", 
+        				"Demo Already Running", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        		
+        		if (dialogResult == JOptionPane.NO_OPTION) return;
+        	}
+
             JFileChooser chooser = new JFileChooser();
             chooser.setCurrentDirectory(currentDir);
             int returnVal = chooser.showOpenDialog(this);
@@ -1219,8 +1229,16 @@ public class GUI2 extends javax.swing.JFrame{
                     stringBuilder.append( line );
                     stringBuilder.append( ls );
                 }
-                dm.setVisible(true);
-                dm.setupDemo(stringBuilder.toString(), this);
+                reader.close();
+                
+                if(demoMode != null) {
+        			demoMode.setVisible(false);
+        			demoMode.dispose();
+        		}
+                
+                demoMode = new DemoMode();
+                demoMode.setVisible(true);
+                demoMode.setupDemo(stringBuilder.toString(), this);
             }
         }
         catch(Exception e){e.printStackTrace();}
