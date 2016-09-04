@@ -98,6 +98,7 @@ public class Context implements Comparable<Context>{
     }
     
     //TODO: We're calling this really often. Maybe some efficiency changes can happen.
+    @SuppressWarnings("unchecked")
     public HashSet<Term> getHyps(){
     	HashSet<Term> hyps = new HashSet<Term>();
     	APersistentSet cljhyps = (APersistentSet)((Ref)context.valAt(hyps_key)).deref();
@@ -108,6 +109,7 @@ public class Context implements Comparable<Context>{
     	return hyps;
     }
     
+    @SuppressWarnings("unchecked")
     public HashSet<Term> getDers(){
     	HashSet<Term> ders = new HashSet<Term>();
     	APersistentSet cljders = (APersistentSet)((Ref)context.valAt(ders_key)).deref();

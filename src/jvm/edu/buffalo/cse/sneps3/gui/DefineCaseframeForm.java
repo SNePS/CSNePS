@@ -11,15 +11,10 @@
 
 package edu.buffalo.cse.sneps3.gui;
 
-import edu.buffalo.cse.sneps3.gui.business.Caseframe;
 import edu.buffalo.cse.sneps3.gui.business.FnInterop;
 import edu.buffalo.cse.sneps3.gui.business.Slot;
 import edu.buffalo.cse.sneps3.gui.business.SemanticType;
 
-import edu.uci.ics.jung.algorithms.layout.FRLayout;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
-import edu.uci.ics.jung.visualization.VisualizationViewer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,10 +32,12 @@ import javax.swing.DefaultListModel;
  */
 public class DefineCaseframeForm extends javax.swing.JFrame{
 
-    ArrayList<Slot> slots;
+	private static final long serialVersionUID = 5203255870323043291L;
 
-    DefaultListModel selectedModel;
-    SortedListModel unselectedModel;
+	ArrayList<Slot> slots;
+
+    DefaultListModel<Slot> selectedModel;
+    SortedListModel<Slot> unselectedModel;
 
     SlotForm slotForm;
 
@@ -51,29 +48,18 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
     /** Creates new form CaseFrameForm */
     public DefineCaseframeForm() {
         initComponents();
-        initPreview();
-        selectedModel = new DefaultListModel();
-        unselectedModel = new SortedListModel();
+        selectedModel = new DefaultListModel<Slot>();
+        unselectedModel = new SortedListModel<Slot>();
         jList_selected.setModel(selectedModel);
         jList_unselected.setModel(unselectedModel);
 
-        DefaultComboBoxModel m = new DefaultComboBoxModel();
+        DefaultComboBoxModel<SemanticType> m = new DefaultComboBoxModel<SemanticType>();
         for(SemanticType t : SemanticType.getSemanticTypes()){
             m.addElement(t);
         }
         jComboBox_type.setModel(m);
 
         //unselectedModel.addElement("Test");
-    }
-
-    public void initPreview(){
-        DirectedSparseMultigraph g = new DirectedSparseMultigraph<String, String>();
-        Layout<String, String> layout = new FRLayout(g);
-        VisualizationViewer<String, String> vv = new VisualizationViewer<String, String>(layout);
-        jSplitPane_preview.setBottomComponent(vv);
-
-        ///test
-        g.addVertex("M");
     }
 
     public void setMode(Mode m){
@@ -122,27 +108,23 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
     private void initComponents() {
 
         jSplitPane1 = new javax.swing.JSplitPane();
-        jSplitPane2 = new javax.swing.JSplitPane();
         jPanel2 = new javax.swing.JPanel();
         jTextField_name = new javax.swing.JTextField();
-        jLabel2 = new javax.swing.JLabel();
-        jComboBox_type = new javax.swing.JComboBox();
-        jPanel3 = new javax.swing.JPanel();
+        jLabel_semtype = new javax.swing.JLabel();
+        jComboBox_type = new javax.swing.JComboBox<SemanticType>();
+        jPanel_slots = new javax.swing.JPanel();
         jButton_newslot = new javax.swing.JButton();
         jButton_unselect = new javax.swing.JButton();
         jButton_select = new javax.swing.JButton();
         jSplitPane3 = new javax.swing.JSplitPane();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jList_unselected = new javax.swing.JList();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jList_selected = new javax.swing.JList();
-        jComboBox_head = new javax.swing.JComboBox();
-        jSplitPane_preview = new javax.swing.JSplitPane();
-        jPanel4 = new javax.swing.JPanel();
-        jLabel7 = new javax.swing.JLabel();
-        jPanel1 = new javax.swing.JPanel();
+        jScrollPane_unselected = new javax.swing.JScrollPane();
+        jList_unselected = new javax.swing.JList<Slot>();
+        jScrollPane_selected = new javax.swing.JScrollPane();
+        jList_selected = new javax.swing.JList<Slot>();
+        jComboBox_head = new javax.swing.JComboBox<String>();
+        jPanel_mainButtons = new javax.swing.JPanel();
         jButton_create = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
+        jButton_cancel = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Define Caseframe");
@@ -152,14 +134,9 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
         jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
         jSplitPane1.setResizeWeight(1.0);
 
-        jSplitPane2.setDividerLocation(140);
-        jSplitPane2.setDividerSize(0);
+        jLabel_semtype.setText("Semantic Type: ");
 
-        jLabel2.setText("Semantic Type: ");
-
-        jComboBox_type.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Slots"));
+        jPanel_slots.setBorder(javax.swing.BorderFactory.createTitledBorder("Slots"));
 
         jButton_newslot.setFont(new java.awt.Font("DejaVu Sans", 0, 10));
         jButton_newslot.setText("New Slot");
@@ -192,26 +169,16 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
         jSplitPane3.setDividerSize(5);
         jSplitPane3.setResizeWeight(0.5);
 
-        jList_unselected.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane1.setViewportView(jList_unselected);
+        jScrollPane_unselected.setViewportView(jList_unselected);
 
-        jSplitPane3.setLeftComponent(jScrollPane1);
+        jSplitPane3.setLeftComponent(jScrollPane_unselected);
+        
+        jScrollPane_selected.setViewportView(jList_selected);
 
-        jList_selected.setModel(new javax.swing.AbstractListModel() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public Object getElementAt(int i) { return strings[i]; }
-        });
-        jScrollPane2.setViewportView(jList_selected);
+        jSplitPane3.setRightComponent(jScrollPane_selected);
 
-        jSplitPane3.setRightComponent(jScrollPane2);
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel_slots);
+        jPanel_slots.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
@@ -240,7 +207,7 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
                 .addContainerGap())
         );
 
-        jComboBox_head.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Name", "Function Symbols" }));
+        jComboBox_head.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Name", "Function Symbols" }));
         jComboBox_head.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBox_headActionPerformed(evt);
@@ -259,10 +226,10 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jTextField_name, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel2)
+                        .addComponent(jLabel_semtype)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBox_type, 0, 341, Short.MAX_VALUE))
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel_slots, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -274,44 +241,14 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
                     .addComponent(jTextField_name, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
+                    .addComponent(jLabel_semtype)
                     .addComponent(jComboBox_type, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jPanel_slots, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(17, Short.MAX_VALUE))
         );
 
-        jSplitPane2.setRightComponent(jPanel2);
-
-        jSplitPane_preview.setDividerLocation(20);
-        jSplitPane_preview.setDividerSize(0);
-        jSplitPane_preview.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
-
-        jPanel4.setBackground(new java.awt.Color(185, 177, 171));
-
-        jLabel7.setText("Preview");
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel7)
-                .addContainerGap(69, Short.MAX_VALUE))
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jLabel7)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-
-        jSplitPane_preview.setTopComponent(jPanel4);
-
-        jSplitPane2.setLeftComponent(jSplitPane_preview);
-
-        jSplitPane1.setTopComponent(jSplitPane2);
+        jSplitPane1.setTopComponent(jPanel2);
 
         jButton_create.setText("Create");
         jButton_create.addActionListener(new java.awt.event.ActionListener() {
@@ -320,22 +257,22 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
             }
         });
 
-        jButton1.setText("Cancel");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButton_cancel.setText("Cancel");
+        jButton_cancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel_mainButtons);
+        jPanel_mainButtons.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(442, Short.MAX_VALUE)
+                .addContainerGap(350, Short.MAX_VALUE)
                 .addComponent(jButton_create)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1)
+                .addComponent(jButton_cancel)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -343,18 +280,18 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
+                    .addComponent(jButton_cancel)
                     .addComponent(jButton_create))
                 .addContainerGap())
         );
 
-        jSplitPane1.setBottomComponent(jPanel1);
+        jSplitPane1.setBottomComponent(jPanel_mainButtons);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 625, Short.MAX_VALUE)
+            .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -414,7 +351,7 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
     private void jButton_selectActionPerformed(java.awt.event.ActionEvent evt) {
         int sel = jList_unselected.getSelectedIndex();
         if(sel < 0) return;
-        selectedModel.addElement(unselectedModel.getElementAt(sel));
+        selectedModel.addElement((Slot)unselectedModel.getElementAt(sel));
         unselectedModel.removeElement(unselectedModel.getElementAt(sel));
     }
 
@@ -457,54 +394,52 @@ public class DefineCaseframeForm extends javax.swing.JFrame{
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton_cancel;
     private javax.swing.JButton jButton_create;
     private javax.swing.JButton jButton_newslot;
     private javax.swing.JButton jButton_select;
     private javax.swing.JButton jButton_unselect;
-    private javax.swing.JComboBox jComboBox_head;
-    private javax.swing.JComboBox jComboBox_type;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel7;
-    private javax.swing.JList jList_selected;
-    private javax.swing.JList jList_unselected;
-    private javax.swing.JPanel jPanel1;
+    private javax.swing.JComboBox<String> jComboBox_head;
+    private javax.swing.JComboBox<SemanticType> jComboBox_type;
+    private javax.swing.JLabel jLabel_semtype;
+    private javax.swing.JList<Slot> jList_selected;
+    private javax.swing.JList<Slot> jList_unselected;
+    private javax.swing.JPanel jPanel_mainButtons;
     private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JPanel jPanel_slots;
+    private javax.swing.JScrollPane jScrollPane_unselected;
+    private javax.swing.JScrollPane jScrollPane_selected;
     private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JSplitPane jSplitPane2;
     private javax.swing.JSplitPane jSplitPane3;
-    private javax.swing.JSplitPane jSplitPane_preview;
     private javax.swing.JTextField jTextField_name;
     // End of variables declaration//GEN-END:variables
 
 }
 
-class SortedListModel extends AbstractListModel {
-	  SortedSet<Object> model;
+class SortedListModel<E> extends AbstractListModel<E> {
+	private static final long serialVersionUID = -6702970294830858491L;
+	SortedSet<E> model;
 
 	  public SortedListModel() {
-	    model = new TreeSet<Object>();
+	    model = new TreeSet<E>();
 	  }
 
 	  public int getSize() {
 	    return model.size();
 	  }
 
-	  public Object getElementAt(int index) {
-	    return model.toArray()[index];
+	  @SuppressWarnings("unchecked")
+	  public E getElementAt(int index) {
+	    return (E)model.toArray()[index];
 	  }
 
-	  public void add(Object element) {
+	  public void add(E element) {
 	    if (model.add(element)) {
 	      fireContentsChanged(this, 0, getSize());
 	  }
 	}
-	  public void addAll(Object elements[]) {
-	    Collection<Object> c = Arrays.asList(elements);
+	  public void addAll(E elements[]) {
+	    Collection<E> c = Arrays.asList(elements);
 	    model.addAll(c);
 	    fireContentsChanged(this, 0, getSize());
 	  }
@@ -522,7 +457,7 @@ class SortedListModel extends AbstractListModel {
 	    return model.first();
 	  }
 
-	  public Iterator iterator() {
+	  public Iterator<E> iterator() {
 	    return model.iterator();
 	  }
 
