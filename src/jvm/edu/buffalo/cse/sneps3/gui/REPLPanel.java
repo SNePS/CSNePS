@@ -13,9 +13,7 @@ package edu.buffalo.cse.sneps3.gui;
 
 import java.awt.event.KeyEvent;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 
-import clojure.tools.nrepl.Connection.Response;
 import edu.buffalo.cse.sneps3.gui.business.repl.REPLView;
 
 //import com.franz.jlinker.*;
@@ -35,13 +33,11 @@ public class REPLPanel extends javax.swing.JPanel {
 	private REPLView replView;
 
 	private Stack<Character> parens;
-	private String inputText = "";
 	
 	private ArrayList<String> history;
 	
 	private int historyLoc = -1;
 	
-	//public REPLFrame parent;
 	/** Creates new form REPLPanel */
 	public REPLPanel() {
 		history = new ArrayList<String>();
@@ -49,13 +45,14 @@ public class REPLPanel extends javax.swing.JPanel {
 		initComponents();
 		this.setLayout(new BorderLayout());
 		add(jSplitPane1, BorderLayout.CENTER);
-		output = jTextArea1;
+		output = jTextArea_output;
+		jTextArea_output.setEditable(false);
+		
 		jSplitPane1.setResizeWeight(1.0);
 		jSplitPane1.setDividerSize(0);
 		jSplitPane1.setDividerLocation(this.getHeight() - 15);
 		
 		parens = new Stack<Character>();
-		//testParenMatcher();
 	}
 
 	public void connect(){
@@ -129,8 +126,6 @@ public class REPLPanel extends javax.swing.JPanel {
 		System.out.println(parensMatch("(Isa (xyz) (orange))"));
 		System.out.println(parensMatch("(Isa (xyz)"));
 	}
-	
-	
 
 	public void appendText(String strText) {
 		final String appendText = strText;
@@ -139,7 +134,7 @@ public class REPLPanel extends javax.swing.JPanel {
 		{
 			public void run()
 			{
-				jTextArea1.append(appendText);
+				jTextArea_output.append(appendText);
 			}
 		});
 	}
@@ -151,65 +146,61 @@ public class REPLPanel extends javax.swing.JPanel {
 	private void initComponents() {
 
 		jSplitPane1 = new javax.swing.JSplitPane();
-		jTextField1 = new javax.swing.JTextField();
+		jTextField_input = new javax.swing.JTextField();
 		jScrollPane1 = new javax.swing.JScrollPane();
-		jTextArea1 = new javax.swing.JTextArea();
+		jTextArea_output = new javax.swing.JTextArea();
 
 		jSplitPane1.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
 
-		jTextField1.addKeyListener(new java.awt.event.KeyAdapter() {
+		jTextField_input.addKeyListener(new java.awt.event.KeyAdapter() {
 			public void keyPressed(java.awt.event.KeyEvent evt) {
 				jTextField1KeyPressed(evt);
 			}
 		});
-		jSplitPane1.setBottomComponent(jTextField1);
+		jSplitPane1.setBottomComponent(jTextField_input);
 
-		jTextArea1.setColumns(20);
-		jTextArea1.setRows(5);
-		jScrollPane1.setViewportView(jTextArea1);
+		jTextArea_output.setColumns(20);
+		jTextArea_output.setRows(5);
+		jScrollPane1.setViewportView(jTextArea_output);
 
 		jSplitPane1.setLeftComponent(jScrollPane1);
 	}
 
 	private void jTextField1KeyPressed(java.awt.event.KeyEvent evt) {
 		if(evt.getKeyCode() == KeyEvent.VK_ENTER){
-			String text = jTextField1.getText();
+			String text = jTextField_input.getText();
 
 			makeClojureCall(text);
 			history.add(text);
 
-			jTextField1.setText("");
+			jTextField_input.setText("");
 		}
 		else if (evt.getKeyCode() == KeyEvent.VK_UP){
 			if (history.size() == 0) return;
 			if (historyLoc == -1) historyLoc = history.size()-1;
 			else if (historyLoc > 0) historyLoc--;
 			
-			jTextField1.setText(history.get(historyLoc));
+			jTextField_input.setText(history.get(historyLoc));
  		}
 		else if (evt.getKeyCode() == KeyEvent.VK_DOWN){
 			if (historyLoc == -1) return;
 			if (historyLoc == history.size()-1){
-				jTextField1.setText("");
+				jTextField_input.setText("");
 				historyLoc++;
 				return;
 			}
 			else if (historyLoc > history.size()-1){
 				return;
 			}
-			else jTextField1.setText(history.get(++historyLoc));
+			else jTextField_input.setText(history.get(++historyLoc));
  		}
 		else historyLoc = -1;
 
 	}
 
-
-	// Variables declaration - do not modify
 	private javax.swing.JScrollPane jScrollPane1;
 	private javax.swing.JSplitPane jSplitPane1;
-	private javax.swing.JTextArea jTextArea1;
-	private javax.swing.JTextField jTextField1;
-	// End of variables declaration
-
+	private javax.swing.JTextArea jTextArea_output;
+	private javax.swing.JTextField jTextField_input;
 }
 
