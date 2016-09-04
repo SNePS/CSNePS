@@ -160,8 +160,8 @@ public class Controller {
 		if (relations_define_slot_fn == null)
 			relations_define_slot_fn = RT.var("csneps.core.relations", "define-slot");
 		try{
-			return (IPersistentMap)relations_define_slot_fn.invoke(name, Keyword.intern("type"), type, Keyword.intern("pos"), min,
-					Keyword.intern("neg"), max, Keyword.intern("posadjust"), posadjust, Keyword.intern("negadjust"), negadjust);
+			return (IPersistentMap)relations_define_slot_fn.invoke(name, Keyword.intern("type"), type, Keyword.intern("min"), min,
+					Keyword.intern("max"), max, Keyword.intern("posadjust"), posadjust, Keyword.intern("negadjust"), negadjust);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
