@@ -75,8 +75,9 @@ public class TermNode<E extends IEdge> implements ITermNode<E> {
 		return visible;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public boolean inCollapsedForm(){
-		return GUI2.getInstance().getGraph().vertexCollapsed(this);
+		return GUI2.getInstance().getGraph().vertexCollapsed((ITermNode<IEdge>) this);
 	}
 	
 	/* (non-Javadoc)
