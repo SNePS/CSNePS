@@ -7,11 +7,9 @@
 
 package edu.buffalo.cse.sneps3.gui;
 
-import edu.buffalo.cse.sneps3.gui.business.Caseframe;
 import edu.buffalo.cse.sneps3.gui.business.FnInterop;
 
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -19,18 +17,17 @@ import java.util.Collection;
 import clojure.lang.PersistentHashSet;
 import clojure.lang.RT;
 import clojure.tools.nrepl.*;
-import clojure.tools.nrepl.Connection.Response;
 
 //Jung 2.0
 import edu.buffalo.cse.sneps3.gui.dataaccess.Model;
+import edu.buffalo.cse.sneps3.gui.graph.IEdge;
+import edu.buffalo.cse.sneps3.gui.graph.ITermNode;
 import edu.buffalo.cse.sneps3.gui.graph.SnepsGraph;
 import edu.buffalo.cse.sneps3.gui.util.OSTools;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.algorithms.layout.util.Relaxer;
 
 //Swing
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.KeyEventDispatcher;
@@ -39,11 +36,6 @@ import java.awt.RenderingHints;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.AbstractButton;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -60,7 +52,7 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2016.09.02";
+	public static final String version = "2016.09.04";
 	
     public static final boolean DEBUG = false;
 
@@ -70,9 +62,6 @@ public class GUI2 extends javax.swing.JFrame{
     private static GUI2 instance;
 
     Connection cljconn;
-    
-    //List model for the context list
-    //DefaultComboBoxModel contextModel = new DefaultComboBoxModel();
 
     CreateContextForm ccf;
 
@@ -169,15 +158,6 @@ public class GUI2 extends javax.swing.JFrame{
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(screenshot);
 
-
-        /*Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-
-            public void run() {
-                makeLispCall("(in-package sneps)");
-                makeLispCall("(setf *sneps-gui-ptr* nil)");
-            }
-        }));*/
-
         jMenuItem12.setEnabled(false);
 
         //getGraphPanel().setStatusbarText("New assertions are not shown in the graph.");
@@ -190,7 +170,6 @@ public class GUI2 extends javax.swing.JFrame{
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
-    		//rEPLPanel1.makeClojureCall("(in-ns 'snuser)");
     		initializeModel();
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage());}
@@ -203,7 +182,6 @@ public class GUI2 extends javax.swing.JFrame{
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
-    		//rEPLPanel1.makeClojureCall("(in-ns 'snuser)");
     		initializeModel(termset);
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage()); e.printStackTrace();}
@@ -448,177 +426,6 @@ public class GUI2 extends javax.swing.JFrame{
         }
     }
 
-//    public void setShowNewAssertions(boolean b){
-//        showNewAssertions = b;
-//    }
-
-    //public void displayNodes(ArrayList nn){
-    //    jungGraphPanel1.displayNodeSet(nn);
-    //    jungGraphPanel1.displayGraph(jungGraphPanel1.getGraph());
-    //}
-
-    //Takes a name, type, caseframe, and activation level.
-/*    public void addCustomVertex(String name, String typename, String cfname, ArrayList cfslots, boolean asserted,
-                                double activation){
-
-        if(DEBUG) System.err.println("Received Node: " + name + " " + typename + " " + cfname + " (" + cfslots + ") " + asserted);
-        
-        //Kill everything before the "-" in the type string.
-        typename = typename.substring(typename.indexOf('-') + 1);
-        SemanticType ty = null;
-        for(SemanticType type : model.types){
-            if(type.getName().equalsIgnoreCase(typename)) ty = type;
-        }
-        Caseframe cf = null;
-        if(cfname!=null && !cfname.equals("nil")){
-            cf = model.getCaseframeByNameAndSlots(cfname, cfslots);
-
-            //for(Caseframe cframe : model.caseframes)
-            //    if(cframe.name.equals(c)) cf = cframe;
-        }
-
-
-        TermNode node = null;//new TermNode(name,ty,cf,asserted,activation);
-        
-        TermNode e = nodeName_node_map.get(name);
-        if(e != null){
-            if(e.getTerm().isAsserted() != asserted) e.getTerm().setAsserted(asserted);
-
-            if(showNewAssertions && !e.isVisible()){
-                jungGraphPanel1.showNode(e);
-            }
-            return;
-        }
-
-        nodeName_node_map.put(node.getTerm().getName(), node);
-
-        //Test, replacing dsg.addVertex(node).
-                //jungGraphPanel1.layout.lock(true);
-
-                //Relaxer relaxer = jungGraphPanel1.vv.getModel().getRelaxer();
-                //relaxer.pause();
-                //if(hideFind){
-                if(showNewAssertions){
-                    jungGraphPanel1.addVertex(node);
-                }
-                else{
-                    node.hide();
-                    jungGraphPanel1.showing_all = false;
-                }
-                //System.err.println("added node " + v1);
-
-                //jungGraphPanel1.layout.initialize();
-                //relaxer.resume();
-                //jungGraphPanel1.layout.lock(false);
-
-    }
-
-    public void unassert(String name){
-        TermNode wft = findGraphNode(name);
-        if(wft != null)
-           wft.getTerm().setAsserted(false);
-    }
-
-    public void addStringEdge(String start, String end, String name){
-
-        if(DEBUG) System.err.println("received edge " + start + " " + end + " " + name);
-
-        //Make sure we haven't already added this edge. We need to do this for
-        //graph updates- and I'm not sure if its better to do here or in the lisp
-        //end of things.
-        
-        TermNode s = findGraphNode(start);
-        TermNode e = findGraphNode(end);
-
-        //In some cases, Lisp sends us edges for nodes not here yet. This isn't
-        //a big deal, as those edges will come again with the nodes.
-        if(s == null || e == null){
-            if(DEBUG) System.err.println("One of those nodes is missing...");
-            return;
-        }
-
-
-        Edge add = new Edge(name, s, e);
-
-
-        //If our start node already has this edge in its down-cableset, don't add it!
-        for(Edge edge : s.getOutEdges()){
-            if(edge.getTo() == e && edge.toString().equals(add.toString())){
-                //if(DEBUG) System.out.println("Exist: " + edge + " Add: " + add);
-                return;
-            }
-        }
-
-
-        //System.out.println("Adding edge from " + start + " to " + e.getName() + " , add to upcs of " + e.getName());
-
-        s.addToDownCableset(add);
-        e.addToUpCableset(add);
-
-        //System.out.println("Upcs size " + e.getUpCableset().size());
-
-                //            	jungGraphPanel1.layout.lock(true);
-                //add a vertex
-                //Integer v1 = new Integer(g.getVertexCount());
-
-                //Relaxer relaxer = jungGraphPanel1.vv.getModel().getRelaxer();
-                //relaxer.pause();
-                if(showNewAssertions) dsg.addEdge(add, s, e, EdgeType.DIRECTED);
-                //System.err.println("added node " + v1);
-
-                //jungGraphPanel1.layout.initialize();
-                //relaxer.resume();
-                //jungGraphPanel1.layout.lock(false);
-
-        edges.add(add);
-        //jungGraphPanel1.getVV().repaint();
-    }
-
-    public void addArbRestrictionEdge(String start, String end){
-        TermNode s = findGraphNode(start);
-        TermNode e = findGraphNode(end);
-
-        Edge add = new JungRestrictionGraphEdge("Every", s, e);
-
-        for(Edge ed : dsg.getEdges()){
-            if(ed.equals(add)) return;
-        }
-
-        dsg.addEdge(add, s, e, EdgeType.DIRECTED);
-    }
-
-    public void addIndRestrictionEdge(String start, String end){
-        TermNode s = findGraphNode(start);
-        TermNode e = findGraphNode(end);
-
-        Edge add = new JungRestrictionGraphEdge("Some", s, e);
-
-        for(Edge ed : dsg.getEdges()){
-            if(ed.equals(add)) return;
-        }
-
-        dsg.addEdge(add, findGraphNode(start), findGraphNode(end), EdgeType.DIRECTED);
-    }
-
-    public void addDepRestrictionEdge(String start, String end){
-        TermNode s = findGraphNode(start);
-        TermNode e = findGraphNode(end);
-
-        Edge add = new JungRestrictionGraphEdge("Depends", s, e);
-
-        for(Edge ed : dsg.getEdges()){
-            if(ed.equals(add)) return;
-        }
-
-        dsg.addEdge(add, findGraphNode(start), findGraphNode(end), EdgeType.DIRECTED);
-    }
-    */
-
-
-    //public void displayGraph(){
-    //    jungGraphPanel1.displayGraph(dsg);
-    //}
-
 /*    public void relayoutGraph(){
         jungGraphPanel1.displayGraph(jungGraphPanel1.getGraph());
     }
@@ -646,11 +453,11 @@ public class GUI2 extends javax.swing.JFrame{
     }*/
     //End hacky crap
 
-    public Collection getNodes(){
+    public Collection<ITermNode<IEdge>> getNodes(){
         return jungGraphPanel1.dsg.getVertices();
     }
 
-    public SnepsGraph getGraph(){
+    public SnepsGraph<ITermNode<IEdge>, IEdge> getGraph(){
         return jungGraphPanel1.dsg;
     }
 
@@ -705,17 +512,11 @@ public class GUI2 extends javax.swing.JFrame{
         return jungGraphPanel1;
     }
 
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        buttonGroup1 = new javax.swing.ButtonGroup();
         jToolBar1 = new javax.swing.JToolBar();
         jButton1 = new javax.swing.JButton();
         jToggleButton_repl = new javax.swing.JToggleButton();
         jToggleButton_plugins = new javax.swing.JToggleButton();
-        
-        
         jSplitPane1 = new javax.swing.JSplitPane();
         splitPane_graphAndREPL = new javax.swing.JSplitPane();
         jTabbedPane1 = new javax.swing.JTabbedPane();
@@ -756,12 +557,7 @@ public class GUI2 extends javax.swing.JFrame{
         menuItem_guidocs = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                formKeyPressed(evt);
-            }
-        });
-
+        
         jToolBar1.setRollover(true);
 
         jButton1.setText("Add Frame Instance");
@@ -1013,11 +809,6 @@ public class GUI2 extends javax.swing.JFrame{
 
         jMenu3.setMnemonic('S');
         jMenu3.setText("SNePS");
-        jMenu3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenu3ActionPerformed(evt);
-            }
-        });
 
         jMenuItem2.setMnemonic('C');
         jMenuItem2.setText("Clear Knowledge Base");
@@ -1090,72 +881,6 @@ public class GUI2 extends javax.swing.JFrame{
             loadToKB(chooser.getSelectedFile());
         } 
     }//GEN-LAST:event_jMenuItem1ActionPerformed
-
-    //Old save to png code:
-    /*        JFileChooser chooser = new JFileChooser();
-        chooser.setSelectedFile(new File(".png"));
-        chooser.setCurrentDirectory(currentDir);
-        chooser.setFileFilter(new FileFilter(){
-
-            @Override
-            public boolean accept(File f) {
-                if (f.isDirectory()) {
-                    return true;
-                }
-
-                String extension = null;
-                String s = f.getName();
-                int i = s.lastIndexOf('.');
-
-                if (i > 0 &&  i < s.length() - 1) {
-                    extension = s.substring(i+1).toLowerCase();
-                }
-
-                if (extension != null) {
-                    if (extension.equalsIgnoreCase("png")) {
-                            return true;
-                    } else {
-                        return false;
-                    }
-                }
-
-                return false;
-            }
-
-            @Override
-            public String getDescription() {
-                return "PNG";
-            }
-
-        });
-        int returnVal = chooser.showSaveDialog(this);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            currentDir = chooser.getCurrentDirectory();
-            File f = chooser.getSelectedFile();
-            if(!f.getName().contains(".png")){
-                f = new File(f.getPath() + ".png");
-            }
-            //Derived from the Jung grapheditor demo.
-            VisualizationViewer<TermNode, Edge> vv = jungGraphPanel1.getVV();
-            int width = vv.getWidth();
-            int height = vv.getHeight();
-
-            BufferedImage bi = new BufferedImage(width, height,BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = bi.createGraphics();
-            vv.paint(graphics);
-            graphics.dispose();
-
-            try {
-                ImageIO.write(bi, "png", f);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }*/
-
-
-    private void jMenu3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenu3ActionPerformed
-
-    }//GEN-LAST:event_jMenu3ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
         System.exit(0);
@@ -1309,10 +1034,6 @@ public class GUI2 extends javax.swing.JFrame{
         }
     }//GEN-LAST:event_jMenuItem10ActionPerformed
 
-    private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
-
-    }//GEN-LAST:event_formKeyPressed
-
     private void jCheckBoxMenuItem_antialiasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem_antialiasActionPerformed
         if(jCheckBoxMenuItem_antialias.isSelected()){
             jungGraphPanel1.getVV().getRenderingHints().put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -1366,7 +1087,6 @@ public class GUI2 extends javax.swing.JFrame{
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JButton jButton1;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_antialias;
     //private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_autoRefresh;
