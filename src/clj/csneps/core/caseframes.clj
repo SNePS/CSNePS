@@ -83,7 +83,7 @@
   (if (seq? fn)
     (do
       (when-not (find-frame (first fn))
-        (throw Exception (str (first fn) "does not have a caseframe defined for it.")))
+        (throw (Exception. (str (first fn) "does not have a caseframe defined for it."))))
       (dosync (alter FN2CF assoc (find-frame (first fn)) cf)))
     (dosync (alter FN2CF assoc fn cf))))
 
@@ -273,7 +273,7 @@
   (map #(when-not (seq? %)
           (when-not (or (some (hash-set %) slots)
                     (some (slot/find-slot %) slots))
-            (throw Exception (str "The print-pattern slot " % " is not among the list of slots " slots "."))))
+            (throw (Exception. (str "The print-pattern slot " % " is not among the list of slots " slots ".")))))
     print-pattern)
 
 

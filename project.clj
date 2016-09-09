@@ -1,6 +1,6 @@
 (defproject Sneps3-Clojure "1.0.0-SNAPSHOT"
   :description "CSNePS - Concurrent SNePS"
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/core.memoize "0.5.6"]
                  [org.clojure/core.incubator "0.1.2"]
@@ -34,7 +34,7 @@
   :repositories {"FreeHEP" "http://java.freehep.org/maven2"
                  "jpedal" "http://maven.geomajas.org"
                  "local" ~(str (.toURI (java.io.File. "local_maven_repo")))}
-  :plugins [[lein-swank "1.4.4"]]
+  :plugins [[lein-swank "1.4.5"]]
   :source-paths ["src/clj/"]
   :source-path "src/clj/"
   :java-source-paths ["src/jvm/"] ;leiningen 2 compat.
