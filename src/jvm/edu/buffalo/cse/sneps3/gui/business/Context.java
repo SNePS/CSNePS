@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
@@ -14,7 +15,6 @@ import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.PersistentVector;
 import clojure.lang.Ref;
-import clojure.lang.Symbol;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 
 /**
@@ -25,7 +25,7 @@ public class Context implements Comparable<Context>{
 
 	private static HashMap<String,Context> contexts = new HashMap<String,Context>();
 	
-	private static Keyword hyps_key = Keyword.intern("hyps");
+	//private static Keyword hyps_key = Keyword.intern("hyps");
 	private static Keyword ders_key = Keyword.intern("ders");
 	private static Keyword name_key = Keyword.intern("name");
 	private static Keyword parents_key = Keyword.intern("parents");
@@ -97,16 +97,12 @@ public class Context implements Comparable<Context>{
     	return p;
     }
     
-    //TODO: We're calling this really often. Maybe some efficiency changes can happen.
-    @SuppressWarnings("unchecked")
-    public HashSet<Term> getHyps(){
-    	HashSet<Term> hyps = new HashSet<Term>();
-    	APersistentSet cljhyps = (APersistentSet)((Ref)context.valAt(hyps_key)).deref();
-    	//System.out.println(cljhyps);
-    	for (Iterator<Symbol> itr = cljhyps.iterator(); itr.hasNext(); ){
-    		hyps.add(Term.getTerm(itr.next().toString())); 
-    	}
-    	return hyps;
+    // This relies in calls into the CSNePS implementation since getting the hyps in a context
+    // requires checking parent contexts as well, and I didn't want to reimplement that here. 
+    // There may be some cues we can use for caching based on the upated hyps call which does
+    // happen from gui.clj.
+    public Set<Term> getHyps(){
+    	return FnInterop.hyps(this);
     }
     
     @SuppressWarnings("unchecked")

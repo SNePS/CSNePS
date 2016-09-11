@@ -14,6 +14,7 @@ import clojure.lang.Var;
 import clojure.lang.Symbol;
 import clojure.lang.Keyword;
 import clojure.lang.RT;
+import clojure.lang.Ref;
 
 public class Controller {
 
@@ -30,6 +31,7 @@ public class Controller {
 	private static Var caseframes_caseframe_name_fn;
 	private static Var caseframes_quotedpp_qmark_fn;
 	private static Var contexts_define_context_fn;
+	private static Var contexts_hyps_fn;
 	private static Var contexts_set_current_context_fn;
 	private static Var csneps_core_molecular_term_qmark_fn;
 	private static Var csneps_core_variable_term_qmark_fn;
@@ -75,6 +77,15 @@ public class Controller {
 			contexts_define_context_fn = RT.var("csneps.core.contexts", "defineContext");
 		try{
 			return (IPersistentMap)contexts_define_context_fn.invoke(name, Keyword.intern("parents"), parents, Keyword.intern("hyps"), hyps);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	public static IPersistentSet contexts_hyps(IPersistentMap context){
+		if (contexts_hyps_fn == null) 
+			contexts_hyps_fn = RT.var("csneps.core.contexts", "hyps");
+		try{
+			return (IPersistentSet)contexts_hyps_fn.invoke(context);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}

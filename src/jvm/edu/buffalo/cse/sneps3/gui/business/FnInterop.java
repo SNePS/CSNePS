@@ -9,6 +9,7 @@ import edu.buffalo.cse.sneps3.gui.business.InteropUtils;
 import edu.buffalo.cse.sneps3.gui.dataaccess.Controller;
 import clojure.lang.IPersistentList;
 import clojure.lang.IPersistentMap;
+import clojure.lang.IPersistentSet;
 import clojure.lang.IPersistentVector;
 import clojure.lang.ISeq;
 import clojure.lang.Keyword;
@@ -16,7 +17,6 @@ import clojure.lang.MapEntry;
 import clojure.lang.PersistentHashSet;
 import clojure.lang.PersistentList;
 import clojure.lang.PersistentVector;
-import clojure.lang.IPersistentMap;
 import clojure.lang.RT;
 import clojure.lang.Symbol;
 
@@ -156,6 +156,18 @@ public class FnInterop {
 	
 	public static void setCurrentContext(Context c){
 		Controller.contexts_set_current_context(c.getClojureContext());
+	}
+	
+	public static Set<Term> hyps(Context c){
+		Set<Term> hyps = new HashSet<Term>();
+		ISeq clhyps = Controller.contexts_hyps(c.getClojureContext()).seq();
+		
+		while(clhyps != null && clhyps.count() > 0){
+			hyps.add(Term.getTerm(clhyps.first().toString()));
+			clhyps = clhyps.next();
+		}
+		
+		return hyps;
 	}
 	
 	/////////////////////////
