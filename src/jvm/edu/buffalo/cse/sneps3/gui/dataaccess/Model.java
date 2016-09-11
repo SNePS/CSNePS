@@ -211,8 +211,6 @@ public class Model {
     	//System.out.println("Changed: " + PersistentVector.create(hyps.seq()));
     	for (Iterator itr = hyps.iterator(); itr.hasNext(); ){
     		Term.getTerm(itr.next().toString()).resetAsserted();
-    	
-    		//Term.create((IPersistentMap)itr.next()).resetAsserted();
     	}
     }
     

@@ -2,21 +2,15 @@ package edu.buffalo.cse.sneps3.gui.business;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
-import edu.buffalo.cse.sneps3.gui.business.InteropUtils;
 import edu.buffalo.cse.sneps3.gui.dataaccess.Controller;
-import clojure.lang.IPersistentList;
 import clojure.lang.IPersistentMap;
-import clojure.lang.IPersistentSet;
 import clojure.lang.IPersistentVector;
 import clojure.lang.ISeq;
 import clojure.lang.Keyword;
-import clojure.lang.MapEntry;
 import clojure.lang.PersistentHashSet;
 import clojure.lang.PersistentList;
-import clojure.lang.PersistentVector;
 import clojure.lang.RT;
 import clojure.lang.Symbol;
 
@@ -74,7 +68,6 @@ public class FnInterop {
 	   return Caseframe.create(Controller.snuser_define_caseframe(Keyword.intern(type), PersistentList.create(slotsyms)));
 	}
 	
-	@SuppressWarnings("rawtypes")
 	public static Caseframe defineCaseframe(String type, ArrayList<Slot> slots, ArrayList<String> fsymbols){
 		ArrayList<Symbol> slotsyms = new ArrayList<Symbol>();
 	    for(Slot s : slots)

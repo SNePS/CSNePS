@@ -14,7 +14,6 @@ import clojure.lang.Var;
 import clojure.lang.Symbol;
 import clojure.lang.Keyword;
 import clojure.lang.RT;
-import clojure.lang.Ref;
 
 public class Controller {
 

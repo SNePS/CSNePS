@@ -1,6 +1,5 @@
 package edu.buffalo.cse.sneps3.gui.business;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Collection;
@@ -11,7 +10,7 @@ import clojure.lang.RT;
 import clojure.lang.Keyword;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 
-public class Slot implements Comparable{
+public class Slot implements Comparable<Slot>{
 
 	private static HashMap<String, Slot> slots = new HashMap<String, Slot>();
 	
@@ -44,6 +43,7 @@ public class Slot implements Comparable{
 		slots.clear();
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static Collection<Slot> reinitializeSlots(IPersistentMap sls, Boolean clear){
 		if(clear) slots.clear();
 		for (Iterator<IPersistentMap> iter = ((ASeq)RT.vals(sls)).iterator(); iter.hasNext(); ){
@@ -83,8 +83,8 @@ public class Slot implements Comparable{
     }
 
 	@Override
-	public int compareTo(Object o) {
-		return this.toString().compareTo(o.toString());
+	public int compareTo(Slot s) {
+		return this.toString().compareTo(s.toString());
 	}
 	
 }
