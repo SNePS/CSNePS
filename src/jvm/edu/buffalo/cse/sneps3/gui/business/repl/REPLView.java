@@ -65,23 +65,4 @@ public class REPLView {
 		}
 	}
 	
-	//Testing
-	public static void main(String[] args) throws IOException{
-		PipedInputStream in = new PipedInputStream();
-		final PipedOutputStream out = new PipedOutputStream(in);
-		new Thread(
-			    new Runnable(){
-			      public void run(){
-			        try {
-						out.write(new String("Test test test").getBytes());
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			      }
-			    }
-			  ).start();
-		readStream(in);
-	}
-	
 }
