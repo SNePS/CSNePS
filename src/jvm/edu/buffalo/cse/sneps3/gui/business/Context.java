@@ -3,18 +3,15 @@ package edu.buffalo.cse.sneps3.gui.business;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
 import clojure.lang.IPersistentVector;
 import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.PersistentVector;
-import clojure.lang.Ref;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 
 /**
@@ -25,8 +22,6 @@ public class Context implements Comparable<Context>{
 
 	private static HashMap<String,Context> contexts = new HashMap<String,Context>();
 	
-	//private static Keyword hyps_key = Keyword.intern("hyps");
-	private static Keyword ders_key = Keyword.intern("ders");
 	private static Keyword name_key = Keyword.intern("name");
 	private static Keyword parents_key = Keyword.intern("parents");
 	
@@ -103,16 +98,6 @@ public class Context implements Comparable<Context>{
     // happen from gui.clj.
     public Set<Term> getHyps(){
     	return FnInterop.hyps(this);
-    }
-    
-    @SuppressWarnings("unchecked")
-    public HashSet<Term> getDers(){
-    	HashSet<Term> ders = new HashSet<Term>();
-    	APersistentSet cljders = (APersistentSet)((Ref)context.valAt(ders_key)).deref();
-    	for (Iterator<IPersistentMap> itr = cljders.iterator(); itr.hasNext(); ){
-    		ders.add(Term.create(itr.next()));
-    	}
-    	return ders;
     }
     
     IPersistentMap getClojureContext(){

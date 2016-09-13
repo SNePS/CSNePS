@@ -29,6 +29,7 @@ public class Controller {
 	private static Var build_unassert_fn;
 	private static Var caseframes_caseframe_name_fn;
 	private static Var caseframes_quotedpp_qmark_fn;
+	private static Var contexts_asserted_qmark_fn;
 	private static Var contexts_define_context_fn;
 	private static Var contexts_hyps_fn;
 	private static Var contexts_set_current_context_fn;
@@ -69,6 +70,15 @@ public class Controller {
 		try{
 			build_add_to_context_fn.invoke(term, context);
 		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	public static IPersistentMap contexts_asserted_qmark(IPersistentMap term, IPersistentMap context){
+		if (contexts_asserted_qmark_fn == null) 
+			contexts_asserted_qmark_fn = RT.var("csneps.core.contexts", "asserted?");
+		try{
+			return (IPersistentMap)contexts_asserted_qmark_fn.invoke(term, context);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
 	}
 	
 	public static IPersistentMap contexts_define_context(Symbol name, IPersistentList parents, IPersistentSet hyps){

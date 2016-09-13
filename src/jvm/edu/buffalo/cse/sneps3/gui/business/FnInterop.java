@@ -136,6 +136,12 @@ public class FnInterop {
 	/// contexts ///
 	////////////////
 	
+	public static Boolean isAsserted(Term t, Context c){
+		IPersistentMap a = Controller.contexts_asserted_qmark(t.getClojureTerm(), c.getClojureContext());
+		if (a != null) return true;
+		return false;
+	}
+	
 	public static Context defineContext(String name, ArrayList<Context> parents, Set<Term> hyps){
 		ArrayList<Object> cljparents = new ArrayList<Object>();
 		PersistentHashSet cljhyps = PersistentHashSet.create(new ArrayList<Object>());

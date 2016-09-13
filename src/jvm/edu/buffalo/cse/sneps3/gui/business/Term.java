@@ -65,8 +65,6 @@ public class Term {
 	
 	private String fsymbol;
 	
-	private Boolean isasserted = null;
-	
 	private Term(IPersistentMap term){
 		this.term = term;
 	}
@@ -275,17 +273,15 @@ public class Term {
 	}
 	
 	public void resetAsserted(){
-		isasserted = isAsserted(Context.getCurrentContext());
+		// Noop 
 	}
 	
 	public Boolean isAsserted(){
-		if(Context.getCurrentContext()==null) return false;
-		if(isasserted!=null) return isasserted;
-		return (isasserted = isAsserted(Context.getCurrentContext()));
+		return isAsserted(Context.getCurrentContext());
 	}
 	
 	public Boolean isAsserted(Context inContext){
-		return inContext.getHyps().contains(this);
+		return FnInterop.isAsserted(this, inContext);
 	}
 	
 	/**
