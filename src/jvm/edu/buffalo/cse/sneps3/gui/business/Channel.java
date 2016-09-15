@@ -1,8 +1,16 @@
 package edu.buffalo.cse.sneps3.gui.business;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
+import clojure.lang.IPersistentSet;
 import clojure.lang.Keyword;
+import clojure.lang.MapEntry;
 import clojure.lang.Ref;
 
 public class Channel {
@@ -21,6 +29,29 @@ public class Channel {
 	public static Channel create(IPersistentMap channel){
 		Channel c = new Channel(channel);
 		return c;
+	}
+	
+	public static Set<Channel> createChannels(APersistentSet channels){
+		Set<Channel> chs = new HashSet<Channel>();
+		
+		for (Iterator itr = channels.iterator(); itr.hasNext(); ){
+    		chs.add(create((IPersistentMap)itr.next()));
+    	}
+		
+		return chs;
+	}
+	
+	public static Map<String, Set<Channel>> createChannelCollection(IPersistentMap channels){
+		Map<String, Set<Channel>> chs = new HashMap<String, Set<Channel>>();
+		
+		for(Iterator<MapEntry> itr = channels.iterator(); itr.hasNext(); ){
+			MapEntry e = itr.next();
+			Term t = Term.create((IPersistentMap)e.getKey());
+			
+			chs.put(t.getName(), createChannels((APersistentSet)e.getValue()));
+		}
+		
+		return chs;
 	}
 	
 	public Term originator(){

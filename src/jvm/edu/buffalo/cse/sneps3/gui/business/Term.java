@@ -24,11 +24,12 @@ public class Term {
 	private final static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
 	private final static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
 	private final static HashMap<String, Set<Term>> dependenciesset = new HashMap<String, Set<Term>>();
-	private final static HashMap<String, HashSet<Channel>> ichannels = new HashMap<String, HashSet<Channel>>(); 
-	private final static HashMap<String, HashSet<Channel>> uchannels = new HashMap<String, HashSet<Channel>>(); 
-	private final static HashMap<String, HashSet<Channel>> gchannels = new HashMap<String, HashSet<Channel>>(); 
 	
-
+	private final static HashMap<String, Set<Channel>> ichannels = new HashMap<String, Set<Channel>>(); 
+	private final static HashMap<String, Set<Channel>> uchannels = new HashMap<String, Set<Channel>>(); 
+	private final static HashMap<String, Set<Channel>> gchannels = new HashMap<String, Set<Channel>>(); 
+	private final static HashMap<String, Set<Channel>> antinchannels = new HashMap<String, Set<Channel>>(); 
+	
 	Var i_channels_ref;
     Var u_channels_ref;
     Var g_channels_ref;
@@ -45,13 +46,7 @@ public class Term {
 	private final static Keyword type_key = Keyword.intern("type");
 	private final static Keyword min_key = Keyword.intern("min");
 	private final static Keyword max_key = Keyword.intern("max");
-	//private final static Keyword caseframe_key = Keyword.intern("caseframe");
-	//private final static Keyword upcablesetw_key = Keyword.intern("up-cablesetw");
-	//private final static Keyword downcableset_key = Keyword.intern("down-cableset");
 	private final static Keyword activation_key = Keyword.intern("activation-value");
-	//private final static Keyword i_channels_key = Keyword.intern("i-channels");
-	//private final static Keyword u_channels_key = Keyword.intern("u-channels");
-	//private final static Keyword g_channels_key = Keyword.intern("g-channels");
 	
 	private IPersistentMap term;
 	
@@ -213,55 +208,60 @@ public class Term {
 		dependenciesset.put(this.getName(), rs);
 	}
 	
-	//The number of i-channels can increase. Compare arity of cache with the one in the term
-	//to determine if we have to do real work.
-	public ArrayList<Channel> getIChannels(){
-//		APersistentSet i = (APersistentSet)((Ref)term.valAt(i_channels_key)).deref();
-//		if(i.count() == ichannels.size()) return ichannels;
-//		
-//		//Do the real work.
-//		for (Iterator<IPersistentMap> iter = i.iterator(); iter.hasNext(); ){
-//			Channel c = Channel.create(iter.next());
-//			if(ichannels.contains(c)) continue;
-//			ichannels.add(c);
-//		}
-//		return ichannels;
+	////////////////
+	/// Channels ///
+	////////////////
+	
+	public Set<Channel> getUChannels(){
+		return uchannels.get(this.getName());
+	}
+
+	public void addUChannels(Set<Channel> chs){
+		if (chs == null) return;
+	
+		if(!uchannels.containsKey(this.getName()))
+			uchannels.put(this.getName(), new HashSet<Channel>());
 		
-		return null;
+		uchannels.get(this.getName()).addAll(chs);
 	}
 	
-	//The number of u-channels can increase. Compare arity of cache with the one in the term
-	//to determine if we have to do real work.
-	public ArrayList<Channel> getUChannels(){
-//		APersistentSet u = (APersistentSet)((Ref)term.valAt(u_channels_key)).deref();
-//		if(u.count() == uchannels.size()) return uchannels;
-//		
-//		//Do the real work.
-//		for (Iterator<IPersistentMap> iter = u.iterator(); iter.hasNext(); ){
-//			Channel c = Channel.create(iter.next());
-//			if(uchannels.contains(c)) continue;
-//			uchannels.add(c);
-//		}
-//		return uchannels;
+	public Set<Channel> getIChannels(){
+		return ichannels.get(this.getName());
+	}
+
+	public void addIChannels(Set<Channel> chs){
+		if (chs == null) return;
+	
+		if(!ichannels.containsKey(this.getName()))
+			ichannels.put(this.getName(), new HashSet<Channel>());
 		
-		return null;
+		ichannels.get(this.getName()).addAll(chs);
 	}
 	
-	//The number of u-channels can increase. Compare arity of cache with the one in the term
-	//to determine if we have to do real work.
-	public ArrayList<Channel> getGChannels(){
-//		APersistentSet g = (APersistentSet)((Ref)term.valAt(g_channels_key)).deref();
-//		if(g.count() == gchannels.size()) return gchannels;
-//		
-//		//Do the real work.
-//		for (Iterator<IPersistentMap> iter = g.iterator(); iter.hasNext(); ){
-//			Channel c = Channel.create(iter.next());
-//			if(gchannels.contains(c)) continue;
-//			gchannels.add(c);
-//		}
-//		return gchannels;
+	public Set<Channel> getGChannels(){
+		return gchannels.get(this.getName());
+	}
+
+	public void addGChannels(Set<Channel> chs){
+		if (chs == null) return;
+	
+		if(!gchannels.containsKey(this.getName()))
+			gchannels.put(this.getName(), new HashSet<Channel>());
 		
-		return null;
+		gchannels.get(this.getName()).addAll(chs);
+	}
+	
+	public Set<Channel> getAntInChannels(){
+		return antinchannels.get(this.getName());
+	}
+
+	public void addAntInChannels(Set<Channel> chs){
+		if (chs == null) return;
+	
+		if(!antinchannels.containsKey(this.getName()))
+			antinchannels.put(this.getName(), new HashSet<Channel>());
+		
+		antinchannels.get(this.getName()).addAll(chs);
 	}
 	
 	public Boolean isMolecular(){

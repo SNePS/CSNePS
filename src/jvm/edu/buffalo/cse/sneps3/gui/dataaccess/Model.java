@@ -18,6 +18,7 @@ import clojure.lang.PersistentHashSet;
 import clojure.lang.IPersistentMap;
 import clojure.lang.APersistentSet;
 import edu.buffalo.cse.sneps3.gui.business.Caseframe;
+import edu.buffalo.cse.sneps3.gui.business.Channel;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 import edu.buffalo.cse.sneps3.gui.business.Context;
 import edu.buffalo.cse.sneps3.gui.business.SemanticType;
@@ -267,15 +268,33 @@ public class Model {
     }
     
     public void termNameIChannelMapChanged(IPersistentMap changed, Boolean reset){
-    	if(GUI2.DEBUG) System.out.println("Ich" + changed.toString());
+    	if(GUI2.DEBUG) 
+    		System.out.println(reset + " Ich " + changed.toString());
+    		
+    	Map<String, Set<Channel>> chs = Channel.createChannelCollection(changed);
+    	
+    	for (String tname : chs.keySet())
+    		Term.getTerm(tname).addIChannels(chs.get(tname));
     }
     
     public void termNameGChannelMapChanged(IPersistentMap changed, Boolean reset){
-    	
+    	if(GUI2.DEBUG) 
+			System.out.println(reset + " Gch " + changed.toString());
+			
+		Map<String, Set<Channel>> chs = Channel.createChannelCollection(changed);
+		
+		for (String tname : chs.keySet())
+    		Term.getTerm(tname).addGChannels(chs.get(tname));
     }
 
     public void termNameUChannelMapChanged(IPersistentMap changed, Boolean reset){
-	
+    	if(GUI2.DEBUG) 
+			System.out.println(reset + " Uch " + changed.toString());
+			
+		Map<String, Set<Channel>> chs = Channel.createChannelCollection(changed);
+		
+		for (String tname : chs.keySet())
+    		Term.getTerm(tname).addUChannels(chs.get(tname));
     }
     
     /****************
