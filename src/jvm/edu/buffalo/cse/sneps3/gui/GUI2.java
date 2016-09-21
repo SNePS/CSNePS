@@ -52,21 +52,19 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 
-	public static final String version = "2016.09.12";
+	public static final String version = "2016.09.20";
 	
     public static final boolean DEBUG = false;
 
-    //The public model for the MVC design pattern.
-    public static Model model = new Model();
+    //The public data model used throughout the app.
+    public static Model model;
 
     private static GUI2 instance;
 
     Connection cljconn;
 
     CreateContextForm ccf;
-
-    //
-    DefineCaseframeForm caseFrameForm = new DefineCaseframeForm();
+    DefineCaseframeForm caseFrameForm;
 
     int lastReplSize = 0;
 
@@ -90,9 +88,6 @@ public class GUI2 extends javax.swing.JFrame{
     
     File currentDir = new File(".");
 
-    //boolean hideFind = true;
-
-
     ExportDialog export;
     boolean doingSave = false;
     
@@ -102,18 +97,19 @@ public class GUI2 extends javax.swing.JFrame{
 
     /** Creates new form GUI2 */
     public GUI2() {
+    	// Initialize the model. 
+    	model = new Model();
+    	
+    	caseFrameForm = new DefineCaseframeForm();
+    	export = new ExportDialog();
+    	
         initComponents();
 
         this.setTitle("CSNePS GUI Version " + version);
         
-        //if (!OSTools.isMac()) 
-        export = new ExportDialog();
-
         //Use this to redirect output from the repl eventually...
         //Var.pushThreadBindings(RT.map(RT.OUT), <outstreamwriter>)
         
-        
-        //this.removeAll();
         this.setLayout(new BorderLayout());
         this.add(jToolBar1, BorderLayout.NORTH);
         this.add(jSplitPane1, BorderLayout.CENTER);
@@ -121,15 +117,12 @@ public class GUI2 extends javax.swing.JFrame{
         //This will let us start maximized - maybe we want this some day!
         //this.setExtendedState(this.getExtendedState()|JFrame.MAXIMIZED_BOTH);
 
-        //model = new Model();
-        //model.registerView(this);
-
         //Set the contextModel to be the model for the context combo box
         //comboBox_context.setModel(contextModel);
 
         //Finally set myself visible
         this.setVisible(true);
-        //instance = this;
+        
         setInstance();
 
         KeyEventDispatcher screenshot = new KeyEventDispatcher() {
