@@ -7,6 +7,8 @@
 
 (in-ns 'csneps.core.build)
 
+(def debug-unification false)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Unification Algorithm ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,10 +102,12 @@
      (cond
        (not (and source target)) [nil nil]
        (= (:name s) (:name t))                   [source target]
-       (set? s)                  (do (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0))
-                                   (unifySets s (if (set? t) t #{t}) [source target] 0))
-       (set? t)                  (do (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1))
-                                   (unifySets t (if (set? s) s #{s}) [source target] 1))
+       (set? s)                  (let [unif (unifySets s (if (set? t) t #{t}) [source target] 0)]
+                                   (when debug-unification (println "***" (unifySets s (if (set? t) t #{t}) [source target] 0)))
+                                   unif)
+       (set? t)                  (let [unif (unifySets t (if (set? s) s #{s}) [source target] 1)]
+                                   (when debug-unification (println "***" (unifySets t (if (set? s) s #{s}) [source target] 1)))
+                                   unif)
        (variable? s)             (uv-fn variable? s t [source target] 0)
        (variable? t)             (uv-fn variable? t s [source target] 1)
        (and (molecularTerm? s)
