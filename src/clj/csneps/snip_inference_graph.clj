@@ -1435,8 +1435,9 @@
     (doseq [g (@g-channels (second x))]
       (println (:originator g) "-G-" (count @(:waiting-msgs g)) (print-valve g) "->" (:destination g)))))
 
-(defn print-all-waiting-msgs []
-  (doseq [t (vals @TERMS)
-          i (@ant-in-channels t)]
-    (println @(:waiting-msgs i))))
+(defn print-waiting-msgs 
+  ([term] (doseq [i (@ant-in-channels term)]
+            (println @(:waiting-msgs i))))
+  ([] (doseq [t (vals @TERMS)]
+        (print-waiting-msgs t))))
 
