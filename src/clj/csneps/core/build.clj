@@ -1076,6 +1076,7 @@
                          (notsames var-label)))]
     (when-not (@restriction-set var) ;; already built!
       (alter TERMS assoc (:name var) var)
+      (alter (:not-same-as var) clojure.set/union nsvars)
       (cond 
         (= quant :qvar) 
         (let [restrictions (clojure.set/union (@restriction-set var)
@@ -1100,9 +1101,6 @@
           (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
           (dosync (doseq [r restrictions]
                     (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
-    
-            
-      (alter (:not-same-as var) clojure.set/union nsvars)
     
        (internal-restrict var)
       

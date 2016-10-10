@@ -40,18 +40,22 @@
   "If neither sbinds nor tbinds bind expr to a term which
    is explicitly not the same as qterm, then return true."
   [[sbinds tbinds] qterm expr]
-  (let [expr-binders-sbinds (filter #(= (second %) expr) sbinds)
-        expr-binders-tbinds (filter #(= (second %) expr) tbinds)
-        expr-binders (into (map #(first %) expr-binders-sbinds) 
-                           (map #(first %) expr-binders-tbinds))
-        qtnsa @(:not-same-as qterm) ]
-    (loop [binders expr-binders]
-      (cond 
-        (empty? binders) true
-        (or (contains? qtnsa (first binders))
-            (contains? @(:not-same-as (first binders)) qterm))
-        false
-        :else (recur (rest binders))))))
+  (if (and (variable? expr)
+           (or (@(:not-same-as qterm) expr)
+               (@(:not-same-as expr) qterm)))
+    false
+    (let [expr-binders-sbinds (filter #(= (second %) expr) sbinds)
+          expr-binders-tbinds (filter #(= (second %) expr) tbinds)
+          expr-binders (into (map first expr-binders-sbinds) 
+                             (map first expr-binders-tbinds))
+          qtnsa @(:not-same-as qterm) ]
+      (loop [binders expr-binders]
+        (cond 
+          (empty? binders) true
+          (or (contains? qtnsa (first binders))
+              (contains? @(:not-same-as (first binders)) qterm))
+          false
+          :else (recur (rest binders)))))))
 
 (defn- bind-phase
   [[source target] variable expr index]
