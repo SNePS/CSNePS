@@ -76,10 +76,15 @@
 (defn compatible-substitutions?
   "Returns true if no variable is bound to two different terms."
   [subs1 subs2]
-  ;; Verify variables aren't bound to different terms.
-  (every? #(or (= (subs1 %) (subs2 %))
-               (nil? (subs2 %)))
-          (keys subs1)))
+  ;; Verify no single variable is bound to different terms, and 
+  ;;    no notSame variables are assigned the same term.
+  (and (every? #(or (= (subs1 %) (subs2 %))
+                    (nil? (subs2 %)))
+               (keys subs1))
+       (every? true? (for [var (set/union (keys subs1) (keys subs2))
+                           :let [notsames @(:not-same-as var)
+                                 binding (or (subs1 var) (subs2 var))]]
+                       (every? #(not= binding (or (subs1 %) (subs2 %))) notsames)))))
 
 (defn subsumption-compatible?
   "Returns true if:
