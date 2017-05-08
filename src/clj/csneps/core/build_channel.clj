@@ -1,9 +1,9 @@
 ;;; CSNePS: Channel
 ;;; =============
 ;;; Daniel R. Schlegel
-;;; Department of Computer Science and Engineering
-;;; State University of New York at Buffalo
-;;; drschleg@buffalo.edu
+;;; Department of Computer Science
+;;; State University of New York at Oswego
+;;; daniel.schlegel@oswego.edu
 
 ;;; The contents of this file are subject to the University at Buffalo
 ;;; Public License Version 1.0 (the "License"); you may not use this file
@@ -20,7 +20,7 @@
 ;;; The Initial Developer of the Original Code is Research Foundation of
 ;;; State University of New York, on behalf of University at Buffalo.
 ;;; 
-;;; Portions created by the Initial Developer are Copyright (C) 2012
+;;; Portions created by the Initial Developer are Copyright (C) 2016
 ;;; Research Foundation of State University of New York, on behalf of
 ;;; University at Buffalo. All Rights Reserved.
 ;;; 
@@ -107,10 +107,14 @@
         out-gch (@g-channels originator)]
     (if (< (count inch) (+ (count out-ich) (count out-uch) (count out-gch)))
       (some #(when (= (:name (:originator %)) (:name originator)) %) inch)
-      (or 
-        (some #(when (= (:name (:destination %)) (:name destination)) %) out-ich)
-        (some #(when (= (:name (:destination %)) (:name destination)) %) out-gch)
-        (some #(when (= (:name (:destination %)) (:name destination)) %) out-uch)))))
+      (letfn [(nameeq [ch] 
+                (when (= (:name (:destination ch)) 
+                         (:name destination)) 
+                  ch))]
+        (or 
+          (some nameeq out-ich)
+          (some nameeq out-gch)
+          (some nameeq out-uch))))))
 
 (defn install-channel
   [ch orig dest type]
