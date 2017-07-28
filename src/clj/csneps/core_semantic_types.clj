@@ -63,10 +63,9 @@
   (isa? @semantic-type-hierarchy name TOP-SEMANTIC-TYPE))
 
 (defn define-type
-  ""
+  "Defines a new semantic type. Takes as arguments a new type, and a list of supertypes."
   [newtype supers]
-  (let [newtypekey (if (keyword? newtype) newtype (keyword newtype))]
-    (dosync (alter semantic-type-hierarchy derive-list newtypekey supers))))
+  (dosync (alter semantic-type-hierarchy derive-list newtype supers)))
 
 (defn instantiate-sem-type
   [termname type]

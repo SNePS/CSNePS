@@ -558,9 +558,11 @@ The term is returned.
 \docmacro{defineType}{\textit{newtype supers} \&optional
   \textit{docstring}}
 Defines \cv{newtype} to be a SNePS semantic type, and a subtype of the
-types listed in the list \cv{supers}.  If \cv{docstring} is given, it
-is set as the documentation string of the new type.  Returns a
-string-message, either of success or what the problem was.
+types listed in the list \cv{supers}. Internally converts types to keywords, 
+but accepts either keywords or symbols as arguments to maintain compatibility 
+with SNePS 3.  If \cv{docstring} is given, it is set as the documentation string of 
+the new type. Prints a message, either of success or what the problem was. 
+Returns nil.
 
 \docfun{demo}{\&key file pause}
 Echoes and evaluates the forms in the \cv{file}.  If \cv{pause} is

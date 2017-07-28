@@ -149,10 +149,13 @@
     (build/build term (or (first semtype) :Entity) {})))
 
 (defmacro defineType
-  [newtype parents & docstring]
-  `(do
-    (dosync (csneps/define-type '~newtype '(~@parents)))
-    (str '~newtype " defined as a subtype of " '~@parents)))
+  "Semantic types are stored internally as keywords, so they are converted to keywords first if 
+   they are not already. Thisconversion maintains some backward compatibility with SNePS 3."
+  [newtype supers & docstring]
+  `(let [newtypekey# (keyword '~newtype)
+         newsuperkeys# (map keyword '~supers)]
+     (dosync (csneps/define-type newtypekey# newsuperkeys#))
+     (println newtypekey# " defined as a subtype of " newsuperkeys#)))
 
 (defmacro describe-terms
   "Prints a description of all the given terms."
