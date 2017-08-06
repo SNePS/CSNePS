@@ -177,9 +177,10 @@
         (dosync (alter type-map assoc (:name term) (first gcsub))))
       (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
   ;; Propositions are true in contexts where they are hyps.
-  (when (or 
-          (and (subtypep newtype :Proposition) (not (subtypep oldtype :Proposition)))
-          (and (nil? (@support term)) (subtypep newtype :Policy)))
+  (when (and (nil? (@support term))
+             (or 
+               (subtypep newtype :Proposition)
+               (subtypep newtype :Policy)))
     (dosync (alter support assoc term #{['hyp #{(:name term)}]})))
   term)
 
@@ -640,7 +641,7 @@
           (dosync 
             (alter TERMS assoc expr term)
             (alter type-map assoc expr semtype)
-            (alter support assoc term #{['hyp #{(:name term)}]})
+            (when (subtypep semtype :Proposition) (alter support assoc term #{['hyp #{(:name term)}]}))
             (alter msgs assoc term (create-message-structure :csneps.core/Atom nil)))
           (when (= expr 'True)
             (assert term (ct/find-context 'BaseCT)))
