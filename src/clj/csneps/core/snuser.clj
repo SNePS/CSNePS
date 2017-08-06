@@ -20,9 +20,9 @@
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
         [csneps.core.build :only (find *PRECISION* defrule unassert rewrite-propositional-expr)]
-        [csneps.core :only (showTypes semantic-type-of)]
+        [csneps.core :only (showTypes list-types semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
-        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction)]
+        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction show-ig-debug)]
         [csneps.core.arithmetic]
         [csneps.util])
   (:import [edu.buffalo.csneps.util CountingLatch]))

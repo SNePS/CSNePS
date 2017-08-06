@@ -12,7 +12,7 @@
 ;; For debug:
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug false)
+(def debug (ref #{}))
 (def showproofs true)
 
 (declare initiate-node-task create-message-structure get-new-messages open-valve cancel-infer-of)
@@ -82,11 +82,11 @@
 
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
-  (when debug (send screenprinter (fn [_]  (println "MSGTX: " message))))
+  (when (:msgtx @debug) (send screenprinter (fn [_]  (println "MSGTX: " message))))
   ;; Filter
   (when ((:filter-fn channel) (:subst message))
     ;; Switch
-    (when debug (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) (:subst message))))))
+    (when (:switch @debug) (send screenprinter (fn [_]  (println "SWITCH!: " ((:switch-fn channel) (:subst message))))))
     (let [message (derivative-message message :subst 
                                       (build/clean-subst ((:switch-fn channel) (:subst message)) channel))]
       (if (build/pass-message? channel message)
@@ -96,7 +96,7 @@
           (when (@infer-status (:taskid message))
             ;(send screenprinter (fn [_]  (println "inc-stc" (:taskid message) (derivative-message message :taskid taskid))))
             (.increment ^CountingLatch (@infer-status (:taskid message))))
-          (when debug (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
+          (when (:msgrx @debug) (send screenprinter (fn [_]  (println "MSGRX: " message "by" (:destination channel)))))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
         ;; Cache in the waiting-msgs
@@ -330,7 +330,7 @@
                  ;(not (visited (:originator ch))))
                  ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
-        (when debug (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
+        (when (:bw @debug) (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
         (let [subst (add-valve-selector ch subst context taskid)]
           (when subst ;; Will be nil if this is an old VS.
             (if (and taskid
@@ -372,7 +372,7 @@
                                  :when (not (nil? new-subst))]
                              [ch new-subst]))]
         (when (seq affected-chs)
-          (when debug (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
+          (when (:cancel @debug) (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
           (doseq [[ch subst] affected-chs]
             (when taskid (.increment ^CountingLatch (@infer-status taskid)))
             (.execute ^ThreadPoolExecutor executorService 
@@ -611,7 +611,7 @@
                                    :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
                                    :type 'U-INFER)
         uch (@u-channels node)]
-    (when debug (send screenprinter (fn [_]  (println "ELIMINATING"))))
+    (when (:der @debug) (send screenprinter (fn [_]  (println "ELIMINATING"))))
     (when showproofs
       (doseq [u uch]
         (when (build/pass-message? u dermsg)
@@ -676,7 +676,7 @@
         totparam (totparam node)
         pos-matches (filter #(= (:pos %) (:max node)) new-ruis)
         neg-matches (filter #(= (- totparam (:neg %)) (:min node)) new-ruis)]
-    (when debug (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
+    (when (:rui @debug) (send screenprinter (fn [_]  (println "NRUI" new-ruis))))
     
     ;(send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
     
@@ -1011,6 +1011,7 @@
           (when (and showproofs instance 
                      (ct/asserted? node (ct/currentContext)) 
                      (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
+            (send screenprinter (fn [_] (println "message:" (:support-set rcm) "node:" (@support node) "inst-support:" inst-support)))
             (send screenprinter (fn [_] (print-proof-step instance
                                                           (:support-set rcm)
                                                           node
@@ -1055,14 +1056,14 @@
     
 (defn arbqvar-instantiation
   [message node]
-  (when debug (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
+  (when (:der @debug) (send screenprinter (fn [_]  (println "Arbitrary derivation:" (:subst message) "at" node))))
   (when (seq (:subst message)) ;; Lets ignore empty substitutions for now.
     (let [new-ruis (get-new-messages (@msgs node) message)
           resct (count (@restriction-set node))
           der-msg-t (filter #(= (:pos %) resct) new-ruis)
           new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message) :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
-      (when debug (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
+      (when (:rui @debug) (send screenprinter (fn [_]  (println "NEWRUIS:" new-ruis))))
       (when (seq der-msg-t)
 ;        (send screenprinter (fn [_]  (println "NEWMESSAGE:" (count (for [msg new-msgs
 ;                                                                         ch gch]
@@ -1071,7 +1072,7 @@
 
         (add-matched-and-sent-messages (@msgs node) (set der-msg-t) {:g-channel (set new-msgs)})
 
-        (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
+        (when (:newmsg @debug) (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
                     ch gch]
                 [ch msg])]))))
@@ -1117,7 +1118,7 @@
                                     (instantiate-indefinite node (:subst message)))) der-rui-t)
           gch (@g-channels node)]
       (when (seq der-rui-t)
-        (when debug (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
+        (when (:newmsg @debug) (send screenprinter (fn [_]  (println "NEWMESSAGE:" new-msgs))))
         [true (for [msg new-msgs
                     ch gch]
                 [ch msg])]))))
@@ -1136,7 +1137,7 @@
 (defn elimination-infer
   "Input is a message and node, output is a set of messages derived."
   [message node new-msgs]
-  (when debug (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
+  (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: (elim) Inferring in:" node))))
   (case (type-of node)
     :csneps.core/CARule (policy-instantiation message node new-msgs)
     :csneps.core/Conjunction (conjunction-elimination message node new-msgs)
@@ -1154,7 +1155,7 @@
 (defn introduction-infer
   ""
   [message node new-msgs]
-  (when debug (send screenprinter (fn [_]  (println "INFER: (intro) Inferring in:" node))))
+  (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: (intro) Inferring in:" node))))
   (case (type-of node)
     :csneps.core/Conjunction (conjunction-introduction message node new-msgs)
     (:csneps.core/Andor 
@@ -1167,7 +1168,7 @@
 
 (defn initiate-node-task
   [term message]
-  (when debug (send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term))))
+  (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER:" term "\n         beginning node task on\n      " message ))))
   ;(send screenprinter (fn [_]  (println "INFER: Begin node task on message: " message "at" term)))
   
   (when (:fwd-infer? message)
@@ -1232,7 +1233,7 @@
       ;; Since we reason in all contexts, it won't result in any new derivations, just new reasons for old ones.
       ;; Each of the elimination rules should have a condition for U-INFER messages to do this.
       (when-let [result (elimination-infer message term (get-matched-messages (@msgs term)))]
-        (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
+        (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
         (doseq [[ch msg] result] 
           (submit-to-channel ch msg)))))
   
@@ -1274,7 +1275,7 @@
       (analyticTerm? term)
       (let [imsg (derivative-message message :origin term)]
         (when (@msgs term) (add-matched-and-sent-messages (@msgs term) #{(sanitize-message message)} {:i-channel #{imsg} :g-channel #{imsg}}))
-        (when debug (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
+        (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: AnalyticGeneric" term "forwarding message."))))
         (doseq [cqch (@i-channels term)] 
           (submit-to-channel cqch imsg)))
       ;; Arbs
@@ -1311,14 +1312,14 @@
       (let [new-msgs (get-new-messages (@msgs term) message)]
         ;; Try elimination
         (when-let [result (elimination-infer message term new-msgs)]
-          (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
+          (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: Result Inferred " result))))
           (doseq [[ch msg] result] 
             (submit-to-channel ch msg)))
         ;; Then try introduction
         (let [results (introduction-infer message term new-msgs)]
           (if (seq results)
             (doseq [[true? spt result] results]
-              (when debug (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
+              (when (:infer @debug) (send screenprinter (fn [_]  (println "INFER: Result Inferred " result "," spt "," true?))))
               ;; Update support.
               (let [resterm (if true?
                               term
@@ -1418,6 +1419,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug Functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
+
+;; valid options: :msgtx, :msgrx, :bw, :cancel, :switch, :rui, :der, :newmsg
+(defn show-ig-debug [& opts]
+  (dosync (ref-set debug (set opts))))
 
 (defn- print-valve [ch]
   (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (ct/find-context (second %))) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
