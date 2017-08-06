@@ -101,5 +101,5 @@
           context
           (some 
             #(set/subset? (second %) cthyps)
-            (filter #(not= (first %) 'hyp) (@csneps/support p)))
+            (filter #(not (= (first %) 'hyp)) (@csneps/support p)))
           context)))))
