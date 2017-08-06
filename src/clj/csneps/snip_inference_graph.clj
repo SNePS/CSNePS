@@ -1011,7 +1011,7 @@
           (when (and showproofs instance 
                      (ct/asserted? node (ct/currentContext)) 
                      (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
-            (send screenprinter (fn [_] (println "message:" (:support-set rcm) "node:" (@support node) "inst-support:" inst-support)))
+            (when (:os @debug) (send screenprinter (fn [_] (println "message:" (:support-set rcm) "node:" (@support node) "inst-support:" inst-support))))
             (send screenprinter (fn [_] (print-proof-step instance
                                                           (:support-set rcm)
                                                           node
@@ -1420,7 +1420,7 @@
 ;;; Debug Functions ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-;; valid options: :msgtx, :msgrx, :bw, :cancel, :switch, :rui, :der, :newmsg
+;; valid options: :msgtx, :msgrx, :bw, :cancel, :switch, :rui, :der, :newmsg, :os
 (defn show-ig-debug [& opts]
   (dosync (ref-set debug (set opts))))
 
