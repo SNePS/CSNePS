@@ -73,7 +73,7 @@
       ;; Reset slots/frames
       (when clearall         
         ;;Initialize the Semantic Type hierarchy
-        (csneps/initialize-default-hierarchy)
+        (build/initialize-default-hierarchy)
         
         ;; Reinitialize slots
         (ref-set slot/SLOTS (hash-map))

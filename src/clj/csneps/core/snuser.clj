@@ -154,7 +154,7 @@
   [newtype supers & docstring]
   `(let [newtypekey# (keyword '~newtype)
          newsuperkeys# (map keyword '~supers)]
-     (dosync (csneps/define-type newtypekey# newsuperkeys#))
+     (dosync (build/define-type newtypekey# newsuperkeys#))
      (println newtypekey# " defined as a subtype of " newsuperkeys#)))
 
 (defmacro describe-terms

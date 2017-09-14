@@ -62,11 +62,6 @@
   [name]
   (isa? @semantic-type-hierarchy name TOP-SEMANTIC-TYPE))
 
-(defn define-type
-  "Defines a new semantic type. Takes as arguments a new type, and a list of supertypes."
-  [newtype supers]
-  (dosync (alter semantic-type-hierarchy derive-list newtype supers)))
-
 (defn instantiate-sem-type
   [termname type]
   (let [newtypekey (keyword type)]
@@ -88,17 +83,6 @@
   (if (isa? (type-of term) ::Term)
     (get @type-map (:name term))
     (get @type-map term)))
-
-(defn initialize-default-hierarchy []
-  (dosync (ref-set semantic-type-hierarchy (make-hierarchy))
-	  (define-type :Propositional '(:Entity))
-	  ;(define-type :WhQuestion '(:Propositional))
-	  (define-type :Proposition '(:Propositional))
-	  (define-type :Act '(:Entity))
-	  (define-type :Policy '(:Entity))
-	  (define-type :Thing '(:Entity))
-	  (define-type :Category '(:Thing))
-	  (define-type :Action '(:Thing))))
 
 (defn subtypep
   "Checks if type1 is a descendent of type2"

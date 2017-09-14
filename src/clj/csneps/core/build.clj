@@ -29,6 +29,7 @@
 (load "build_channel")
 (load "build_rules")
 (load "build_rewrite")
+(load "build_semantic_types")
 
 (defvar KRNovice (ref nil)
   "If the value is non-null,
