@@ -163,6 +163,8 @@
                       then [action] may occur, and [subrule] may be matched."))
       ))
   
+  (build/initial-semtypes-to-obj-lang)
+  
   ;; Do this outside the dosync (see above).
   (ct/setCurrentContext 'DefaultCT)
 
