@@ -3,7 +3,6 @@
   :dependencies [[org.clojure/clojure "1.9.0-beta1"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/core.memoize "0.5.6"]
-                 [org.clojure/core.incubator "0.1.2"]
                  [org.clojure/math.numeric-tower "0.0.4"]
                  [org.clojure/math.combinatorics "0.1.4"]
                  [org.clojure/tools.trace "0.7.6"]

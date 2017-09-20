@@ -1,7 +1,6 @@
 (ns csneps.gui
   (:import [edu.buffalo.cse.sneps3.gui])
   (:use [clojure.tools.nrepl.server :only (start-server stop-server)]
-        [clojure.core.incubator :only (-?>)]
         [csneps.util])
   (:require [clojure.tools.nrepl :as repl]
             [csneps.core :as csneps]
@@ -107,7 +106,7 @@
   [status s]
   (format "Expression %s: %s"
     ({"timeout" "timed out", "interrupted" "was interrupted"} status "failed")
-    (-?> ^String s
+    (some-> ^String s
       (.substring 0 (min 30 (count s)))
       (str (when (> (count s) 30) "..."))
       (.replaceAll "\\n|\\r" " "))))
