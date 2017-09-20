@@ -1,5 +1,4 @@
 (ns csneps.core.build
-  (:require [clojure.math.combinatorics :as cb])
   (:require [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
             [csneps.core.printer :as print]
@@ -10,7 +9,7 @@
             [clojure.zip :as zip]
             [clojure.set :as set]
             [clojure.string])
-  ;(:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
+  (:refer-clojure :exclude [assert find]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.util]
         [clojure.walk :as walk :only [prewalk prewalk-replace postwalk-replace]]
@@ -263,7 +262,7 @@
   [args semtype subst]
   (let [cf (cf/find-frame 'andor)]
     (when-not cf (error "There is no frame associated with andor."))
-    (when-not (seqable? (first args))
+    (when-not (cl-seqable? (first args))
       (error "andor must be followed by a list, (i j) in " (list* 'andor args) "."))
     (let [min (ffirst args)
           max (second (first args))
@@ -301,7 +300,7 @@
   [args semtype subst]
   (let [cf (cf/find-frame 'thresh)]
     (when-not cf (error "There is no frame associated with thresh."))
-    (when-not (seqable? (first args))
+    (when-not (cl-seqable? (first args))
       (error
        "thresh must be followed by a list, (i) or (i j), in "
          (list* 'thresh args) "."))
@@ -500,7 +499,7 @@
   "Build a term for the expression expr, whose function is fcn,
        and whose contextual semantic type is to be semtype."
   [fn expr semtype substitution]
-  ;(println "Building User Term... ")
+  ;(println "Building User Term... " fn expr semtype substitution)
   ;; fn = (first expr)
   (let [fcn (if-not (atom? fn) (build fn :Thing substitution) fn)
         cf (or
@@ -738,7 +737,7 @@
                                                       :min (count fillers)
                                                       :max (count fillers))))
             (rest expr) ;;1 conjunct
-               (if (or (and (seqable? (second expr)) (= (first (second expr)) 'setof))
+               (if (or (and (cl-seqable? (second expr)) (= (first (second expr)) 'setof))
                        (set? (second expr)))
                 ;; if the argument is a set, treat it as the set of conjuncts
                 (if (= (count (second expr)) 1)
@@ -900,7 +899,7 @@
         (if (= (count set) 1) (first set) set))
       
       close
-      (let [closed-var-labels (if (seqable? (second expr)) (second expr) (list (second expr)))
+      (let [closed-var-labels (if (cl-seqable? (second expr)) (second expr) (list (second expr)))
             closed-vars (map substitution closed-var-labels)
             fillers (build (set (rest (rest expr))) :Proposition substitution)]
         (build-molecular-node (cf/find-frame 'close)
@@ -1143,7 +1142,7 @@
   (cond
     (function-symbol? rst) [rst var]
     (or (symbol? rst) (string? rst)) ['Isa var rst]
-    (and (seqable? rst)
+    (and (cl-seqable? rst)
          (not (some #(= % var) rst))
          (not= (count (rest rst)) (count (:slots (cf/find-frame (first rst))))))
     (into [(first rst) var] (rest rst))
@@ -1194,7 +1193,7 @@
       arb-rsts:  [x ->  ((Isa x Farmer) (Owns x y))]"
   [assertion-spec arb-rsts ind-deps-rsts qvar-rsts & {:keys [buildingqvar] :or {buildingqvar #{}}}]
   (cond
-    (and (seqable? assertion-spec) (not (set? assertion-spec)) (not (map? assertion-spec)))
+    (and (cl-seqable? assertion-spec) (not (set? assertion-spec)) (not (map? assertion-spec)))
     (cond
       (= (first assertion-spec) 'some)
       (let [rsts (rest (ind-deps-rsts (second assertion-spec)))]

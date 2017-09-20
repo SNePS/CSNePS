@@ -45,8 +45,8 @@
            :or {docstring "", parents '(BaseCT), hyps (hash-set)}}]
   (assert (symbol? name))
   (assert (string? docstring))
-  (assert (or (nil? parents) (seqable? parents)))
-  (assert (seqable? hyps) (set? hyps))
+  (assert (or (nil? parents) (cl-seqable? parents)))
+  (assert (cl-seqable? hyps) (set? hyps))
   (if (find-context name)
     (println "A context named" name "already exists.")
     (dosync (alter CONTEXTS assoc name (Context. name docstring 

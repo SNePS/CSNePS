@@ -17,20 +17,6 @@
 
 (defn varinlist? [list] #(some #{%} list))
 
-(defn- composite?
-  "Taken from the old `contrib.core/seqable?`. Since the meaning of 'seqable' is
-   questionable, I will work on phasing it out and using a more meaningful
-   predicate.  At the moment, the only meaning of `composite?` is:
-   Returns true if `(seq x)` will succeed, false otherwise."
-  [x]
-  (or (seq? x)
-      (instance? clojure.lang.Seqable x)
-      (nil? x)
-      (instance? Iterable x)
-      (-> x class .isArray)
-      (string? x)
-      (instance? java.util.Map x)))
-
 (defn occurs?
   "Basic occurs check"
   [var term]

@@ -9,7 +9,7 @@
 
 (defn assert-type-generic
   [newtype supers]
-  (assert (list 'Isa (list 'every 'x (name newtype)) (set (map name supers))) 'BaseCT))
+  (assert (list 'Isa (list 'every 'x (name newtype)) (set (map name supers))) 'OntologyCT))
 
 (defn define-type 
   "Defines a new semantic type. Takes as arguments a new type, and a list of supertypes."

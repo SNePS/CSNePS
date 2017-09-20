@@ -11,9 +11,12 @@
       (ct/defineContext 'BaseCT
         :docstring "The root of all the contexts."
         :parents nil)
+      (ct/defineContext 'OntologyCT
+        :docstring "Context containing the semantic type ontology and other ontological
+                    assertions which are not subject to belief revision.")
       (ct/defineContext 'DefaultCT
         :docstring "The default current context."
-        :parents '(BaseCT))
+        :parents '(OntologyCT))
       ;; Set current context after the dosync, since 
       ;; it's side-effect producing. 
 

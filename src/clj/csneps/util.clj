@@ -365,7 +365,7 @@
               :else    (recur m (next ks))))
       (persistent! m))))
 
-(defn seqable? 
+(defn cl-seqable? 
   [x]
   (instance? clojure.lang.Seqable x))
 
