@@ -38,7 +38,8 @@
                keep-pausing (ref pause)
                continue (ref true)]
           (when (and form @continue)
-            (println "\ninput: " form)
+            (print "\ninput: ") 
+            (clojure.pprint/pprint form)
             (when @keep-pausing
               (loop []
                 (println "\n--- pause ---\n")
@@ -57,7 +58,7 @@
                                 (cl-format true
                                            "~%The following commands are available at pause points:~
                                             ~%  h,?            Print this help message~
-                                            ~%  l,^            Enter Lisp read/eval/print loop~
+                                            ~%  l,^            Enter Clojure read/eval/print loop~
                                             ~%  c              Continue without pausing~
                                             ~%  q              Quit the demo~
                                             ~%  RETURN         Continue the demo~
