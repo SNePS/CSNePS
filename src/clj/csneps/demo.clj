@@ -2,8 +2,26 @@
   (:use [clojure.java.io :only (reader)]
         [clojure.pprint :only (cl-format pprint)]))
 
+(declare demo demoindex)
+
 (defn noop
   [])
+
+(defn list-demos []
+  (let [demodir (str (System/getProperty "user.dir") "/Demo")]
+    (load-file (str demodir "/index.clj"))
+    (doseq [x (range (count demoindex))
+            :let [[demoname _] (nth demoindex x)]]
+      (println x " " demoname)))
+  nil)
+
+(defn demo-chooser [pause failonerror]
+  (let [demodir (str (System/getProperty "user.dir") "/Demo")]
+    (println "Enter the number next to the demo you wish to run:")
+    (list-demos)
+    (let [input (read-line)
+          num (Integer/parseInt input)]
+      (demo :file (str demodir "/" (second (nth demoindex num))) :pause pause :failonerror failonerror))))
 
 (defn demo 
   "Echoes and evaluates the forms in the file.
@@ -51,4 +69,4 @@
               (println "output:" (eval form))
               (println "output:" (try (eval form) (catch Exception e (.getMessage e))))) ;; We watch to catch errors, print them, and move on sometimes.
             (recur (read r false nil) keep-pausing continue)))))
-    "Please use :file. Listing not yet implemented."))
+    (demo-chooser pause failonerror)))
