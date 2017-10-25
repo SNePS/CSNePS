@@ -7,28 +7,36 @@
 (defn noop
   [])
 
-(defn list-demos []
+(defn- list-demos 
+  "Lists the demos in the /Demo directory via the index.clj file." []
   (let [demodir (str (System/getProperty "user.dir") "/Demo")]
     (load-file (str demodir "/index.clj"))
     (doseq [x (range (count demoindex))
             :let [[demoname _] (nth demoindex x)]]
-      (println x " " demoname)))
-  nil)
+      (println x "\t" demoname))))
 
-(defn demo-chooser [pause failonerror]
+(defn- demo-chooser [pause failonerror]
   (let [demodir (str (System/getProperty "user.dir") "/Demo")]
     (println "Enter the number next to the demo you wish to run:")
     (list-demos)
+    (println "q\tQuit")
     (let [input (read-line)
-          num (Integer/parseInt input)]
-      (demo :file (str demodir "/" (second (nth demoindex num))) :pause pause :failonerror failonerror))))
+          q? (= input "q") 
+          numstr (re-find #"\d+" input)
+          num (when numstr (Integer/parseInt numstr))]
+      (cond 
+        q? nil
+        (and numstr 
+             (>= num 0) 
+             (< num (count demoindex))) (demo :file (str demodir "/" (second (nth demoindex num))) :pause pause :failonerror failonerror)
+        :default (println "Invalid selection.")))))
 
 (defn demo 
   "Echoes and evaluates the forms in the file.
    If pause is true, will pause after echoing each form,
    but before evaluating it. If failonerror is true, an
-   exception will halt the demo.
-     If the file is omitted, a menu will be presented of available demos."
+   exception will halt the demo. If the file is omitted, 
+   a menu will be presented of available demos."
   [& {:keys [file pause failonerror] :or {file nil, pause nil, failonerror nil}}]
   (if file
     (with-open [r (java.io.PushbackReader.

@@ -564,11 +564,13 @@ with SNePS 3.  If \cv{docstring} is given, it is set as the documentation string
 the new type. Prints a message, either of success or what the problem was. 
 Returns nil.
 
-\docfun{demo}{\&key file pause}
+\docfun{demo}{\&key file pause failonerror}
 Echoes and evaluates the forms in the \cv{file}.  If \cv{pause} is
 non-\texttt{nil} (the default is \texttt{nil}), will pause after
 echoing each form, but before evaluating it.  If the \cv{file} is
-omitted, a menu will be presented of available demos.
+omitted, a menu will be presented of available demos. By default, an erroneous 
+form will not stop the demo from continuing, but this may be changed by
+setting \cv{failonerror} to a non-nil value.
 
 %\docmacro{describe-terms}{\&rest \textit{ftnames}}
 %Prints a description of all the given terms.
