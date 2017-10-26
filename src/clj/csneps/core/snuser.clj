@@ -199,22 +199,27 @@
   ;; Then indefinite nodes
   ;; Then qvar nodes
   ;; Then print molecular terms;
-  [& {:keys [asserted types originsets properties]}]
+  [& {:keys [asserted types originsets properties showontology]}]
   (let [terms (vals @csneps/TERMS)
         atoms (sort-by :name (filter #(= (:type %) :csneps.core/Atom) terms))
         arbs (sort-by :name (filter csneps/arbitraryTerm? terms))
         inds (sort-by :name (filter csneps/indefiniteTerm? terms))
         qvars (sort-by :name (filter csneps/queryTerm? terms))
-        mols (sort-by :name (filter csneps/molecularTerm? terms))]
+        mols (sort-by :name (filter csneps/molecularTerm? terms))
+        print-term (fn [x] 
+                     (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
+                     (if (and properties (@csneps/property-map x)) (print (@csneps/property-map x) " ") #{})
+                     (print x)
+                     (when originsets (print " " (@csneps/support x)))
+                     (println))]
     (doseq [x (concat atoms arbs inds qvars mols)]
-      (when (or (not asserted)
-                (and asserted
-                     (ct/asserted? x (ct/currentContext))))
-        (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
-        (if (and properties (@csneps/property-map x)) (print (@csneps/property-map x) " ") #{})
-        (print x)
-        (when originsets (print " " (@csneps/support x)))
-        (println)))))
+      (let [asserted-in-ct (ct/asserted? x (ct/currentContext))
+            ontological-term (ct/asserted? x 'OntologyCT :local true)]
+        (cond 
+          (and (not asserted) (not showontology) (not ontological-term)) (print-term x)
+          (and asserted asserted-in-ct showontology) (print-term x)
+          (and asserted asserted-in-ct (not showontology) (not ontological-term)) (print-term x)
+          (and (not asserted) showontology) (print-term x))))))
 
 (defn listkb
   "Prints the current context and all propositions asserted in it."

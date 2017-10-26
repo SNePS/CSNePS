@@ -704,7 +704,7 @@
                                                               (str (or 
                                                                      (build/syntype-fsym-map (syntactic-type-of node))
                                                                      "andor")
-                                                                   "-elimination")))))))
+                                                                   "-elimination (1)")))))))
 
         (add-matched-and-sent-messages (@msgs node) (set pos-matches) {:u-channel (set (vals der-msgs))})
                 
@@ -737,7 +737,7 @@
                                                               (str (or 
                                                                      (build/syntype-fsym-map (syntactic-type-of node))
                                                                      "andor")
-                                                                   "-elimination")))))))
+                                                                   "-elimination (2)")))))))
 
         (add-matched-and-sent-messages (@msgs node) (set neg-matches) {:u-channel (set (vals der-msgs))})
                 

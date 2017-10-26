@@ -90,12 +90,15 @@
 
 (defn asserted?
   "If p has an origin set which is a subset of the hyps of the
-   context ct, then it is asserted."
-  [p ct]
+   context ct, then it is asserted. Local key indicates to only
+   look in the current context, and not parents."
+  [p ct & {:keys [local]}]
   (let [context (find-context ct)]
     (if (@(:hyps context) (:name p)) 
       context
-      (let [cthyps (hyps context)]
+      (let [cthyps (if local 
+                     @(:hyps context) 
+                     (hyps context))]
         (cond
           (cthyps (:name p)) 
           context

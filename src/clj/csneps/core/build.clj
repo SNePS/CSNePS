@@ -390,7 +390,7 @@
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     (doseq [v (vals subs)]
       (doseq [rst (seq (@restriction-set v))]
-        (assert rst (ct/find-context 'BaseCT)))
+        (assert rst (ct/find-context 'OntologyCT)))
       (build-quantterm-channels v)
       ;(when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v))
       )
@@ -644,11 +644,11 @@
             (when (subtypep semtype :Proposition) (alter support assoc term #{['hyp #{(:name term)}]}))
             (alter msgs assoc term (create-message-structure :csneps.core/Atom nil)))
           (when (= expr 'True)
-            (assert term (ct/find-context 'BaseCT)))
+            (assert term (ct/find-context 'OntologyCT)))
           (when (= expr 'False)
             (assert 
               (build (list 'not term) :Proposition substitution)
-              (ct/find-context 'BaseCT)))
+              (ct/find-context 'OntologyCT)))
           term))))
 
 

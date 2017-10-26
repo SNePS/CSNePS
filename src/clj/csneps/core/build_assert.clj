@@ -14,7 +14,7 @@
     (doseq [v (seq vars)]
       (doseq [rst (seq (@restriction-set v))]
         (when-not (whquestion-term? rst) ;; It doesn't make sense to assert a WhQuestion.
-          (assert rst (ct/find-context 'BaseCT))))
+          (assert rst (ct/find-context 'OntologyCT))))
       (build-quantterm-channels v))
       ;(when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
     (build new-expr type substitution)))
@@ -26,7 +26,7 @@
   [var-expr]
   (let [[new-expr vars substitution] (check-and-build-variables var-expr)]
     (doseq [rst (seq (@restriction-set (first vars)))]
-      (assert rst (ct/find-context 'BaseCT)))
+      (assert rst (ct/find-context 'OntologyCT)))
     (build-quantterm-channels (first vars))
     (first vars)))
 
