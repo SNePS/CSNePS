@@ -614,11 +614,10 @@ Prints a list of all of the focused reasoning tasks, backward and forward.
 \docfun{list-slots}{}
 Prints a list of all the SNePS slots.
 
-\docfun{list-terms}{\&key (:asserted nil) (:types nil) (:originsets nil)}
-Prints a list of all the terms in the KB.  If \texttt{:asserted} is non-nil,
-only asserted propositions will be printed; otherwise, all terms will
-be printed.  If \texttt{:types} is non-nil, the type of
-each term will also be printed. If \texttt{:originsets} is non-nil, the origin sets of each term will also be printed.
+\docfun{list-terms}{\&key (:asserted nil) (:types nil) (:originsets nil) (:properties nil) (:showontology nil)}
+Prints a list of all the terms in the KB, except ontological terms in the OntologyCT context. These may be seen by setting \texttt{:showontology} non-nil.  If \texttt{:asserted} is non-nil,
+only asserted propositions will be printed.  If \texttt{:types} is non-nil, the type of
+each term will also be printed. If \texttt{:originsets} is non-nil, the origin sets of each term will also be printed, and if \texttt{:properties} is non-nil, additional properties of the terms will be printed.
 
 \docfun{listkb}{}
 Prints the current context and all propositions asserted in it.
