@@ -134,7 +134,7 @@
   "Given results from a find operation, return all of the terms in the substitutions."
   [findres]
   (when (seq findres)
-    (set (apply vals (map second findres)))))
+    (set (apply concat (map vals (map second findres))))))
 
 (defn find-old-var-node
   "If an existing variable node can be found such that:
