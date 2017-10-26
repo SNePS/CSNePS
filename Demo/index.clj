@@ -39,4 +39,9 @@
                 ["Negation by Failure" "negbyfail.sneps"],
                 ["SNeRE" "snere.sneps"],
                 ["Demonstration of using find (for SNePS Developers)." "finddemo.sneps"],
-                ["Demonstration of building arbitrary individuals." "vardemo.sneps"]])
+                ["Demonstration of building arbitrary individuals." "vardemo.sneps"]
+                ["Demonstration of condition-action rules." "condact-rules.sneps"]
+                ["Demonstration of focused inference." "focusedinfer.sneps"]
+                ["Demonstration of inference using generics." "genericinfer.sneps"]
+                ["Demonstration of subsumption inference." "subsumption.sneps"]])
+                
