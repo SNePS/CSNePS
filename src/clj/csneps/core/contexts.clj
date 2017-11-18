@@ -1,5 +1,6 @@
 (ns csneps.core.contexts
   (:require [csneps.core :as csneps]
+            [clojure.string :as str]
             [clojure.set :as set])
   (:use [csneps.util]))
 
@@ -9,13 +10,18 @@
 (defvar ^:dynamic *CurrentContext* (ref nil)
   "The current context.")
 
-;;; "A SNePS 3 Context"
+;;; "A CSNePS Context"
 (defrecord Context [
         ^clojure.lang.Symbol name
         ^String docstring
         ^clojure.lang.PersistentList parents
         ^clojure.lang.PersistentHashSet hyps
         ^java.lang.Boolean kinconsistent])
+
+(defmethod print-method csneps.core.contexts.Context [o w]
+  (.write ^java.io.Writer w (str (:name o) " - " (:docstring o)
+                                 "\n\tParents: " (str/join ", " (map :name (:parents o)))
+                                 "\n\tConsistent?: " (not (:kinconsistent o)))))
 
 (defn find-context
   "If ctx is a context, returns it.
