@@ -10,7 +10,7 @@
             [csneps.gui :as gui]
             [csneps.utils.ontology :as onto-tools])
   (:use clojure.stacktrace)
-  (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load])
+  (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load exit quit])
   (:use [clojure.pprint :only (cl-format)]
         [clojure.core.memoize :only (memo-clear!)]
         [clojure.walk]
@@ -241,6 +241,14 @@
 (defn load
   [fname]
   (load-file fname))
+
+(defn quit
+  []
+  (shutdown-agents)
+  (csneps.snip/shutdownExecutor)
+  (System/exit 0))
+
+(defn exit [] (quit))
 
 (clojure.core/load "/csneps/core/initialize")
 (clojure.core/load "/csneps/test/benchmark")

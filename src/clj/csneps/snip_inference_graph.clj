@@ -58,13 +58,18 @@
 (defn resetExecutor
   []
   (.clear ^PriorityBlockingQueue queue)
-  (.shutdown ^ThreadPoolExecutor executorService)
+  (.shutdownNow ^ThreadPoolExecutor executorService)
   (def executorService (ThreadPoolExecutor.
                          ig-cpus-to-use
                          ig-cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
   (def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)})))
+
+;; Only used when exiting. 
+(defn shutdownExecutor
+  []
+  (.shutdownNow ^ThreadPoolExecutor executorService))
 
 ;;; Experimental attempt at pausing inference.
 (let [waiting-queue (LinkedBlockingQueue.)]
