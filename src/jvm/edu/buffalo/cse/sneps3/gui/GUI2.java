@@ -51,6 +51,7 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
  */
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
+	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
 	public static final String version = "2016.09.20";
 	
@@ -95,18 +96,19 @@ public class GUI2 extends javax.swing.JFrame{
 
     //static ArrayList<Caseframe> hide_cf_list = new ArrayList<Caseframe>();
 
-    /** Creates new form GUI2 */
-    public GUI2() {
-    	// Initialize the model. 
-    	model = new Model();
-    	
-    	caseFrameForm = new DefineCaseframeForm();
-    	export = new ExportDialog();
-    	
-        initComponents();
+	/** Creates new form GUI2 */
+	public GUI2() {
+		// Initialize the model.
+		model = new Model();
 
-        this.setTitle("CSNePS GUI Version " + version);
-        
+		caseFrameForm = new DefineCaseframeForm();
+		if (javaVersion < 1.9)
+			export = new ExportDialog();
+
+		initComponents();
+
+		this.setTitle("CSNePS GUI Version " + version);
+
         //Use this to redirect output from the repl eventually...
         //Var.pushThreadBindings(RT.map(RT.OUT), <outstreamwriter>)
         
@@ -141,7 +143,8 @@ public class GUI2 extends javax.swing.JFrame{
                     }
 
                     //ExportDialog export = new ExportDialog();
-                    export.showExportDialog(parent, "Take Screenshot...", parent, "guiscr");
+                    if (javaVersion < 1.9)
+                    		export.showExportDialog(parent, "Take Screenshot...", parent, "guiscr");
                     doingSave = false;
                     return true;
                 }
@@ -659,8 +662,8 @@ public class GUI2 extends javax.swing.JFrame{
                 jMenuItem10ActionPerformed(evt);
             }
         });
-        //if (!OSTools.isMac()) 
-        jMenu4.add(jMenuItem10);
+        if (javaVersion < 1.9) 
+        		jMenu4.add(jMenuItem10);
 
         jMenu1.add(jMenu4);
 
