@@ -30,6 +30,7 @@ public class Controller {
 	private static Var caseframes_caseframe_name_fn;
 	private static Var caseframes_quotedpp_qmark_fn;
 	private static Var contexts_asserted_qmark_fn;
+	private static Var contexts_ontology_term_qmark_fn;
 	private static Var contexts_define_context_fn;
 	private static Var contexts_hyps_fn;
 	private static Var contexts_set_current_context_fn;
@@ -72,11 +73,20 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public static IPersistentMap contexts_asserted_qmark(IPersistentMap term, IPersistentMap context){
+	public static Boolean contexts_ontology_term_qmark(IPersistentMap term){
+		if (contexts_ontology_term_qmark_fn == null) 
+			contexts_ontology_term_qmark_fn = RT.var("csneps.core.contexts", "ontology-term?");
+		try{
+			return (contexts_ontology_term_qmark_fn.invoke(term) == Boolean.valueOf(false) ? false : true);
+		} catch (Exception e) {e.printStackTrace();}
+		return false;
+	}
+	
+	public static IPersistentMap contexts_asserted_qmark(IPersistentMap term, IPersistentMap context, Boolean local){
 		if (contexts_asserted_qmark_fn == null) 
 			contexts_asserted_qmark_fn = RT.var("csneps.core.contexts", "asserted?");
 		try{
-			return (IPersistentMap)contexts_asserted_qmark_fn.invoke(term, context);
+			return (IPersistentMap)contexts_asserted_qmark_fn.invoke(term, context, Keyword.intern("local"), local);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}

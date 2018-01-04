@@ -137,9 +137,17 @@ public class FnInterop {
 	////////////////
 	
 	public static Boolean isAsserted(Term t, Context c){
-		IPersistentMap a = Controller.contexts_asserted_qmark(t.getClojureTerm(), c.getClojureContext());
+		return isAsserted(t, c, false);
+	}
+	
+	public static Boolean isAsserted(Term t, Context c, Boolean local){
+		IPersistentMap a = Controller.contexts_asserted_qmark(t.getClojureTerm(), c.getClojureContext(), local);
 		if (a != null) return true;
 		return false;
+	}
+	
+	public static Boolean isOntologyTerm(Term t) {
+		return Controller.contexts_ontology_term_qmark(t.getClojureTerm());
 	}
 	
 	public static Context defineContext(String name, ArrayList<Context> parents, Set<Term> hyps){

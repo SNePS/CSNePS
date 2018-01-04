@@ -284,6 +284,19 @@ public class Term {
 		return FnInterop.isAsserted(this, inContext);
 	}
 	
+	/* 
+	 * Returns the result of checking if the term has been
+	 * explicitly asserted in the context. That is, it isn't
+	 * assrted in a parent, it's directly this one. 
+	 */
+	public Boolean isExplicitlyAsserted(Context inContext) {
+		return FnInterop.isAsserted(this, inContext, true);
+	}
+	
+	public Boolean isOntologyTerm() {
+		return FnInterop.isOntologyTerm(this);
+	}
+	
 	/**
 	 * Two terms are equal if they have the same name.
 	 * @param term2

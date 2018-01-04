@@ -1,9 +1,4 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
  * JungGraphPanel.java
  *
  * Created on Nov 28, 2009, 7:52:32 PM
@@ -90,8 +85,7 @@ import javax.vecmath.Point3d;
 import org.apache.commons.collections15.Transformer;
 
 /**
- * 
- * @author dan
+ * @author Daniel R. Schlegel
  */
 public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
@@ -102,6 +96,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	};
 
     boolean showNewTerms = true;
+    boolean showOntologyTerms = false;
 	
 	boolean straightEdges = true;
 	boolean findv2 = true;
@@ -196,6 +191,14 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	
 	public boolean getShowNewTerms(){
 		return showNewTerms;
+	}
+	
+	public void setShowOntologyTerms(boolean b){
+		showOntologyTerms = b;
+	}
+	
+	public boolean getShowOntologyTerms(){
+		return showOntologyTerms;
 	}
 	
 	public void configureGraphViewer(){
@@ -907,75 +910,95 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 	public void slotUpdate(Collection<Slot> slot, Boolean clear) {
 	}
+	
+	public boolean shouldShowTerm(ITermNode<IEdge> tn) {
+		if (showNewTerms && !tn.isVisible()) {
+			System.out.println("Ont term? " + tn.getTerm() + " " + tn.getTerm().isOntologyTerm());
 
+			if (showOntologyTerms) return true;
+			else if (!tn.getTerm().isOntologyTerm()) return true;
+		}
+		return false;
+	}
+
+	
     // Warning: Do not refer to up-cablesetw here on atomic nodes unless you already have
     // the molecular node! It may still be being constructed!
 	public void termUpdate(Collection<Term> term, Boolean clear) {
-		if(clear){
+		if (clear) {
 			dsg.removeAll();
 			vv.repaint();
 			return;
 		}
-		
-		ITermNode<IEdge> tn = null;
-		
+
 		// Put all the term nodes on the graph.
-		for(Term t : term){
+		for (Term t : term) {
 			// Try to find the term in the graph.
-			tn = dsg.getVertex(t.getName());
-	        if(tn != null){
-	            if(showNewTerms && !tn.isVisible()){
-	            	dsg.addVertex(tn);
-	            	showNode(tn);
-	            }
-	            return;
-	        }
-	        else{
-		        // Term not already in the graph, and we are showing new terms.
-			    tn = new TermNode<IEdge>(t);
-			    if(showNewTerms && !tn.isVisible()){
-			        if(GUI2.DEBUG) System.err.println("Adding node: " + tn);
-			     	dsg.addVertex(tn);
-			       	showNode(tn);
-			    }
-	        }
+			ITermNode<IEdge> tn = dsg.getVertex(t.getName());
+			if (tn != null) {
+				// Show the node only if in a state requiring it.
+				if (shouldShowTerm(tn))
+					showNode(tn);
+				return; // Is this needed? It's old code, but it seems like a bug, not sure. [DRS
+						// 1/3/18]
+			} else {
+				// Term not already in the graph.
+				// Always add to the graph, defaults to hidden.
+				tn = new TermNode<IEdge>(t);
+				if (GUI2.DEBUG)
+					System.err.println("Adding node: " + tn);
+				dsg.addVertex(tn);
+				// Show only if needed.
+				if (shouldShowTerm(tn))
+					showNode(tn);
+			}
 		}
-		
-		for(Term t : term){
-			tn = dsg.getVertex(t.getName());
-			
-		    // Deal with edges within molecular terms.
-	        if(t.isMolecular()){
-	        	HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
-	        	for(Iterator<Entry<Slot, Set<Term>>> itr = dcs.entrySet().iterator(); itr.hasNext(); ){
-	        		Entry<Slot, Set<Term>> entry = itr.next();
-	        		for(Term endterm : entry.getValue()){	        			
-		        		Edge edge = new Edge(entry.getKey(), tn, dsg.getVertex(endterm.getName()));
-		        		if(GUI2.DEBUG) System.out.println("Adding edge from: " + tn.getTerm().getName() + " to: " + endterm.getName());
-		        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + endterm);
-	        		}
-	        	}
-	        }
-	        
-	        // Deal with "metaedges" within variable terms (restriction + depends edges). 
-	        else if(t.isVariable()){
-	        	Set<Term> rs = t.getRestrictionset();
-	        	for (Term r : rs){
-	        		RestrictionEdge edge = new RestrictionEdge(tn, dsg.getVertex(r.getName()));
-	        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + r.getName());
-	        	}
-	        	
-	        	Set<Term> deps = t.getDependencies();
-	        	for (Term d : deps){
-	        		DependencyEdge edge = new DependencyEdge(tn, dsg.getVertex(d.getName()));
-	        		if(!addEdge(edge)) System.err.println("Error adding edge from: " + tn + " to: " + d.getName());
-	        	}
-	        }
+
+		for (Term t : term) {
+			ITermNode<IEdge> tn = dsg.getVertex(t.getName());
+
+			// Deal with edges within molecular terms.
+			if (t.isMolecular()) {
+				HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
+				for (Entry<Slot, Set<Term>> entry : dcs.entrySet()) {
+					for (Term endterm : entry.getValue()) {
+						ITermNode<IEdge> targetnode = dsg.getVertex(endterm.getName());
+
+						// It's possible that one of the arguments of a new molecular node is hidden.
+						// Make sure to make it visible.
+						if (tn.isVisible() && !targetnode.isVisible())
+							showNode(targetnode);
+
+						Edge edge = new Edge(entry.getKey(), tn, targetnode);
+						if (GUI2.DEBUG)
+							System.out.println(
+									"Adding edge from: " + tn.getTerm().getName() + " to: " + endterm.getName());
+						if (!addEdge(edge))
+							System.err.println("Error adding edge from: " + tn + " to: " + endterm);
+					}
+				}
+			}
+
+			// Deal with "metaedges" within variable terms (restriction + depends edges).
+			else if (t.isVariable()) {
+				Set<Term> rs = t.getRestrictionset();
+				for (Term r : rs) {
+					RestrictionEdge edge = new RestrictionEdge(tn, dsg.getVertex(r.getName()));
+					if (!addEdge(edge))
+						System.err.println("Error adding edge from: " + tn + " to: " + r.getName());
+				}
+
+				Set<Term> deps = t.getDependencies();
+				for (Term d : deps) {
+					DependencyEdge edge = new DependencyEdge(tn, dsg.getVertex(d.getName()));
+					if (!addEdge(edge))
+						System.err.println("Error adding edge from: " + tn + " to: " + d.getName());
+				}
+			}
 		}
-		
+
 		vv.repaint();
-		
-		
+
 	}
 
 }

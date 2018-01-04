@@ -39,6 +39,7 @@ import java.io.FileReader;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -47,13 +48,13 @@ import org.freehep.graphicsbase.util.export.ExportDialog;
 
 /**
  *
- * @author Dan Schlegel
+ * @author Daniel R. Schlegel
  */
 public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2016.09.20";
+	public static final String version = "2018.01.03";
 	
     public static final boolean DEBUG = false;
 
@@ -243,10 +244,11 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
 		model.setRestrictionSetWRef(RT.var("csneps.core", "restriction-set"));
 		model.setDependenciesRef(RT.var("csneps.core", "dependencies"));
-		model.initializeTerms();
+		
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
+		model.initializeTerms();
 	}
 	
 	public void initializeModel(PersistentHashSet termset){
@@ -262,10 +264,11 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setDownCablesetRef(RT.var("csneps.core", "down-cableset"));
 		model.setRestrictionSetWRef(RT.var("csneps.core", "restriction-set"));
 		model.setDependenciesRef(RT.var("csneps.core", "dependencies"));
-		model.initializeTerms(termset);
+		
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
+		model.initializeTerms(termset);
 	}
 
     public void startup(){
@@ -532,8 +535,6 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu_globablFilter = new javax.swing.JMenu();
         jMenuItem9 = new javax.swing.JMenuItem();
         jMenuItem12 = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem_showNewAssertions = new javax.swing.JCheckBoxMenuItem();
-        jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItem_refreshGraph = new javax.swing.JMenuItem();
         //jCheckBoxMenuItem_autoRefresh = new javax.swing.JCheckBoxMenuItem();
         jMenuItem_relayout = new javax.swing.JMenuItem();
@@ -699,15 +700,25 @@ public class GUI2 extends javax.swing.JFrame{
         });
         jMenu_globablFilter.add(jMenuItem12);
 
-        jCheckBoxMenuItem_showNewAssertions.setSelected(true);
-        jCheckBoxMenuItem_showNewAssertions.setText("Show New Assertions in Graph");
-        jCheckBoxMenuItem_showNewAssertions.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItem_showNewAssertionsActionPerformed(evt);
-            }
-        });
+        jMenu_globablFilter.add(new JPopupMenu.Separator());
+
+		jCheckBoxMenuItem_showOntologyTerms = new javax.swing.JCheckBoxMenuItem("Show Ontology Terms", false);
+		jCheckBoxMenuItem_showOntologyTerms.addActionListener(e -> jungGraphPanel1.setShowOntologyTerms(jCheckBoxMenuItem_showOntologyTerms.isSelected()));
+		jMenu_globablFilter.add(jCheckBoxMenuItem_showOntologyTerms);
+
+		jCheckBoxMenuItem_showNewAssertions = new javax.swing.JCheckBoxMenuItem("Show New Assertions in Graph", true);
+		jCheckBoxMenuItem_showNewAssertions.addActionListener(e -> {
+			if (jCheckBoxMenuItem_showNewAssertions.isSelected()) {
+				jungGraphPanel1.setShowNewTerms(true);
+				getGraphPanel().setStatusbarText("");
+			} else {
+				jungGraphPanel1.setShowNewTerms(false);
+				getGraphPanel().setStatusbarText("New assertions are not shown in the graph.");
+			}
+		});
+        
         jMenu_globablFilter.add(jCheckBoxMenuItem_showNewAssertions);
-        jMenu_globablFilter.add(jSeparator1);
+        jMenu_globablFilter.add(new JPopupMenu.Separator());
 
         jMenuItem_refreshGraph.setMnemonic('F');
         jMenuItem_refreshGraph.setText("Refresh");
@@ -1049,17 +1060,6 @@ public class GUI2 extends javax.swing.JFrame{
         GlobalGraphFilter.showFilterDialog(this);
     }//GEN-LAST:event_jMenuItem12ActionPerformed
 
-    private void jCheckBoxMenuItem_showNewAssertionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jCheckBoxMenuItem_showNewAssertionsActionPerformed
-        if(jCheckBoxMenuItem_showNewAssertions.isSelected()){
-            jungGraphPanel1.setShowNewTerms(true);
-            getGraphPanel().setStatusbarText("");
-        }
-        else{
-        	jungGraphPanel1.setShowNewTerms(false);
-            getGraphPanel().setStatusbarText("New assertions are not shown in the graph.");
-        }
-    }//GEN-LAST:event_jCheckBoxMenuItem_showNewAssertionsActionPerformed
-
     /**
     * @param args the command line arguments
     */
@@ -1087,6 +1087,7 @@ public class GUI2 extends javax.swing.JFrame{
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_antialias;
     //private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_autoRefresh;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_autoRelayout;
+    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_showOntologyTerms;
     private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_showNewAssertions;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu3;
@@ -1110,7 +1111,6 @@ public class GUI2 extends javax.swing.JFrame{
     private javax.swing.JMenuItem jMenuItem_refreshGraph;
     private javax.swing.JMenuItem jMenuItem_relayout;
     private javax.swing.JMenu jMenu_globablFilter;
-    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JToggleButton jToggleButton_repl;
