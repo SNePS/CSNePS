@@ -112,3 +112,23 @@
             #(set/subset? (second %) cthyps)
             (filter #(not (= (first %) 'hyp)) (@csneps/support p)))
           context)))))
+
+(defn ontology-term?
+  "Returns true if p is an ontology term. That is either: 
+   1) p is asserted in OntologyCT, or 
+   2) p is named the same as a semantic type, or
+   3) p is an arbitrary with only a single restriction of the form (Isa x <SemanticType>)"
+  [p]
+  (or
+    (asserted? p (find-context 'OntologyCT) :local true)
+    (csneps/semtype? (keyword (:name p)))
+    (and
+      (csneps/arbitraryTerm? p)
+      (= 1 (count (@csneps/restriction-set p)))
+      (let [res (first (@csneps/restriction-set p))
+            cf (second (first (:print-pattern (@csneps/caseframe res))))
+            arg2 (when (= cf 'Isa) (second (@csneps/down-cableset res)))]
+        (when arg2
+          (every? #(csneps/semtype? (keyword (:name %))) arg2))))))
+            
+      

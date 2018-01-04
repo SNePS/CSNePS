@@ -214,7 +214,7 @@
                      (println))]
     (doseq [x (concat atoms arbs inds qvars mols)]
       (let [asserted-in-ct (ct/asserted? x (ct/currentContext))
-            ontological-term (ct/asserted? x 'OntologyCT :local true)]
+            ontological-term (ct/ontology-term? x)]
         (cond 
           (and (not asserted) (not showontology) (not ontological-term)) (print-term x)
           (and asserted asserted-in-ct showontology) (print-term x)
