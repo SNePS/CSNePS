@@ -196,8 +196,8 @@
 
 (defn msg-semtype-check
   [msg] 
-  (when-not (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg))
-    (println "Semtype check failed: " (:subst msg)))
+  ;(when-not (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg))
+  ;  (println "Semtype check failed: " (:subst msg)))
   (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg)))
 
 (defn pass-vs?
