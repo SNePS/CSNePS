@@ -134,6 +134,7 @@
 (defn- try-subst-map-1bind
   "Attempts to substitute the bindings in the appropriate locations in the given source/target bindings maps."
   [variable? [source target]]
+  ;(println "substmap" source target)
   (let [substfn (fn [set1 set2]
                   (zipmap (keys set1)
                     (for [[k x] set1]
@@ -522,6 +523,7 @@
   "The actual check that v1 is a subtype (or equal type) of t1, and that if t1 is a 
    variable, that it subsumes v1"
   [[v1 t1]]
+  ; (println v1 (semantic-type-of v1) t1 (semantic-type-of t1) (subtypep (semantic-type-of v1) (semantic-type-of t1)))
   ;; check that t1 can replace v1 legally. That is, all v1's are t1's.
   (if (subtypep (semantic-type-of v1) (semantic-type-of t1))
     (if (variable? t1)
@@ -536,7 +538,13 @@
         sourcebind (:sourcebind unifier)
         targetbind (:targetbind unifier)
         sbok (every? check-binding-matches sourcebind)
-        tbok (every? check-binding-matches targetbind)]
+        tbok (and (every? check-binding-matches targetbind)
+                  ;; Don't build channels if there's no hope of the semantic types working out in the future. 
+                  ;; We recognize that lowering can happen, so Entity -> Category is OK, but we don't want
+                  ;; something like Category -> Policy. Some of these will be built if a term started as Entity
+                  ;; and was later lowered to Category, but let's not pollute things by always building them. 
+                  ;; Note messages like Entity -> Category are being stopped in the channels. 
+                  (every? (fn [[v1 v2]] (gcsubtype (semantic-type-of v2) (semantic-type-of v1))) sourcebind))]
     ;(println unifier)
     ;(println sourcebind "\n" targetbind "\n" sbok tbok)
     (cond

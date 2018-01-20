@@ -117,6 +117,7 @@
           (some nameeq out-uch))))))
 
 (defn install-channel
+  ""
   [ch orig dest type]
   (when-not (find-channel orig dest)
     (dosync
@@ -150,7 +151,7 @@
             (not (variableTerm? orig))
             (not= (syntactic-type-of orig) :csneps.core/Negation))
       (submit-to-channel ch (new-message {:origin orig, :support-set #{['hyp #{(:name orig)}]}, :type 'I-INFER})))
-  
+    
     ;; Remmember, inner terms are built before outer terms, so to handle negations, they must come when the nor is
     ;; built. If orig is a nor, send a u-infer message to its arguments.
     (when (and (= type :u-channel)
@@ -193,6 +194,12 @@
   [channel]
   @(:valve-open channel))
 
+(defn msg-semtype-check
+  [msg] 
+  (when-not (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg))
+    (println "Semtype check failed: " (:subst msg)))
+  (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg)))
+
 (defn pass-vs?
   [[sub ct] message]
   (let [ct (ct/find-context ct)]
@@ -206,10 +213,17 @@
 
 (defn pass-message?
   [channel message]
-  (or
-    (:fwd-infer? message)
-    (valve-open? channel) ;; Kept for legacy reasons for now.
-    (some #(pass-vs? % message) @(:valve-selectors channel))))
+  (and 
+    ;; This will prevent passing some messages which may eventually have reason to pass
+    ;; but don't currently. Remember that semtypes can get lowered, so just because a term 
+    ;; is, e.g., an Entity right now therefore can't match with (every x Thing), it may
+    ;; eventually become a Thing based on usage. (See unification/match-single-unifier for
+    ;; more explaination)
+    (msg-semtype-check message)
+	  (or
+	    (:fwd-infer? message)
+	    (valve-open? channel) ;; Kept for legacy reasons for now.
+	    (some #(pass-vs? % message) @(:valve-selectors channel)))))
 
 ;; Watch the valve-state for changes. Adjust the operation of the channel as necessary.
 
