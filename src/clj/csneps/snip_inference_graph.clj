@@ -1345,12 +1345,11 @@
 ;;; Message Handling ;;;
 
 (defn create-message-structure
-  "Create the RUI structure for a rule node. For now,
-   we always create an empty set. In the future, we'll create P-Trees
-   and S-Indexes as necessary."
+  "Create the RUI structure for a rule node. Chooses to 
+   create P-Trees and S-Indexes as necessary."
   [syntype dcs & {:keys [n]}]
   (cond
-    (empty? (filter #(arbitraryTerm? %) (build/flatten-term dcs)))
+    (empty? (filter arbitraryTerm? (build/flatten-term dcs)))
     (make-linear-msg-set)
     (and (or (= syntype :csneps.core/Numericalentailment)
              (= syntype :csneps.core/Implication))
@@ -1437,7 +1436,7 @@
       :else "/")))
 
 (defn ig-status []
-  (doseq [x @csneps.core/TERMS]
+  (doseq [x (sort-by first @csneps.core/TERMS)]
     (doseq [i (@i-channels (second x))]
       (println (:originator i) "-I-" (count @(:waiting-msgs i)) (print-valve i) "->" (:destination i)))
     (doseq [u (@u-channels (second x))]
@@ -1447,7 +1446,7 @@
 
 (defn print-waiting-msgs 
   ([term] (doseq [i (@ant-in-channels term)]
-            (println @(:waiting-msgs i))))
-  ([] (doseq [t (vals @TERMS)]
+            (println (:name term) " - " @(:waiting-msgs i))))
+  ([] (doseq [t (vals (sort-by first @TERMS))]
         (print-waiting-msgs t))))
 
