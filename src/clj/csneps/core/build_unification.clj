@@ -523,9 +523,11 @@
   "The actual check that v1 is a subtype (or equal type) of t1, and that if t1 is a 
    variable, that it subsumes v1"
   [[v1 t1]]
-  ; (println v1 (semantic-type-of v1) t1 (semantic-type-of t1) (subtypep (semantic-type-of v1) (semantic-type-of t1)))
-  ;; check that t1 can replace v1 legally. That is, all v1's are t1's.
-  (if (subtypep (semantic-type-of v1) (semantic-type-of t1))
+  ;; Check that t1 can replace v1 legally. That is, all v1's are t1's.
+  ;; Allow for cases where semantic types don't match now but *could* in the future. 
+  ;; Bad types will be blocked in the channels, so this is OK, and we don't want to
+  ;; not build channels which could become relevant. (Same idea used in match-single-unifier)
+  (if (gcsubtype (semantic-type-of v1) (semantic-type-of t1))
     (if (variable? t1)
       (subsumes? t1 v1)
       true)
