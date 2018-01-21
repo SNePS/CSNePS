@@ -10,6 +10,10 @@
 \usepackage{color}
 \usepackage[final]{graphics}
 \usepackage[final]{graphics}
+\usepackage{authblk}
+
+\setlength{\affilsep}{1em}
+\renewcommand*{\Authfont}{\bfseries}
 
 \makeindex
 
@@ -57,16 +61,30 @@
     Network-based Hard/Soft Information Fusion,'' issued by the US Army Research
     Office (ARO) under the program management of Dr. John Lavery.}}
 
-\author{ \bf
-Stuart C. Shapiro \\ \bf
-Daniel R. Schlegel \\ \bf
-and \\ \bf
-The SNePS Implementation Group \\[2ex] \bf
-Department of Computer Science and Engineering\\ \bf
-State University of New York at Buffalo \\ \bf
-226 Bell Hall\\ \bf
-Buffalo, NY 14260-2000 \\[2ex] \bf
-\date{\today}}
+%\author{ \bf
+%Stuart C. Shapiro \\ \bf
+%Daniel R. Schlegel \\ \bf
+%and \\ \bf
+%The SNePS Implementation Group \\[2ex] \bf
+%Department of Computer Science and Engineering\\ \bf
+%State University of New York at Buffalo \\ \bf
+%226 Bell Hall\\ \bf
+%Buffalo, NY 14260-2000 \\[2ex] \bf
+%\date{\today}}
+
+\author[1]{Stuart C. Shapiro}
+\author[2]{Daniel R. Schlegel}
+\author[ ]{The SNePS Implementation Group}
+\affil[1]{Department of Computer Science and Engineering \protect\\ 
+State University of New York at Buffalo  \protect\\ 
+338 Davis Hall \protect\\
+Buffalo, NY 14260-2500\protect\vspace{1em}}
+\affil[2]{Department of Computer Science\protect\\
+State University of New York at Oswego\protect\\
+396 Shineman Center\protect\\
+Oswego, NY 13126}
+
+\renewcommand\Authands{ and }
 
 
 \begin{document}
@@ -614,8 +632,8 @@ Prints a list of all of the focused reasoning tasks, backward and forward.
 \docfun{list-slots}{}
 Prints a list of all the SNePS slots.
 
-\docfun{list-terms}{\&key (:asserted nil) (:types nil) (:originsets nil) (:properties nil) (:showontology nil)}
-Prints a list of all the terms in the KB, except ontological terms in the OntologyCT context. These may be seen by setting \texttt{:showontology} non-nil.  If \texttt{:asserted} is non-nil,
+\docfun{list-terms}{\&key (:asserted nil) (:types nil) (:originsets nil) (:properties nil) (:ontology nil)}
+Prints a list of all the terms in the KB, except ontological terms in the OntologyCT context. These may be seen by setting \texttt{:ontology} non-nil.  If \texttt{:asserted} is non-nil,
 only asserted propositions will be printed.  If \texttt{:types} is non-nil, the type of
 each term will also be printed. If \texttt{:originsets} is non-nil, the origin sets of each term will also be printed, and if \texttt{:properties} is non-nil, additional properties of the terms will be printed.
 

@@ -199,7 +199,7 @@
   ;; Then indefinite nodes
   ;; Then qvar nodes
   ;; Then print molecular terms;
-  [& {:keys [asserted types originsets properties showontology]}]
+  [& {:keys [asserted types originsets properties ontology]}]
   (let [terms (vals @csneps/TERMS)
         atoms (sort-by :name (filter #(= (:type %) :csneps.core/Atom) terms))
         arbs (sort-by :name (filter csneps/arbitraryTerm? terms))
@@ -216,10 +216,10 @@
       (let [asserted-in-ct (ct/asserted? x (ct/currentContext))
             ontological-term (ct/ontology-term? x)]
         (cond 
-          (and (not asserted) (not showontology) (not ontological-term)) (print-term x)
-          (and asserted asserted-in-ct showontology) (print-term x)
-          (and asserted asserted-in-ct (not showontology) (not ontological-term)) (print-term x)
-          (and (not asserted) showontology) (print-term x))))))
+          (and (not asserted) (not ontology) (not ontological-term)) (print-term x)
+          (and asserted asserted-in-ct ontology) (print-term x)
+          (and asserted asserted-in-ct (not ontology) (not ontological-term)) (print-term x)
+          (and (not asserted) ontology) (print-term x))))))
 
 (defn listkb
   "Prints the current context and all propositions asserted in it."
