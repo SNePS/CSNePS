@@ -194,6 +194,7 @@
       (do 
         (dosync (commute (:valve-selectors channel) conj valve-selector))
         (doseq [msg @(:waiting-msgs channel)]
+          ;(send screenprinter (fn [_] (println "Trying to pass" msg)))
           (when (build/pass-vs? valve-selector msg)
             ;(send screenprinter (fn [_]  (println "Pass")))
             (dosync (commute (:waiting-msgs channel) disj msg))
@@ -1449,7 +1450,7 @@
       (println (:originator g) "-G-" (count @(:waiting-msgs g)) (print-valve g) "->" (:destination g)))))
 
 (defn print-waiting-msgs 
-  ([term] (doseq [i (@ant-in-channels term)]
+  ([term] (doseq [i (union (@ant-in-channels term) (@semtype-in-channels term))]
             (println (:name term) " - " @(:waiting-msgs i))))
   ([] (doseq [t (vals (sort-by first @TERMS))]
         (print-waiting-msgs t))))
