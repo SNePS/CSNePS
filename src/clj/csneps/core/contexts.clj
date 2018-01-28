@@ -26,11 +26,13 @@
 (defn find-context
   "If ctx is a context, returns it.
      If ctx is a symbol, returns the context named ctx
-      or nil if there isn't any."
+      or nil if there isn't any.
+     If ctx is nil, just return nil."
   [ctx]
   (typecase ctx
     Context ctx
-    clojure.lang.Symbol (get @CONTEXTS ctx)))
+    clojure.lang.Symbol (get @CONTEXTS ctx)
+    nil nil))
 
 (defn setCurrentContext
   "If ctx is a context name,
@@ -100,18 +102,19 @@
    look in the current context, and not parents."
   [p ct & {:keys [local]}]
   (let [context (find-context ct)]
-    (if (@(:hyps context) (:name p)) 
-      context
-      (let [cthyps (if local 
-                     @(:hyps context) 
-                     (hyps context))]
-        (cond
-          (cthyps (:name p)) 
-          context
-          (some 
-            #(set/subset? (second %) cthyps)
-            (filter #(not (= (first %) 'hyp)) (@csneps/support p)))
-          context)))))
+    (when context 
+      (if (@(:hyps context) (:name p)) 
+        context
+        (let [cthyps (if local 
+                       @(:hyps context) 
+                       (hyps context))]
+          (cond
+            (cthyps (:name p)) 
+            context
+            (some 
+              #(set/subset? (second %) cthyps)
+              (filter #(not (= (first %) 'hyp)) (@csneps/support p)))
+            context))))))
 
 (defn ontology-term?
   "Returns true if p is an ontology term. That is either: 
