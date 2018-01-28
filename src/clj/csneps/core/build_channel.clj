@@ -206,10 +206,11 @@
     (and 
       ;; Empty map means pass everything in the ct. (Used with qvars)
       (or (= sub {}) (submap? sub (:subst message)))
-      (some 
-        (fn [supportset] 
-          (clojure.set/subset? (second supportset) (ct/hyps ct))) 
-        (:support-set message)))))
+      (or (empty? (:support-set message)) ;; Empty support set means we believe it based on nothing at all.
+          (some 
+            (fn [supportset] 
+              (clojure.set/subset? (second supportset) (ct/hyps ct))) 
+            (:support-set message))))))
 
 (defn pass-message?
   [channel message]

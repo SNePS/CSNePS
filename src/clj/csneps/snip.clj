@@ -54,9 +54,9 @@
         #{p})
       :else
       (setOr
-        ;(sort-based-derivable p context)
         (slot-based-derivable p context termstack)
-        (backward-infer-derivable p context)))))
+        (backward-infer-derivable p context)
+        (sort-based-derivable p context)))))
 
 (defn askwh [ques context]
   "If the WhQuestion ques can be answered in context, 
