@@ -54,7 +54,7 @@
         #{p})
       :else
       (setOr
-        (sort-based-derivable p context)
+        ;(sort-based-derivable p context)
         (slot-based-derivable p context termstack)
         (backward-infer-derivable p context)))))
 

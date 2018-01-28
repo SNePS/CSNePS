@@ -326,7 +326,7 @@
                                 taskid))))))
     
     ;; Propogate backward-infer messages.
-    (doseq [ch (@ant-in-channels term)]
+    (doseq [ch (union (@ant-in-channels term) (@semtype-in-channels term) {})]
       (when (and (not (visited term)))
 ;                 (if-let [oppositech (build/find-channel (:destination ch) (:originator ch))]
 ;                   (not (visited (:originator ch)))
@@ -337,29 +337,30 @@
                  ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
         (when (:bw @debug) (send screenprinter (fn [_]  (println "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))))
         (let [subst (add-valve-selector ch subst context taskid)]
-          (when subst ;; Will be nil if this is an old VS.
-            (if (and taskid
-                     (@infer-status taskid))
-              (when taskid (.increment ^CountingLatch (@infer-status taskid)))
-              (send screenprinter (fn [_]  
-                                    (println) 
-                                    (println "Warning: No taskid during backward infer on" ch) 
-                                    (println "This may indicate a bug or race condition in the inference graph.")
-                                    (println))))
-            
-            (.execute ^ThreadPoolExecutor executorService 
-              (priority-partial depth 
-                                (fn [t d v i s c id] 
-                                  (backward-infer t d v i s c id) 
-                                  ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                  (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
-                                (:originator ch)
-                                (dec depth)
-                                (conj visited term)
-                                invoketermset
-                                subst
-                                context
-                                taskid))))))))
+          ;; Semtype channels won't have an originator, so no need to propogate backward.
+          (when (:originator ch)
+	          (when subst ;; Will be nil if this is an old VS.
+	            (if (and taskid
+	                     (@infer-status taskid))
+	              (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+	              (send screenprinter (fn [_]  
+	                                    (println) 
+	                                    (println "Warning: No taskid during backward infer on" ch) 
+	                                    (println "This may indicate a bug or race condition in the inference graph.")
+	                                    (println))))
+              (.execute ^ThreadPoolExecutor executorService 
+                    (priority-partial depth 
+                                      (fn [t d v i s c id] 
+                                        (backward-infer t d v i s c id) 
+                                        ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
+                                        (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
+                                      (:originator ch)
+                                      (dec depth)
+                                      (conj visited term)
+                                      invoketermset
+                                      subst
+                                      context
+                                      taskid)))))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
@@ -372,22 +373,23 @@
       (dosync (commute (:future-bw-infer term) disj cancel-for-term)))
     ;(when (empty? @(:future-bw-infer term))
       (let [affected-chs (doall 
-                           (for [ch (@ant-in-channels term)
+                           (for [ch (union (@ant-in-channels term) (@semtype-in-channels term))
                                  :let [new-subst (remove-valve-selector ch subst hyps)]
                                  :when (not (nil? new-subst))]
                              [ch new-subst]))]
         (when (seq affected-chs)
           (when (:cancel @debug) (send screenprinter (fn [_]  (println "CANCEL: Cancel Infer - closing incoming channels to" term))))
           (doseq [[ch subst] affected-chs]
-            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
-            (.execute ^ThreadPoolExecutor executorService 
-                (priority-partial Integer/MAX_VALUE 
-                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement ^CountingLatch (@infer-status id))))
-                                  (:originator ch) 
-                                  cancel-for-term 
-                                  taskid
-                                  subst
-                                  hyps)))))));)
+            (when (:originator ch)
+	            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+	            (.execute ^ThreadPoolExecutor executorService 
+	                (priority-partial Integer/MAX_VALUE 
+	                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement ^CountingLatch (@infer-status id))))
+	                                  (:originator ch) 
+	                                  cancel-for-term 
+	                                  taskid
+	                                  subst
+	                                  hyps))))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
@@ -1437,6 +1439,8 @@
 
 (defn ig-status []
   (doseq [x (sort-by first @csneps.core/TERMS)]
+    (doseq [s (@semtype-in-channels (second x))]
+      (println "X [semtype] -I-" (count @(:waiting-msgs s)) (print-valve s) "->" (:destination s)))
     (doseq [i (@i-channels (second x))]
       (println (:originator i) "-I-" (count @(:waiting-msgs i)) (print-valve i) "->" (:destination i)))
     (doseq [u (@u-channels (second x))]

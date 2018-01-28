@@ -111,6 +111,7 @@
 (def u-channels (ref {}))
 (def g-channels (ref {}))
 (def ant-in-channels (ref {}))
+(def semtype-in-channels (ref {}))
 (def future-fw-infer (ref {}))
 (def instances (ref {}))
 (def expected-instances (ref {}))

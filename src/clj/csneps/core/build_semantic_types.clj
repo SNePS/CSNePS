@@ -9,7 +9,13 @@
 
 (defn assert-type-generic
   [newtype supers]
-  (assert (list 'Isa (list 'every 'x (name newtype)) (set (map name supers))) 'OntologyCT))
+  (let [arb (build-variable (list 'every 'x (name newtype)))
+        type-generic (assert (list 'Isa (:name arb) (set (map name supers))) 'OntologyCT)
+        ;; This will have already been asserted but it's the easiest way to find it. 
+        analytic-term (assert (list 'Isa (:name arb) (name newtype)) 'OntologyCT)]
+    ;; Set up channel in semtype-in-channels. 
+    (dosync (alter semtype-in-channels assoc analytic-term #{(build-channel nil analytic-term {} {})}))
+    type-generic))
 
 (defn define-type 
   "Defines a new semantic type. Takes as arguments a new type, and a list of supertypes."
@@ -20,7 +26,7 @@
 (defn initialize-default-hierarchy []
   (dosync (ref-set semantic-type-hierarchy (make-hierarchy))
 	  (define-type* :Propositional '(:Entity))
-	  ;(define-type :WhQuestion '(:Propositional))
+	  (define-type* :WhQuestion '(:Propositional))
 	  (define-type* :Proposition '(:Propositional))
 	  (define-type* :Act '(:Entity))
 	  (define-type* :Policy '(:Entity))
