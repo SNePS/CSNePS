@@ -1,4 +1,4 @@
-;;; Basic Demo of SNePS 3 Facilities
+;;; Basic Demo of CSNePS Facilities
 ;;; ================================
 
 ;;; The contents of this file are subject to the University at Buffalo
@@ -11,7 +11,7 @@
 ;;; the License for the specific language governing rights and limitations
 ;;; under the License.
 ;;; 
-;;; The Original Code is SNePS 3.
+;;; The Original Code is CSNePS.
 ;;; 
 ;;; The Initial Developer of the Original Code is Research Foundation of
 ;;; State University of New York, on behalf of University at Buffalo.
@@ -88,7 +88,7 @@
 ;;; Let's see just the asserted terms.
 (list-terms :asserted true)
 ;;; and describe the asserted ones.
-(describe-terms wft3 wft1 wft2)
+(describe-terms wft19 wft17 wft18)
 ;;;
 ;;; A caseframe with unquoted function symbol
 ;;;
@@ -99,15 +99,15 @@
 		:posadjust none :negadjust none
 		:min 1 :max 1)
 ;;; Note that the actions slot is predefined.
-(defineCaseframe 'Act '(actions object)
-  :docstring "[actions] [object]"
+(defineCaseframe 'Act '(action object)
+  :docstring "[action] [object]"
   :fsymbols '(senseFor go))
 (assert '(Isa (senseFor smell) Act))
 (assert '(Isa (go left) Act))
 (sameFrame 'say 'go)
 (assert '(Isa (say Hello) Act))
 (list-terms)
-(describe-terms wft2 wft4 wft6)
+(describe-terms wft19 wft21 wft23)
 ;;;
 ;;; Negations
 ;;;
