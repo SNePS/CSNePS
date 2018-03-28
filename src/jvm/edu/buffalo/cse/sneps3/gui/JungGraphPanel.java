@@ -913,7 +913,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	
 	public boolean shouldShowTerm(ITermNode<IEdge> tn) {
 		if (showNewTerms && !tn.isVisible()) {
-			System.out.println("Ont term? " + tn.getTerm() + " " + tn.getTerm().isOntologyTerm());
+			//System.out.println("Ont term? " + tn.getTerm() + " " + tn.getTerm().isOntologyTerm());
 
 			if (showOntologyTerms) return true;
 			else if (!tn.getTerm().isOntologyTerm()) return true;
