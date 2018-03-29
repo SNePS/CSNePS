@@ -4,6 +4,9 @@
   [& clear?]
   (dosync 
     (let [clearall (first clear?)]
+      ;; Stop any ongoing inference. 
+      (snip/resetExecutor)
+      
       ;; Initialize Contexts
       (ref-set ct/CONTEXTS (hash-map))
       
