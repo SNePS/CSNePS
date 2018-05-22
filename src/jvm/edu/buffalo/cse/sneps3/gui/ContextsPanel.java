@@ -75,7 +75,7 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     	
         for(Context ct : c){
             if(ct.getParents().isEmpty()){
-                ComparableTreeNode t = new ComparableTreeNode(ct);
+                ComparableTreeNode<Context> t = new ComparableTreeNode<>(ct);
                 rootNode.add(t);
                 populateChildrenOf(t, c);  
             }
@@ -85,11 +85,11 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
         expandAll(jTree_contexts);
     }
 
-    public void populateChildrenOf(ComparableTreeNode r, Collection<Context> c){
+    public void populateChildrenOf(ComparableTreeNode<Context> r, Collection<Context> c){
         for(Context ct : c){
             for(Context p : ct.getParents()){
                 if(p.getName().equals(r.toString())){
-                    ComparableTreeNode n = new ComparableTreeNode(ct);
+                    ComparableTreeNode<Context> n = new ComparableTreeNode<>(ct);
                     r.add(n);
                     populateChildrenOf(n, c);
                 }
