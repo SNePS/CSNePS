@@ -196,8 +196,8 @@
 
 (defn msg-semtype-check
   [msg] 
-  ;(when-not (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg))
-  ;  (println "Semtype check failed: " (:subst msg)))
+  (when-not (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg))
+     (send screenprinter (fn [_]  (println "Semtype check failed: " (:subst msg)))))
   (every? (fn [[v1 v2]] (subtypep (semantic-type-of v2) (semantic-type-of v1))) (:subst msg)))
 
 (defn pass-vs?
@@ -220,7 +220,9 @@
     ;; is, e.g., an Entity right now therefore can't match with (every x Thing), it may
     ;; eventually become a Thing based on usage. (See unification/match-single-unifier for
     ;; more explaination)
-    (msg-semtype-check message)
+    ;; Removed on 5/31/18, since currently there's no mechanism to re-try a message which has
+    ;; failed for this reason. It would require additional hooks into the semtype lowering code.
+    ;;(msg-semtype-check message)
 	  (or
 	    (:fwd-infer? message)
 	    (valve-open? channel) ;; Kept for legacy reasons for now.
