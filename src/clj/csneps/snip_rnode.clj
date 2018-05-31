@@ -5,5 +5,3 @@
    cached-terms (ref #{})
    origin-set (ref #{})])
   
-
-;; Implementation of s-indexes and p-trees goes here.
