@@ -42,7 +42,8 @@
                                          (conj (doall (map inner (@down-cableset termpart))) fsym)
                                          (doall (map inner (@down-cableset termpart))))
                                        (if ignore-type :Entity (csneps.core/semantic-type-of termpart))
-                                       {}))
+                                       {}
+                                       #{}))
     (atomicTerm? termpart) (outer termpart)
     (set? termpart) (set (doall (map inner termpart)))
     :else (error (str "Term contains unknown parts (" termpart ")"))))
@@ -52,7 +53,8 @@
   (cond
     (molecularTerm? termpart) (outer (build (conj (doall (map inner (@down-cableset termpart))) (term-predicate termpart)) 
                                         :Propositional
-                                        {}))
+                                        {}
+                                        #{}))
     ;(arbitraryTerm? termpart) (outer (build-variable (list 'every (:var-label termpart) (map inner @(:restriction-set termpart))))) 
     (atomicTerm? termpart) (outer termpart)
     (set? termpart) (set (doall (map inner termpart)))

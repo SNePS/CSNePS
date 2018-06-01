@@ -9,7 +9,7 @@
    (e.g., x in (every x ...)). This and a substitution between
    variable-labels and the AI and IO is provided to build. Also asserts into
    the Base KB the restriction sets. Returns the built expression."
-  [expr type]
+  [expr type properties]
   (let [[new-expr vars substitution] (check-and-build-variables expr)]
     (doseq [v (seq vars)]
       (doseq [rst (seq (@restriction-set v))]
@@ -17,7 +17,7 @@
           (assert rst (ct/find-context 'OntologyCT))))
       (build-quantterm-channels v))
       ;(when (= (syntactic-type-of v) :csneps.core/Arbitrary) (lattice-insert v)))
-    (build new-expr type substitution)))
+    (build new-expr type substitution properties)))
 
 (defn build-variable 
   "This function should only be called when a single variable needs to be built
@@ -48,31 +48,31 @@
 
 (defmethod assert
   [clojure.lang.Symbol] [expr context]
-  (assert (build expr :Proposition {}) context))
+  (assert (build expr :Proposition {} #{}) context))
 
 (defmethod assert
   [java.lang.Integer] [expr context]
-  (assert (build expr :Proposition {}) context))
+  (assert (build expr :Proposition {} #{}) context))
 
 (defmethod assert
   [java.lang.Double] [expr context]
-  (assert (build expr :Proposition {}) context))
+  (assert (build expr :Proposition {} #{}) context))
 
 (defmethod assert
   [java.lang.String] [expr context]
-  (assert (build expr :Proposition {}) context))
+  (assert (build expr :Proposition {} #{}) context))
 
 (defmethod assert
   [clojure.lang.PersistentList] [expr context]
-  (assert (variable-parse-and-build expr :Proposition) context))
+  (assert (variable-parse-and-build expr :Proposition #{}) context))
 
 (defmethod assert
   [clojure.lang.Cons] [expr context]
-  (assert (variable-parse-and-build (seq expr) :Proposition) context))
+  (assert (variable-parse-and-build (seq expr) :Proposition #{}) context))
 
 (defmethod assert
   [clojure.lang.PersistentVector] [expr context]
-  (assert (variable-parse-and-build (seq expr) :Proposition) context))
+  (assert (variable-parse-and-build (seq expr) :Proposition #{}) context))
 
 (defmethod assert
   [clojure.lang.PersistentHashSet] [expr context]
@@ -118,4 +118,4 @@
 (defn add-to-context
   "Adds the term to the context's hyps."
   [term ctx]
-  (ct/hypothesize (build term :Proposition {}) ctx))
+  (ct/hypothesize (build term :Proposition {} #{}) ctx))

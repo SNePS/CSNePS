@@ -83,7 +83,7 @@
          or the empty set if there are none."
   [exprpat]
   (rewrite-propositional-expr exprpat)
-  (snip/askif (build/variable-parse-and-build exprpat :Proposition)  
+  (snip/askif (build/variable-parse-and-build exprpat :Proposition #{})  
               (currentContext) 
               nil))
 
@@ -93,7 +93,7 @@
          or the empty set if there are none."
   [exprpat]
   (rewrite-propositional-expr (list 'not exprpat))
-  (snip/askif (build/variable-parse-and-build (list 'not exprpat) :Proposition)
+  (snip/askif (build/variable-parse-and-build (list 'not exprpat) :Proposition #{})
               (currentContext)
               nil))
 
@@ -144,7 +144,7 @@
     (seq? term)
     (do 
       (rewrite-propositional-expr term)
-      (build/variable-parse-and-build term :Propositional))
+      (build/variable-parse-and-build term :Propositional #{}))
     :else
     (build/build term (or (first semtype) :Entity) {})))
 

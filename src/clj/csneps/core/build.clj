@@ -278,15 +278,15 @@
       (cond
        ;; Canonical transformations
         (and (zero? min) (= max tot))
-          (build 'True semtype {})
+          (build 'True semtype {} #{})
         (= tot min max)
-          (build (list* 'and (rest args)) semtype subst)
+          (build (list* 'and (rest args)) semtype subst #{})
         (= 0 min max)
-          (build (list* 'nor (rest args)) semtype subst)
+          (build (list* 'nor (rest args)) semtype subst #{})
         (and (zero? min) (= max (dec tot)))
-          (build (list* 'nand (rest args)) semtype subst)
+          (build (list* 'nand (rest args)) semtype subst #{})
         :else
-          (let [fillers (build (list* 'setof (rest args)) semtype subst)
+          (let [fillers (build (list* 'setof (rest args)) semtype subst #{})
                 term (build-molecular-node
                        cf (list fillers) :csneps.core/Andor semtype
                        :fsemtype (semantic-type-of fillers)
@@ -319,17 +319,17 @@
       (cond
        ;; Canonical transformations
         (and (zero? min) (= max tot))
-          (build 'False semtype {})
+          (build 'False semtype {} #{})
         (and (zero? min) (= max (dec tot)))
-          (build (list* 'and (rest args)) semtype subst) 
+          (build (list* 'and (rest args)) semtype subst #{}) 
         (= min max 0)
-          (build (list* 'or (rest args)) semtype subst)
+          (build (list* 'or (rest args)) semtype subst #{})
         (and (= min 1) (= max tot))
-          (build (list* 'nor (rest args)) semtype subst)
+          (build (list* 'nor (rest args)) semtype subst #{})
         (= min tot)
-          (build (list* 'nand (rest args)) semtype subst)
+          (build (list* 'nand (rest args)) semtype subst #{})
         :else 
-          (let [fillers (build (list* 'setof (rest args)) semtype subst)
+          (let [fillers (build (list* 'setof (rest args)) semtype subst #{})
                 term (build-channels 
                        (build-molecular-node
                          cf (list fillers) :csneps.core/Thresh semtype
@@ -359,11 +359,11 @@
       (cond
         ;; Canonical transformations
         (zero? i)
-          (build (list 'and (build cq semtype)) semtype {})
+          (build (list 'and (build cq semtype)) semtype {} #{})
         :else 
           (let [term (build-channels
                        (build-molecular-node
-                         cf (list (build ant semtype substitution) (build cq semtype substitution))
+                         cf (list (build ant semtype substitution #{}) (build cq semtype substitution #{}))
                          :csneps.core/Numericalentailment semtype
                          :fsemtype semtype :min i))]
             term)))))
@@ -378,14 +378,14 @@
                              [built-lhs subs]
                              (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
                                (recur (rest lhs)
-                                      (conj built-lhs (build new-expr :Proposition (set/union subs sub)))
+                                      (conj built-lhs (build new-expr :Proposition (set/union subs sub) #{}))
                                       (set/union subs sub)))))
         actfn (bound-fn [subst] 
                 (when (= (count subs) (count (filter (fn [[k v]] (subst v)) subs)))
 	                ;(println "Forms:" forms "\nSubs" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))) 
                   (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms)))
-        name (build rulename :Thing {})
-        act (build (str "act" (.hashCode forms)) :Action {})
+        name (build rulename :Thing {} #{})
+        act (build (str "act" (.hashCode forms)) :Action {} #{})
         ;; TODO: Note, gensymming the subrule name precludes sharing subrules
         subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
     (doseq [v (vals subs)]
@@ -431,8 +431,11 @@
 (defn build-unifier-channels
   "Channels built between unifiable terms."
   [unif]
-  ;; No unifier channels should originate from a WhQuestion.
-  (when-not (and (@property-map (:source unif)) ((@property-map (:source unif)) :WhQuestion))
+  ;; No unifier channels should originate from a WhQuestion, or an analytic generic
+  (when-not (and (@property-map (:source unif)) 
+                 (or ((@property-map (:source unif)) :WhQuestion)
+                     ((@property-map (:source unif)) :Analytic)))
+    (println "building unif channel from " (:source unif) "to" (:target unif) "pmap" (@property-map (:source unif)))
     (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
       (cond 
         (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
@@ -498,10 +501,10 @@
 (defn build-user-term
   "Build a term for the expression expr, whose function is fcn,
        and whose contextual semantic type is to be semtype."
-  [fn expr semtype substitution]
+  [fn expr semtype substitution properties]
   ;(println "Building User Term... " fn expr semtype substitution)
   ;; fn = (first expr)
-  (let [fcn (if-not (atom? fn) (build fn :Thing substitution) fn)
+  (let [fcn (if-not (atom? fn) (build fn :Thing substitution #{}) fn)
         cf (or
              (cf/find-frame
                (condp = (type-of fcn)
@@ -537,16 +540,17 @@
                                          (rest fixed-expr)
                                          fixed-expr)
                                        (:slots cf))]
-                    (build arg (:type rel) substitution))
+                    (build arg (:type rel) substitution #{}))
           whfills (whquestion-fillers (set fillers))
           genfills (generic-fillers (set fillers))
-          properties (cond
-                       (and (seq whfills) (seq genfills))
-                       #{:Generic :WhQuestion}
-                       (seq whfills)
-                       #{:WhQuestion}
-                       (seq genfills) 
-                       #{:Generic})
+          properties (set/union properties 
+                                (cond
+                                  (and (seq whfills) (seq genfills))
+                                  #{:Generic :WhQuestion}
+                                  (seq whfills)
+                                  #{:WhQuestion}
+                                  (seq genfills) 
+                                  #{:Generic}))
           molnode (build-molecular-node cf fillers :csneps.core/Molecular semtype :properties properties)]
                                         ;(if (seq genfills)
                                           ;(if (subtypep semtype :Generic) semtype :Generic)
@@ -558,11 +562,11 @@
       molnode)))
 
 (defmulti build
-  (fn [expr semtype substitution] [(type-of expr)]))
+  (fn [expr semtype substitution properties] [(type-of expr)]))
 
 (defmethod build
 ;  "Returns an empty set."
-  [nil] [expr semtype substitution]
+  [nil] [expr semtype substitution properties]
   (hash-set))
 
 (defmethod build
@@ -570,40 +574,40 @@
 ;           the symbol whose name is expr
 ;       of the given semantic type,
 ;     and returns it."
-  [java.lang.String] [expr semtype substitution]
-  (build (symbol expr) semtype substitution))
+  [java.lang.String] [expr semtype substitution properties]
+  (build (symbol expr) semtype substitution properties))
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
 ;           the symbol whose name is expr
 ;       of the given semantic type,
 ;     and returns it."
-  [java.lang.Character] [expr semtype substitution]
-  (build (symbol (str expr)) semtype substitution))
+  [java.lang.Character] [expr semtype substitution properties]
+  (build (symbol (str expr)) semtype substitution properties))
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
 ;           the symbol whose name looks like the integer x
 ;       of the given semantic type,
 ;     and returns it."
-  [java.lang.Integer] [expr semtype substitution]
-  (build (symbol (str expr)) semtype substitution))
+  [java.lang.Integer] [expr semtype substitution properties]
+  (build (symbol (str expr)) semtype substitution properties))
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
 ;           the symbol whose name looks like the long integer x
 ;       of the given semantic type,
 ;     and returns it."
-  [java.lang.Long] [expr semtype substitution]
-  (build (symbol (str expr)) semtype substitution))
+  [java.lang.Long] [expr semtype substitution properties]
+  (build (symbol (str expr)) semtype substitution properties))
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
 ;           the symbol whose name looks like the ratio x
 ;       of the given semantic type,
 ;     and returns it."
-  [clojure.lang.Ratio] [expr semtype substitution]
-  (build (symbol (str expr)) semtype substitution))
+  [clojure.lang.Ratio] [expr semtype substitution properties]
+  (build (symbol (str expr)) semtype substitution properties))
 
 (defmethod build
 ;  "Creates (if necessary) an atomic term expressed by
@@ -611,18 +615,18 @@
 ;           rounded to *PRECISION* digits
 ;       of the given semantic type,
 ;     and returns it."
-  [java.lang.Double] [expr semtype substitution]
-  (build (symbol (str (roundf expr))) semtype substitution))
+  [java.lang.Double] [expr semtype substitution properties]
+  (build (symbol (str (roundf expr))) semtype substitution properties))
 
 (defmethod build
 ;  "Returns the given term,
 ;       and if necessary, adjusting its semantic type so that
 ;       it is of the semantic type semtype."
-  [:csneps.core/Term] [expr semtype substitution]
+  [:csneps.core/Term] [expr semtype substitution properties]
   (adjustType expr (semantic-type-of expr) semtype))
 
 (defmethod build
-  [clojure.lang.Symbol] [expr semtype substitution]
+  [clojure.lang.Symbol] [expr semtype substitution properties]
   ;(println "Building symbol: " expr)
   (let [term (or 
                (and (seq substitution)
@@ -653,39 +657,39 @@
 
 
 (defmethod build
-  [clojure.lang.LazySeq] [expr semtype substitution]
+  [clojure.lang.LazySeq] [expr semtype substitution properties]
   ;(println (list* expr) " " (type (list* expr)))
   ;(build (list* expr) semtype substitution))
-  (build (vec expr) semtype substitution))
+  (build (vec expr) semtype substitution properties))
 
 (defmethod build
-  [clojure.lang.PersistentList] [expr semtype substitution]
+  [clojure.lang.PersistentList] [expr semtype substitution properties]
   ;(println (list* expr) " " (type (list* expr)))
   ;(build (list* expr) semtype substitution))
-  (build (vec expr) semtype substitution))
+  (build (vec expr) semtype substitution properties))
 
 (defmethod build
-  [clojure.lang.Cons] [expr semtype substitution]
+  [clojure.lang.Cons] [expr semtype substitution properties]
   ;(println (list* expr) " " (type (list* expr)))
   ;(build (list* expr) semtype substitution))
-  (build (vec expr) semtype substitution))
+  (build (vec expr) semtype substitution properties))
 
 (defmethod build
-  [clojure.lang.PersistentVector$ChunkedSeq] [expr semtype substitution]
+  [clojure.lang.PersistentVector$ChunkedSeq] [expr semtype substitution properties]
   ;(println (list* expr) " " (type (list* expr)))
   ;(build (list* expr) semtype substitution))
-  (build (vec expr) semtype substitution))
+  (build (vec expr) semtype substitution properties))
 
 (defmethod build
-  [clojure.lang.PersistentHashSet] [expr semtype substitution] 
-  (let [set (set (map #(build % semtype substitution) expr))]
+  [clojure.lang.PersistentHashSet] [expr semtype substitution properties] 
+  (let [set (set (map #(build % semtype substitution properties) expr))]
     (if (= (count set) 1) (first set) set)))
 
 (defmethod build
 ;    "Creates (if necessary) a well-formed term expressed by expr
 ;       of the given semantic type,
 ;     and returns it."
-  [clojure.lang.PersistentVector] [expr semtype substitution]
+  [clojure.lang.PersistentVector] [expr semtype substitution properties]
   (let [fcn (first expr)]
     ;(println "Building: " expr semtype substitution)
     ;(println "Subs:" substitution)
@@ -698,21 +702,22 @@
         (do
           (clojure.core/assert (= (count expr) 3)
                                (str "Isa must take 2 arguments. It doesn't in " expr "."))
-          (let [entity (build (second expr) :Entity substitution)
-                category (build (third expr) :Category substitution)
+          (let [entity (build (second expr) :Entity substitution #{})
+                category (build (third expr) :Category substitution #{})
                 genfills (if (= entity category)
                            (generic-fillers #{entity})
                            (generic-fillers #{entity category}))
                 whfills (if (= entity category)
                           (whquestion-fillers #{entity})
                           (whquestion-fillers #{entity category}))
-                properties (cond
-                             (and (seq whfills) (seq genfills))
-                             #{:Generic :WhQuestion}
-                             (seq whfills)
-                             #{:WhQuestion}
-                             (seq genfills) 
-                             #{:Generic})
+                properties (set/union properties 
+                                  (cond
+                                    (and (seq whfills) (seq genfills))
+                                    #{:Generic :WhQuestion}
+                                    (seq whfills)
+                                    #{:WhQuestion}
+                                    (seq genfills) 
+                                    #{:Generic}))
                 molnode (build-molecular-node (cf/find-frame 'Isa)
                                               (list entity category)
                                               :csneps.core/Categorization
@@ -728,7 +733,7 @@
         (if-let [cf (cf/find-frame 'and)]
           (cond
             (rest (rest expr)) ;;>1 conjunct
-              (let [fillers (build (set (rest expr)) semtype substitution)]
+              (let [fillers (build (set (rest expr)) semtype substitution #{})]
                 (build-channels (build-molecular-node cf 
                                                       (list fillers) 
                                                       :csneps.core/Conjunction 
@@ -751,9 +756,9 @@
                                                         :min (count (rest expr))
                                                         :max (count (rest expr)))))
                 ;; otherwise, just build the conjunct.
-                (build (second expr) semtype substitution))
+                (build (second expr) semtype substitution #{}))
             :else
-              (build 'True :csneps.core/Proposition substitution))
+              (build 'True :csneps.core/Proposition substitution #{}))
           (error "There is no frame associated with and."))
 
       or
@@ -761,16 +766,16 @@
       (if-let [cf (cf/find-frame 'andor)]
         (cond
           (rest (rest expr))
-          (let [fillers (build (set (rest expr)) semtype substitution)]
+          (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-channels 
               (build-molecular-node cf (list fillers) :csneps.core/Disjunction semtype :fsemtype (semantic-type-of fillers)
                                     :min 1 :max (count fillers))))
           (rest expr)
           ;; If only one disjunct, just build the disjunct.
-          (build (second expr) semtype substitution)
+          (build (second expr) semtype substitution #{})
           :else
           ;; A disjunction with no disjuncts is the False proposition
-          (build 'False :csneps.core/Term substitution))
+          (build 'False :csneps.core/Term substitution #{}))
         (error "There is no frame associated with or"))
 
       xor
@@ -778,16 +783,16 @@
       (if-let [cf (cf/find-frame 'andor)]
         (cond
           (rest (rest expr))
-          (let [fillers (build (set (rest expr)) semtype substitution)]
+          (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-channels 
               (build-molecular-node cf (list fillers) :csneps.core/Xor semtype :fsemtype (semantic-type-of fillers)
                                     :min 1 :max 1)))
           (rest expr)
           ;; If only one disjunct, just build the disjunct.
-          (build (second expr) semtype substitution)
+          (build (second expr) semtype substitution #{})
           :else
           ;; An exclusive disjunction with no disjuncts is the False proposition
-          (build 'False :csneps.core/Term substitution))
+          (build 'False :csneps.core/Term substitution #{}))
         (error "There is no frame associated with xor"))
       
       nand
@@ -798,16 +803,16 @@
              (> (count expr) 2)
              (and (set? (second expr))
                   (> (count (second expr)) 1)))
-           (let [fillers (build (set (rest expr)) semtype substitution)]
+           (let [fillers (build (set (rest expr)) semtype substitution #{})]
              (build-channels 
                (build-molecular-node cf (list fillers) :csneps.core/Nand semtype :fsemtype (semantic-type-of fillers)
                                      :min 0 :max (dec (count fillers)))))
            (= (count expr) 2)
            ;; If only one argument, build the negation of the argument.
-           (build (list 'not (second expr)) semtype substitution)
+           (build (list 'not (second expr)) semtype substitution #{})
            :else
            ;; A negatedconjunction with no arguments is the False proposition
-           (build 'False :csneps.core/Term substitution))
+           (build 'False :csneps.core/Term substitution #{}))
          (error "There is no frame associated with nand"))
 
       andor
@@ -823,8 +828,8 @@
       (if-let [cf (cf/find-frame 'if)]
         (do
           (checkArity 'if expr cf)
-          (let [fillers1 (build (second expr) semtype substitution)
-                fillers2 (build (nth expr 2) semtype substitution)]
+          (let [fillers1 (build (second expr) semtype substitution #{})
+                fillers2 (build (nth expr 2) semtype substitution #{})]
             (build-channels 
               (build-molecular-node
                 cf (list fillers1 fillers2) :csneps.core/Implication semtype
@@ -838,7 +843,7 @@
       (if-let [cf (cf/find-frame 'thresh)]
         (cond
           (rest (rest expr))
-          (let [fillers (build (set (rest expr)) semtype substitution)]
+          (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-channels
               (build-molecular-node
                 cf (list fillers) :csneps.core/Equivalence semtype
@@ -857,10 +862,10 @@
                   cf (rest expr) :csneps.core/Equivalence semtype
                   :fsemtype (semantic-type-of (second expr))
                   :min 1 :max (dec (count (first (rest expr)))))))
-            (build 'True :csneps.core/Term substitution))
+            (build 'True :csneps.core/Term substitution #{}))
           :else
           ;; A iff with no fillers is the True proposition
-          (build 'True :csneps.core/Term substitution))
+          (build 'True :csneps.core/Term substitution #{}))
         (error "There is no frame associated with iff."))
 
        (not nor)
@@ -869,7 +874,7 @@
          (cond
            ;(third expr)		; at least two arguments
            (rest expr) ;;1 or more args
-           (let [fillers (build (set (rest expr)) semtype substitution)]
+           (let [fillers (build (set (rest expr)) semtype substitution #{})]
              (build-channels
                (build-molecular-node
                  cf (list fillers) :csneps.core/Negation semtype
@@ -877,7 +882,7 @@
            ;(rest expr)		; exactly one argument
            ;  (build-canonical-negation (second expr) semtype)
            :else			; (not) = (nor) = T
-           (build 'True :csneps.core/Term substitution))
+           (build 'True :csneps.core/Term substitution #{}))
          (error "There is no frame associated with nor."))
 
       (thnot thnor)
@@ -885,23 +890,23 @@
       (if-let [cf (cf/find-frame 'thnor)]
         (cond
           (rest expr)		; at least one argument
-          (let [fillers (build (set (rest expr)) semtype substitution)]
+          (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-molecular-node
               cf (list fillers) :csneps.core/Negationbyfailure semtype
               :fsemtype (semantic-type-of fillers)))
           :else			; (thnot) = (thnor) = T
-          (build 'True :csneps.core/Term substitution))
+          (build 'True :csneps.core/Term substitution #{}))
         (error "There is no frame associated with thnor."))
 
 
       setof
-      (let [set (set (for [arg (rest expr)] (build arg semtype substitution)))]
+      (let [set (set (for [arg (rest expr)] (build arg semtype substitution #{})))]
         (if (= (count set) 1) (first set) set))
       
       close
       (let [closed-var-labels (if (cl-seqable? (second expr)) (second expr) (list (second expr)))
             closed-vars (map substitution closed-var-labels)
-            fillers (build (set (rest (rest expr))) :Proposition substitution)]
+            fillers (build (set (rest (rest expr))) :Proposition substitution #{})]
         (build-molecular-node (cf/find-frame 'close)
 	                            (list fillers)
 	                            :csneps.core/Closure
@@ -920,7 +925,7 @@
             ;; expr is (i=> ant cq)
             (build-numerical-entailmant (ientaili fcn) (second expr) (third expr) semtype substitution)
             :else
-            (build-user-term fcn expr semtype substitution)))))
+            (build-user-term fcn expr semtype substitution properties)))))
 
 (defn pre-build-var
   "This function creates a variable without a restriciton set. This is
@@ -1081,27 +1086,30 @@
       (cond 
         (= quant :qvar) 
         (let [restrictions (clojure.set/union (@restriction-set var)
-                                              (set (map #(build % :Propositional substitution) rsts)))]
+                                              (set (map #(build % :Propositional substitution #{:WhQuestion :Analytic}) rsts)))]
           (alter restriction-set assoc var restrictions)
           (alter msgs assoc var (create-message-structure :csneps.core/QueryVariable nil))
-          (dosync (doseq [r restrictions]
-                    (alter property-map assoc r (set/union (@property-map r) #{:WhQuestion :Analytic})))))
+          ;(dosync (doseq [r restrictions]
+          ;          (alter property-map assoc r (set/union (@property-map r) #{:WhQuestion :Analytic}))))
+          )
         (and (= quant :some) (not (nil? dependencies)))
-        (let [restrictions (set (map #(build % :Propositional substitution) rsts))
+        (let [restrictions (set (map #(build % :Propositional substitution #{:Generic :Analytic}) rsts))
               deps (clojure.set/union (@dependencies var)
                                       (set (map #(substitution %) deps)))] 
           (alter dependencies assoc var deps)
           (alter restriction-set assoc var restrictions)
           (alter msgs assoc var (create-message-structure :csneps.core/Indefinite nil))
-          (dosync (doseq [r restrictions]
-                    (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic})))))
+          ;(dosync (doseq [r restrictions]
+          ;          (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))
+          )
         :else
         (let [restrictions (clojure.set/union (@restriction-set var)
-                                              (set (map #(build % :Propositional substitution) rsts)))] 
+                                              (set (map #(build % :Propositional substitution #{:Generic :Analytic}) rsts)))] 
           (alter restriction-set assoc var restrictions)
           (alter msgs assoc var (create-message-structure :csneps.core/Arbitrary restrictions))
-          (dosync (doseq [r restrictions]
-                    (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))))
+          ;(dosync (doseq [r restrictions]
+          ;          (alter property-map assoc r (set/union (@property-map r) #{:Generic :Analytic}))))
+          ))
     
        (internal-restrict var)
       

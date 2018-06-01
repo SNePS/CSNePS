@@ -51,7 +51,7 @@
               (when-not (whquestion-term? rst) ;; It doesn't make sense to assert a WhQuestion.
                 (assert rst (ct/find-context 'BaseCT))))
             (build-quantterm-channels v))
-          (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution))))))
+          (build new-expr (if ignore-type :Entity (semantic-type-of term)) substitution #{}))))))
 
 
 

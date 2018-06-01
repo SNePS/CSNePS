@@ -29,7 +29,7 @@
 (defn defrule-helper [rulename body substitutions]
   (let [[lhs rhs] (lhsrhs body)
         [forms subrules] (formorsub rhs)]
-    (build (list 'rule rulename lhs (set forms) subrules) :Policy substitutions)))
+    (build (list 'rule rulename lhs (set forms) subrules) :Policy substitutions #{})))
 
 (defmacro defrule [rulename & body]
   `(defrule-helper '~rulename '~body {}))

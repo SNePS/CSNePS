@@ -45,7 +45,7 @@
         The termstack is a stack of propositions
            that this goal is a subgoal of.."
   [prop context termstack]
-  (let [p (build/build prop :Proposition {})]
+  (let [p (build/build prop :Proposition {} #{})]
     (when GOALTRACE (cl-format true "~&I wonder if ~S~%" p))
     (cond
       (ct/asserted? p context)
@@ -62,7 +62,7 @@
   "If the WhQuestion ques can be answered in context, 
       return a list of substitutions for the qvars,
       else return the empty set."
-  (let [q (build/variable-parse-and-build ques :Entity)]
+  (let [q (build/variable-parse-and-build ques :Entity #{})]
     (for [[k v] (backward-infer-answer q context)
           :when (not (analyticTerm? v))]
       k)))
@@ -71,7 +71,7 @@
   "If the WhQuestion ques can be answered in context, 
       return a list of satisfying terms,
       else return the empty set."
-  (let [q (build/variable-parse-and-build ques :Entity)]
+  (let [q (build/variable-parse-and-build ques :Entity #{})]
     (set (remove analyticTerm? (vals (backward-infer-answer q context))))))
 
 (defn assertTrace
