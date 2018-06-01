@@ -435,7 +435,7 @@
   (when-not (and (@property-map (:source unif)) 
                  (or ((@property-map (:source unif)) :WhQuestion)
                      ((@property-map (:source unif)) :Analytic)))
-    (println "building unif channel from " (:source unif) "to" (:target unif) "pmap" (@property-map (:source unif)))
+    ;(println "building unif channel from " (:source unif) "to" (:target unif) "pmap" (@property-map (:source unif)))
     (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
       (cond 
         (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
