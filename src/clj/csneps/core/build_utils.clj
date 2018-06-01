@@ -78,9 +78,39 @@
 (defn flatten-term
   "Takes a term, and recursively explores its down-cablesets to build a
    complete set of subterms."
-  [term]
-  (cond 
-    (molecularTerm? term) (flatten (map flatten-term (@down-cableset term)))
-    (atomicTerm? term) (list term)
-    (set? term) (flatten (map flatten-term term))))
+  ([term] (set (flatten-term term #{})))
+  ([term seen]
+    (cond 
+      (seen term) '()
+      (molecularTerm? term) (flatten (conj (map #(flatten-term % (conj seen term)) (@down-cableset term)) term))
+      ;; This is needed, but currently breaks things:
+      ;(variableTerm? term) (flatten (conj (map #(flatten-term % (conj seen term)) (@restriction-set term)) term))
+      (atomicTerm? term) (list term)
+      (set? term) (flatten (map #(flatten-term % seen) term)))))
 
+(defn get-antecedents
+  [term]
+  (let [slot-map (cf/dcsRelationTermsetMap term)]
+    (case (type-of term)
+      :csneps.core/Conjunction
+      (get slot-map (slot/find-slot 'and))
+      (:csneps.core/Andor 
+       :csneps.core/Disjunction 
+       :csneps.core/Xor
+       :csneps.core/Nand)
+      (get slot-map (slot/find-slot 'andorargs))
+      (:csneps.core/Thresh
+       :csneps.core/Equivalence)
+      (get slot-map (slot/find-slot 'threshargs))
+      (:csneps.core/Numericalentailment
+       :csneps.core/Implication)
+      (get slot-map (slot/find-slot 'ant))
+      nil)))
+
+(defn get-vars
+  "Returns the vars in the given term, or, if the term is a rule
+   returns the intersection of variables in its antecedents."
+  [term]
+  (if-let [ants (get-antecedents term)]
+    (apply set/intersection (map #(set (filter variable? (flatten-term %))) ants))
+    (set (filter variable? (flatten-term term)))))

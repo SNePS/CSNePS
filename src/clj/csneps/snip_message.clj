@@ -39,6 +39,7 @@
          " pos:" (:pos o) " neg:" (:neg o)
          " support: " (:support-set o)
          " substitution: " (:subst o)
+         " flaggedns: " (:flaggedns o)
          " forward?: " (:fwd-infer? o))))
 
 (defn message-key [msg]

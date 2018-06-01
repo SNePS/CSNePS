@@ -366,3 +366,4 @@
                          :varfn (if var-list (varinlist? (flatten var-list)) synvariable?)
                          :sourcenode (findDistNode (first expr) (dec (count expr)) @DistNodes)))))
       {}))
+  

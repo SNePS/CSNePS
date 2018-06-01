@@ -169,36 +169,9 @@
 ;  [channel]
 ;  (dosync (ref-set (:valve-open channel) false)))
 
-(defn get-antecedents
-  [term]
-  (let [slot-map (cf/dcsRelationTermsetMap term)]
-    (case (type-of term)
-      :csneps.core/Conjunction
-      (get slot-map (slot/find-slot 'and))
-      (:csneps.core/Andor 
-       :csneps.core/Disjunction 
-       :csneps.core/Xor
-       :csneps.core/Nand)
-      (get slot-map (slot/find-slot 'andorargs))
-      (:csneps.core/Thresh
-       :csneps.core/Equivalence)
-      (get slot-map (slot/find-slot 'threshargs))
-      (:csneps.core/Numericalentailment
-       :csneps.core/Implication)
-      (get slot-map (slot/find-slot 'ant))
-      nil)))
-
-(defn get-vars
-  "Returns the vars in the given term, or, if the term is a rule
-   returns the intersection of variables in its antecedents."
-  [term]
-  (if-let [ants (get-antecedents term)]
-    (apply intersection (map #(set (filter build/variable? (build/flatten-term %))) ants))
-    (set (filter build/variable? (build/flatten-term term)))))
-
 (defn add-valve-selector
   [channel subst context taskid]
-  (let [vars-in-orig (get-vars (:originator channel))
+  (let [vars-in-orig (build/get-vars (:originator channel))
         ;; selector subst is the same, doesn't have the filtered parts, since those have already
         ;; been checked!
         selector-subst (build/substitution-application-nomerge subst
@@ -228,6 +201,7 @@
                                      (println "Warning: No taskid when adding valve selector to" channel) 
                                      (println "This may indicate a bug or race condition in the inference graph.")
                                      (println))))
+            (print-debug :msgrx #{(:originator channel) (:destination channel)} (print-str "MSGRX: " msg "\n -- on channel" channel))
             (.execute ^ThreadPoolExecutor executorService 
               (priority-partial 1 initiate-node-task (:destination channel) (derivative-message msg :taskid taskid)))))
         subst)
@@ -248,7 +222,7 @@
 (defn remove-valve-selector
   ([channel hyps] (remove-valve-selector channel nil hyps))
   ([channel subst hyps]
-    (let [vars-in-orig (when subst (get-vars (:originator channel)))
+    (let [vars-in-orig (when subst (build/get-vars (:originator channel)))
           selector-subst (build/substitution-application-nomerge subst
                                                                  (or (:switch-binds channel) #{}))
           selector-subst (into {} (filter #(vars-in-orig (first %)) subst))
@@ -1020,9 +994,12 @@
                              ;; This can't be minimal, can it? DRS 7/5/14
                              ;; Would seem (@support instance) would always be more minimal.
                              ;(os-union (:support-set rcm) (@support instance)))
+              ;;; Next line is experimental! Not sure it's needed in this case. 
+              expanded-subst (build/expand-substitution node (:subst rcm))
               der-msg (derivative-message rcm
                                          :origin node
                                          :support-set inst-support
+                                         :subst expanded-subst
                                          :true? true
                                          :type 'I-INFER
                                          :fwd-infer? (:fwd-infer? message)
@@ -1057,6 +1034,8 @@
                                      (map (fn [a] (apply-to-all-restrictions (:subst message) a))
                                           (filter #(arbitraryTerm? %) 
                                                   (keys (:subst message)))))))
+              ;;; Next line is experimental! Not sure how it overlaps with subst-support, if it all.
+              expanded-subst (build/expand-substitution node (:subst message))
               outgoing-support (if (seq subst-support)
                                  (os-union (:support-set message)
                                            #{['der subst-support]})
@@ -1064,6 +1043,7 @@
               der-msg (derivative-message message
                                           :origin node
                                           :support-set outgoing-support
+                                          :subst expanded-subst
                                           :type 'I-INFER
                                           :fwd-infer? (:fwd-infer? message)
                                           :taskid (:taskid message))]
@@ -1091,7 +1071,7 @@
           der-msg-t (filter #(= (:pos %) resct) new-ruis)
           new-msgs (map #(derivative-message % :origin node :type 'I-INFER :taskid (:taskid message) :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
-      (print-debug :rui #{node} (print-str "NEW RUI: Arb/Qvar" new-ruis "at" node))
+      (print-debug :rui #{node} (print-str "NEW RUI: Arb/Qvar" new-ruis "\n -- at" node "\n   -- via new message" message))
       (when (seq der-msg-t)
 ;        (send screenprinter (fn [_]  (println "NEWMESSAGE:" (count (for [msg new-msgs
 ;                                                                         ch gch]

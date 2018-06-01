@@ -86,6 +86,21 @@
                                  binding (or (subs1 var) (subs2 var))]]
                        (every? #(not= binding (or (subs1 %) (subs2 %))) notsames)))))
 
+(defn subst-occurs-helper
+  "Returns true if all of term's vars appears in subst."
+  [term subst]
+  (let [term-vars (get-vars term)
+        term-vars-not-in-subst (set/difference term-vars (set (keys subst)))]
+    (empty? term-vars-not-in-subst)))
+
+;; Perhaps this is always something to check for compatibility
+;(defn substitution-occurs?
+;  "Returns false if subs1's bound vars are unbound in any of subs2's keys,
+;   and the same for subs2's bound vars in subs1's keys."
+;  
+;  )
+
+
 (defn subsumption-compatible?
   "Returns true if:
    1) No variable is bound to two different terms.
@@ -104,3 +119,12 @@
 ;  "Returns true if subs1 is a subset of subs2"
 ;  [subs1 subs2]
 ;  (every? #(= (subs1 %) (subs2 %)) (keys subs1)))
+
+(defn expand-substitution
+  "Given a term and a substitution, examines the term for embedded vars
+   which use terms in the substitution. Builds a new substitution with those
+   terms substituted for."
+  [term subst]
+  (let [term-vars (set/difference (get-vars term) (set (keys subst)))]
+    (if-not (empty? term-vars)
+      (into {} (map #(vector % (apply-sub-to-term % subst)) term-vars)))))
