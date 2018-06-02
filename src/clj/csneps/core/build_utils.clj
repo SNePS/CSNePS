@@ -86,18 +86,12 @@
       (atomicTerm? term) (list term)
       (set? term) (flatten (map #(flatten-term-helper % seen vars?) term)))))
 
+;; vars? = true is obviously a little slower, so only do it when needed.
 (defn flatten-term
-  "Takes a term, and recursively explores its down-cablesets to build a
-   complete set of subterms."
-  [term]
-  (disj (set (flatten-term-helper term #{} false)) term))
-
-;; This one is obviously a little slower, so only do it when needed.
-(defn flatten-var-term
-  "Takes a term, and recursively explores its down-cablesets and restrictions
-   to build a complete set of subterms."
-  [term]
-  (disj (set (flatten-term-helper term #{} true)) term))
+  "Takes a term, and recursively explores its down-cablesets (and optionally
+   restrictions) to build a complete set of subterms."
+  [term & {:keys [vars?] :or {vars? false}}]
+  (disj (set (flatten-term-helper term #{} vars?)) term))
 
 (defn get-antecedents
   [term]
@@ -120,8 +114,9 @@
 
 (defn get-vars
   "Returns the vars in the given term, or, if the term is a rule
-   returns the intersection of variables in its antecedents."
-  [term]
+   returns the intersection of variables in its antecedents. Optionally
+   traverses inside variables looking for inner variables."
+  [term & {:keys [inner-vars?] :or {inner-vars? false}}]
   (if-let [ants (get-antecedents term)]
-    (apply set/intersection (map #(set (filter variable? (flatten-term %))) ants))
-    (set (filter variable? (flatten-term term)))))
+    (apply set/intersection (map #(set (filter variable? (flatten-term % :vars? inner-vars?))) ants))
+    (set (filter variable? (flatten-term term :vars? inner-vars?)))))

@@ -72,6 +72,27 @@
   [subs1 subs2]
   (into {} (map (fn [[k v]] [k (apply-sub-to-term v subs2)]) subs1)))
 
+(defn subst-occurs-helper
+  "Returns true if when compare-subst contains a substitution for any variable inside var,
+   it also binds var, unless there's an identical binding already in var-subst."
+  ;; TODO: Must it bind ALL of the inner vars?
+  [var var-subs compare-subs] 
+  (let [inner-vars (get-vars var :inner-vars? true)
+        binds (set (keys compare-subs))
+        shared-binds (set/intersection binds inner-vars)]
+    (if-not (empty? shared-binds)
+      (or (binds var)
+          (every? #(= (var-subs %) (compare-subs %)) shared-binds))
+      true)))
+
+(defn substitution-occurs-check
+  "Ensures that whenever a variable is used in a substitution, the substitution
+   it is combined with does not contain bindings for inner variables without a 
+   binding for the parent, or, if it does, that the inner variable binding isn't
+   identical between the two substitutions."
+  [subs1 subs2]
+  (and (every? #(subst-occurs-helper % subs2 subs1) (keys subs2))
+       (every? #(subst-occurs-helper % subs1 subs2) (keys subs1))))
 
 (defn compatible-substitutions?
   "Returns true if no variable is bound to two different terms."
@@ -81,25 +102,11 @@
   (and (every? #(or (= (subs1 %) (subs2 %))
                     (nil? (subs2 %)))
                (keys subs1))
+       (substitution-occurs-check subs1 subs2)
        (every? true? (for [var (set/union (keys subs1) (keys subs2))
                            :let [notsames @(:not-same-as var)
                                  binding (or (subs1 var) (subs2 var))]]
                        (every? #(not= binding (or (subs1 %) (subs2 %))) notsames)))))
-
-(defn subst-occurs-helper
-  "Returns true if all of term's vars appears in subst."
-  [term subst]
-  (let [term-vars (get-vars term)
-        term-vars-not-in-subst (set/difference term-vars (set (keys subst)))]
-    (empty? term-vars-not-in-subst)))
-
-;; Perhaps this is always something to check for compatibility
-;(defn substitution-occurs?
-;  "Returns false if subs1's bound vars are unbound in any of subs2's keys,
-;   and the same for subs2's bound vars in subs1's keys."
-;  
-;  )
-
 
 (defn subsumption-compatible?
   "Returns true if:
