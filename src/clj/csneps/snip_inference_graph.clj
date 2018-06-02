@@ -700,7 +700,7 @@
                          (not (negated? (:destination u)))
                          (build/pass-message? u der-msg))
                 (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst pos-match)))
-                                                                           :Proposition {})
+                                                                           :Proposition {} #{})
                                                               (:support-set pos-match)
                                                               node
                                                               (str (or 
@@ -733,7 +733,7 @@
                          (not (negated? (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
                 (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst neg-match)))
-                                                                           :Proposition {})
+                                                                           :Proposition {} #{})
                                                               (:support-set neg-match)
                                                               node
                                                               (str (or 
@@ -1192,7 +1192,7 @@
              (not (seen-message? (@msgs term) message)))
     (let [result-term (if (:true? message)
                         (build/apply-sub-to-term term (:subst message))
-                        (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {}))]
+                        (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {} #{}))]
       
       (when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
       
