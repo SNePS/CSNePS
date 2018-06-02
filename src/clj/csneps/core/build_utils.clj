@@ -75,18 +75,29 @@
   [term]
   (term-prewalk (fn [x] (when (term? x) (print "Walked: ") (prn x)) x) term))
 
+(defn- flatten-term-helper
+  "Takes a term, and recursively explores its down-cablesets and optionally
+   its restrictions to build a complete set of subterms."
+  ([term seen vars?]
+    (cond 
+      (seen term) '()
+      (molecularTerm? term) (flatten (conj (map #(flatten-term-helper % (conj seen term) vars?) (@down-cableset term)) term))
+      (and vars? (variableTerm? term)) (flatten (conj (map #(flatten-term-helper % (conj seen term) vars?) (@restriction-set term)) term))
+      (atomicTerm? term) (list term)
+      (set? term) (flatten (map #(flatten-term-helper % seen vars?) term)))))
+
 (defn flatten-term
   "Takes a term, and recursively explores its down-cablesets to build a
    complete set of subterms."
-  ([term] (set (flatten-term term #{})))
-  ([term seen]
-    (cond 
-      (seen term) '()
-      (molecularTerm? term) (flatten (conj (map #(flatten-term % (conj seen term)) (@down-cableset term)) term))
-      ;; This is needed, but currently breaks things:
-      ;(variableTerm? term) (flatten (conj (map #(flatten-term % (conj seen term)) (@restriction-set term)) term))
-      (atomicTerm? term) (list term)
-      (set? term) (flatten (map #(flatten-term % seen) term)))))
+  [term]
+  (disj (set (flatten-term-helper term #{} false)) term))
+
+;; This one is obviously a little slower, so only do it when needed.
+(defn flatten-var-term
+  "Takes a term, and recursively explores its down-cablesets and restrictions
+   to build a complete set of subterms."
+  [term]
+  (disj (set (flatten-term-helper term #{} true)) term))
 
 (defn get-antecedents
   [term]

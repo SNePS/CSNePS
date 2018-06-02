@@ -79,11 +79,12 @@
 
 ;; Use agents for channels? Like message passing in Erlang?
 
-(defn clean-subst
-  "Removes any irrelevant substitutions (those not in the destination of the channel) from the passing message."
-  [subst ch]
-  (let [vars (set (filter variable? (flatten-term (:destination ch))))]
-    (into {} (filter #(get vars (first %)) subst))))
+;; This is a bad idea!
+;(defn clean-subst
+;  "Removes any irrelevant substitutions (those not in the destination of the channel) from the passing message."
+;  [subst ch]
+;  (let [vars (set (filter variable? (flatten-term (:destination ch))))]
+;    (into {} (filter #(get vars (first %)) subst))))
 
 (defn switch-fn
   [sub]
