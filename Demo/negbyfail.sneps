@@ -1,6 +1,6 @@
 ;;; Demonstration of Negation by Failure
 
-(in-ns 'snuser)
+(in-ns 'csneps.core.snuser)
 
 (clearkb)
 ;;; A kind of bird that is not known not to fly flies.

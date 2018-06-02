@@ -1,7 +1,7 @@
-;;; Basic Demo of SNePS 3 Equivalence Elimination and Introduction
+;;; Basic Demo of CSNePS Equivalence Elimination and Introduction
 ;;; ================================
 
-(in-ns 'snuser)
+(in-ns 'csneps.core.snuser)
 ;; Initialize KB completely
 (clearkb true)
 
