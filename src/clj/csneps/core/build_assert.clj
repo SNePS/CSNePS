@@ -109,7 +109,7 @@
   ;;    so propositions derived using prop might still be asserted,
   ;;    and prop, itself, might be rederivable.
   (let [cntx (or ctx (ct/currentContext))
-        p (build prop :Proposition {})]
+        p (build prop :Proposition {} #{})]
     (loop [context (ct/asserted? p cntx)]
       (when context
         (ct/remove-from-context p context)
