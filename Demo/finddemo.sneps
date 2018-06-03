@@ -8,6 +8,7 @@
 
 ;;; Define Slots
 (defineSlot agent :type Agent)
+(defineSlot actions :type Action)
 (defineSlot object :type Thing
 	    :docstring "Non-agentive objects of actions.")
 (defineSlot property :type Thing)
