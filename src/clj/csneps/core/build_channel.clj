@@ -151,13 +151,20 @@
                 (= type :g-channel))
             (not (variableTerm? orig))
             (not= (syntactic-type-of orig) :csneps.core/Negation))
-      (submit-to-channel ch (new-message {:origin orig, :support-set #{['hyp #{(:name orig)}]}, :type 'I-INFER})))
+      (submit-to-channel ch (new-message {:origin orig
+                                          :support-set #{['hyp #{(:name orig)}]}
+                                          :flaggedns {orig true}
+                                          :type 'I-INFER})))
     
     ;; Remmember, inner terms are built before outer terms, so to handle negations, they must come when the nor is
     ;; built. If orig is a nor, send a u-infer message to its arguments.
     (when (and (= type :u-channel)
                (= (syntactic-type-of orig) :csneps.core/Negation))
-      (let [new-msg (new-message {:origin orig, :support-set #{['der #{(:name orig)}]}, :type 'U-INFER, :true? false})]
+      (let [new-msg (new-message {:origin orig, 
+                                  :support-set #{['der #{(:name orig)}]}, 
+                                  :type 'U-INFER, 
+                                  :flaggedns {orig true}
+                                  :u-true? false})]
         (submit-to-channel ch new-msg)))
 
   ;; Focused forward-in-backward, extension for new in-channels.
