@@ -1234,7 +1234,7 @@
         (let [imsg (derivative-message message
                                      :origin term
                                      :support-set (@support result-term)
-                                     :flaggedns {term true}
+                                     :flaggedns {term (:u-true? message)}
                                      :type 'I-INFER)]
           ;; Save the message for future terms which might have channels
           ;; from this. Sometimes necessary for forward focused reasoning.
