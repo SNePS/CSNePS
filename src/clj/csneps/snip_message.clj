@@ -39,7 +39,7 @@
     (str "(" (:priority o) ")"
          " From: " (if (:origin o) (print-str (:origin o)) "<?>")
          " " (:type o) 
-         (when (= (:type o) 'U-INFER ) " (" (if (:u-true? o) "t" "f") ")")
+         (when (= (:type o) 'U-INFER ) (str " (" (if (:u-true? o) "t" "f") ")"))
          " pos:" (:pos o) " neg:" (:neg o)
          " support: " (:support-set o)
          " substitution: " (:subst o)
