@@ -17,23 +17,11 @@
 
 (def print-intermediate-results false)
 (def print-results-on-infer false)
-(def debug-features (ref #{}))
-(def debug-nodes (ref #{}))
 (def showproofs true)
 
-(defn print-debug
-  "Prints the message if any item from features is in debug-features, and 
-   if any of: any item in nodes is in debug-nodes or debug-nodes is empty 
-   or nodes is empty. Accepts either a set of nodes/features, or a single
-   one on their own."
-  [features nodes message]
-  (let [features (if (seqable? features) (set features) #{features})
-        nodes (if (and (seqable? nodes) (not (map? nodes))) (set nodes) #{nodes})] ;; Records are seqable.
-    (when (and (not (empty? (intersection features @debug-features)))
-               (or (empty? @debug-nodes) 
-                   (empty? nodes)
-                   (not (empty? (intersection nodes @debug-nodes)))))
-      (send screenprinter (fn [_]  (println message))))))
+(defn ig-debug-all []
+  (set-debug-features :msgtx, :msgrx, :valveselect, :bw, :cancel, :switch, :filter, :rui, :der, :newmsg, :os, :infer)
+  (set-debug-nodes))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 ;;; Concurrency control ;;;
@@ -468,6 +456,8 @@
                                    :flaggedns {node (:u-true? message)}
                                    :type 'U-INFER)
         uch (@u-channels node)]
+    
+    (print-debug :infer #{node} (print-str "INFER: negation-elimination" node "\n -- message:" message "\n    -- derived messages:" dermsg))
 
     (when (and showproofs 
                (not (:u-true? message)))
@@ -514,7 +504,7 @@
             [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))
       (when (seq false-msgs)
         ;; This isn't a perfect solution, but it will stop infinite generation of (not (not ... ))
-        ;; TODO: Somehow remove the new-msgs from the matched to allow later generation of needed.
+        ;; TODO: Somehow remove the new-msgs from the matched to allow later generation if needed.
         (when-not (and (= (type-of node) :csneps.core/Negation)
                        (empty? (build/find (list 'not node))))
           (when showproofs
@@ -1440,27 +1430,6 @@
     (alter future-fw-infer empty))
   (doseq [t (vals @TERMS)]
     (dosync (alter (:future-bw-infer t) empty))))
-  
-;;;;;;;;;;;;;;;;;;;;;;;
-;;; Debug Functions ;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-;; valid options: :msgtx, :msgrx, :valveselect, :bw, :cancel, :switch, :filter, :rui, :der, :newmsg, :os
-(defn set-debug-features [& opts]
-  (dosync (ref-set debug-features (set opts))))
-
-;; Empty nodes list means debug all nodes.
-(defn set-debug-nodes [& nodes]
-  (dosync (ref-set debug-nodes (set (map get-term nodes)))))
-
-(defmacro ig-debug [& {:keys [features nodes] :or {features '() nodes '()}}]
-  `(do 
-     (set-debug-features ~@features)
-     (set-debug-nodes ~@nodes)))
-
-(defn ig-debug-all []
-  (set-debug-features :msgtx, :msgrx, :valveselect, :bw, :cancel, :switch, :filter, :rui, :der, :newmsg, :os)
-  (set-debug-nodes))
 
 (defn- print-valve [ch]
   (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (ct/find-context (second %))) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]

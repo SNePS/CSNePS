@@ -11,6 +11,7 @@
   (:use [csneps.core]
         [csneps.util]
         [csneps.configuration]
+        [csneps.debug]
         [csneps.snip.util]
         [csneps.core.build :only (term-prewalk variable?)]
         [clojure.core.memoize :only (memo)]

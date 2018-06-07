@@ -22,9 +22,10 @@
         [csneps.core.build :only (find *PRECISION* defrule unassert rewrite-propositional-expr)]
         [csneps.core :only (showTypes list-types semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
-        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction set-debug-nodes set-debug-features ig-debug-all)]
+        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction ig-debug-all)]
         [csneps.core.arithmetic]
-        [csneps.util])
+        [csneps.util]
+        [csneps.debug :only (debug set-debug-nodes set-debug-features)])
   (:import [edu.buffalo.csneps.util CountingLatch]))
 
 (declare askif askifnot defineTerm find-term)

@@ -99,7 +99,7 @@
     (assoc :support-set (or support-set (:support-set message)))
     (assoc :antecedent-support-sets #{})
     (assoc :type (or type (:type message)))
-    (assoc :u-true? (if (nil? u-true?) (:u-true? message) true?))
+    (assoc :u-true? (or u-true? (:u-true? message)))
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
     (assoc :invoke-set (or invoke-set (if origin
                                         (@future-fw-infer origin)

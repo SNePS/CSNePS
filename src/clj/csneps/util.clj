@@ -411,10 +411,3 @@
   (and (<= (count sub) (count m)) 
        (.containsAll (.entrySet m) (.entrySet sub))))
 
-;; Debug stuff
-
-(def screenprinter (agent nil))
-
-(defn println-agent
-  [& strs]
-  (send screenprinter (fn [_]  (println (clojure.string/join " " strs)))))
