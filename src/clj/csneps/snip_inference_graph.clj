@@ -513,15 +513,19 @@
           (for [[_ dermsg] dermsgs-t]
             [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))
       (when (seq false-msgs)
-        (when showproofs
-          (doseq [[fmsg dermsg] dermsgs-f]
-            (send screenprinter (fn [_] (print-proof-step (build/variable-parse-and-build (list 'not node) :Propositional #{})
-                                                          (:support-set fmsg)
-                                                          rule-name)))))
-        (add-matched-and-sent-messages (@msgs node) (set false-msgs) {:i-channel (set (vals dermsgs-f))})
-        (doall
-          (for [[_ dermsg] dermsgs-f]
-            [false (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))))))
+        ;; This isn't a perfect solution, but it will stop infinite generation of (not (not ... ))
+        ;; TODO: Somehow remove the new-msgs from the matched to allow later generation of needed.
+        (when-not (and (= (type-of node) :csneps.core/Negation)
+                       (empty? (build/find (list 'not node))))
+          (when showproofs
+            (doseq [[fmsg dermsg] dermsgs-f]
+              (send screenprinter (fn [_] (print-proof-step (build/variable-parse-and-build (list 'not node) :Propositional #{})
+                                                            (:support-set fmsg)
+                                                            rule-name)))))
+          (add-matched-and-sent-messages (@msgs node) (set false-msgs) {:i-channel (set (vals dermsgs-f))})
+          (doall
+            (for [[_ dermsg] dermsgs-f]
+              [false (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))))))
 
 (defn conjunction-introduction
   "We are in an unasserted 'and' node, and would like to know if we now
