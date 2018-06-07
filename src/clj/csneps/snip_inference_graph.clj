@@ -471,7 +471,6 @@
 (defn consensus-introduction
   "This rule introduces conjunction or negation, since they are extremely similar."
   [message node new-msgs rule-name pos-is-true?]
-    [message node new-msgs]
   (let [true-msgs (if pos-is-true?
                     (filter #(= (:pos %) (count (@u-channels node))) new-msgs)
                     (filter #(= (:neg %) (count (@u-channels node))) new-msgs))
@@ -491,6 +490,10 @@
         dermsgs-t (dermsg-fn true-msgs true) 
         dermsgs-f (dermsg-fn false-msgs false)
         ich (@i-channels node)]
+    
+    (print-debug :infer #{node} (print-str "INFER:" (if pos-is-true? "conjunction-introduction" "negation-introduction") 
+                                           node "\n -- message:" message "\n    -- True derived messages:" dermsgs-t "\n    -- False derived messages:" dermsgs-f))
+
     (concat
       (when (seq true-msgs)
         (when showproofs
@@ -553,7 +556,7 @@
                                    :flaggedns {node true}
                                    :type 'U-INFER)
         uch (@u-channels node)]
-    (print-debug :der #{node} (print-str "DER: Conjunction Elimination at" node))
+    (print-debug :infer #{node} (print-str "INFER: conjunction-elimination" node "\n -- message:" message "\n    -- derived messages:" dermsg))
     (when showproofs
       (doseq [u uch]
         (when (build/pass-message? u dermsg)
