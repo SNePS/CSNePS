@@ -92,6 +92,7 @@
 (defn derivative-message 
   "Creates a message just like <message>, but with the given keys switched for the given values"
   [message & {:keys [origin priority subst support-set type u-true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
+  (println-agent "utrue" u-true? (:u-true? message))
   (-> message 
     (assoc :origin (or origin (:origin message)))
     (assoc :priority (or priority (inc (:priority message))))
@@ -99,7 +100,7 @@
     (assoc :support-set (or support-set (:support-set message)))
     (assoc :antecedent-support-sets #{})
     (assoc :type (or type (:type message)))
-    (assoc :u-true? (or u-true? (:u-true? message)))
+    (assoc :u-true? (if (nil? u-true?) (:u-true? message) u-true?))
     (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
     (assoc :invoke-set (or invoke-set (if origin
                                         (@future-fw-infer origin)
