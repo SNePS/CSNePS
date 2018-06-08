@@ -4,7 +4,8 @@
 ;;; Modified: 6/10/2014
 
 (ns csneps.core.printer
-  (:require [csneps.core.contexts :as ct]
+  (:require [clojure.string :as str]
+            [csneps.core.contexts :as ct]
             [csneps.core :as csneps]
             [csneps.core.caseframes :as cf])
   (:use [csneps.core :only (type-of)]
@@ -18,7 +19,9 @@
 
 (defn print-atom
   [term]
-  (:name term))
+  (if (str/includes? (:name term) " ")
+    (str "\"" (:name term) "\"")
+    (:name term)))
 
 (defn wft-string
   [term]
