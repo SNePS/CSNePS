@@ -7,7 +7,16 @@
   (seen-message? [this msg]) ;; Sometimes you don't want to combine msgs, just check if you've already seen one.
   (get-matched-messages [this])
   (get-sent-messages [this chtype])
-  (add-matched-and-sent-messages [this matched sent]))
+  (add-matched-and-sent-messages [this matched sent])
+  (print-messages [this]))
+
+(defmethod print-method csneps.snip.MessageStructure [o w]
+  (.write ^java.io.Writer w 
+    (str (print-messages o))))
+
+(prefer-method print-method csneps.snip.MessageStructure java.util.Map)
+(prefer-method print-method csneps.snip.MessageStructure clojure.lang.IPersistentMap)
+(prefer-method print-method csneps.snip.MessageStructure clojure.lang.IRecord)
 
 ;; Type options:
 ;; U-INFER
@@ -93,7 +102,9 @@
   "Creates a message just like <message>, but with the given keys switched for the given values"
   [message & {:keys [origin priority subst support-set type u-true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
   (let [new-u-true (cond 
-                      (not= (or type (:type message)) 'U-INFER) true ;; default to true in messages of the wrong type
+                     (and (nil? type) (not= (:type message) 'U-INFER)) true
+                     (and (not (nil? type)) (not= type 'U-INFER)) true
+                     ; (not= (or type (:type message)) 'U-INFER) true ;; default to true in messages of the wrong type
                       (nil? u-true?) (:u-true? message)
                       :default u-true?)
         new-flaggedns (or flaggedns (:flaggedns message))]

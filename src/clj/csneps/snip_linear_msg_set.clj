@@ -33,7 +33,17 @@
     (dosync
       (alter (:sent-msgs this) (partial merge-with union) sent)
       (alter (:matched-msgs this) union matched)
-      (alter (:working-msgs this) difference matched))))
+      (alter (:working-msgs this) difference matched)))
+  (print-messages
+    [this]
+    (println "--- Linear Message Set ---")
+    (println "Matched Messages:")
+    (doseq [mm @(:matched-msgs this)] (println mm))
+    (println "Sent Messages:")
+    (doseq [[chtype sms] @(:sent-msgs this)
+            sm sms] (println chtype ":" sm))
+    (println "Working Messages:")
+    (doseq [wm @(:working-msgs this)] (println wm))))
 
 (defn make-linear-msg-set
   []

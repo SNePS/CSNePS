@@ -36,7 +36,17 @@
     [this matched sent]
     (dosync 
       (alter (:matched-msgs this) union matched)
-      (alter (:sent-msgs this) (partial merge-with union) sent))))
+      (alter (:sent-msgs this) (partial merge-with union) sent)))
+  (print-messages
+    [this]
+    (println "--- S-Index ---")
+    (println "Matched Messages:")
+    (doseq [mm @(:matched-msgs this)] (println mm))
+    (println "Sent Messages:")
+    (doseq [[chtype sms] @(:sent-msgs this)
+            sm sms] (println chtype ":" sm))
+    (println "Working Messages:")
+    (doseq [wm (vals @(:sindex this))] (println wm))))
 
 (defn make-sindex
   []
