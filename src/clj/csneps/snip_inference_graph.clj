@@ -703,7 +703,7 @@
                                                                      "andor")
                                                                    "-elimination (1)")))))))
 
-        (add-matched-and-sent-messages (@msgs node) (set pos-matches) {:u-channel (set (vals der-msgs))})
+        (add-matched-and-sent-messages (@msgs node) (set pos-matches) {:u-channel (set (vals der-msgs))} false)
                 
         (into {} (for [[pos-match der-msg] der-msgs
                        u (@u-channels node)
@@ -737,7 +737,7 @@
                                                                      "andor")
                                                                    "-elimination (2)")))))))
 
-        (add-matched-and-sent-messages (@msgs node) (set neg-matches) {:u-channel (set (vals der-msgs))})
+        (add-matched-and-sent-messages (@msgs node) (set neg-matches) {:u-channel (set (vals der-msgs))} false)
                 
         (into {} (for [[neg-match der-msg] der-msgs
                        u (@u-channels node)
@@ -853,7 +853,7 @@
                                                                    "thresh")                                                               
                                                                  "-elimination"))))))
           
-          (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))})
+          (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))} false)
           
           (into {} (for [[more-than-min-true-match der-msg] der-msgs
                          u (@u-channels node)
@@ -885,7 +885,7 @@
                                                                    "thresh")                                                               
                                                                  "-elimination"))))))
           
-          (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))})
+          (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))} false)
           
           (into {} (for [[less-than-max-true-match der-msg] der-msgs
                          u (@u-channels node)

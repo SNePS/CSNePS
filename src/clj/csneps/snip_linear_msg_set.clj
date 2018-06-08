@@ -29,11 +29,13 @@
     [this]
     @(:matched-msgs this))
   (add-matched-and-sent-messages
-    [this matched sent]
+    [this matched sent] (add-matched-and-sent-messages this matched sent true))
+  (add-matched-and-sent-messages
+    [this matched sent remove-matched-from-working?]
     (dosync
       (alter (:sent-msgs this) (partial merge-with union) sent)
       (alter (:matched-msgs this) union matched)
-      (alter (:working-msgs this) difference matched)))
+      (when remove-matched-from-working? (alter (:working-msgs this) difference matched))))
   (print-messages
     [this]
     (println "--- Linear Message Set ---")

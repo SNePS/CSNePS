@@ -33,7 +33,9 @@
     [this]
     @(:matched-msgs this))
   (add-matched-and-sent-messages
-    [this matched sent]
+    [this matched sent] (add-matched-and-sent-messages this matched sent false))
+  (add-matched-and-sent-messages
+    [this matched sent _]
     (dosync 
       (alter (:matched-msgs this) union matched)
       (alter (:sent-msgs this) (partial merge-with union) sent)))

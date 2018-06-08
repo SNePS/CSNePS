@@ -7,7 +7,7 @@
   (seen-message? [this msg]) ;; Sometimes you don't want to combine msgs, just check if you've already seen one.
   (get-matched-messages [this])
   (get-sent-messages [this chtype])
-  (add-matched-and-sent-messages [this matched sent])
+  (add-matched-and-sent-messages [this matched sent] [this matched sent remove-matched-from-working?])
   (print-messages [this]))
 
 (defmethod print-method csneps.snip.MessageStructure [o w]
