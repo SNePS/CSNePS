@@ -69,6 +69,15 @@
   [initial value-map]
   (reduce set-record-field initial value-map))
 
+;; set-record-fields could be improved through the use of the threading
+;; macro with assoc, but the below doesn't work (yet).
+;(defmacro set-record-fields
+;  "Set many fields on a record, from a map."
+;  [initial value-map]
+;  `(-> ~initial
+;         ~@(for [[k v] value-map]
+;            `(assoc ~k ~v))))
+
 ;; NOTE: The way that fields are set in this approach is inefficient and garbage
 ;; objects are thrown off when setting multiple fields, but it does present the
 ;; abstraction we want of setting fields via maps.
@@ -372,6 +381,11 @@
 (defn subsat
   [s char]
   (subs s (.indexOf s char)))
+
+(defn assoc-when-val [inmap k v]
+  "Associates k with v in inmap if v is truthy, otherwise results
+   in inmap."
+  (if v (assoc inmap k v) inmap))
 
 ;;; Utility functions for evaluating functions with another
 ;;; set of local bindings. 

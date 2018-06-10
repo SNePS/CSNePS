@@ -103,28 +103,30 @@
   [message & {:keys [origin priority subst support-set type u-true? fwd-infer? invoke-set taskid pos neg flaggedns]}]
   (let [new-u-true (cond 
                      (and (nil? type) (not= (:type message) 'U-INFER)) true
-                     (and (not (nil? type)) (not= type 'U-INFER)) true
-                     ; (not= (or type (:type message)) 'U-INFER) true ;; default to true in messages of the wrong type
-                      (nil? u-true?) (:u-true? message)
-                      :default u-true?)
+                     (and (not (nil? type)) (not= type 'U-INFER)) true ;; default to true in messages of the wrong type
+                     (nil? u-true?) (:u-true? message)
+                     :default u-true?)
         new-flaggedns (or flaggedns (:flaggedns message))
         new-pos (or pos (if (empty? new-flaggedns)
                           1
                           (count (filter true? (vals new-flaggedns)))))
-        new-neg (max 0 (- (count new-flaggedns) new-pos))]; (or neg (count (filter false? (vals new-flaggedns))))]
+        new-neg (max 0 (- (count new-flaggedns) new-pos))]
+    ;; For some reason tests show using the -> with many inner assoc's is faster than 
+    ;; one assoc with all of the k/v pairs. Made somewhat more efficient by using assoc-when-val
+    ;; which will do the update only when the new val is truthy.
     (-> message 
-      (assoc :origin (or origin (:origin message)))
+      (assoc-when-val :origin origin)
       (assoc :priority (or priority (inc (:priority message))))
-      (assoc :subst (or subst (:subst message)))
-      (assoc :support-set (or support-set (:support-set message)))
+      (assoc-when-val :subst subst)
+      (assoc-when-val :support-set support-set)
       (assoc :antecedent-support-sets #{})
-      (assoc :type (or type (:type message)))
+      (assoc-when-val :type type)
       (assoc :u-true? new-u-true)
-      (assoc :fwd-infer? (or fwd-infer? (:fwd-infer? message)))
+      (assoc-when-val :fwd-infer? fwd-infer?)
       (assoc :invoke-set (or invoke-set (if origin
                                           (@future-fw-infer origin)
                                           (when (:origin message) (@future-fw-infer (:origin message))))))
-      (assoc :taskid (or taskid (:taskid message)))
+      (assoc-when-val :taskid taskid)
       (assoc :pos new-pos)
       (assoc :neg new-neg)
       (assoc :flaggedns new-flaggedns))))
