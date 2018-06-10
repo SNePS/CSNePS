@@ -107,7 +107,11 @@
                      ; (not= (or type (:type message)) 'U-INFER) true ;; default to true in messages of the wrong type
                       (nil? u-true?) (:u-true? message)
                       :default u-true?)
-        new-flaggedns (or flaggedns (:flaggedns message))]
+        new-flaggedns (or flaggedns (:flaggedns message))
+        new-pos (or pos (if (empty? new-flaggedns)
+                          1
+                          (count (filter true? (vals new-flaggedns)))))
+        new-neg (max 0 (- (count new-flaggedns) new-pos))]; (or neg (count (filter false? (vals new-flaggedns))))]
     (-> message 
       (assoc :origin (or origin (:origin message)))
       (assoc :priority (or priority (inc (:priority message))))
@@ -121,8 +125,8 @@
                                           (@future-fw-infer origin)
                                           (when (:origin message) (@future-fw-infer (:origin message))))))
       (assoc :taskid (or taskid (:taskid message)))
-      (assoc :pos (or pos (count (filter true? (vals new-flaggedns)))))
-      (assoc :neg (or neg (count (filter false? (vals new-flaggedns)))))
+      (assoc :pos new-pos)
+      (assoc :neg new-neg)
       (assoc :flaggedns new-flaggedns))))
 
 (defn imessage-from-ymessage
