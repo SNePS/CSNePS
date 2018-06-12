@@ -1082,6 +1082,7 @@
                          (notsames var-label)))]
     (when-not (@restriction-set var) ;; already built!
       (alter TERMS assoc (:name var) var)
+      (when (some nil? nsvars) (error "Cannot build notSame for variable out of scope."))
       (alter (:not-same-as var) clojure.set/union nsvars)
       (cond 
         (= quant :qvar) 
