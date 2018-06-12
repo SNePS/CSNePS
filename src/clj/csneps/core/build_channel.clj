@@ -154,6 +154,7 @@
       (submit-to-channel ch (new-message {:origin orig
                                           :support-set #{['hyp #{(:name orig)}]}
                                           :flaggedns {orig true}
+                                          :pos 1
                                           :type 'I-INFER})))
     
     ;; Remmember, inner terms are built before outer terms, so to handle negations, they must come when the nor is
@@ -164,6 +165,7 @@
                                   :support-set #{['der #{(:name orig)}]}, 
                                   :type 'U-INFER, 
                                   :flaggedns {orig true}
+                                  :pos 1
                                   :u-true? false})]
         (submit-to-channel ch new-msg)))
 

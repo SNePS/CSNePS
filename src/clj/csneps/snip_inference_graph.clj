@@ -945,25 +945,21 @@
     (let [inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                   ;; What about shared sub-policies though?
           inst-msgs (filter #(= (:pos %) inchct) new-msgs)
-          new-msgs (map #(derivative-message % 
+          der-msgs (map #(derivative-message % 
                                              :origin node 
                                              :type 'I-INFER 
                                              :taskid (:taskid message)
                                              :flaggedns {node true}
                                              :support-set (os-union (:support-set %) (@support node))) 
-                        inst-msgs) ;; using fwd-infer here is a bit of a hack.
+                        inst-msgs)
           ich (@i-channels node)]
-      ;(when showproofs
-    
-      (add-matched-and-sent-messages (@msgs node) (set inst-msgs) {:i-channel (set new-msgs)})
-    
-      (when (seq new-msgs)
-        (send screenprinter (fn [_] (println "Policy " node " satisfied." inst-msgs))))
+
+      (when (seq der-msgs)
+        (print-debug :infer #{node} (print-str "INFER: policy-instantiation" node "\n -- message:" message "\n    -- derived messages:" der-msgs))
+        (add-matched-and-sent-messages (@msgs node) (set inst-msgs) {:i-channel (set der-msgs)}))
       (apply concat 
-             (for [nmsg new-msgs] 
+             (for [nmsg der-msgs] 
                (zipmap ich (repeat (count ich) nmsg)))))))
-
-
 
 (defn apply-to-all-restrictions
   [subst arb]
@@ -985,6 +981,7 @@
     (let [new-combined-messages (get-new-messages (@msgs node) message)
           rel-combined-messages (when new-combined-messages
                                   (filter #(> (:pos %) 0) new-combined-messages))]
+
       (doseq [rcm rel-combined-messages]
         
         (let [instance (if (:fwd-infer message)
@@ -1013,7 +1010,10 @@
               ;(alter support assoc instance (os-concat (@support instance) inst-support))
              ; (alter instances assoc node (assoc (@instances node) instance (:subst rcm)))))
           
-          (add-matched-and-sent-messages (@msgs node) #{rcm} {:i-channel #{der-msg} :g-channel #{der-msg}})
+          ;; Don't remove matched messages from working to avoid cases where two arbs need
+          ;; matching, but they independently get removed from working. There is likely an
+          ;; optomization possible where they can be removed if pos has some value. 
+          (add-matched-and-sent-messages (@msgs node) #{rcm} {:i-channel #{der-msg} :g-channel #{der-msg}} false)
           
           (when (and showproofs instance 
                      (ct/asserted? node (ct/currentContext)) 
@@ -1076,7 +1076,7 @@
                                              :origin node 
                                              :type 'I-INFER 
                                              :taskid (:taskid message) 
-                                             :flaggedns {}
+                                             :flaggedns {node true}
                                              :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
       (print-debug :rui #{node} (print-str "NEW RUI: Arb/Qvar" new-ruis "\n -- at" node "\n   -- via new message" message))
@@ -1309,6 +1309,7 @@
       (and 
         (genericTerm? (:origin message))
         (not (rule? term))
+        (not (carule? term))
         (not (variableTerm? term)))
       (do 
         (when (:u-true? message)

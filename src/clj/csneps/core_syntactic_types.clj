@@ -91,6 +91,10 @@
        (or (isa? (:type o) ::Param2op)
            (isa? (:type o) ::Numericalentailment)
            (isa? (:type o) ::Negation))))
+
+(defn carule?
+  [o]
+  (when (:type o) (isa? (:type o) ::CARule)))
               
 
 ;;; Syntactic Types
