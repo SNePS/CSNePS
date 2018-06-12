@@ -11,7 +11,8 @@
     (if (or (= (:type term) :csneps.core/Atom)
             (= subst {}))
       term
-      (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)]
+      (binding [csneps.core.printer/PRINTED-VARIABLES (hash-set)
+                csneps.core.printer/PRINTED-VARIABLE-LABELS (hash-map)]
         (let [expr (read-string (csneps.core.printer/print-unnamed-molecular-term term))
               [new-expr arb-rsts ind-dep-rsts qvar-rsts] (dosync (parse-vars-and-rsts expr {} {} {}))
               [new-expr built-vars substitution] (dosync (check-and-build-variables expr :reuse-inds true))
