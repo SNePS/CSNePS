@@ -14,6 +14,7 @@
         [clojure.java.io]))
 
 (def ^{:dynamic true} PRINTED-VARIABLES (hash-set))
+(def ^{:dynamic true} PRINTED-VARIABLE-LABELS (hash-map))
 
 (declare print-term print-set)
 
@@ -75,34 +76,42 @@
                                  (error "Bad pattern part "p" in the pattern "(:print-pattern cf)"."))))))
          ")"))
 
+(defn get-var-label
+  [term]
+  (or (PRINTED-VARIABLE-LABELS term)
+      (let [var-label (if ((set (vals PRINTED-VARIABLE-LABELS)) (:var-label term))
+                                  (str "x" (count PRINTED-VARIABLE-LABELS))
+                                  (:var-label term))]
+        (set! PRINTED-VARIABLE-LABELS (assoc PRINTED-VARIABLE-LABELS term var-label))
+        var-label)))
 
 (defn print-ind-deps
   [ind]
   (let [deps (@csneps/dependencies ind)
-        labels (map :var-label deps)]
+        labels (map get-var-label deps)]
     (apply str (interpose " " labels))))
 
 (defn print-unnamed-variable-term
   [term]
   (str
     (cond
-      (PRINTED-VARIABLES term) (:var-label term)
+      (PRINTED-VARIABLES term) (PRINTED-VARIABLE-LABELS term)
       :true
-      (do 
+      (let [var-label (get-var-label term)]
         (set! PRINTED-VARIABLES (conj PRINTED-VARIABLES term))
         (str 
           (condp = (type-of term)
-            :csneps.core/Arbitrary (str "(every " (:var-label term) " ")
-            :csneps.core/Indefinite (str "(some " (:var-label term) " (" (print-ind-deps term) ") ")
-            :csneps.core/QueryVariable (str "(" (:var-label term) " "))
-          (print-set (@csneps/restriction-set term) false) 
+            :csneps.core/Arbitrary (str "(every " var-label " ")
+            :csneps.core/Indefinite (str "(some " var-label " (" (print-ind-deps term) ") ")
+            :csneps.core/QueryVariable (str "(" var-label " "))
+          (print-set (@csneps/restriction-set term) false)
           (when (seq @(:not-same-as term))
-            (str " (notSame " (:var-label term) " " (print-set @(:not-same-as term) false) ")"))
+            (str " (notSame " var-label " " (print-set @(:not-same-as term) false) ")"))
           ")")))))
 
 (defn print-closure
   [term]
-  (print-str (list 'close (map #(:var-label %) (:closed-vars term)) (print-term (first (@csneps/down-cableset term))))))
+  (print-str (list 'close (map get-var-label (:closed-vars term)) (print-term (first (@csneps/down-cableset term))))))
 
 (defn print-unnamed-molecular-term
   [term]
@@ -185,7 +194,8 @@
 
 (defn term-printer
   [term]
-  (binding [PRINTED-VARIABLES (hash-set)]
+  (binding [PRINTED-VARIABLES (hash-set)
+            PRINTED-VARIABLE-LABELS (hash-map)]
   (cond
     ;; Variable
     (isa? (csneps.core/syntactic-type-of term) :csneps.core/Variable)
@@ -343,7 +353,8 @@
         (.write w  "(csneps.core.build/assert '")
         (if (= (:type term) :csneps.core/Atom)
           (.write w (str (print-atom term)))
-          (binding [PRINTED-VARIABLES (hash-set)]
+          (binding [PRINTED-VARIABLES (hash-set)
+                    PRINTED-VARIABLE-LABELS (hash-map)]
             (.write w (str (print-unnamed-molecular-term term)))))
         (.write w (str " 'DefaultCT)\n"))))))
       
