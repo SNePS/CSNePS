@@ -147,7 +147,7 @@
       (rewrite-propositional-expr term)
       (build/variable-parse-and-build term :Propositional #{}))
     :else
-    (build/build term (or (first semtype) :Entity) {})))
+    (build/build term (or (first semtype) :Entity) {} #{})))
 
 (defmacro defineType
   "Semantic types are stored internally as keywords, so they are converted to keywords first if 
