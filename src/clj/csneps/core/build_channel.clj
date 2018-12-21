@@ -186,19 +186,17 @@
 
 (defn build-channel
   [originator destination target-binds source-binds]
-  (let [qvar-targets (into {} (filter #(queryTerm? (second %)) target-binds))
-        source-binds (merge source-binds (set/map-invert qvar-targets))
-        target-binds (apply dissoc target-binds (keys qvar-targets))
-        channel (or 
-                  (find-channel originator destination)
-                  (new-channel {:originator originator
-                                :destination destination
-                                :filter-fn (filter-fn target-binds)
-                                :switch-fn (switch-fn source-binds)
-                                :switch-binds source-binds
-                                :filter-binds target-binds
-                                :valve-open (ref false)}))]
-    channel))
+  (or (find-channel originator destination)
+      (let [qvar-targets (into {} (filter #(queryTerm? (second %)) target-binds))
+            source-binds (merge source-binds (set/map-invert qvar-targets))
+            target-binds (apply dissoc target-binds (keys qvar-targets))]
+        (new-channel {:originator originator
+                      :destination destination
+                      :filter-fn (filter-fn target-binds)
+                      :switch-fn (switch-fn source-binds)
+                      :switch-binds source-binds
+                      :filter-binds target-binds
+                      :valve-open (ref false)}))))
 
 (defn valve-open?
   [channel]

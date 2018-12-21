@@ -1108,10 +1108,10 @@
                        (concat new-rsts (map #(build/apply-sub-to-term % subst) (@restriction-set (first deps))))
                        (rest deps))))
         ;; TODO FIX:
-        new-ind (new-indefinite :name (symbol (str "ind" (ind-counter)))
-                                       :var-label (:var-label ind)
-                                       :msgs (create-message-structure :csneps.core/Indefinite nil)
-                                       :restriction-set (ref (set new-rsts)))]
+        new-ind (new-indefinite {:name (symbol (str "ind" (ind-counter)))
+                                 :var-label (:var-label ind)
+                                 :msgs (create-message-structure :csneps.core/Indefinite nil)
+                                 :restriction-set (ref (set new-rsts))})]
     (inc-ind-counter)
     (instantiate-sem-type (:name new-ind) (semantic-type-of ind))
     new-ind))

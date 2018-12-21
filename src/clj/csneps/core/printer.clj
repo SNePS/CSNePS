@@ -7,7 +7,8 @@
   (:require [clojure.string :as str]
             [csneps.core.contexts :as ct]
             [csneps.core :as csneps]
-            [csneps.core.caseframes :as cf])
+            [csneps.core.caseframes :as cf]
+            [csneps.core.relations :as slot])
   (:use [csneps.core :only (type-of)]
         [clojure.pprint :only (cl-format pprint)]
         [csneps.util]
@@ -113,10 +114,27 @@
   [term]
   (print-str (list 'close (map get-var-label (:closed-vars term)) (print-term (first (@csneps/down-cableset term))))))
 
+(defn print-carule
+  [term]
+  (let [dcs (cf/dcsRelationTermsetMap term)
+        rulename (first (dcs (slot/find-slot 'rulename)))
+        condition (map print-term (dcs (slot/find-slot 'condition)))
+        action @(:print-forms term)
+        subrules (map print-term (dcs (slot/find-slot 'subrule)))]
+    (print-str (list (if (str/includes? rulename "subrule")
+                       :subrule
+                       (print-str 'defrule rulename))
+                     (str/join " " condition)
+                     '=> 
+                     action
+                     (str/join " " subrules)))))
+
 (defn print-unnamed-molecular-term
   [term]
   ;(println "Printing term: " term)
   (condp = (type-of term)
+    :csneps.core/CARule
+      (print-carule term)
     :csneps.core/Closure
       (print-closure term)
     :csneps.core/Negation
