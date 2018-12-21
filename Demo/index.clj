@@ -23,17 +23,17 @@
 
 (in-ns 'csneps.demo)
 
-(def demoindex [["Basic - Demonstration of basic CSNePS functionality." "basic-demo.sneps"],
+(def demoindex [["Demonstration of basic CSNePS functionality." "basic-demo.sneps"],
                 ["Example of function-valued functions." "refcl.sneps"],
-                ["Chng - Demonstration of contextually determining, and changing semantic types." "changedemo.sneps"],
-                ["Demonstration of Sort-based inference" "sort-based-derivable.sneps"],
-                ["Demonstration of Path-based inference" "pb-inference.sneps"],
-                ["Demonstration of Natural Deduction" "natural-deduction-derivable.sneps"],
-                ["Demonstration of Natural Deduction with xor" "xor.sneps"],
-                ["Demonstration of Andor and Thresh Introduction" "andor.sneps"],
-                ["Demonstration of Thresh Elimination" "threshelim.sneps"],
-                ["Demonstration of Equivalence Elimination and Introduction" "equivalence.sneps"],
-                ["Demonstration of combined Slot-Based Inference and And Elimination" "inferdemo.sneps"],
+                ["Demonstration of contextually determining, and changing semantic types." "changedemo.sneps"],
+                ["Demonstration of sort-based inference" "sort-based-derivable.sneps"],
+                ["Demonstration of path-based inference" "pb-inference.sneps"],
+                ["Demonstration of natural deduction" "natural-deduction-derivable.sneps"],
+                ["Demonstration of natural deduction with xor" "xor.sneps"],
+                ["Demonstration of andor and thresh introduction" "andor.sneps"],
+                ["Demonstration of thresh elimination" "threshelim.sneps"],
+                ["Demonstration of equivalence elimination and introduction" "equivalence.sneps"],
+                ["Demonstration of combined slot-based inference and and elimination" "inferdemo.sneps"],
                 ["Using Slot-Based Inference to derive rules" "sbConnectives.sneps"],
                 ["Cutting Infinite Recursion" "recursion.sneps"],
                 ["Negation by Failure" "negbyfail.sneps"],
@@ -43,5 +43,6 @@
                 ["Demonstration of condition-action rules." "condact-rules.sneps"]
                 ["Demonstration of focused inference." "focusedinfer.sneps"]
                 ["Demonstration of inference using generics." "genericinfer.sneps"]
-                ["Demonstration of subsumption inference." "subsumption.sneps"]])
+                ["Demonstration of subsumption inference." "subsumption.sneps"]
+                ["Demonstration of production rules." "production-rules.sneps"]])
                 

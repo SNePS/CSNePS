@@ -55,17 +55,17 @@
 
 (assert! '(Isa (every x (Isa x Wheat)) Grain))
 
-Since wft2!: (Isa (every x (Isa x Grain)) Plant) 
-  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
-I derived: wft21!: (Isa (every x (Isa x Wheat)) Plant) by generic-instantiation.
+;Since wft2!: (Isa (every x (Isa x Grain)) Plant) 
+;  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
+;I derived: wft21!: (Isa (every x (Isa x Wheat)) Plant) by generic-instantiation.
 
-Since wft4!: (eats (every x (Isa x Bird)) (every x (Isa x Grain)))
-  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
-I derived: wft22!: (eats (every x (Isa x Bird)) (every x (Isa x Wheat))) by generic-instantiation.
+;Since wft4!: (eats (every x (Isa x Bird)) (every x (Isa x Grain)))
+;  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
+;I derived: wft22!: (eats (every x (Isa x Bird)) (every x (Isa x Wheat))) by generic-instantiation.
 
-Since wft7!: (eats (every x (Isa x Cow)) (every y (Isa y Plant)))
-  and wft21!: (Isa (every x (Isa x Wheat)) Plant)
-I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by generic-instantiation.
+;Since wft7!: (eats (every x (Isa x Cow)) (every y (Isa y Plant)))
+;  and wft21!: (Isa (every x (Isa x Wheat)) Plant)
+;I derived: wft24!: (eats (every x (Isa x Cow)) (every x (Isa x Wheat))) by generic-instantiation.
 
 
 
