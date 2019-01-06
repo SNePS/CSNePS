@@ -728,7 +728,7 @@
               (when (and (not ((:flaggedns neg-match) (:destination u)))
                          (not (negated? (:destination u)))
                          (or (build/valve-open? u) (build/pass-message? u der-msg)))
-                (send screenprinter (fn [_] (print-proof-step (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst neg-match)))
+                (send screenprinter (fn [_] (print-proof-step (build/build (build/apply-sub-to-term (:destination u) (:subst neg-match))
                                                                            :Proposition {} #{})
                                                               (:support-set neg-match)
                                                               node
@@ -864,7 +864,7 @@
         (let [der-msgs (into {} (map #(vector % (derivative-message %
                                                                    :origin node 
                                                                    :type 'U-INFER 
-                                                                   :u-true? false 
+                                                                   :u-true? false
                                                                    :flaggedns {node true}
                                                                    :support-set (os-union (:support-set %) (@support node))
                                                                    :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
