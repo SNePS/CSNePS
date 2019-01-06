@@ -813,7 +813,7 @@
               [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))])))))))
   
 (defn thresh-elimination
-  "Thesh is true if less than min or more than max."
+  "Thresh is true if less than min or more than max."
   [message node new-msgs]
   (let [totparam (totparam node)
         ;; Case 1: There are >= minimum true. Therefore > maximum must be true. 
@@ -851,7 +851,7 @@
                                                             (str (or 
                                                                    (build/syntype-fsym-map (syntactic-type-of node))
                                                                    "thresh")                                                               
-                                                                 "-elimination"))))))
+                                                                 "-elimination (1)"))))))
           
           (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))} false)
           
@@ -864,7 +864,7 @@
         (let [der-msgs (into {} (map #(vector % (derivative-message %
                                                                    :origin node 
                                                                    :type 'U-INFER 
-                                                                   :u-true? true 
+                                                                   :u-true? false 
                                                                    :flaggedns {node true}
                                                                    :support-set (os-union (:support-set %) (@support node))
                                                                    :fwd-infer? (when (or (:fwd-infer? message) (seq (@future-fw-infer node))) true)
@@ -883,7 +883,7 @@
                                                             (str (or 
                                                                    (build/syntype-fsym-map (syntactic-type-of node))
                                                                    "thresh")                                                               
-                                                                 "-elimination"))))))
+                                                                 "-elimination (2)"))))))
           
           (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))} false)
           
