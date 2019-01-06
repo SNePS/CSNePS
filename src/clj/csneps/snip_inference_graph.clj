@@ -876,7 +876,8 @@
                     u (@u-channels node)
                     :when (and (not ((:flaggedns less-than-max-true-match) (:destination u)))
                                (build/pass-message? u der-msg))
-                    :let [result-term (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match))]]
+                    :let [result-term (build/build (list 'not (build/apply-sub-to-term (:destination u) (:subst less-than-max-true-match)))
+                                                   :Proposition {} #{})]]
               (send screenprinter (fn [_] (print-proof-step result-term 
                                                             (:support-set less-than-max-true-match)
                                                             node
