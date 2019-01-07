@@ -676,7 +676,7 @@
     (print-debug :rui #{node} (print-str "NEW RUI: Andor Elimination" new-ruis "at" node))
     ;(send screenprinter (fn [_]  (println "Pos" pos-matches) (println "Neg" neg-matches)))
     
-    (merge 
+    (concat
       (when (seq pos-matches)
         (let [der-msgs (into {} (map #(vector % (derivative-message %
                                                                     :origin node 
@@ -705,11 +705,11 @@
 
         (add-matched-and-sent-messages (@msgs node) (set pos-matches) {:u-channel (set (vals der-msgs))} false)
                 
-        (into {} (for [[pos-match der-msg] der-msgs
-                       u (@u-channels node)
-                       :when (and (nil? ((:flaggedns pos-match) (:destination u)))
-                                  (not (negated? (:destination u))))]
-                   [u der-msg]))))
+        (for [[pos-match der-msg] der-msgs
+              u (@u-channels node)
+              :when (and (nil? ((:flaggedns pos-match) (:destination u)))
+                         (not (negated? (:destination u))))]
+          [u der-msg])))
       
       (when (seq neg-matches)
         (let [der-msgs (into {} (map #(vector % (derivative-message %
@@ -739,11 +739,11 @@
 
         (add-matched-and-sent-messages (@msgs node) (set neg-matches) {:u-channel (set (vals der-msgs))} false)
                 
-        (into {} (for [[neg-match der-msg] der-msgs
-                       u (@u-channels node)
-                       :when (and (nil? ((:flaggedns neg-match) (:destination u)))
-                                  (not (negated? (:destination u))))]
-                   [u der-msg])))))))
+        (for [[neg-match der-msg] der-msgs
+              u (@u-channels node)
+              :when (and (nil? ((:flaggedns neg-match) (:destination u)))
+                         (not (negated? (:destination u))))]
+                   [u der-msg]))))))
 
 ;     Inference can terminate
 ;        as soon as one of the following is determined to hold:
@@ -827,7 +827,7 @@
         less-than-max-true-match (filter #(and (>= (:neg %) (- totparam (:max node)))
                                                (= (:pos %) (dec (:min node))))
                                           new-msgs)]
-    (merge
+    (concat
       (when (seq more-than-min-true-match)
         (let [der-msgs (into {} (map #(vector % (derivative-message %
                                                                    :origin node 
@@ -855,10 +855,10 @@
           
           (add-matched-and-sent-messages (@msgs node) (set more-than-min-true-match) {:u-channel (set (vals der-msgs))} false)
           
-          (into {} (for [[more-than-min-true-match der-msg] der-msgs
-                         u (@u-channels node)
-                         :when (not ((:flaggedns more-than-min-true-match) (:destination u)))]
-                     [u der-msg]))))
+          (for [[more-than-min-true-match der-msg] der-msgs
+                u (@u-channels node)
+                :when (not ((:flaggedns more-than-min-true-match) (:destination u)))]
+            [u der-msg])))
       
       (when (seq less-than-max-true-match)
         (let [der-msgs (into {} (map #(vector % (derivative-message %
@@ -888,10 +888,10 @@
           
           (add-matched-and-sent-messages (@msgs node) (set less-than-max-true-match) {:u-channel (set (vals der-msgs))} false)
           
-          (into {} (for [[less-than-max-true-match der-msg] der-msgs
-                         u (@u-channels node)
-                         :when (not ((:flaggedns less-than-max-true-match) (:destination u)))]
-                     [u der-msg])))))))
+          (for [[less-than-max-true-match der-msg] der-msgs
+                u (@u-channels node)
+                :when (not ((:flaggedns less-than-max-true-match) (:destination u)))]
+            [u der-msg]))))))
 
 (defn g-chan-to-node?
   [orig dest]
