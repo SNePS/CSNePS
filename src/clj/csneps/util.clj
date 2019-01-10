@@ -326,7 +326,7 @@
 	     ~expr)))))
 
 (defmacro setAnd
-  "Returns true if each expression evalulates to a 
+  "Returns true if each expression evaluates to a
    non-empty set. Otherwise, false."
   [& setexprs] 
   (if (empty? setexprs)
@@ -335,6 +335,43 @@
        (if (empty? expr#)
          false
          (setAnd ~@(rest setexprs))))))
+
+(defmacro setWhen
+  "If expr evaluates to a non-empty set or a non-nil value,
+      or a non-false value, then the forms are evaluated;
+   otherwise the forms are not evaluated.
+   Returns the value of the last form evaluated."
+  [expr & forms]
+  `(let [exprval# ~expr]
+     (when-not (or (and (set? exprval#) (empty? exprval#))
+                   (nil? exprval#)
+                   (false? exprval#))
+       ~@forms)))
+
+(defmacro setWhenNot
+  "If expr evaluates to an empty set or to nil or to false,
+      then the forms are evaluated;
+   otherwise the forms are not evaluated.
+   Returns the value of the last form evaluated."
+  [expr & forms]
+  `(let [exprval# ~expr]
+     (when (or (and (set? exprval#) (empty? exprval#))
+                   (nil? exprval#)
+                   (false? exprval#))
+       ~@forms)))
+
+(defmacro setIf
+  "If expr evaluates to a non-empty set or a non-nil or non-false value
+      then the first form is evaluated;
+   otherwise the second form is evalulated.
+   Returns the value of the last form evaluated."
+  [expr ifform elseform]
+  `(let [exprval# ~expr]
+     (if (or (and (set? exprval#) (empty? exprval#))
+                   (nil? exprval#)
+                   (false? exprval#))
+       ~elseform
+       ~ifform)))
          
 (defn cons?
   [expr]
