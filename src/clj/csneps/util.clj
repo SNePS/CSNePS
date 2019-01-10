@@ -372,6 +372,21 @@
                    (false? exprval#))
        ~elseform
        ~ifform)))
+
+(defmacro setCond
+  "Adapted from clojure.core, takes a set of test/expr pairs. It evaluates
+   each test one at a time.  If a test returns logical a non-empty set or
+   logical true for a non-set, cond evaluates and returns
+   the value of the corresponding expr and doesn't evaluate any of the
+   other tests or exprs. (setCond) returns nil."
+  [& clauses]
+  (when clauses
+    (list 'setIf (first clauses)
+          (if (next clauses)
+            (second clauses)
+            (throw (IllegalArgumentException.
+                     "setCond requires an even number of forms")))
+          (cons 'csneps.util/setCond (next (next clauses))))))
          
 (defn cons?
   [expr]
