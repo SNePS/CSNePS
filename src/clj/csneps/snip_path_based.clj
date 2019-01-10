@@ -163,12 +163,12 @@
                  (let [th (third path)
                        comp (build-path-fn (second path))]
                    (fn [x] (loop [terms x
-                                  result nil]
-                             (if (nil? terms) 
+                                  result #{}]
+                             (if (or (empty? terms) (nil? terms))
                                result
                                (let [mov (memberOrVar th (comp (hash-set (first terms))))]
                                  (recur (rest terms)
-                                        (if mov (conj result mov) result))))))))
+                                        (if mov (conj result (first terms)) result))))))))
       :else (error (str "Unrecognized path expression operator: " (first path))))
     (if (= '! path); handle asserted
       #(asserted-members % (ct/currentContext))
