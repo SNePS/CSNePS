@@ -9,11 +9,13 @@
   ;(println "finding asserted" termset ctx)
   (loop
     [ts termset
-     result nil]
+     result #{}]
     (cond
       (empty? ts) result
-      (ct/asserted? (first ts) ctx) (recur (rest ts) (conj result (first ts)))
-      :else (recur (rest ts) result))))
+      (ct/asserted? (first ts) ctx) (recur (rest ts)
+                                           (conj result (first ts)))
+      :else (recur (rest ts)
+                   result))))
 
 (defn pb-findfroms
   "Returns the set of nodes
@@ -45,13 +47,13 @@
     to one or more of the input nodes"
   [nodes slotname]
   (loop [nodeset nodes
-         result nil]
+         result #{}]
     (if (empty? nodeset)
       result
       (let [n     (first nodeset)
             froms (find-utils/findfrom n slotname)]
         (if (seq froms)
-          (recur (rest nodeset) (concat result froms))
+          (recur (rest nodeset) (union result froms))
           (recur (rest nodeset) result))))))
 
 (defn get-tos
@@ -60,13 +62,13 @@
     from one or more of the input nodes"
   [nodes slotname]
   (loop [nodeset nodes
-         result nil]
+         result #{}]
     (if (empty? nodeset)
       result
       (let [n   (first nodeset)
             tos (find-utils/findto n slotname)]
         (if (seq tos)
-          (recur (rest nodeset) (concat result tos))
+          (recur (rest nodeset) (union result tos))
           (recur (rest nodeset) result))))))
 
 (defn path-keyword?
