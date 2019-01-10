@@ -196,6 +196,7 @@
   (let [termset (cond
                   (set? terms) terms
                   (nil? terms) #{}
+                  (term? terms) #{terms}
                   (symbol? terms) #{(get-term terms)}
                   (seq? terms) (set (map #(get-term %) terms)))
         builtpath (build-path-fn path)]
