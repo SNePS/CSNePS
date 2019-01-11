@@ -8,7 +8,9 @@
             [csneps.core.build :as build]
             [csneps.snip :as snip]
             [csneps.gui :as gui]
-            [csneps.utils.ontology :as onto-tools])
+            [csneps.utils.ontology :as onto-tools]
+            [clojure.tools.cli :refer [parse-opts]]
+            [reply.main])
   (:use clojure.stacktrace)
   (:refer-clojure :exclude [+ - * / < <= > >= == not= assert find load exit quit])
   (:use [clojure.pprint :only (cl-format)]
@@ -16,7 +18,7 @@
         [clojure.walk]
         [csneps.core.caseframes :only (list-caseframes sameFrame description)]
         [csneps.demo :only (demo)]
-        [clojure.set :only (union)]
+        [clojure.set :only (union difference)]
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
         [csneps.core.build :only (find *PRECISION* defrule unassert rewrite-propositional-expr)]
@@ -235,6 +237,14 @@
   [b]
   (dosync (ref-set build/KRNovice b)))
 
+(defn goaltrace
+  []
+  (reset! snip/goaltrace true))
+
+(defn nogoaltrace
+  []
+  (reset! snip/goaltrace false))
+
 (defn startGUI
   ([] (gui/startGUI))
   ([termset] (gui/startGUI termset)))
@@ -255,10 +265,18 @@
 (clojure.core/load "/csneps/test/benchmark")
 (clojure.core/load "/csneps/test/mapper_benchmark")
 
-(clearkb true)
+(def cli-options
+  ;; An option with a required argument
+  [["-c" "--cli"] ;; Use CLI (if nil, use GUI)
+   ["-h" "--help"]]) ;; Help
 
 (defn -main [& args]
-  (set! *print-length* 40)
-  (set! *print-level* 4)
-  (gui/startGUI))
+  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)]
+    (when (:help options)
+      (println summary)
+      (System/exit 0))
+    (clearkb true)
+    (if (:cli options)
+      (reply.main/launch {:custom-eval '(in-ns 'csneps.core.snuser)})
+      (gui/startGUI))))
 

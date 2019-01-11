@@ -189,7 +189,7 @@
   (if (isa? (type-of target) :csneps.core/Molecular) 
     (do 
 	    ;;Look at the terms stored in the target's caseframe
-	    (when GOALTRACE 
+	    (when @goaltrace
 	      (cl-format true "~&I will consider using Slot&Path-Based inference.~%"))
 	    (or 
 	      (loop 

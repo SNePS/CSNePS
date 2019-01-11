@@ -31,25 +31,3 @@
           (assertTrace nil nil p "Sort-Based inference" context)
           #{p})
         #{}))))
-
-
-
-
-
-
-
-
-;  (unless (typep p 'sneps:categorization)
-;    (return-from sort-based-derivable set:*emptyset*))
-;  (when *GOALTRACE*
-;    (format *trace-output* "~&I will consider using Sort-Based inference.~%"))
-;  (set:loopset for member in (sneps3:findto p 'member)
-;	       do(set:loopset for class in (sneps3:findto p 'class)
-;			      unless (and (sneps:semantic-type-p
-;					   (sneps::name class))
-;					  (typep member (sneps::name class)))
-;			      do(return-from sort-based-derivable
-;				  set:*emptyset*)))
-;  (assertTrace nil nil p "Sort-Based inference" context)
-;  (set::new-set :items (list p))
-;  )

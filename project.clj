@@ -26,11 +26,14 @@
                  [org.freehep/freehep-graphicsio-ps "2.4"]
                  [org.freehep/freehep-graphicsio-svg "2.4"]
                  [org.freehep/freehep-graphicsio-swf "2.4"]
-                 [jpedal/jpedal "4.45-b-105"]
+                 [org.jpedal/jpedal-lgpl "4.74b27"]
                  [org.swinglabs/swingx "1.6.1"]
-                 [net.xeon/jspf.core "1.0.2"]]
+                 [net.xeon/jspf.core "1.0.2"]
+                 [org.clojure/tools.cli "0.4.1"]
+                 [reply/reply "0.4.3"]]
   :dev [[org.clojure/tools.namespace "0.2.4"]]
   :repositories {"FreeHEP" "http://java.freehep.org/maven2"
+                 "mvnrepo" "https://mvnrepository.com"
                  "jpedal" "http://maven.geomajas.org"
                  "local" ~(str (.toURI (java.io.File. "local_maven_repo")))}
   :plugins [[lein-swank "1.4.5"]]

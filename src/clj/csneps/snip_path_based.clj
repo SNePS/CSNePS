@@ -3,7 +3,7 @@
 (declare get-tos get-froms build-path-fn)
 
 (defn asserted-members
-  "Given a set of terms, return the set 
+  "Given a set of terms, return the set
     containing only those that are asserted in the given context"
   [termset ctx]
   ;(println "finding asserted" termset ctx)
@@ -209,7 +209,7 @@
       return a singleton set of that proposition;
    else return the empty set."
   [p context]
-  (when GOALTRACE
+  (when @goaltrace
     (cl-format true "~&I will consider using Path-Based inference.~%"))
   (if (isa? (type-of p) :csneps.core/Molecular)
     (let [dcs (:down-cableset p)

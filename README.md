@@ -3,9 +3,23 @@ CSNePS - Concurrent SNePS
 
 CSNePS is an implementation (and extension of) of the <a href="http://www.cse.buffalo.edu/sneps/Projects/sneps3.html">SNePS 3</a> knowledge representation and reasoning system specification. CSNePS is written in the Clojure programming language, and is designed to utilize concurrency during inference. 
 
-While CSNePS is still under heavy development, the version available here should be usable. There is some documentation (including setup instructions) provided in the manual.pdf file in the doc folder,  but most documentation is currently in the form of papers written about SNePS 3 and portions of CSNePS. 
+## Running CSNePS
 
-If you intend to use CSNePS it is best to first aquiant yourself with the SNePS 3 specification: 
+CSNePS should be run using [Leiningen](https://leiningen.org/) for the best experience. Once you've installed Leiningen you can run CSnePS by changing into the CSNePS directory and typing either:
+
+```lein run```
+
+to launch CSNePS with its GUI, or 
+
+```lein run -c```
+
+to launch the command line interface for CSNePS.
+
+## Further Documentation
+
+While CSNePS is still under heavy development, the version available here should be usable. There is some documentation provided in the manual.pdf file in the doc folder,  but most documentation is currently in the form of papers written about SNePS 3 and portions of CSNePS. 
+
+If you intend to use CSNePS it is best to first acquaint yourself with the SNePS 3 specification: 
 
 Stuart C. Shapiro, <A
 HREF="http://www.cse.buffalo.edu/~shapiro/Papers/sneps3intro.pdf">An Introduction to SNePS 3</A>.

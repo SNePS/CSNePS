@@ -23,13 +23,15 @@
 
 (declare assertTrace askif)
 
-(defvar TRACE nil
-  "If non-nil, inference will be traced when rules fire.")
+(def trace
+  "If non-nil, inference will be traced when rules fire."
+  (atom nil))
 
-(defvar GOALTRACE true
+(def goaltrace
   "If non-nil, inference will be traced
-             when (sub)goals are generated,
-             and when (sub)goals are found asserted in the KB.")
+     when (sub)goals are generated,
+       and when (sub)goals are found asserted in the KB."
+  (atom true))
 
 (load "snip_sort_based")
 (load "snip_path_based")
@@ -47,11 +49,11 @@
            that this goal is a subgoal of.."
   [prop context termstack]
   (let [p (build/build prop :Proposition {} #{})]
-    (when GOALTRACE (cl-format true "~&I wonder if ~S~%" p))
+    (when @goaltrace (cl-format true "~&I wonder if ~S~%" p))
     (cond
       (ct/asserted? p context)
       (do
-        (when GOALTRACE (cl-format true "~&I know that ~S~%" p))
+        (when @goaltrace (cl-format true "~&I know that ~S~%" p))
         #{p})
       :else
       (setOr

@@ -6,5 +6,5 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # Change into that dir.
 cd "$DIR"
 
-# Start the leiningen REPL.
-lein repl
+# Run the project with the -c argument (for CLI)
+lein run -c
