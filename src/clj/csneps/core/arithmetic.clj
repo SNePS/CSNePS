@@ -15,11 +15,14 @@
    else throw an error."
   [term]
   (if (number? term)
-      term
-    (let [n (ignore-errors (read-string (str (:name term))))]
-      (if (number? n)
-        n
-        (error (str term " does not look like a number."))))))
+    term
+    (let [read-term (read-string (str term))]
+      (if (number? read-term)
+        read-term
+        (let [n (ignore-errors (read-string (str (:name term))))]
+          (if (number? n)
+            n
+            (error (str term " does not look like a number."))))))))
 
 (defn +
   "Returns a term whose name looks like the sum of the numbs,

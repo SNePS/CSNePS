@@ -168,7 +168,8 @@
 
 (defn find-term
   [term]
-  (csneps/get-term (symbol term)))
+  ;; Cast to a string before a symbol since numbers cannot be converted directly to symbols.
+  (csneps/get-term (symbol (str term))))
 
 (defn list-focused-inference-tasks
   []
