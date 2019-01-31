@@ -352,9 +352,10 @@ public class Model {
 		for(int i = 0; i < dcs.size(); i++){
 			List terms = (List)((APersistentSet)dcs.get(i)).seq();
 			HashSet<Term> termset = new HashSet<Term>();
-			for(int j = 0; j < terms.size(); j++){
-				termset.add(Term.create((IPersistentMap)terms.get(j)));
-			}
+			if(terms != null) // If a slot is unfilled, when terms is turned to a seq it will be null.
+				for(int j = 0; j < terms.size(); j++){
+					termset.add(Term.create((IPersistentMap)terms.get(j)));
+				}
 			downcableset.put(termslots.get(i), termset);
 		}
     	
