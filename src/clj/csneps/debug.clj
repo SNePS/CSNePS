@@ -27,6 +27,8 @@
      (set-debug-features ~@features)
      (set-debug-nodes ~@nodes)))
 
+(defn debug? [] (not (empty? @debug-features)))
+
 (defn print-debug
   "Prints the message if any item from features is in debug-features, and 
    if any of: any item in nodes is in debug-nodes or debug-nodes is empty 

@@ -93,24 +93,24 @@
 
 (defn submit-to-channel
   [^csneps.core.build.Channel channel ^csneps.snip.Message message]
-  (print-debug :msgtx #{(:originator channel) (:destination channel)} (print-str "MSGTX: " message "\n -- on channel" channel))
+  (when (debug?) (print-debug :msgtx #{(:originator channel) (:destination channel)} (print-str "MSGTX: " message "\n -- on channel" channel)))
   ;; Filter
-  (print-debug :filter #{(:originator channel) (:destination channel)} (print-str "FILTER: " ((:filter-fn channel) (:subst message)) "\n -- in channel" channel))
+  (when (debug?) (print-debug :filter #{(:originator channel) (:destination channel)} (print-str "FILTER: " ((:filter-fn channel) (:subst message)) "\n -- in channel" channel)))
   (when ((:filter-fn channel) (:subst message))
     ;; Switch
-    (print-debug :switch #{(:originator channel) (:destination channel)} (print-str "SWITCH: " ((:switch-fn channel) (:subst message)) "\n -- in channel" channel))
+    (when (debug?) (print-debug :switch #{(:originator channel) (:destination channel)} (print-str "SWITCH: " ((:switch-fn channel) (:subst message)) "\n -- in channel" channel)))
     (let [message (derivative-message message :subst ((:switch-fn channel) (:subst message)))]
       ;; Previously the above cleaned the unused substitutions. I think this is a bad idea, since in cases
       ;; of embedded arbs, the "extra" substitutions matter for determining a match!
       ;; Old code did: (build/clean-subst ((:switch-fn channel) (:subst message)) channel))]
-      (print-debug :valveselect #{(:originator channel) (:destination channel)} (print-str "VS: " (build/pass-message? channel message) "\n -- for message" message" \n   -- in channel" channel))
+      (when (debug?) (print-debug :valveselect #{(:originator channel) (:destination channel)} (print-str "VS: " (build/pass-message? channel message) "\n -- for message" message" \n   -- in channel" channel)))
       (if (build/pass-message? channel message)
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
         (do 
           (when (@infer-status (:taskid message))
             (.increment ^CountingLatch (@infer-status (:taskid message))))
-          (print-debug :msgrx #{(:originator channel) (:destination channel)} (print-str "MSGRX: " message "\n -- on channel" channel))
+          (when (debug?) (print-debug :msgrx #{(:originator channel) (:destination channel)} (print-str "MSGRX: " message "\n -- on channel" channel)))
           (.execute ^ThreadPoolExecutor executorService 
             (priority-partial 1 initiate-node-task (:destination channel) message)))
         ;; Cache in the waiting-msgs
