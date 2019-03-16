@@ -1465,9 +1465,9 @@
     (doseq [i (@i-channels (second x))]
       (print-channel-status i "I" open))
     (doseq [u (@u-channels (second x))]
-      (print-channel-status u "I" open))
+      (print-channel-status u "U" open))
     (doseq [g (@g-channels (second x))]
-      (print-channel-status g "I" open))))
+      (print-channel-status g "G" open))))
 
 (defn print-waiting-msgs 
   ([term] (doseq [i (union (@ant-in-channels term) (@semtype-in-channels term))]
