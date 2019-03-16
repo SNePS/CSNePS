@@ -308,43 +308,49 @@
                                 subst
                                 ct
                                 taskid))))))
-    
-    ;; Propogate backward-infer messages.
-    (doseq [ch (union (@ant-in-channels term) (@semtype-in-channels term) {})]
-      (when (and (not (visited term)))
-;                 (if-let [oppositech (build/find-channel (:destination ch) (:originator ch))]
-;                   (not (visited (:originator ch)))
-;                   true))
-                 
-                 ;(not (visited (:originator ch))))
-                 ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
-                 ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
-        (print-debug :bw #{(:originator ch) (:destination ch)} (print-str "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))
-        (let [subst (add-valve-selector ch subst context taskid)]
-          ;; Semtype channels won't have an originator, so no need to propogate backward.
-          (when (:originator ch)
-	          (when subst ;; Will be nil if this is an old VS.
-	            (if (and taskid
-	                     (@infer-status taskid))
-	              (when taskid (.increment ^CountingLatch (@infer-status taskid)))
-	              (send screenprinter (fn [_]  
-	                                    (println) 
-	                                    (println "Warning: No taskid during backward infer on" ch) 
-	                                    (println "This may indicate a bug or race condition in the inference graph.")
-	                                    (println))))
-              (.execute ^ThreadPoolExecutor executorService 
-                    (priority-partial depth 
-                                      (fn [t d v i s c id] 
-                                        (backward-infer t d v i s c id) 
-                                        ;(send screenprinter (fn [_]  (println "dec-bwi" id))) 
-                                        (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
-                                      (:originator ch)
-                                      (dec depth)
-                                      (conj visited term)
-                                      invoketermset
-                                      subst
-                                      context
-                                      taskid)))))))))
+
+    ;; If term is not generic, and believed in the current context, we should not try to
+    ;; derive it again.
+    (when-not (and
+                (not (build/generic-term? term))
+                (not (carule? term))
+                (ct/asserted? term context))
+      ;; Propogate backward-infer messages.
+      (doseq [ch (union (@ant-in-channels term) (@semtype-in-channels term) {})]
+        (when (and (not (visited term)))
+  ;                 (if-let [oppositech (build/find-channel (:destination ch) (:originator ch))]
+  ;                   (not (visited (:originator ch)))
+  ;                   true))
+
+                   ;(not (visited (:originator ch))))
+                   ;(not (subset? invoketermset @(:future-bw-infer (:originator ch)))))
+                   ;(not= (union @(:future-bw-infer (:originator ch)) invoketermset) @(:future-bw-infer (:originator ch))))
+          (print-debug :bw #{(:originator ch) (:destination ch)} (print-str "BW: Backward Infer -" depth "- opening channel from" (:originator ch) "to" term "(task" taskid")"))
+          (let [subst (add-valve-selector ch subst context taskid)]
+            ;; Semtype channels won't have an originator, so no need to propogate backward.
+            (when (:originator ch)
+              (when subst ;; Will be nil if this is an old VS.
+                (if (and taskid
+                         (@infer-status taskid))
+                  (when taskid (.increment ^CountingLatch (@infer-status taskid)))
+                  (send screenprinter (fn [_]
+                                        (println)
+                                        (println "Warning: No taskid during backward infer on" ch)
+                                        (println "This may indicate a bug or race condition in the inference graph.")
+                                        (println))))
+                (.execute ^ThreadPoolExecutor executorService
+                      (priority-partial depth
+                                        (fn [t d v i s c id]
+                                          (backward-infer t d v i s c id)
+                                          ;(send screenprinter (fn [_]  (println "dec-bwi" id)))
+                                          (when (@infer-status id) (.decrement ^CountingLatch (@infer-status id))))
+                                        (:originator ch)
+                                        (dec depth)
+                                        (conj visited term)
+                                        invoketermset
+                                        subst
+                                        context
+                                        taskid))))))))))
 
 (defn cancel-infer
   "Same idea as backward-infer, except it closes valves. Cancelling inference
