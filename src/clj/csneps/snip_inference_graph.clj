@@ -1443,16 +1443,31 @@
       (seq selectors-this-ct) (str "~" (print-str (map #(first %) selectors-this-ct)) "~")
       :else "/")))
 
-(defn ig-status []
+(defn open-valve? [ch]
+  (let [selectors-this-ct (filter #(clojure.set/subset? @(:hyps (ct/find-context (second %))) @(:hyps (ct/currentContext))) @(:valve-selectors ch))]
+    (or @(:valve-open ch) (seq selectors-this-ct))))
+
+(defn print-channel-status [ch name open-only?]
+  (when
+    (or
+      (not open-only?)
+      (and open-only? (open-valve? ch)))
+    (println (:originator ch) (str "-" name "-") (count @(:waiting-msgs ch)) (print-valve ch) "->" (:destination ch))))
+
+(defn ig-status [& {:keys [open]}]
   (doseq [x (sort-by first @csneps.core/TERMS)]
     (doseq [s (@semtype-in-channels (second x))]
-      (println "X [semtype] -I-" (count @(:waiting-msgs s)) (print-valve s) "->" (:destination s)))
+      (when
+        (or
+          (not open)
+          (and open (open-valve? s)))
+        (println "X [semtype] -I-" (count @(:waiting-msgs s)) (print-valve s) "->" (:destination s))))
     (doseq [i (@i-channels (second x))]
-      (println (:originator i) "-I-" (count @(:waiting-msgs i)) (print-valve i) "->" (:destination i)))
+      (print-channel-status i "I" open))
     (doseq [u (@u-channels (second x))]
-      (println (:originator u) "-U-" (count @(:waiting-msgs u)) (print-valve u) "->" (:destination u)))
+      (print-channel-status u "I" open))
     (doseq [g (@g-channels (second x))]
-      (println (:originator g) "-G-" (count @(:waiting-msgs g)) (print-valve g) "->" (:destination g)))))
+      (print-channel-status g "I" open))))
 
 (defn print-waiting-msgs 
   ([term] (doseq [i (union (@ant-in-channels term) (@semtype-in-channels term))]
