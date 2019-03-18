@@ -42,50 +42,44 @@
         (.await ^CountingLatch (@snip/infer-status taskid)))
       (error "Rule " rule-name " does not exist."))))
 
-;(defn adopt-rules
-;  "Takes a list of symbolic rule names to be adopted in order, one after the other.
-;   Rows may take the form of a single rule name, or a vector of rule names. A vector
-;   of rule names will be adopted simultaneously."
-;  [order]
-;  (doseq [row order]
-;    (if (vector? row)
-;      (let [tasks (doall (map #(future (adopt-rule %)) row))]
-;        (doall (map deref tasks)))
-;      (adopt-rule row))))
-
-(defn pause-rule []
-  (println "\n--- pause ---\n")
-  (println "\ninput: ")
-  (let [usrinput (read-line)]
-    (case usrinput
-      "" (noop)
-      "c" (do))
-    ))
-
 (defn adopt-rules
   "Takes a list of symbolic rule names to be adopted in order, one after the other.
    Rows may take the form of a single rule name, or a vector of rule names. A vector
-   of rule names will be adopted simultaneously."
+   of rule names will be adopted simultaneously. Optionally pauses before each rule."
   [rules & {:keys [pause] :or {pause false}}]
-  (doseq [row rules]
-    (if (vector? row)
-      (do
-        (if pause
-          (let [tasks (doall (map #(future (adopt-rule %)) row) (pause-rule))])
-
+  (let [keep-pausing (ref pause)
+        continue (ref true)]
+    (doseq [row rules]
+      (when (and @continue @keep-pausing)
+        (loop []
+          (println "\n--- pause ---\n")
+          (println "Next rule: " row)
+          (let [usrinput (read-line)]
+            (case usrinput
+              "" (noop)
+              "c" (dosync (ref-set keep-pausing nil))
+              "q" (dosync (ref-set continue nil))
+              ("?" "h") (do (cl-format true
+                                       "~%The following commands are available at pause points:~
+                                        ~%  h,?            Print this help message~
+                                        ~%  l,^            Enter Clojure read/eval/print loop~
+                                        ~%  c              Continue without pausing~
+                                        ~%  q              Quit the rule adoption~
+                                        ~%  RETURN         Adopt next rule~
+                                        ~%")
+                            (recur))
+              ("l" "^") (do
+                          (println "Rule adoption interrupted. Type exit and press enter to continue.")
+                          (clojure.main/repl :read (fn [request-prompt request-exit]
+                                                     (let [form (clojure.main/repl-read request-prompt request-exit)]
+                                                       (if (= 'exit form) request-exit form))))
+                          (recur))
+              (recur)))))
+      (when @continue
+        (if (vector? row)
           (let [tasks (doall (map #(future (adopt-rule %)) row))]
-            (doall (map deref tasks))
-            )
-          )
-        )
-      (if pause
-        (do
-          (pause-rule)
-          (adopt-rule row)
-          )
+            (doall (map deref tasks))))
         (adopt-rule row)))))
-
-
 
 (defn assert [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
