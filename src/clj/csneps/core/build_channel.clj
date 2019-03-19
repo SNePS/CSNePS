@@ -150,6 +150,7 @@
             (or (= type :i-channel)
                 (= type :g-channel))
             (not (variableTerm? orig))
+            (not (carule? orig))
             (not= (syntactic-type-of orig) :csneps.core/Negation))
       (submit-to-channel ch (new-message {:origin orig
                                           :support-set #{['hyp #{(:name orig)}]}
