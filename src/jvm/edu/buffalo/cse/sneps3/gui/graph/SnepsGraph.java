@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.collections15.Factory;
+//import org.apache.commons.collections15.Factory;
 
+import com.google.common.base.Supplier;
 import edu.buffalo.cse.sneps3.gui.GUI2;
 import edu.buffalo.cse.sneps3.gui.business.Caseframe;
 import edu.uci.ics.jung.graph.AbstractTypedGraph;
@@ -50,9 +51,9 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
      * @param <V> the vertex type for the graph factory
      * @param <E> the edge type for the graph factory
      */
-	public static <V extends ITermNode<E>,E extends IEdge> Factory<DirectedGraph<V,E>> getFactory() {
-		return new Factory<DirectedGraph<V,E>> () {
-			public DirectedGraph<V,E> create() {
+	public static <V extends ITermNode<E>,E extends IEdge> Supplier<DirectedGraph<V,E>> getFactory() {
+		return new Supplier<DirectedGraph<V,E>> () {
+			public DirectedGraph<V,E> get() {
 				return new SnepsGraph<V,E>();
 			}
 		};

@@ -5,16 +5,16 @@
 
 package edu.buffalo.cse.sneps3.gui.graph;
 
+import com.google.common.base.Function;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.util.ArrowFactory;
 import java.awt.Shape;
-import org.apache.commons.collections15.Transformer;
 
 
-public class ArrowShapeTransformer<C, S> implements Transformer<Context<Graph<ITermNode<IEdge>,IEdge>,IEdge>,Shape> {
+public class ArrowShapeTransformer<C, S> implements Function<Context<Graph<ITermNode<IEdge>,IEdge>,IEdge>,Shape> {
 
-    public Shape transform(Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> arg0) {
+    public Shape apply(Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> arg0) {
         IEdge e = arg0.element;
         if(e instanceof CollapsedEdge){
             return ArrowFactory.getWedgeArrow(15, 15);

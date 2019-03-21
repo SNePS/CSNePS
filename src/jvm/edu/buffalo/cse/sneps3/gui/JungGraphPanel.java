@@ -6,6 +6,7 @@
 
 package edu.buffalo.cse.sneps3.gui;
 
+import com.google.common.base.Function;
 import edu.buffalo.cse.sneps3.gui.business.Caseframe;
 import edu.buffalo.cse.sneps3.gui.business.IView;
 import edu.buffalo.cse.sneps3.gui.business.Slot;
@@ -23,10 +24,7 @@ import edu.buffalo.cse.sneps3.gui.graph.TermNode;
 import edu.buffalo.cse.sneps3.gui.graph.Edge;
 import edu.buffalo.cse.sneps3.gui.graph.CollapsedEdge;
 import edu.buffalo.cse.sneps3.gui.graph.DependencyEdge;
-import edu.uci.ics.jung.graph.DelegateForest;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.event.GraphEvent.Vertex;
 import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.graph.util.Pair;
 import edu.uci.ics.jung.visualization.DefaultVisualizationModel;
@@ -70,19 +68,12 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 import java.util.Map.Entry;
 
-import javax.media.j3d.*;
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JToggleButton;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
-import javax.vecmath.Point3d;
-import org.apache.commons.collections15.Transformer;
 
 /**
  * @author Daniel R. Schlegel
@@ -105,8 +96,8 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 	GraphType type = GraphType.FR2d;
 
-	QuadCurve<ITermNode<IEdge>, IEdge> quadcurve = new EdgeShape.QuadCurve<ITermNode<IEdge>, IEdge>();
-	Line<ITermNode<IEdge>, IEdge> line = new EdgeShape.Line<ITermNode<IEdge>, IEdge>();
+	QuadCurve quadcurve;
+	Line line;
 
 	SnepsGraph<ITermNode<IEdge>, IEdge> dsg;
 	VisualizationViewer<ITermNode<IEdge>, IEdge> vv;
@@ -115,7 +106,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	// No idea what i need of these yet.
 	LensSupport hyperbolicViewSupport;
 	LensSupport hyperbolicLayoutSupport;
-
+	
 	SnepsModalGraphMouse<ITermNode<IEdge>, IEdge> graphMouse = new SnepsModalGraphMouse<ITermNode<IEdge>, IEdge>();
 
 	public HashSet<ITermNode<IEdge>> highlightedNodes = new HashSet<ITermNode<IEdge>>();
@@ -156,6 +147,10 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		initComponents();
 
 		dsg = new SnepsGraph<ITermNode<IEdge>, IEdge>();
+
+		quadcurve = EdgeShape.quadCurve(dsg);
+		line = EdgeShape.line(dsg);
+
 		configureGraphViewer();
 		displayGraph(dsg);
 		
@@ -167,9 +162,8 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	}
 
 	public void setFontSize(final int size) {
-		Transformer<ITermNode<IEdge>, Font> vertexFont = new Transformer<ITermNode<IEdge>, Font>() {
-
-			public Font transform(ITermNode<IEdge> i) {
+		Function<ITermNode<IEdge>, Font> vertexFont = new Function<ITermNode<IEdge>, Font>() {
+			public Font apply(ITermNode<IEdge> i) {
 				return new Font(vv.getFont().getName(),
 						vv.getFont().getStyle(), size);
 			}
@@ -208,7 +202,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		vv.setBackground(Color.white);
 
 		vv.getRenderContext().setVertexLabelTransformer(
-				new ToStringLabeller<ITermNode<IEdge>>());
+				new ToStringLabeller());
 		vv.getRenderer().getVertexLabelRenderer()
 				.setPosition(Position.CNTR);
 
@@ -217,23 +211,23 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		if (straightEdges) {
 			vv.getRenderContext()
 					.setEdgeShapeTransformer(
-							new Transformer<Context<Graph<ITermNode<IEdge>, IEdge>, IEdge>, Shape>() {
-								public Shape transform(
-										Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
-									if (i.element instanceof RestrictionEdge || i.element instanceof DependencyEdge) {
-										return quadcurve.transform(i);
+							new Function<IEdge, Shape>() {
+								public Shape apply(IEdge i) {
+										//Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
+									if (i instanceof RestrictionEdge || i instanceof DependencyEdge) {
+										return quadcurve.apply(i);
 									}
 
 									// Check for parallel edges:
-									ITermNode<IEdge> n = i.element.getFrom();
+									ITermNode<IEdge> n = i.getFrom();
 									for (Object j : dsg.getOutEdges(n)) {
 										IEdge e = (IEdge) j;
-										if (e.getTo() == i.element.getTo()
-												&& i.element != e) {
-											return quadcurve.transform(i);
+										if (e.getTo() == i.getTo()
+												&& i != e) {
+											return quadcurve.apply(i);
 										}
 									}
-									return line.transform(i);
+									return line.apply(i);
 								}
 							});
 
@@ -242,9 +236,8 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		}
 
 		vv.getRenderContext().setEdgeStrokeTransformer(
-				new Transformer<IEdge, Stroke>() {
-
-					public Stroke transform(IEdge i) {
+				new Function<IEdge, Stroke>() {
+					public Stroke apply(IEdge i) {
 						if (i instanceof RestrictionEdge || i instanceof DependencyEdge) {
 							return dashStroke;
 						}
@@ -261,9 +254,9 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		// Makes the labels more closely really centered on the line.
 		vv.getRenderContext()
 				.setEdgeLabelClosenessTransformer(
-						new Transformer<edu.uci.ics.jung.graph.util.Context<Graph<ITermNode<IEdge>, IEdge>, IEdge>, Number>() {
+						new Function<edu.uci.ics.jung.graph.util.Context<Graph<ITermNode<IEdge>, IEdge>, IEdge>, Number>() {
 
-							public Number transform(
+							public Number apply(
 									Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
 								return new Double(.5);
 							}
@@ -271,7 +264,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 						});
 
 		vv.getRenderContext().setEdgeLabelTransformer(
-				new ToStringLabeller<IEdge>());
+				new ToStringLabeller());
 
 		vv.getRenderContext().setEdgeArrowTransformer(
 				new ArrowShapeTransformer<Object, Object>());
@@ -279,8 +272,8 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		vv.getRenderContext().setVertexShapeTransformer(
 				new NodeShapeTransformer<Object, Object>());
 
-		Transformer<ITermNode<IEdge>, Paint> vertexPaint = new Transformer<ITermNode<IEdge>, Paint>() {
-			public Paint transform(ITermNode<IEdge> i) {
+		Function<ITermNode<IEdge>, Paint> vertexPaint = new Function<ITermNode<IEdge>, Paint>() {
+			public Paint apply(ITermNode<IEdge> i) {
 
 				PickedState<ITermNode<IEdge>> ps = vv.getPickedVertexState();
 
@@ -352,24 +345,6 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 				this.remove(((BorderLayout) this.getLayout())
 						.getLayoutComponent(BorderLayout.CENTER));
 			add(panel, BorderLayout.CENTER);
-		}
-		// *****3d version*****//
-		if (type == GraphType.FR3d) {
-			edu.uci.ics.jung.algorithms.layout3d.Layout<ITermNode<IEdge>, IEdge> layout3d = new edu.uci.ics.jung.algorithms.layout3d.FRLayout<ITermNode<IEdge>, IEdge>(
-					g);
-			layout3d.setSize(new BoundingSphere(new Point3d(150, 150, 150), 50)); // sets
-																					// the
-																					// initial
-																					// size
-																					// of
-																					// the
-																					// space
-
-			edu.uci.ics.jung.visualization3d.VisualizationViewer<ITermNode<IEdge>, IEdge> vv3d = new edu.uci.ics.jung.visualization3d.VisualizationViewer<ITermNode<IEdge>, IEdge>();
-			vv3d.setGraphLayout(layout3d);
-			vv3d.setPreferredSize(new Dimension(350, 350)); // Sets the viewing
-															// area size
-			add(vv3d, BorderLayout.CENTER);
 		}
 
 		// on_graph_expanded_nodenames = new ArrayList<String>();
@@ -761,7 +736,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	private javax.swing.JToolBar jToolBar1;
 	private javax.swing.JToolBar jToolBar2;
 
-	class NodeShapeTransformer<St, Ss> implements Transformer<ITermNode<IEdge>, Shape> {
+	class NodeShapeTransformer<St, Ss> implements Function<ITermNode<IEdge>, Shape> {
 
 		// private DirectedSparseMultigraph<?, ?> d;
 
@@ -769,7 +744,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		// d = dsg;
 		// }
 
-		public Shape transform(ITermNode<IEdge> arg0) {
+		public Shape apply(ITermNode<IEdge> arg0) {
 			// int width = 13*arg0.toString().length();
 
 			int width = vv.getFontMetrics(vv.getFont()).stringWidth(
@@ -790,7 +765,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 				boolean isSelected, E edge) {
 			return rc.getEdgeLabelRenderer().<E> getEdgeLabelRendererComponent(
 					rc.getScreenDevice(), value,
-					rc.getEdgeFontTransformer().transform(edge), isSelected,
+					rc.getEdgeFontTransformer().apply(edge), isSelected,
 					edge);
 		}
 
@@ -809,18 +784,18 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			Pair<V> endpoints = graph.getEndpoints(e);
 			V v1 = endpoints.getFirst();
 			V v2 = endpoints.getSecond();
-			if (!rc.getEdgeIncludePredicate().evaluate(
+			if (!rc.getEdgeIncludePredicate().apply(
 					Context.<Graph<V, E>, E> getInstance(graph, e)))
 				return;
 
-			if (!rc.getVertexIncludePredicate().evaluate(
+			if (!rc.getVertexIncludePredicate().apply(
 					Context.<Graph<V, E>, V> getInstance(graph, v1))
-					|| !rc.getVertexIncludePredicate().evaluate(
+					|| !rc.getVertexIncludePredicate().apply(
 							Context.<Graph<V, E>, V> getInstance(graph, v2)))
 				return;
 
-			Point2D p1 = layout.transform(v1);
-			Point2D p2 = layout.transform(v2);
+			Point2D p1 = layout.apply(v1);
+			Point2D p2 = layout.apply(v2);
 			p1 = rc.getMultiLayerTransformer().transform(Layer.LAYOUT, p1);
 			p2 = rc.getMultiLayerTransformer().transform(Layer.LAYOUT, p2);
 			float x1 = (float) p1.getX();
@@ -834,7 +809,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			double totalLength = Math.sqrt(distX * distX + distY * distY);
 
 			double closeness = rc.getEdgeLabelClosenessTransformer()
-					.transform(Context.<Graph<V, E>, E> getInstance(graph, e))
+					.apply(Context.<Graph<V, E>, E> getInstance(graph, e))
 					.doubleValue();
 
 			int posX = (int) (x1 + (closeness) * distX);
@@ -849,8 +824,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 			Dimension d = component.getPreferredSize();
 
-			Shape edgeShape = rc.getEdgeShapeTransformer().transform(
-					Context.<Graph<V, E>, E> getInstance(graph, e));
+			Shape edgeShape = rc.getEdgeShapeTransformer().apply(e);
 
 			double parallelOffset = 1;
 

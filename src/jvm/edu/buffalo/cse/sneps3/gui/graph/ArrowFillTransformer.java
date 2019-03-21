@@ -5,18 +5,18 @@
 
 package edu.buffalo.cse.sneps3.gui.graph;
 
+import com.google.common.base.Function;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.graph.util.Context;
 import edu.uci.ics.jung.visualization.util.ArrowFactory;
 import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
-import org.apache.commons.collections15.Transformer;
 
 
-public class ArrowFillTransformer<C, S> implements Transformer<IEdge, Paint> {
+public class ArrowFillTransformer<C, S> implements Function<IEdge, Paint> {
 
-    public Paint transform(IEdge arg0) {
+    public Paint apply(IEdge arg0) {
         return Color.white;
     }
 
