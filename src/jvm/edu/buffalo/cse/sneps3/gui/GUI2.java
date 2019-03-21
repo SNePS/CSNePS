@@ -9,6 +9,7 @@ package edu.buffalo.cse.sneps3.gui;
 
 import edu.buffalo.cse.sneps3.gui.business.FnInterop;
 
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -616,7 +617,7 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu5.setMnemonic('L');
         jMenu5.setText("Load");
 
-        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
         jMenuItem1.setMnemonic('L');
         jMenuItem1.setText("Load to KB");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
@@ -626,7 +627,7 @@ public class GUI2 extends javax.swing.JFrame{
         });
         jMenu5.add(jMenuItem1);
 
-        loadDemo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, java.awt.event.InputEvent.ALT_MASK));
+        loadDemo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, InputEvent.ALT_DOWN_MASK));
         loadDemo.setMnemonic('D');
         loadDemo.setText("Demo");
         loadDemo.addActionListener(new java.awt.event.ActionListener() {
@@ -682,7 +683,7 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu_globablFilter.setMnemonic('G');
         jMenu_globablFilter.setText("Graph");
 
-        jMenuItem9.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.event.InputEvent.CTRL_MASK));
+        jMenuItem9.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK));
         jMenuItem9.setMnemonic('S');
         jMenuItem9.setText("Show In Graph");
         jMenuItem9.addActionListener(new java.awt.event.ActionListener() {

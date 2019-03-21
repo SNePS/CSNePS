@@ -28,8 +28,8 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 
 	//when things are added, removed, shown, or hidden it will make the graph "dirty."
 	private boolean VisibleNodesEdgesDirty;
-	Collection<E> visibleEdges;
-	Collection<V> visibleVertices; 
+	private Collection<E> visibleEdges;
+	private Collection<V> visibleVertices;
 	
 	private HashMap<V, CollapsedEdge> collapsedVertices;
 	

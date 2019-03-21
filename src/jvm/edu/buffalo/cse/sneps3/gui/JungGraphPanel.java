@@ -82,10 +82,6 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 	private static final long serialVersionUID = 6788099320573599178L;
 
-	enum GraphType {
-		FR3d, FR2d
-	};
-
     boolean showNewTerms = true;
     boolean showOntologyTerms = false;
 	
@@ -93,8 +89,6 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	boolean findv2 = true;
 
 	boolean showing_all = true;
-
-	GraphType type = GraphType.FR2d;
 
 	QuadCurve quadcurve;
 	Line line;
@@ -106,7 +100,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	// No idea what i need of these yet.
 	LensSupport hyperbolicViewSupport;
 	LensSupport hyperbolicLayoutSupport;
-	
+
 	SnepsModalGraphMouse<ITermNode<IEdge>, IEdge> graphMouse = new SnepsModalGraphMouse<ITermNode<IEdge>, IEdge>();
 
 	public HashSet<ITermNode<IEdge>> highlightedNodes = new HashSet<ITermNode<IEdge>>();
@@ -258,7 +252,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 							public Number apply(
 									Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
-								return new Double(.5);
+								return .5;
 							}
 
 						});
@@ -322,43 +316,32 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		// The Layout<V, E> is parameterized by the vertex and edge types
 		// We should probably use the FRLayout(g) which is used by the current
 		// show().
-		// *****2d version******//
-		if (type == GraphType.FR2d) {
-			layout = new edu.uci.ics.jung.algorithms.layout.FRLayout2<ITermNode<IEdge>, IEdge>(g);
-			// layout.setSize(new Dimension(this.getWidth(), this.getHeight()));
-			int layoutwidth = (this.getWidth() < 100 ? 700 : this.getWidth()
-					- ((Integer) UIManager.get("ScrollBar.width")).intValue()
-					- 15);
-			int layoutheight = (this.getHeight() < 100 ? 350 : this.getHeight()
-					- ((Integer) UIManager.get("ScrollBar.width")).intValue()
-					- 40);
+		layout = new edu.uci.ics.jung.algorithms.layout.FRLayout2<ITermNode<IEdge>, IEdge>(g);
+		// layout.setSize(new Dimension(this.getWidth(), this.getHeight()));
+		int layoutwidth = (this.getWidth() < 100 ? 700 : this.getWidth()
+				- ((Integer) UIManager.get("ScrollBar.width")).intValue()
+				- 15);
+		int layoutheight = (this.getHeight() < 100 ? 350 : this.getHeight()
+				- ((Integer) UIManager.get("ScrollBar.width")).intValue()
+				- 40);
 
-			layout.setSize(new Dimension(layoutwidth, layoutheight));
-			
-			DefaultVisualizationModel<ITermNode<IEdge>, IEdge> vm = new DefaultVisualizationModel<ITermNode<IEdge>, IEdge>(layout);
-			
-			vv.setModel(vm);
+		layout.setSize(new Dimension(layoutwidth, layoutheight));
 
-			panel = new GraphZoomScrollPane(vv);
-			if (((BorderLayout) this.getLayout())
-					.getLayoutComponent(BorderLayout.CENTER) != null)
-				this.remove(((BorderLayout) this.getLayout())
-						.getLayoutComponent(BorderLayout.CENTER));
-			add(panel, BorderLayout.CENTER);
-		}
+		DefaultVisualizationModel<ITermNode<IEdge>, IEdge> vm = new DefaultVisualizationModel<ITermNode<IEdge>, IEdge>(layout);
 
-		// on_graph_expanded_nodenames = new ArrayList<String>();
-		/*on_graph_expanded_nodenames.clear();
-		for (ITermNode<IEdge> o : dsg.getVertices()) {
-			on_graph_expanded_nodenames.add(o.getTerm().getName());
-		}*/
+		vv.setModel(vm);
 
+		panel = new GraphZoomScrollPane(vv);
+		if (((BorderLayout) this.getLayout())
+				.getLayoutComponent(BorderLayout.CENTER) != null)
+			this.remove(((BorderLayout) this.getLayout())
+					.getLayoutComponent(BorderLayout.CENTER));
+		add(panel, BorderLayout.CENTER);
 	}
 
 	public void addVertex(ITermNode<IEdge> n) {
 		dsg.addVertex(n);
 		n.show();
-		//on_graph_expanded_nodenames.add(n.getTerm().getName());
 	}
 
 	public boolean addEdge(Edge e) {

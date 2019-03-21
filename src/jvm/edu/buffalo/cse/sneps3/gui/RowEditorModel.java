@@ -14,14 +14,14 @@ public class RowEditorModel {
     }
 
     public void addEditorForRow(int row, TableCellEditor e) {
-        data.put(new Integer(row), e);
+        data.put(row, e);
     }
 
     public void removeEditorForRow(int row) {
-        data.remove(new Integer(row));
+        data.remove(row);
     }
 
     public TableCellEditor getEditor(int row) {
-        return (TableCellEditor) data.get(new Integer(row));
+        return (TableCellEditor) data.get(row);
     }
 }
