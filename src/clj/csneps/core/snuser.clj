@@ -274,6 +274,14 @@
   []
   (reset! snip/goaltrace false))
 
+(defn verboserules
+  []
+  (reset! build/verbose-rules true))
+
+(defn noverboserules
+  []
+  (reset! build/verbose-rules false))
+
 (defn startGUI
   ([] (gui/startGUI))
   ([termset] (gui/startGUI termset)))

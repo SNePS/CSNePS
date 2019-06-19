@@ -643,6 +643,9 @@ Prints the current context and all propositions asserted in it.
 %\docfun{noshowproofs}{}
 %Turns off the effects of \texttt{showproofs}.
 
+\docfun{noverboserules}{}
+Disables verbose output for condition-action rules, as enabled through the \textit{verboserules} function.
+
 \docfun{pathsfrom}{\textit{terms path}}
 Returns the set of terms at the end of the given \cv{path} (\textit{see}
 \S\ref{sec:pathsyntax}) from \cv{terms}, which must be a term, the name of a
@@ -689,6 +692,10 @@ Unasserts the proposition \cv{prop} in the given context and all ancestor
 contexts.  Currently there is no belief revision, so propositions derived using
 \cv{prop} might still be asserted, and prop, itself, might be rederivable.
 
+\docfun{verboserules}{}
+When a condition-action rule fires, this function enables output of the rule name
+and set of substitutions sent to the RHS of the rule. It may be disabled with the 
+\textit{noverboserules} function.
 
 %\docmacro{withInstances}{(\textit{variables} of \textit{pattern} \&body \textit{forms}}
 %For each asserted substitution instance of \cv{pattern}, evaluates
