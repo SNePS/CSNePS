@@ -382,7 +382,7 @@
                                 subs subs]
                            (if (empty? lhs)
                              [built-lhs subs]
-                             (let [[new-expr built-vars sub] (check-and-build-variables (first lhs))]
+                             (let [[new-expr built-vars sub] (check-and-build-variables (first lhs) :additional-subs subs)]
                                (recur (rest lhs)
                                       (conj built-lhs (build new-expr :Proposition (set/union subs sub) #{}))
                                       (set/union subs sub)))))
@@ -1084,8 +1084,11 @@
    needed for building indefinite objects."
   [quant var-label rsts substitution notsames & {:keys [deps]}]
   (let [var (substitution var-label)
-        nsvars (set (map #(or (substitution %)
-                              (get-term %)) ;; Now allows terms to be used in notsames.
+        nsvars (set (map #(let [nsvar (or (substitution %)
+                                           (get-term %))] ;; Allows terms to be used in notsames.
+                            (when-not nsvar
+                              (error (str "Cannot build notSame for variable " % " which is out of scope.")))
+                            nsvar)
                          (notsames var-label)))]
     (when-not (@restriction-set var) ;; already built!
       (alter TERMS assoc (:name var) var)
@@ -1289,6 +1292,8 @@
     :else 
     [assertion-spec arb-rsts ind-deps-rsts qvar-rsts]))
 
+;; Additional-subs allows a way to bring other variables that would be out of scope into this scope. This is used in
+;; condition-action rules, especially in subrule handling.
 (defn check-and-build-variables
   "Given a top-level build expression, checks that expression for
    variable terms syntax (e.g., every, some). These terms are built and
@@ -1298,13 +1303,13 @@
    Returns three values. The first is the new build expression, the
    second the the built nodes, and the third the substitution between
    var-labels and the AI/IO nodes."
-  [expr & {:keys [reuse-inds]}]
+  [expr & {:keys [reuse-inds additional-subs] :or {additional-subs {}}}]
   (dosync
     (let [[new-expr arb-rsts ind-dep-rsts qvar-rsts] (parse-vars-and-rsts expr {} {} {})
           arb-rsts (generate-notsames (expand-rsts arb-rsts))
           qvar-rsts (generate-notsames (expand-rsts qvar-rsts))
           ind-dep-rsts (expand-ind-dep-rsts ind-dep-rsts)
           [arb-rsts qvar-rsts ind-dep-rsts notsames] (notsames arb-rsts qvar-rsts ind-dep-rsts)
-          substitution (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds reuse-inds)
+          substitution (merge (pre-build-vars arb-rsts ind-dep-rsts qvar-rsts notsames :reuse-inds reuse-inds) additional-subs)
           built-vars (build-vars arb-rsts ind-dep-rsts qvar-rsts substitution notsames)]
       [new-expr built-vars substitution])))
