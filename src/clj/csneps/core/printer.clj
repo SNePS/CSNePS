@@ -21,7 +21,10 @@
 
 (defn print-atom
   [term]
-  (if (str/includes? (:name term) " ")
+  ;; When re-read, we can't have symbols ending in a colon, or with spaces, commas, or quotes.
+  ;; So, add quotes now to make them look like a string.
+  (if (re-find #"[\",. ]|:$" (str (:name term)))
+    ;(str/includes? (:name term) " ")
     (str "\"" (:name term) "\"")
     (:name term)))
 
@@ -365,21 +368,20 @@
     (.write w (str ";;; " (.toString (new java.util.Date)) "\n"))
     (when headerfile 
       (.write ^java.io.Writer w "(clojure.lang.Compiler/loadFile " (first headerfile) ")\n"))
-    (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n(in-ns 'csneps.core.snuser)\n")
+    (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n")
+    (.write w "(in-ns 'csneps.core.snuser)\n")
     (doseq [term (vals @csneps/TERMS)]
       (when (ct/asserted? term (ct/currentContext))
-        (.write w  "(csneps.core.build/assert '")
-        (if (= (:type term) :csneps.core/Atom)
-          (.write w (str (print-atom term)))
+        (if (= (:type term) :csneps.core/CARule)
+          ;; Condition-action rules don't need the assert portion of the output.
           (binding [PRINTED-VARIABLES (hash-set)
                     PRINTED-VARIABLE-LABELS (hash-map)]
-            (.write w (str (print-unnamed-molecular-term term)))))
-        (.write w (str " 'DefaultCT)\n"))))))
-      
-
-  
-  
-  
-
-
-      
+            (.write w (str (print-unnamed-molecular-term term))))
+          (do
+            (.write w  "(csneps.core.build/assert '")
+            (if (= (:type term) :csneps.core/Atom)
+              (.write w (str (print-atom term)))
+              (binding [PRINTED-VARIABLES (hash-set)
+                        PRINTED-VARIABLE-LABELS (hash-map)]
+                (.write w (str (print-unnamed-molecular-term term)))))
+            (.write w (str " '" (:name (ct/currentContext)) ")\n"))))))))
