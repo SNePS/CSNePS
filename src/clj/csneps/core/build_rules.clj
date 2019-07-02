@@ -31,8 +31,8 @@
         [forms subrules] (formorsub rhs)
         [_ vars local-substitutions] (check-and-build-variables lhs :additional-subs substitutions)
         all-substitutions (merge local-substitutions substitutions)]
-    ;(print (list 'rule rulename lhs (set forms) subrules) "\n --" all-substitutions)
-    (build (list 'rule rulename lhs (set forms) subrules) :Policy all-substitutions #{})))
+    ;(print (list 'rule rulename lhs forms subrules) "\n --" all-substitutions)
+    (build (list 'rule rulename lhs forms subrules) :Policy all-substitutions #{})))
 
 (defmacro defrule [rulename & body]
   `(defrule-helper '~rulename '~body {}))
