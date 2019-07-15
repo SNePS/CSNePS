@@ -359,15 +359,15 @@
    so that when that file is loaded,
    all the propositions asserted in the current KB
    will be asserted in the new KB.
-   If the headerfile is included,
-      a load of that file will be written before any of the asserts."
-  [file & headerfile]
+   If the headerfile is non-nil,
+      a load of each header file will be written before any of the asserts."
+  [file & headerfiles]
   (with-open [w ^java.io.Writer (writer file)]
     (.write w ";;; CSNePS KB\n")
     (.write w ";;; =========\n")
     (.write w (str ";;; " (.toString (new java.util.Date)) "\n"))
-    (when headerfile 
-      (.write ^java.io.Writer w "(clojure.lang.Compiler/loadFile " (first headerfile) ")\n"))
+    (doseq [h headerfiles]
+      (.write w (str "(csneps.core.snuser/load " h ")\n")))
     (.write w ";;; Assumes that all required Contexts, Types, Slots, and Caseframes have now been loaded.\n")
     (.write w "(in-ns 'csneps.core.snuser)\n")
     (doseq [term (vals @csneps/TERMS)]
