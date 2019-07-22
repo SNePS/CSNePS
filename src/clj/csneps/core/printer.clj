@@ -21,10 +21,10 @@
 
 (defn print-atom
   [term]
-  ;; When re-read, we can't have symbols ending in a colon, or with spaces, commas, or quotes,
+  ;; When re-read, we can't have symbols ending in a colon, or with spaces, commas, parentheses, or quotes,
   ;; or things that start numerically but then have non-numeric elements.
   ;; So, add quotes now to make them look like a string.
-  (if (re-find #"[\",. ]|:$|^[0-9]+[^0-9]" (str (:name term)))
+  (if (re-find #"[\",.()\[\]/ ]|:$|^[0-9]+[^0-9]" (str (:name term)))
     ;(str/includes? (:name term) " ")
     (str "\"" (:name term) "\"")
     (:name term)))
