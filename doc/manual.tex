@@ -312,7 +312,7 @@ Again continuing the formal definition of the rule language, the RHS is defined 
 \texttt{\begin{tabular}{lcl}
   RHS &=& RHSLine+;\\
   RHSLine &=& clojureform | subrule;\\
-  subrule &=& `(:subrule' LHS `=>' RHS `)';
+  subrule &=& `(:subrule', subrulename?, LHS, `=>', RHS `)';
 \end{tabular}}
 
 

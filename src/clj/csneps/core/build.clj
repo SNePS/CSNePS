@@ -374,6 +374,17 @@
                          :fsemtype semtype :min i))]
             term)))))
 
+;; Note, when a subrule name is gensymmed it can't be shared.
+(defn subrule-helper
+  "Helps build a subrule. If there is a string or symbol after :subrule, use it as the subrules name.
+   Otherwise gensym a name."
+  [parentname subrule subs]
+  (let [name-or-term (second subrule)
+        named? (or (symbol? name-or-term) (string? name-or-term))]
+    (if named?
+      (defrule-helper name-or-term (rest (rest subrule)) subs)
+      (defrule-helper (gensym (str parentname "-subrule")) (rest subrule) subs))))
+
 (defn build-rule 
   [rulename lhs forms subrules & {:keys [subs] :or {subs {}}}]
   ;(println rulename lhs forms subrules subs)
@@ -393,8 +404,7 @@
                   (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms)))
         name (build rulename :Thing {} #{})
         act (build (str "act" (.hashCode forms)) :Action {} #{})
-        ;; TODO: Note, gensymming the subrule name precludes sharing subrules
-        subrules (set (map #(defrule-helper (gensym "subrule") (rest %) subs) subrules))]
+        subrules (set (map #(subrule-helper rulename % subs) subrules))]
     (doseq [v (vals subs)]
       (doseq [rst (seq (@restriction-set v))]
         (assert rst (ct/find-context 'OntologyCT)))
