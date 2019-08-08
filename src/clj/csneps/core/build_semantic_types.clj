@@ -21,7 +21,8 @@
     (let [sem-channel (build-channel nil analytic-term {} {})]
       (dosync
         (alter semtype-in-channels assoc analytic-term #{sem-channel})
-        (alter semtype-to-channel-map assoc newtype sem-channel)))
+        (alter semtype-to-channel-map assoc newtype sem-channel)
+        (alter semtype-to-arb-map assoc newtype arb)))
     type-generic))
 
 (defn define-type 
@@ -55,7 +56,13 @@
 
 (defn set-term-type
   [term newtype]
-  (dosync (alter type-map assoc (:name term) newtype)))
+  (dosync
+    (alter type-map assoc (:name term) newtype)
+    (when (and semtype-objectlang-experimental (@semtype-to-channel-map newtype))
+      (submit-to-channel (@semtype-to-channel-map newtype)
+                       (new-message {:pos 1
+                                     :type 'I-INFER
+                                     :subst {(@semtype-to-arb-map newtype) term}})))))
 
 (defn adjust-type
   "Adjusts the type of term, if possible,

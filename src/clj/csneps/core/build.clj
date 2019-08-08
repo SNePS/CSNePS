@@ -12,6 +12,7 @@
             [clojure.string])
   (:refer-clojure :exclude [assert find]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
+        [csneps.configuration]
         [csneps.util]
         [clojure.walk :as walk :only [prewalk prewalk-replace postwalk-replace]]
         [csneps.core.find-utils]))

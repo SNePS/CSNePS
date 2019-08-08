@@ -59,7 +59,8 @@
       (setOr
         (slot-based-derivable p context termstack)
         (backward-infer-derivable p context)
-        (sort-based-derivable p context)))))
+        (when-not semtype-objectlang-experimental (sort-based-derivable p context))
+        ))))
 
 (defn askwh [ques context]
   "If the WhQuestion ques can be answered in context, 
