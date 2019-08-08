@@ -75,6 +75,7 @@
 (defn shutdownExecutor
   []
   (.shutdownNow ^ThreadPoolExecutor executorService)
+  (.awaitTermination ^ThreadPoolExecutor executorService 60 TimeUnit/SECONDS)
   (when-not (.isTerminated ^ThreadPoolExecutor executorService)
     (println "ThreadPoolExecutor did not terminate.")))
 
