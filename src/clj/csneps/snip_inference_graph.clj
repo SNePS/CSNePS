@@ -59,8 +59,11 @@
 
 (defn resetExecutor
   []
-  (.clear ^PriorityBlockingQueue queue)
   (.shutdownNow ^ThreadPoolExecutor executorService)
+  (.awaitTermination ^ThreadPoolExecutor executorService 60 TimeUnit/SECONDS)
+  (when-not (.isTerminated ^ThreadPoolExecutor executorService)
+    (println "ThreadPoolExecutor did not terminate.")) 
+  (.clear ^PriorityBlockingQueue queue)
   (def executorService (ThreadPoolExecutor.
                          ig-cpus-to-use
                          ig-cpus-to-use
@@ -71,7 +74,9 @@
 ;; Only used when exiting. 
 (defn shutdownExecutor
   []
-  (.shutdownNow ^ThreadPoolExecutor executorService))
+  (.shutdownNow ^ThreadPoolExecutor executorService)
+  (when-not (.isTerminated ^ThreadPoolExecutor executorService)
+    (println "ThreadPoolExecutor did not terminate.")))
 
 ;;; Experimental attempt at pausing inference.
 (let [waiting-queue (LinkedBlockingQueue.)]
