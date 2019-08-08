@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare lattice-insert submit-assertion-to-channels build-quantterm-channels adjustType whquestion-term?)
+(declare lattice-insert submit-assertion-to-channels build-quantterm-channels adjust-type whquestion-term?)
 
 (defn variable-parse-and-build
   "Given a top-level build expression, checks that expression for
@@ -85,7 +85,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
       (ct/hypothesize expr ct)
-      (adjustType expr (semantic-type-of expr) :Proposition)
+      (adjust-type expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
@@ -97,7 +97,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
       (ct/hypothesize expr ct)
-      (adjustType expr (semantic-type-of expr) :Proposition)
+      (adjust-type expr (semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)

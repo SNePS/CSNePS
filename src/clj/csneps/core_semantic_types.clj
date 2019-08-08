@@ -62,6 +62,7 @@
   [name]
   (isa? @semantic-type-hierarchy name TOP-SEMANTIC-TYPE))
 
+;; This is only used on variable terms currently. Is that correct?
 (defn instantiate-sem-type
   [termname type]
   (let [newtypekey (keyword type)]

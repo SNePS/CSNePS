@@ -115,7 +115,8 @@
 (def u-channels (ref {}))
 (def g-channels (ref {}))
 (def ant-in-channels (ref {}))
-(def semtype-in-channels (ref {}))
+(def semtype-in-channels (ref {})) ;; Like the other channel maps.
+(def semtype-to-channel-map (ref {})) ;; Maps semtypes to the channel for that type.
 (def future-fw-infer (ref {}))
 (def instances (ref {}))
 (def expected-instances (ref {}))

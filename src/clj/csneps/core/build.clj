@@ -141,55 +141,6 @@
       (error fn " is used with incorrect arity in " expr ".\n
                          It should be given " (dec correctlength) " arguments instead of " (dec (count expr)) "."))))
 
-(defn adjustType
-  "Adjusts the type of term, if possible,
-       from its old semantic type, oldtype,
-       to its new semantic type, newtype,
-       while keeping its syntactic type, syntype,
-    and return the term."
-  [term oldtype newtype]
-  ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
-  (cond
-    ;; Types are already the same
-    (= (type-of term) (type-of newtype)) nil
-    ;; Arbitrary terms can be adjusted down only while they're being built.
-    ;; They can't ever be adjusted down below their highest-level restriction.
-    (and (arbitraryTerm? term)
-         @(:fully-built term)
-         (not (subtypep oldtype newtype)))
-    (error "Cannot adjust an arbitrary term " (:name term) " from type " oldtype " to more specific type " newtype ".")
-    (and (queryTerm? term)
-         @(:fully-built term)
-         (not (subtypep oldtype newtype)))
-    (error "Cannot adjust a query term " (:name term) " from type " oldtype " to more specific type " newtype ".")
-    ;; Can't adjust WhQuestion to a subtype of Proposition.
-    (and (whquestion-term? term)
-         (subtypep newtype :Proposition))
-    (error "Cannot adjust a WhQuestion to Proposition or lower.")
-    
-    ;; Newtype is a subtype of oldtype
-    (subtypep newtype oldtype)
-    (dosync (alter type-map assoc (:name term) newtype))
-    ;; If new type and oldtype have a common subtype,
-    ;;    change the type to be the greatest common subtype
-    ;; Could there be more than 1 greatest common subtype?
-    :else
-    (if-let [gcsub (gcsubtype newtype oldtype)]
-      (if (> (count gcsub) 1)
-        (let [gcsubchoice (menuChooseFromList (str "Choose a type for " term ".") gcsub)]
-          (if gcsubchoice
-            (dosync (alter type-map assoc (:name term) gcsubchoice))
-            (error "No semantic type for " term ".")))
-        (dosync (alter type-map assoc (:name term) (first gcsub))))
-      (error (str "Type Error: Cannot adjust " (:name term) " from " oldtype " to " newtype "."))))
-  ;; Propositions are true in contexts where they are hyps.
-  (when (and (nil? (@support term))
-             (or 
-               (subtypep newtype :Proposition)
-               (subtypep newtype :Policy)))
-    (dosync (alter support assoc term #{['hyp #{(:name term)}]})))
-  term)
-
 (defn check-min-max
   "Raises an error if fillers is a set
         that doesn't satisfy the min and max restrictions of slot."
@@ -239,14 +190,14 @@
                    (alter caseframe assoc wft cf)
                    (alter msgs assoc wft (create-message-structure syntype dcs-sets :n min))
                    (alter TERMS assoc (:name wft) wft)
-                   (alter type-map assoc (:name wft) (:type cf)))
+                   (set-term-type wft (:type cf)))
                  
                  (initialize-syntype wft)
                  
                  (cf/add-caseframe-term wft :cf cf)
                  wft))]
 
-    (adjustType term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
+    (adjust-type term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
     
     (when properties 
       (dosync (alter property-map assoc term (set/union (@property-map term) properties))))
@@ -640,7 +591,7 @@
 ;       and if necessary, adjusting its semantic type so that
 ;       it is of the semantic type semtype."
   [:csneps.core/Term] [expr semtype substitution properties]
-  (adjustType expr (semantic-type-of expr) semtype))
+  (adjust-type expr (semantic-type-of expr) semtype))
 
 (defmethod build
   [clojure.lang.Symbol] [expr semtype substitution properties]
@@ -653,15 +604,15 @@
       (or (wftname? (str expr))
           (quantterm? (str expr)))
         (if term ;;Lower it's semantic type if necessary
-          (adjustType term (semantic-type-of term) semtype)
+          (adjust-type term (semantic-type-of term) semtype)
           (error (str "The name " expr " is not yet associated with a term.")))
       term ;Lower its semantic type, if necessary
-	    (adjustType term (semantic-type-of term) semtype)
+	    (adjust-type term (semantic-type-of term) semtype)
       :else
         (let [term (new-atom {:name expr})]
           (dosync 
             (alter TERMS assoc expr term)
-            (alter type-map assoc expr semtype)
+            (set-term-type term semtype)
             (when (subtypep semtype :Proposition) (alter support assoc term #{['hyp #{(:name term)}]}))
             (alter msgs assoc term (create-message-structure :csneps.core/Atom nil)))
           (when (= expr 'True)
@@ -1015,7 +966,7 @@
         categorizations (filter #(isa? (syntactic-type-of %) :csneps.core/Categorization) res)
         categories (apply clojure.set/union (map #(second (@down-cableset %)) categorizations))
         semcats (filter semtype? (map #(keyword (:name %)) categories))]
-    (doall (map #(adjustType var (semantic-type-of var) %) semcats))))
+    (doall (map #(adjust-type var (semantic-type-of var) %) semcats))))
 
 ;;; Note: Doesn't deal with if the user puts >1 notSame relation.
 (defn- notsames-helper 
