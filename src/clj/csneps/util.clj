@@ -1,3 +1,5 @@
+;; These are utilities designed not to rely on any of CSNePS. They simply add to our function library.
+
 (ns csneps.util
   (:use [clojure.string :only (join)]
         [clojure.pprint])

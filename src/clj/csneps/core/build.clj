@@ -3,6 +3,7 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
+            [csneps.snip.messagestructure :as msgstruct]
             [csneps.debug :as debug]
             [clojure.core.match :as match]
             [clojure.math.numeric-tower :as math]
@@ -14,6 +15,7 @@
   (:use [csneps.core]
         [csneps.configuration]
         [csneps.util]
+        [csneps.utils.coreutils]
         [clojure.walk :as walk :only [prewalk prewalk-replace postwalk-replace]]
         [csneps.core.find-utils]))
 

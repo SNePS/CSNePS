@@ -914,7 +914,7 @@
   (if (g-chan-to-node? (:origin message) node)
     ;; Msgs from restrictions.
     (let [new-combined-messages (msgstruct/get-new-messages (@msgs node) message)
-          querytermct (count (filter queryTerm? (build/flatten-term node)))
+          querytermct (count (filter queryTerm? (flatten-term node)))
           rel-combined-messages (when new-combined-messages
                                   (filter #(= (:pos %) querytermct) new-combined-messages))]
       (doseq [rcm rel-combined-messages
@@ -1377,7 +1377,7 @@
    create P-Trees and S-Indexes as necessary."
   [syntype dcs & {:keys [n]}]
   (cond
-    (empty? (filter arbitraryTerm? (build/flatten-term dcs)))
+    (empty? (filter arbitraryTerm? (flatten-term dcs)))
     (lms/make-linear-msg-set)
     (and (or (= syntype :csneps.core/Numericalentailment)
              (= syntype :csneps.core/Implication))
@@ -1388,7 +1388,7 @@
     :else
     (lms/make-linear-msg-set)))
 
-(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels msg/new-message create-message-structure msgstruct/get-sent-messages backward-infer forward-infer msgstruct/add-matched-and-sent-messages)
+(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels msg/new-message create-message-structure backward-infer forward-infer)
 
 ;;; Reductio
 

@@ -16,6 +16,7 @@
 ;  (:refer-clojure :exclude [merge])
   (:use [csneps.core]
         [csneps.util]
+        [csneps.utils.coreutils]
         [csneps.configuration]
         [csneps.debug]
         [csneps.snip.util]

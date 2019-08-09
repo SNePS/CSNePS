@@ -28,21 +28,19 @@
 
 (in-ns 'csneps.core.build)
 
-(declare valve-state-changed submit-to-channels new-message create-message-structure get-sent-messages add-matched-and-sent-messages)
+(declare valve-state-changed submit-to-channels new-message create-message-structure)
 
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc bstc satc nm crs gsm bwi fwi amasm]
+  [stc bstc satc nm crs bwi fwi]
   (def submit-to-channel stc)
   (def blocking-submit-to-channel bstc)
   (def submit-assertion-to-channels satc)
   (def new-message nm)
   (def create-message-structure crs)
-  (def get-sent-messages gsm)
   (def backward-infer bwi)
-  (def forward-infer fwi)
-  (def add-matched-and-sent-messages amasm))
+  (def forward-infer fwi))
 
 (defrecord2 Channel 
   [originator    nil
@@ -178,7 +176,7 @@
       (backward-infer dest @(:future-bw-infer dest) nil))
     
     (when (@msgs orig)
-      (doseq [msg (get-sent-messages (@msgs orig) type)]
+      (doseq [msg (msgstruct/get-sent-messages (@msgs orig) type)]
         ;; We MUST block until the message is processed, otherwise the following can happen:
         ;; 1) This inference sends a new message to out going channels (of which there are none) and saves it
         ;; 2) At the same time, a new channel is built, seeing no messages to send.
