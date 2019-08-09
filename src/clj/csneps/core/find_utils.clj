@@ -12,7 +12,7 @@
               (slot/find-slot r)
               r)]
     (when (isa? (type-of n) :csneps.core/Molecular)
-      (let [pos (first (positions #{rel} (:slots (@caseframe n))))]
+      (let [pos (first (positions #{rel} (:slots (@term-caseframe-map n))))]
         (if pos
           (nth (seq (@down-cableset n)) pos)
           #{})))))

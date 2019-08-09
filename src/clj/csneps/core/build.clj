@@ -188,7 +188,7 @@
                                                         :closed-vars closed-vars})]
                  (dosync 
                    (alter down-cableset assoc wft dcs-sets)
-                   (alter caseframe assoc wft cf)
+                   (alter term-caseframe-map assoc wft cf)
                    (alter msgs assoc wft (create-message-structure syntype dcs-sets :n min))
                    (alter TERMS assoc (:name wft) wft)
                    (set-term-type wft (:type cf)))
@@ -479,12 +479,12 @@
                (condp = (type-of fcn)
                  clojure.lang.Symbol
                  (if (wftname? (str fcn))
-                   (@caseframe (get-term fcn))
+                   (caseframe-for (get-term fcn))
                    fcn)
                  :csneps.core/Atom
                  (:name fcn)
                  :csneps.core/Molecular
-                 (@caseframe fcn)
+                 (caseframe-for fcn)
                  (error
                    "The function \"symbol\", "fcn", is not an acceptable function \"symbol\".")))
              (and @KRNovice

@@ -349,9 +349,9 @@
   [term & {:keys [parent distnodes] :or {distnodes DistNodes}}]
   (if (isa? (syntactic-type-of term) :csneps.core/Molecular)
     (let [termid (term-predicate term)
-          termpp (:print-pattern (@caseframe term))
+          termpp (:print-pattern (@term-caseframe-map term))
           nofsyms (and (seq? (first termpp)) (= (ffirst termpp) 'quote))
-          arity (dec (count (:print-pattern (@caseframe term))))
+          arity (dec (count (:print-pattern (@term-caseframe-map term))))
           newparent (buildUnificationTreeNode termid arity :parent parent :distnodes distnodes)] ; ;Builds the node for the predicate symbol
       (loop [p newparent
              dcs (if nofsyms

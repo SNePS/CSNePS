@@ -61,7 +61,7 @@
   [term]
   (cond
     (csneps/atomicTerm? term) (str (:name term))
-    (csneps/molecularTerm? term) ((:descfun (@csneps/caseframe term)) term)
+    (csneps/molecularTerm? term) ((:descfun (csneps/caseframe-for term)) term)
     (set? term) (clojure.string/join ", and " (for [trm term] (description trm)))))
 
 (defn make-description-function
@@ -320,7 +320,7 @@
    If the caseframe cf is given, add the term to that caseframe.
    Else, add the term to the caseframe that term uses."
   [term & {:keys [cf]}]
-  (dosync (alter (:terms (if cf cf (@csneps/caseframe term))) conj term)))
+  (dosync (alter (:terms (if cf cf (csneps/caseframe-for term))) conj term)))
 
 (defn quotedpp?
   "Returns True if the caseframe cf
@@ -373,7 +373,7 @@
   "Given a term, returns a map with the keys being relations and the values being sets of terms for each
    item in the original terms down cableset."
   [term]
-  (apply merge (map hash-map (:slots (@csneps/caseframe term)) (@csneps/down-cableset term))))
+  (apply merge (map hash-map (:slots (csneps/caseframe-for term)) (@csneps/down-cableset term))))
   
 (defn hasOneArgumentSlot
   [cf]

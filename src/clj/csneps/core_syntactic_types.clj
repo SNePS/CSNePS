@@ -3,30 +3,6 @@
 ;;; Data structures for Syntactic Types
 ;;; ====================================
 
-(def TERMS 
-  "A map from term names to the actual terms" 
-  (ref (hash-map)))
-
-(def ARBITRARIES 
-  "The set of all arbitrary individual nodes."
-  (ref #{}))
-
-(def INDEFINITES 
-  "The set of all arbitrary individual nodes."
-  (ref #{}))
-
-(def QVARS
-  "The set of all question-mark nodes."
-  (ref #{}))
-
-(def WFTCOUNT (ref 0))
-
-(def ARBCOUNT (ref 0))
-
-(def INDCOUNT (ref 0))
-
-(def QVARCOUNT (ref 0))
-
 (defn ind-counter [] (inc @INDCOUNT))
 
 (defn arb-counter [] (inc @ARBCOUNT))
@@ -100,9 +76,6 @@
 ;;; Syntactic Types
 ;;; ===============
 
-(defvar TopSyntacticType ::Term
-  "The root of the syntactic type hierarchy.")
-
 ;(defprotocol SYNTACTIC-TYPE
 ;  (syntactic-type-of [t])
 ;  (stype [t]))
@@ -110,25 +83,6 @@
 (defn syntactic-type-of
   [term]
   (:type term))
-
-(def i-channels (ref {}))
-(def u-channels (ref {}))
-(def g-channels (ref {}))
-(def ant-in-channels (ref {}))
-(def semtype-in-channels (ref {})) ;; Like the other channel maps.
-(def semtype-to-channel-map (ref {})) ;; Maps semtypes to the channel for that type.
-(def semtype-to-arb-map (ref {})) ;; Maps semtypes to the arbitrary for that type.
-(def future-fw-infer (ref {}))
-(def instances (ref {}))
-(def expected-instances (ref {}))
-(def up-cablesetw (ref {}))
-(def support (ref {}))
-(def msgs (ref {}))
-(def restriction-set (ref {}))
-(def dependencies (ref {}))
-(def lattice-node (ref {}))
-(def down-cableset (ref {}))
-(def caseframe (ref {}))
 
 ;;;Instantiate with (new-test {}) and inside {} use any args you need.
 (defrecord2 Term
@@ -522,7 +476,7 @@
 
 (defn build-upcsets
   [mol]
-  (doseq [[rel ns] (map #(vector %1 %2) (:slots (@caseframe mol)) (@down-cableset mol))]
+  (doseq [[rel ns] (map #(vector %1 %2) (:slots (@term-caseframe-map mol)) (@down-cableset mol))]
     (if (= (type ns) clojure.lang.PersistentHashSet)
       (doseq [m ns]
         (install-in-upcset mol rel m))

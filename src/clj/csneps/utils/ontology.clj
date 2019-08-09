@@ -5,9 +5,9 @@
 
 (defn- anonclass?
   [term]
-  (or (= (@csneps.core/caseframe term) (cf/find-frame 'ObjectSomeValuesFrom))
-      (= (@csneps.core/caseframe term) (cf/find-frame 'ObjectAllValuesFrom))
-      (= (@csneps.core/caseframe term) (cf/find-frame 'ObjectHasValue))))
+  (or (= (csneps.core/caseframe-for term) (cf/find-frame 'ObjectSomeValuesFrom))
+      (= (csneps.core/caseframe-for term) (cf/find-frame 'ObjectAllValuesFrom))
+      (= (csneps.core/caseframe-for term) (cf/find-frame 'ObjectHasValue))))
 
 (defn- supertype-of
   [term]

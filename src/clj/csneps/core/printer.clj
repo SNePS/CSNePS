@@ -170,7 +170,7 @@
       (print-unnamed-variable-term term)
     :csneps.core/QueryVariable
       (print-unnamed-variable-term term)
-    (print-molecular (@csneps/caseframe term) (@csneps/down-cableset term))
+    (print-molecular (csneps/caseframe-for term) (@csneps/down-cableset term))
     ))
 
 (defn sneps-printer

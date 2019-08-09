@@ -129,7 +129,7 @@
       (csneps/arbitraryTerm? p)
       (= 1 (count (@csneps/restriction-set p)))
       (let [res (first (@csneps/restriction-set p))
-            cf (second (first (:print-pattern (@csneps/caseframe res))))
+            cf (second (first (:print-pattern (csneps/caseframe-for res))))
             arg2 (when (= cf 'Isa) (second (@csneps/down-cableset res)))]
         (when arg2
           (every? #(csneps/semtype? (keyword (:name %))) arg2))))))

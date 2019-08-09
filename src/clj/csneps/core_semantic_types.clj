@@ -1,27 +1,5 @@
 (in-ns 'csneps.core)
 
-(def TOP-SEMANTIC-TYPE :Entity)
-
-(defvar semantic-type-hierarchy (ref nil))
-
-;;Maps the term name to the semantic type
-(defvar type-map (ref (hash-map)))
-
-;;Maps the term name to a map with a vector of usages for each semantic type.
-(defvar type-support (ref (hash-map)))
-
-;;Maps the term to its set of properties.
-(defvar property-map (ref (hash-map)))
-
-;;Maps the term name to it's support set
-(defvar support-set (ref (hash-map)))
-
-;;Maps the term name to its supported node set.
-(defvar supported-nodes-set (ref (hash-map)))
-
-;;Maps a term to it's primaction (Act/Actor only)
-(defvar primaction (ref (hash-map)))
-
 ;;; There are really (structurally) only 3 different types - Entity, Proposition, Act(ion).
 ;;; Proposition is an Entity with a support-set, and supported-nodes-set
 ;;; Act/Action is an Entity/Thing with a primaction

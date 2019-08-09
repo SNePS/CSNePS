@@ -26,7 +26,7 @@
   [term]
   (or
     ((type-of term) syntype-fsym-map)
-    (let [p (:print-pattern (@caseframe term))]
+    (let [p (:print-pattern (@term-caseframe-map term))]
       (if (and (seq? (first p)) (= (first (first p)) 'quote))
         (second (first p))
         (:name (first (first (@down-cableset term))))))))
@@ -36,7 +36,7 @@
   (cond
     (molecularTerm? termpart) (outer (build 
                                        (if-let [fsym (or ((type-of termpart) syntype-fsym-map)
-                                                         (let [p (:print-pattern (@caseframe termpart))]
+                                                         (let [p (:print-pattern (@term-caseframe-map termpart))]
                                                            (when (and (seq? (first p)) (= (first (first p)) 'quote))
                                                              (second (first p)))))]
                                          (conj (doall (map inner (@down-cableset termpart))) fsym)

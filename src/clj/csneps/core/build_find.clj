@@ -36,7 +36,7 @@
     (if (empty? fs)
       (apply clojure.set/intersection (map set res))
       (let [filler (first fs)
-            termsfrom (filter #(= (@caseframe %) cf) (findfrom filler slot))]
+            termsfrom (filter #(= (@term-caseframe-map %) cf) (findfrom filler slot))]
         (if (empty? termsfrom) 
           #{}
           (recur (rest fs) (conj res termsfrom)))))))
@@ -91,7 +91,7 @@
                     new-dcs
                     (recur (rest dcs)
                            (conj new-dcs (set (replace subst (first dcs)))))))]
-    (find-exact (syntactic-type-of term) (@caseframe term) new-dcs)))
+    (find-exact (syntactic-type-of term) (@term-caseframe-map term) new-dcs)))
 
 (defn specificInstanceOfGeneric? 
   [genterm term subst]

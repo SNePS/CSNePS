@@ -111,7 +111,7 @@
 	        ;; TODO:     should this "adjustable" check be eliminated?
           (if (and (isa? (syntactic-type-of target) :csneps.core/Molecular)
                    (isa? (syntactic-type-of source) :csneps.core/Molecular)
-                   (cf/adjustable? (@caseframe source) (@caseframe target)))
+                   (cf/adjustable? (@term-caseframe-map source) (@term-caseframe-map target)))
             ;; Return targetset if the fillers of every source slot can 
 		        ;;     be validly adjusted to the fillers of the corresponding target slot
             (when (every?
@@ -120,7 +120,7 @@
                                    (:max %)
                                    (pb-findtos (hash-set source) %)
                                    (pb-findtos (hash-set target) %))
-                    (:slots (@caseframe source)))
+                    (:slots (@term-caseframe-map source)))
               targetset)))
         ;; Else (not singletons;  special nor case): 
 	      ;;      return targetset if the source set covers the target set
@@ -129,14 +129,14 @@
 (defmethod slot-based-entails 
   [:csneps.core/Molecular :csneps.core/Molecular] [source target]
   ;(println "Here" (cf/adjustable? (:caseframe source) (:caseframe target)))
-  (when (and (cf/adjustable? (@caseframe source) (@caseframe target))
+  (when (and (cf/adjustable? (@term-caseframe-map source) (@term-caseframe-map target))
              (every? 
                #(valid-adjust (:posadjust %)
                               (:min %)
                               (:max %)
                               (pb-findtos (hash-set source) %)
                               (pb-findtos (hash-set target) %))
-               (:slots (@caseframe source))))
+               (:slots (@term-caseframe-map source))))
     target))
 
 (defn covers
@@ -193,7 +193,7 @@
 	      (cl-format true "~&I will consider using Slot&Path-Based inference.~%"))
 	    (or 
 	      (loop 
-	        [terms @(:terms (@caseframe target))]
+	        [terms @(:terms (@term-caseframe-map target))]
 	        (cond 
 	          (empty? terms) 
 	          nil
@@ -205,7 +205,7 @@
 	      ;; For each caseframe cf that can be adjusted to the target's frame, 
 	      ;;  look at each of cf's stored terms
 	      (loop 
-	        [cfs @(:adj-from (@caseframe target))]
+	        [cfs @(:adj-from (@term-caseframe-map target))]
 	        (let [cf (first cfs)
 	              res (when cf
 	                    (loop 

@@ -61,7 +61,7 @@
 			(ref-set csneps/dependencies {})
 			(ref-set csneps/lattice-node {})
 			(ref-set csneps/down-cableset {})
-			(ref-set csneps/caseframe {})
+			(ref-set csneps/term-caseframe-map {})
    
       ;; Clear cache used by IG.
       (memo-clear! snip/hyp-subst-of-ct?)
