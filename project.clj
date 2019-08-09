@@ -3,7 +3,7 @@
   "http" #(org.apache.maven.wagon.providers.http.HttpWagon.))
 (defproject Sneps3-Clojure "1.0.0-SNAPSHOT"
   :description "CSNePS - Concurrent SNePS"
-  :dependencies [[org.clojure/clojure "1.9.0"]
+  :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/core.memoize "0.5.9"]
                  [org.clojure/math.numeric-tower "0.0.4"]
