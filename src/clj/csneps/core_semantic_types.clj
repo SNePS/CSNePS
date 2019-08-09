@@ -7,6 +7,9 @@
 ;;Maps the term name to the semantic type
 (defvar type-map (ref (hash-map)))
 
+;;Maps the term name to a map with a vector of usages for each semantic type.
+(defvar type-support (ref (hash-map)))
+
 ;;Maps the term to its set of properties.
 (defvar property-map (ref (hash-map)))
 
@@ -101,8 +104,8 @@
   ((conj (descendants @semantic-type-hierarchy :Entity) :Entity) kw))
 
 (defn gcsubtype
-  [type1 type2]
   "Returns a set of the greatest common subtypes of type1 and type2"
+  [type1 type2]
     ;(println "gcsubtype")
     (if (= type1 type2) (list type1)
       (let [common (clojure.set/intersection (set (conj (descendants @semantic-type-hierarchy type1) type1))

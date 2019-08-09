@@ -35,6 +35,7 @@
   (dosync
     (ref-set semtype-in-channels {})
     (ref-set semtype-to-channel-map {})
+    (ref-set type-support {})
     (ref-set semantic-type-hierarchy (make-hierarchy))
 	  (define-type* :Propositional '(:Entity))
 	  (define-type* :WhQuestion '(:Propositional))
@@ -112,3 +113,27 @@
                (subtypep newtype :Policy)))
     (dosync (alter support assoc term #{['hyp #{(:name term)}]})))
   term)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Term type support ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn add-type-support
+  "Adds a vector of terms supporting a semantic type of a term to the type-support map."
+  [term sem-type supporting-terms]
+  (let [types (@type-support (:name term))
+        new-supports (vec (conj (sem-type types) supporting-terms))]
+    (dosync (alter type-support assoc (:name term) (assoc types sem-type new-supports)))))
+
+(defn supported-type?
+  "Returns true if the type is directly supported in the provided context. No inference is
+   used to get less specific type support."
+  [term sem-type context]
+  (let [supports (sem-type (@type-support (:name term)))]
+    (some #(every? (fn [t] (ct/asserted? t context)) %) supports)))
+
+(defn supported-types
+  "Returns the list of supported semantic types of a term in the provided context."
+  [term context]
+  (remove nil?
+          (map #(when (supported-type? term % context) %) (keys (@type-support (:name term))))))
