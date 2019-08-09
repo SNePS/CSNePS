@@ -1,6 +1,6 @@
 (in-ns 'csneps.core.build)
 
-(declare add-type-support)
+(declare add-type-support semtype-in-context)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Type Definition ;;;
@@ -73,13 +73,12 @@
   "Adjusts the type of term, if possible,
        from its old semantic type, oldtype,
        to its new semantic type, newtype,
-       while keeping its syntactic type, syntype,
-    and return the term."
+    and returns the term."
   [term oldtype newtype]
   ;(println "Adjusting type of: " (:name term) " from: " oldtype " -> " newtype)
   (cond
     ;; Types are already the same
-    (= (type-of term) (type-of newtype)) nil
+    (= oldtype newtype) nil
     ;; Arbitrary terms can be adjusted down only while they're being built.
     ;; They can't ever be adjusted down below their highest-level restriction.
     (and (arbitraryTerm? term)
@@ -146,6 +145,8 @@
   "Returns the current type of a term in the given context."
   [term context]
   (let [types (supported-types term context)
-        type (reduce gcsubtype types)]
+        type (if (> (count types) 0)
+               (reduce gcsubtype types)
+               (error (str "Term" term "has no type in context" (:name context))))]
     (when-not type
       (error (str "Term" term "has inconsistent type in context" (:name context))))))
