@@ -1,4 +1,7 @@
-(in-ns 'csneps.snip)
+(ns csneps.snip.sindex
+  (:use [csneps.snip.messagestructure]
+        [csneps.snip.message]
+        [clojure.set]))
 
 ;;; An S-Index is a map from substitution to a RUI. 
 ;;; Preconditions for use:

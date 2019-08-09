@@ -1,4 +1,8 @@
-(in-ns 'csneps.snip)
+(ns csneps.snip.ptree
+  (:use [csneps.snip.messagestructure]
+        [csneps.snip.message]
+        [clojure.set])
+  (:require [csneps.core :as csneps]))
 
 (declare msgs-to-promote print-ptree)
 
@@ -97,11 +101,11 @@
 (defn term-vars
   "Returns the set of arbitrary terms which are in the down cableset of term."
   [term]
-  (loop [dcs (@down-cableset term)
+  (loop [dcs (@csneps/down-cableset term)
          vars #{}]
     (if (seq dcs)
       (recur (rest dcs)
-             (union vars (set (filter arbitraryTerm? (first dcs)))))
+             (union vars (set (filter csneps/arbitraryTerm? (first dcs)))))
       vars)))
 
 (defn var-pat-map
@@ -193,18 +197,18 @@
 
 ;;; Debug and testing
 
-(defn test-ptree
-  []
-  (dosync (ref-set build/KRNovice true))
-  (let [a (build/assert '(and (A (every x (Isa x v1)) (every y (Isa y v2)))
-                              (B (every z (Isa z v3)) (every w (Isa w v4)))
-                              (C z (every v (Isa v v5)))
-                              (D x z)
-                              (E y v)
-                              (G y z)
-                              (H x w))
-                        (ct/currentContext))]
-    (make-ptree :csneps.core/Conjunction (@down-cableset a))))
+;(defn test-ptree
+;  []
+;  (dosync (ref-set build/KRNovice true))
+;  (let [a (build/assert '(and (A (every x (Isa x v1)) (every y (Isa y v2)))
+;                              (B (every z (Isa z v3)) (every w (Isa w v4)))
+;                              (C z (every v (Isa v v5)))
+;                              (D x z)
+;                              (E y v)
+;                              (G y z)
+;                              (H x w))
+;                        (ct/currentContext))]
+;    (make-ptree :csneps.core/Conjunction (@down-cableset a))))
 
 (defn- get-root
   [ptree]

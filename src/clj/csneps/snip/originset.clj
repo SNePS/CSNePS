@@ -4,7 +4,9 @@
 ;;; or to apply difference operations to many sets. These functions are meant
 ;;; to abstract that away from the implementation of IGs.
 
-(in-ns 'csneps.snip)
+(ns csneps.snip.originset
+  (:use [clojure.set])
+  (:require [csneps.core :as csneps]))
 
 (defn combine-origin-tags
   [t1 t2]
@@ -73,7 +75,7 @@
 
 (defn alter-support
   [term new-support]
-  (alter support assoc term new-support))
+  (alter csneps/support assoc term new-support))
 
 (defn ss-contains-os
   [ss os]

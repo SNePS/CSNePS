@@ -1,22 +1,11 @@
-(in-ns 'csneps.snip)
+(ns csneps.snip.message
+  (:use [clojure.set]
+        [csneps.util])
+  (:require [csneps.snip.originset :as os]
+            [csneps.core :as csneps]
+            [csneps.core.build :as build]))
 
-;;; A message is a container for a substitution. 
-
-(defprotocol MessageStructure
-  (get-new-messages [this new-msg])
-  (seen-message? [this msg]) ;; Sometimes you don't want to combine msgs, just check if you've already seen one.
-  (get-matched-messages [this])
-  (get-sent-messages [this chtype])
-  (add-matched-and-sent-messages [this matched sent] [this matched sent remove-matched-from-working?])
-  (print-messages [this]))
-
-(defmethod print-method csneps.snip.MessageStructure [o w]
-  (.write ^java.io.Writer w 
-    (str (print-messages o))))
-
-(prefer-method print-method csneps.snip.MessageStructure java.util.Map)
-(prefer-method print-method csneps.snip.MessageStructure clojure.lang.IPersistentMap)
-(prefer-method print-method csneps.snip.MessageStructure clojure.lang.IRecord)
+;;; A message is a container for a substitution.
 
 ;; Type options:
 ;; U-INFER
@@ -43,7 +32,7 @@
    invoke-set #{}
    taskid nil])
 
-(defmethod print-method csneps.snip.Message [o w]
+(defmethod print-method csneps.snip.message.Message [o w]
   (.write ^java.io.Writer w 
     (str "(" (:priority o) ")"
          " From: " (if (:origin o) (print-str (:origin o)) "<?>")
@@ -79,7 +68,7 @@
     (new-message {:subst (merge (:subst msg1) (:subst msg2))
                   :pos (count (filter true? (vals new-flaggedns)))
                   :neg (count (filter false? (vals new-flaggedns)))
-                  :support-set (os-union (:support-set msg1) (:support-set msg2))
+                  :support-set (os/os-union (:support-set msg1) (:support-set msg2))
                   :antecedent-support-sets (union (:antecedent-support-sets msg1) (:antecedent-support-sets msg2)
                                                   (when-not (seq (:antecedent-support-sets msg1)) #{(:support-set msg1)})
                                                   (when-not (seq (:antecedent-support-sets msg2)) #{(:support-set msg2)}))
@@ -124,8 +113,8 @@
       (assoc :u-true? new-u-true)
       (assoc-when-val :fwd-infer? fwd-infer?)
       (assoc :invoke-set (or invoke-set (if origin
-                                          (@future-fw-infer origin)
-                                          (when (:origin message) (@future-fw-infer (:origin message))))))
+                                          (@csneps/future-fw-infer origin)
+                                          (when (:origin message) (@csneps/future-fw-infer (:origin message))))))
       (assoc-when-val :taskid taskid)
       (assoc :pos new-pos)
       (assoc :neg new-neg)

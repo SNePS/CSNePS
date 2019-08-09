@@ -6,6 +6,12 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.relations :as slot]
             [csneps.core.printer :as print]
+            [csneps.snip.message :as msg]
+            [csneps.snip.messagestructure :as msgstruct]
+            [csneps.snip.originset :as os]
+            [csneps.snip.ptree :as ptree]
+            [csneps.snip.linear_message_set :as lms]
+            [csneps.snip.sindex :as sindex]
             [clojure.walk :as walk])
 ;  (:refer-clojure :exclude [merge])
   (:use [csneps.core]
@@ -36,8 +42,8 @@
 (load "snip_sort_based")
 (load "snip_path_based")
 (load "snip_slot_based")
-(load "snip_originset")
-(load "snip_message")
+;(load "snip_originset")
+;(load "snip_message")
 (load "snip_inference_graph")
 (load "snip_acting")
 
