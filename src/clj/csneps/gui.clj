@@ -1,5 +1,5 @@
 (ns csneps.gui
-  (:import [edu.buffalo.cse.sneps3.gui])
+  (:import [edu.buffalo.cse.sneps3.gui GUI2])
   (:use [clojure.tools.nrepl.server :only (start-server stop-server)]
         [csneps.util])
   (:require [clojure.tools.nrepl :as repl]
@@ -16,48 +16,48 @@
           port (+ 1000 (.nextInt ^java.util.Random rgen 9000))
           srv (start-server :port port)
           termset (set (map #(csneps/get-term %) termset))
-          GUI (new edu.buffalo.cse.sneps3.gui.GUI2 port termset)
-          typechangefn (fn [ref key oldvalue newvalue] (.typesChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          GUI (new GUI2 port termset)
+          typechangefn (fn [ref key oldvalue newvalue] (.typesChanged (GUI2/getModel)
                                                                       (map-difference (:parents oldvalue) (:parents newvalue))
                                                                       (if (>= (count oldvalue) (count newvalue)) true false)))
-          termchangefn (fn [ref key oldvalue newvalue] (.termsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          termchangefn (fn [ref key oldvalue newvalue] (.termsChanged (GUI2/getModel)
                                                                       (map-difference oldvalue newvalue)
                                                                       (empty? newvalue)))
           contextchangefn (fn [ref key oldvalue newvalue] (let [clear? (>= (count oldvalue) (count newvalue))]
                                                             (if clear? 
                                                               (.contextsChanged 
-                                                                (edu.buffalo.cse.sneps3.gui.GUI2/getModel)
+                                                                (GUI2/getModel)
                                                                 newvalue
                                                                 true)
                                                               (.contextsChanged 
-                                                                (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                                                                (GUI2/getModel)
                                                                 (map-difference oldvalue newvalue)
                                                                 false))))
-          slotchangefn (fn [ref key oldvalue newvalue] (.slotsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          slotchangefn (fn [ref key oldvalue newvalue] (.slotsChanged (GUI2/getModel)
                                                                       (map-difference oldvalue newvalue)
                                                                       (if (>= (count oldvalue) (count newvalue)) true false)))
-          caseframechangefn (fn [ref key oldvalue newvalue] (.caseframesChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          caseframechangefn (fn [ref key oldvalue newvalue] (.caseframesChanged (GUI2/getModel)
                                                                                 (set/difference newvalue oldvalue)
                                                                                 (if (>= (count oldvalue) (count newvalue)) true false)))
-          fsymbolchangefn (fn [ref key oldvalue newvalue] (.fsymbolsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          fsymbolchangefn (fn [ref key oldvalue newvalue] (.fsymbolsChanged (GUI2/getModel)
                                                                                 (map-difference oldvalue newvalue)))
-          currentcontexthypschangefn (fn [ref key oldvalue newvalue] (.currentContextHypsChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          currentcontexthypschangefn (fn [ref key oldvalue newvalue] (.currentContextHypsChanged (GUI2/getModel)
                                                                                 (set/difference newvalue oldvalue)))
-          currentcontextchangefn (fn [ref key oldvalue newvalue] (.currentContextChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+          currentcontextchangefn (fn [ref key oldvalue newvalue] (.currentContextChanged (GUI2/getModel)
                                                                                 newvalue)
                                    (remove-watch (:hyps oldvalue) :currhyps)
                                    (add-watch (:hyps newvalue) :currhyps currentcontexthypschangefn))
           ;; Refs removed from terms.
           ichannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameIChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                              (.termNameIChannelMapChanged (GUI2/getModel)
                                 (map-difference newvalue oldvalue)
                                 (empty? newvalue)))
           uchannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameUChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                              (.termNameUChannelMapChanged (GUI2/getModel)
                                 (map-difference newvalue oldvalue)
                                 (empty? newvalue)))
           gchannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameGChannelMapChanged (edu.buffalo.cse.sneps3.gui.GUI2/getModel) 
+                              (.termNameGChannelMapChanged (GUI2/getModel)
                                 (map-difference newvalue oldvalue)
                                 (empty? newvalue)))] 
       (add-watch csneps/semantic-type-hierarchy :types typechangefn)
