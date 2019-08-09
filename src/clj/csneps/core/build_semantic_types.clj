@@ -1,5 +1,7 @@
 (in-ns 'csneps.core.build)
 
+(declare add-type-support)
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Type Definition ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -56,9 +58,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn set-term-type
-  [term newtype]
+  [term newtype & {:keys [support] :or {support []}}]
   (dosync
     (alter type-map assoc (:name term) newtype)
+    (when semtype-objectlang-experimental
+      (add-type-support term newtype support))
     (when (and semtype-objectlang-experimental (@semtype-to-channel-map newtype))
       (submit-to-channel (@semtype-to-channel-map newtype)
                        (new-message {:pos 1
@@ -122,7 +126,7 @@
   "Adds a vector of terms supporting a semantic type of a term to the type-support map."
   [term sem-type supporting-terms]
   (let [types (@type-support (:name term))
-        new-supports (vec (conj (sem-type types) supporting-terms))]
+        new-supports (set (conj (sem-type types) supporting-terms))]
     (dosync (alter type-support assoc (:name term) (assoc types sem-type new-supports)))))
 
 (defn supported-type?
@@ -137,3 +141,11 @@
   [term context]
   (remove nil?
           (map #(when (supported-type? term % context) %) (keys (@type-support (:name term))))))
+
+(defn semtype-in-context
+  "Returns the current type of a term in the given context."
+  [term context]
+  (let [types (supported-types term context)
+        type (reduce gcsubtype types)]
+    (when-not type
+      (error (str "Term" term "has inconsistent type in context" (:name context))))))
