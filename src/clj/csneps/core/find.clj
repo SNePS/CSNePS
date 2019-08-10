@@ -2,12 +2,13 @@
   (:require [csneps.core :as csneps]
             [csneps.core.caseframes :as cf]
             [clojure.math.combinatorics :as cb])
+  (:refer-clojure :exclude [find])
   (:use [csneps.core.find-utils]
         [csneps.utils.coreutils]
         [csneps.core.unify.treenode]
         [csneps.util]))
 
-(declare find find-in find-helper)
+(declare find-in find-helper)
 
 ;; Rewritten 10/12/12 [DRS]
 (defn eqfillersets
