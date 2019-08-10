@@ -1388,7 +1388,7 @@
     :else
     (lms/make-linear-msg-set)))
 
-(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels msg/new-message create-message-structure backward-infer forward-infer)
+(build/fix-fn-defs submit-to-channel blocking-submit-to-channel submit-assertion-to-channels create-message-structure backward-infer forward-infer)
 
 ;;; Reductio
 

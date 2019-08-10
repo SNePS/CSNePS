@@ -1,6 +1,7 @@
 (ns csneps.snip.linear_message_set
   (:use [csneps.snip.messagestructure]
         [csneps.snip.message]
+        [csneps.snip.message-compat]
         [clojure.set]))
 
 ;; This is the worst case, combinatorial algorithm. 

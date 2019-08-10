@@ -5,6 +5,7 @@
             [csneps.core.relations :as slot]
             [csneps.core.find :as find]
             [csneps.snip.messagestructure :as msgstruct]
+            [csneps.snip.message :as msg]
             [csneps.debug :as debug]
             [clojure.core.match :as match]
             [clojure.math.numeric-tower :as math]

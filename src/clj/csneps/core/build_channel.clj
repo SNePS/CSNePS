@@ -28,16 +28,15 @@
 
 (in-ns 'csneps.core.build)
 
-(declare valve-state-changed submit-to-channels new-message create-message-structure)
+(declare valve-state-changed submit-to-channels create-message-structure)
 
 (defn fix-fn-defs
   "A hack to work around circular reference issues. Otherwise we'd have to combine
    snip and build."
-  [stc bstc satc nm crs bwi fwi]
+  [stc bstc satc crs bwi fwi]
   (def submit-to-channel stc)
   (def blocking-submit-to-channel bstc)
   (def submit-assertion-to-channels satc)
-  (def new-message nm)
   (def create-message-structure crs)
   (def backward-infer bwi)
   (def forward-infer fwi))
@@ -150,7 +149,7 @@
             (not (variableTerm? orig))
             (not (carule? orig))
             (not= (syntactic-type-of orig) :csneps.core/Negation))
-      (submit-to-channel ch (new-message {:origin orig
+      (submit-to-channel ch (msg/new-message {:origin orig
                                           :support-set #{['hyp #{(:name orig)}]}
                                           :flaggedns {orig true}
                                           :pos 1
@@ -160,7 +159,7 @@
     ;; built. If orig is a nor, send a u-infer message to its arguments.
     (when (and (= type :u-channel)
                (= (syntactic-type-of orig) :csneps.core/Negation))
-      (let [new-msg (new-message {:origin orig, 
+      (let [new-msg (msg/new-message {:origin orig,
                                   :support-set #{['der #{(:name orig)}]}, 
                                   :type 'U-INFER, 
                                   :flaggedns {orig true}

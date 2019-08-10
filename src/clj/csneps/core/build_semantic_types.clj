@@ -65,7 +65,7 @@
       (add-type-support term newtype support))
     (when (and semtype-objectlang-experimental (@semtype-to-channel-map newtype))
       (submit-to-channel (@semtype-to-channel-map newtype)
-                       (new-message {:pos 1
+                       (msg/new-message {:pos 1
                                      :type 'I-INFER
                                      :subst {(@semtype-to-arb-map newtype) term}})))))
 

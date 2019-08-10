@@ -1,6 +1,7 @@
 (ns csneps.snip.ptree
   (:use [csneps.snip.messagestructure]
         [csneps.snip.message]
+        [csneps.snip.message-compat]
         [clojure.set])
   (:require [csneps.core :as csneps]))
 
