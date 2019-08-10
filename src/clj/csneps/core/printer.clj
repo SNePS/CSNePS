@@ -377,7 +377,7 @@
           ;; Condition-action rules don't need the assert portion of the output.
           (binding [PRINTED-VARIABLES (hash-set)
                     PRINTED-VARIABLE-LABELS (hash-map)]
-            (.write w (str (print-unnamed-molecular-term term))))
+            (.write w (str (print-unnamed-molecular-term term) "\n")))
           (do
             (.write w  "(csneps.core.build/assert '")
             (if (= (:type term) :csneps.core/Atom)
