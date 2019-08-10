@@ -27,11 +27,16 @@
 (def queue (PriorityBlockingQueue. 50 task-cmpr))
 
 ;; Fixed Thread Pool of size 2 * processors, using queue as it's queue.
-(def executorService (ThreadPoolExecutor.
-                       ig-cpus-to-use
-                       ig-cpus-to-use
-                       (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
-(.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
+
+(def executorService nil)
+
+(defn startExecutor
+  []
+  (def executorService (ThreadPoolExecutor.
+                         ig-cpus-to-use
+                         ig-cpus-to-use
+                         (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
+  (.prestartAllCoreThreads ^ThreadPoolExecutor executorService))
 
 (defn resetExecutor
   []

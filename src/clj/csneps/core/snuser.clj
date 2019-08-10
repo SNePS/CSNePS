@@ -315,6 +315,7 @@
     (when (:help options)
       (println summary)
       (System/exit 0))
+    (igc/startExecutor)
     (clearkb true)
     (if (:cli options)
       (reply.main/launch {:custom-eval '(in-ns 'csneps.core.snuser)})

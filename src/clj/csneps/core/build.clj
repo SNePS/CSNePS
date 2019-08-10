@@ -13,7 +13,7 @@
             [clojure.zip :as zip]
             [clojure.set :as set]
             [clojure.string])
-  (:refer-clojure :exclude [assert find]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
+  (:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.configuration]
         [csneps.util]
