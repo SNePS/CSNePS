@@ -1,2 +1,2 @@
-(ns snip.inference-graph.util)
+(ns csneps.snip.inference-graph.util)
 

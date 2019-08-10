@@ -1,5 +1,6 @@
 (ns csneps.test.unification
-  (:use [csneps.core.build])
+  (:use [csneps.core.build]
+        [csneps.core.unify.treenode])
   (:require [csneps.core.snuser]))
 
 (defn basicunif-test []
