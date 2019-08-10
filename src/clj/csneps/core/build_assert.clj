@@ -85,7 +85,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
       (ct/hypothesize expr ct)
-      (adjust-type expr (semantic-type-of expr) :Proposition)
+      (adjust-type expr (st/semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)
@@ -97,7 +97,7 @@
   (let [ct (csneps.core.contexts/find-context context)]
     (when-not (ct/asserted? expr ct)
       (ct/hypothesize expr ct)
-      (adjust-type expr (semantic-type-of expr) :Proposition)
+      (adjust-type expr (st/semantic-type-of expr) :Proposition)
       (submit-assertion-to-channels expr))
     (check-contradiction expr ct))
   expr)

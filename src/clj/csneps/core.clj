@@ -39,17 +39,22 @@
 (def term-caseframe-map (ref {}))
 (def support (ref {}))
 (def dependencies (ref {}))
-(defvar property-map (ref (hash-map))
-        "Maps the term to its set of properties.")
 
-(defvar support-set (ref (hash-map))
-        "Maps the term name to it's support set.")
+(def property-map
+  "Maps the term to its set of properties."
+  (ref (hash-map)))
 
-(defvar supported-nodes-set (ref (hash-map))
-        "Maps the term name to its supported node set.")
+(def support-set
+  "Maps the term name to it's support set."
+  (ref (hash-map)))
 
-(defvar primaction (ref (hash-map))
-        "Maps a term to it's primaction (Act/Actor only).")
+(def supported-nodes-set
+  "Maps the term name to its supported node set."
+  (ref (hash-map)))
+
+(def primaction
+  "Maps a term to it's primaction (Act/Actor only)."
+  (ref (hash-map)))
 
 ;; Inference Graph extensions to the Propositional Graph
 (def i-channels (ref {}))
@@ -69,21 +74,24 @@
 (def semtype-to-channel-map (ref {})) ;; Maps semtypes to the channel for that type.
 (def semtype-to-arb-map (ref {})) ;; Maps semtypes to the arbitrary for that type.
 
-(defvar type-support (ref (hash-map))
-        "Maps the term name to a map with a vector of usages for each semantic type.")
+(def type-support
+  "Maps the term name to a map with a vector of usages for each semantic type."
+  (ref (hash-map)))
 
 ;; Syntactic Types
-(defvar TopSyntacticType ::Term
-        "The root of the syntactic type hierarchy.")
+(def TopSyntacticType
+  "The root of the syntactic type hierarchy."
+  ::Term)
 
 ;; Semantic Types
 (def TOP-SEMANTIC-TYPE :Entity)
 
-(defvar semantic-type-hierarchy (ref nil))
+(def semantic-type-hierarchy (ref nil))
 
 ;; Goal is to eliminate this with putting the types in the object language.
-(defvar type-map (ref (hash-map))
-        "Maps the term name to the semantic type.")
+(def type-map
+  "Maps the term name to the semantic type."
+  (ref (hash-map)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Utility Functions on Data Model ;;;

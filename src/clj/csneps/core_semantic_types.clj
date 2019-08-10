@@ -60,12 +60,6 @@
           (alter primaction assoc termname nil)))
       newtypekey))
 
-(defn semantic-type-of
-  [term]
-  (if (isa? (type-of term) ::Term)
-    (get @type-map (:name term))
-    (get @type-map term)))
-
 (defn subtypep
   "Checks if type1 is a descendent of type2"
   [type1 type2]

@@ -4,11 +4,13 @@
             [clojure.set :as set])
   (:use [csneps.util]))
 
-(defvar CONTEXTS (ref (hash-map))
-  "A map from context name to context.")
+(def CONTEXTS
+  "A map from context name to context."
+  (ref (hash-map)))
 
-(defvar ^:dynamic *CurrentContext* (ref nil)
-  "The current context.")
+(def ^:dynamic *CurrentContext*
+  "The current context."
+  (ref nil))
 
 ;;; "A CSNePS Context"
 (defrecord Context [
@@ -133,5 +135,3 @@
             arg2 (when (= cf 'Isa) (second (@csneps/down-cableset res)))]
         (when arg2
           (every? #(csneps/semtype? (keyword (:name %))) arg2))))))
-            
-      

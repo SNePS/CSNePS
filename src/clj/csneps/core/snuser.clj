@@ -24,7 +24,8 @@
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
         [csneps.core.build :only (*PRECISION* defrule unassert rewrite-propositional-expr)]
         [csneps.core.find :only (find)]
-        [csneps.core :only (showTypes list-types semantic-type-of)]
+        [csneps.core :only (showTypes list-types)]
+        [csneps.core.semantic-types :only [semantic-type-of]]
         [csneps.core.printer :only (writeKBToTextFile)]
         [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction ig-debug-all)]
         [csneps.core.arithmetic]
@@ -243,7 +244,7 @@
         qvars (sort-by :name (filter csneps/queryTerm? terms))
         mols (sort-by :name (filter csneps/molecularTerm? terms))
         print-term (fn [x]
-                     (when types (print (csneps/syntactic-type-of x) "-" (csneps/semantic-type-of x) " "))
+                     (when types (print (csneps/syntactic-type-of x) "-" (semantic-type-of x) " "))
                      (if (and properties (@csneps/property-map x)) (print (@csneps/property-map x) " ") #{})
                      (print x)
                      (when originsets (print " " (@csneps/support x)))

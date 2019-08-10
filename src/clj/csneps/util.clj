@@ -240,16 +240,6 @@
 ;;; Removing reliance on the monolithic Clojure.contrib for the move to 1.3
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;From the old 1.2 version of Clojure.contrib.def
-(defmacro defvar
-  "Defines a var with an optional intializer and doc string"
-  ([name]
-     (list `def name))
-  ([name init]
-     (list `def name init))
-  ([name init doc]
-     (list `def (with-meta name (assoc (meta name) :doc doc)) init)))
-
 ; name-with-attributes by Konrad Hinsen:
 (defn name-with-attributes
   "To be used in macro definitions.

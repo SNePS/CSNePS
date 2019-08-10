@@ -4,6 +4,7 @@
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
             [csneps.core :as csneps]
+            [csneps.core.semantic-types :as st]
             [csneps.core.build :as build]
             [csneps.snip :as snip]
             [clojure.set :as set]
@@ -73,7 +74,7 @@
 ;    (snuser/assert `(~'Isa (~'every ~'x (~'Isa ~'x ~(name c))) ~(name p))))
   (let [terms (filter csneps/atomicTerm? (vals @csneps/TERMS))]
     (doseq [t terms]
-      (snuser/assert ['Isa t (name (csneps/semantic-type-of t))]))))
+      (snuser/assert ['Isa t (name (st/semantic-type-of t))]))))
 
 (defn typeToGeneric
   [typestr]

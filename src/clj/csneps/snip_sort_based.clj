@@ -22,7 +22,7 @@
                                    countc 0]
                               (if (and class
                                        (semantic-type-p (keyword (:name (first class))))
-                                       (isa? (semantic-type-of (first member)) (keyword (:name (first class)))))
+                                       (isa? (st/semantic-type-of (first member)) (keyword (:name (first class)))))
                                 (recur (next class) (inc countc))
                                 countc))))
                       (recur (next member) (inc countm))

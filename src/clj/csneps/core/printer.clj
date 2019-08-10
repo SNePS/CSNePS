@@ -7,6 +7,7 @@
   (:require [clojure.string :as str]
             [csneps.core.contexts :as ct]
             [csneps.core :as csneps]
+            [csneps.core.semantic-types :as st]
             [csneps.core.caseframes :as cf]
             [csneps.core.relations :as slot])
   (:use [csneps.core :only (type-of)]
@@ -32,8 +33,8 @@
 (defn wft-string
   [term]
   (str (:name term)
-      (if (or (csneps/subtypep (csneps/semantic-type-of term) :Proposition)
-              (csneps/subtypep (csneps/semantic-type-of term) :Policy))
+      (if (or (csneps/subtypep (st/semantic-type-of term) :Proposition)
+              (csneps/subtypep (st/semantic-type-of term) :Policy))
         (if (ct/asserted? term (ct/currentContext)) "!" "?"))":"))
 
 (defn args-str
@@ -231,7 +232,7 @@
     :else
     (str (print-atom term)
       (if
-        (and (= (csneps.core/semantic-type-of term) :Proposition)
+        (and (= (st/semantic-type-of term) :Proposition)
 	     (ct/asserted? term (ct/currentContext)))
         "!" "")))))
 

@@ -415,7 +415,7 @@
   ;; Allow for cases where semantic types don't match now but *could* in the future. 
   ;; Bad types will be blocked in the channels, so this is OK, and we don't want to
   ;; not build channels which could become relevant. (Same idea used in match-single-unifier)
-  (if (gcsubtype (semantic-type-of v1) (semantic-type-of t1))
+  (if (gcsubtype (st/semantic-type-of v1) (st/semantic-type-of t1))
     (if (variable? t1)
       (subsumes? t1 v1)
       true)
@@ -434,7 +434,7 @@
                   ;; something like Category -> Policy. Some of these will be built if a term started as Entity
                   ;; and was later lowered to Category, but let's not pollute things by always building them. 
                   ;; Note messages like Entity -> Category are being stopped in the channels. 
-                  (every? (fn [[v1 v2]] (gcsubtype (semantic-type-of v2) (semantic-type-of v1))) sourcebind))]
+                  (every? (fn [[v1 v2]] (gcsubtype (st/semantic-type-of v2) (st/semantic-type-of v1))) sourcebind))]
     ;(println unifier)
     ;(println sourcebind "\n" targetbind "\n" sbok tbok)
     (cond

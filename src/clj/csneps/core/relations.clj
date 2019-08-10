@@ -3,7 +3,7 @@
   (:use [csneps.util])
   (:require [csneps.core]))
 
-(defvar SLOTS (ref (hash-map)))
+(def SLOTS (ref (hash-map)))
 
 (defrecord2 Slot
   [name (gensym "rel")  ;the name of the slot

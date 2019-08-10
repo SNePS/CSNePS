@@ -3,6 +3,7 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
+            [csneps.core.semantic-types :as st]
             [csneps.core.find :as find]
             [csneps.snip.messagestructure :as msgstruct]
             [csneps.snip.message :as msg]
@@ -36,13 +37,14 @@
 (load "build_rewrite")
 (load "build_semantic_types")
 
-(defvar KRNovice (ref nil)
+(def KRNovice
   "If the value is non-null,
       caseframes will be created automatically
         whenever the user uses a function symbol
-            that doesn't already have a caseframe.")
+            that doesn't already have a caseframe."
+  (ref nil))
 
-(defvar ^:dynamic *PRECISION* 5)
+(def ^:dynamic *PRECISION* 5)
 
 ;; I'd rather this be in snuser or snip, but it's forced to be here for now.
 (def verbose-rules
@@ -251,7 +253,7 @@
           (let [fillers (build (list* 'setof (rest args)) semtype subst #{})
                 term (build-molecular-node
                        cf (list fillers) :csneps.core/Andor semtype
-                       :fsemtype (semantic-type-of fillers)
+                       :fsemtype (st/semantic-type-of fillers)
                        :min min :max max)]
             (build-channels term)
             term)))))
@@ -295,7 +297,7 @@
                 term (build-channels 
                        (build-molecular-node
                          cf (list fillers) :csneps.core/Thresh semtype
-                         :fsemtype (semantic-type-of fillers)
+                         :fsemtype (st/semantic-type-of fillers)
                          :min min :max max))]
             term)))))
 
@@ -596,7 +598,7 @@
 ;       and if necessary, adjusting its semantic type so that
 ;       it is of the semantic type semtype."
   [:csneps.core/Term] [expr semtype substitution properties]
-  (adjust-type expr (semantic-type-of expr) semtype))
+  (adjust-type expr (st/semantic-type-of expr) semtype))
 
 (defmethod build
   [clojure.lang.Symbol] [expr semtype substitution properties]
@@ -609,10 +611,10 @@
       (or (wftname? (str expr))
           (quantterm? (str expr)))
         (if term ;;Lower it's semantic type if necessary
-          (adjust-type term (semantic-type-of term) semtype)
+          (adjust-type term (st/semantic-type-of term) semtype)
           (error (str "The name " expr " is not yet associated with a term.")))
       term ;Lower its semantic type, if necessary
-	    (adjust-type term (semantic-type-of term) semtype)
+	    (adjust-type term (st/semantic-type-of term) semtype)
       :else
         (let [term (new-atom {:name expr})]
           (dosync 
@@ -711,7 +713,7 @@
                                                       (list fillers) 
                                                       :csneps.core/Conjunction 
                                                       semtype 
-                                                      :fsemtype (semantic-type-of fillers)
+                                                      :fsemtype (st/semantic-type-of fillers)
                                                       :min (count fillers)
                                                       :max (count fillers))))
             (rest expr) ;;1 conjunct
@@ -725,7 +727,7 @@
                                                         :csneps.core/Conjunction 
                                                         semtype 
                                                         :fsemtype 
-                                                        (semantic-type-of (second expr))
+                                                        (st/semantic-type-of (second expr))
                                                         :min (count (rest expr))
                                                         :max (count (rest expr)))))
                 ;; otherwise, just build the conjunct.
@@ -741,7 +743,7 @@
           (rest (rest expr))
           (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-channels 
-              (build-molecular-node cf (list fillers) :csneps.core/Disjunction semtype :fsemtype (semantic-type-of fillers)
+              (build-molecular-node cf (list fillers) :csneps.core/Disjunction semtype :fsemtype (st/semantic-type-of fillers)
                                     :min 1 :max (count fillers))))
           (rest expr)
           ;; If only one disjunct, just build the disjunct.
@@ -758,7 +760,7 @@
           (rest (rest expr))
           (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-channels 
-              (build-molecular-node cf (list fillers) :csneps.core/Xor semtype :fsemtype (semantic-type-of fillers)
+              (build-molecular-node cf (list fillers) :csneps.core/Xor semtype :fsemtype (st/semantic-type-of fillers)
                                     :min 1 :max 1)))
           (rest expr)
           ;; If only one disjunct, just build the disjunct.
@@ -778,7 +780,7 @@
                   (> (count (second expr)) 1)))
            (let [fillers (build (set (rest expr)) semtype substitution #{})]
              (build-channels 
-               (build-molecular-node cf (list fillers) :csneps.core/Nand semtype :fsemtype (semantic-type-of fillers)
+               (build-molecular-node cf (list fillers) :csneps.core/Nand semtype :fsemtype (st/semantic-type-of fillers)
                                      :min 0 :max (dec (count fillers)))))
            (= (count expr) 2)
            ;; If only one argument, build the negation of the argument.
@@ -820,7 +822,7 @@
             (build-channels
               (build-molecular-node
                 cf (list fillers) :csneps.core/Equivalence semtype
-                :fsemtype (semantic-type-of fillers)
+                :fsemtype (st/semantic-type-of fillers)
                 :min 1 :max (dec (count fillers)))))
           (rest expr)
           ;; If only one filler,
@@ -833,7 +835,7 @@
               (build-channels 
                 (build-molecular-node
                   cf (rest expr) :csneps.core/Equivalence semtype
-                  :fsemtype (semantic-type-of (second expr))
+                  :fsemtype (st/semantic-type-of (second expr))
                   :min 1 :max (dec (count (first (rest expr)))))))
             (build 'True :csneps.core/Term substitution #{}))
           :else
@@ -851,7 +853,7 @@
              (build-channels
                (build-molecular-node
                  cf (list fillers) :csneps.core/Negation semtype
-                 :fsemtype (semantic-type-of fillers))))
+                 :fsemtype (st/semantic-type-of fillers))))
            ;(rest expr)		; exactly one argument
            ;  (build-canonical-negation (second expr) semtype)
            :else			; (not) = (nor) = T
@@ -866,7 +868,7 @@
           (let [fillers (build (set (rest expr)) semtype substitution #{})]
             (build-molecular-node
               cf (list fillers) :csneps.core/Negationbyfailure semtype
-              :fsemtype (semantic-type-of fillers)))
+              :fsemtype (st/semantic-type-of fillers)))
           :else			; (thnot) = (thnor) = T
           (build 'True :csneps.core/Term substitution #{}))
         (error "There is no frame associated with thnor."))
@@ -971,7 +973,7 @@
         categorizations (filter #(isa? (syntactic-type-of %) :csneps.core/Categorization) res)
         categories (apply clojure.set/union (map #(second (@down-cableset %)) categorizations))
         semcats (filter semtype? (map #(keyword (:name %)) categories))]
-    (doall (map #(adjust-type var (semantic-type-of var) %) semcats))))
+    (doall (map #(adjust-type var (st/semantic-type-of var) %) semcats))))
 
 ;;; Note: Doesn't deal with if the user puts >1 notSame relation.
 (defn- notsames-helper 

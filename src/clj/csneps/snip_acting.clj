@@ -9,7 +9,7 @@
 (defn adopt 
   "Adopt a policy."
   [policy]
-  {:pre [(subtypep (semantic-type-of policy) :Policy)]}
+  {:pre [(subtypep (st/semantic-type-of policy) :Policy)]}
   (let [ct (ct/currentContext)
         taskid (gensym "task")]
     (when-not (ct/asserted? policy ct)
@@ -29,7 +29,7 @@
 (defn unadopt
   "Unadopt a policy."
   [policy]
-  {:pre [(subtypep (semantic-type-of policy) :Policy)]}
+  {:pre [(subtypep (st/semantic-type-of policy) :Policy)]}
   (let [ct (ct/currentContext)]
     (when (ct/asserted? policy ct)
       (ct/remove-from-context policy ct)
@@ -45,6 +45,6 @@
     (unadopt subrule)))
 
 (defn attach-primaction [act fname]
-  {:pre [(subtypep (semantic-type-of act) :Act)
+  {:pre [(subtypep (st/semantic-type-of act) :Act)
          @(primaction-fns fname)]}
   (dosync (alter primaction assoc act @(primaction-fns fname))))

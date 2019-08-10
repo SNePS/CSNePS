@@ -1060,7 +1060,7 @@
                                  :msgs (create-message-structure :csneps.core/Indefinite nil)
                                  :restriction-set (ref (set new-rsts))})]
     (inc-ind-counter)
-    (instantiate-sem-type (:name new-ind) (semantic-type-of ind))
+    (instantiate-sem-type (:name new-ind) (st/semantic-type-of ind))
     new-ind))
 
 (defn indefinite-instantiation
@@ -1229,7 +1229,7 @@
     (cond 
       ;; Actions should execute their primative action.
       (and
-        (= (semantic-type-of term) :Action)
+        (= (st/semantic-type-of term) :Action)
         (primaction term))
       ((primaction term) (:subst message))
       ;; "Introduction" of a WhQuestion is really just collecting answers.

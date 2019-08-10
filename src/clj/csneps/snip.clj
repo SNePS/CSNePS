@@ -6,6 +6,7 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.find :as find]
             [csneps.core.relations :as slot]
+            [csneps.core.semantic-types :as st]
             [csneps.core.printer :as print]
             [csneps.snip.message :as msg]
             [csneps.snip.messagestructure :as msgstruct]
