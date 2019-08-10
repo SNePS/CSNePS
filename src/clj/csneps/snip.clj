@@ -21,6 +21,7 @@
         [csneps.configuration]
         [csneps.debug]
         [csneps.snip.util]
+        [csneps.snip.inference-graph.concurrent]
         [csneps.core.build :only (term-prewalk)]
         [clojure.core.memoize :only (memo)]
         [clojure.pprint :only (cl-format)]

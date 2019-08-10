@@ -7,6 +7,7 @@
             [csneps.core :as csneps]
             [csneps.core.build :as build]
             [csneps.snip :as snip]
+            [csneps.snip.inference-graph.concurrent :as igc]
             [csneps.gui :as gui]
             [csneps.utils.ontology :as onto-tools]
             [clojure.tools.cli :refer [parse-opts]]
@@ -41,7 +42,7 @@
         rule (filter #(= rule-name (:name (ffirst (@csneps/down-cableset %)))) rules)]
     (if (first rule)
       (when-let [taskid (adopt (first rule))]
-        (.await ^CountingLatch (@snip/infer-status taskid)))
+        (.await ^CountingLatch (@igc/infer-status taskid)))
       (error "Rule " rule-name " does not exist."))))
 
 (defn adopt-rules
@@ -295,7 +296,7 @@
 (defn quit
   []
   (shutdown-agents)
-  (csneps.snip/shutdownExecutor)
+  (igc/shutdownExecutor)
   (System/exit 0))
 
 (defn exit [] (quit))

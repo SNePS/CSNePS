@@ -5,7 +5,7 @@
   (dosync 
     (let [clearall (first clear?)]
       ;; Stop any ongoing inference. 
-      (snip/resetExecutor)
+      (igc/resetExecutor)
       
       ;; Initialize Contexts
       (ref-set ct/CONTEXTS (hash-map))
