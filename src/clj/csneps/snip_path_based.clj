@@ -221,7 +221,7 @@
                                                     (map #(pb-findfroms % slot) fillers))
                                                   (cf/dcsRelationTermsetMap p))))))]
       (if (and (seq results)
-               (some #(build/eqfillersets (@down-cableset %) dcs) results))
+               (some #(find/eqfillersets (@down-cableset %) dcs) results))
         (do 
           (assertTrace nil (seq results) p "Path-Based inference" context)
           (hash-set p))

@@ -1,4 +1,11 @@
-(in-ns 'csneps.core.build)
+(ns csneps.core.find
+  (:require [csneps.core :as csneps]
+            [csneps.core.caseframes :as cf]
+            [clojure.math.combinatorics :as cb])
+  (:use [csneps.core.find-utils]
+        [csneps.utils.coreutils]
+        [csneps.core.unify.treenode]
+        [csneps.util]))
 
 (declare find find-in find-helper)
 
@@ -36,7 +43,7 @@
     (if (empty? fs)
       (apply clojure.set/intersection (map set res))
       (let [filler (first fs)
-            termsfrom (filter #(= (@term-caseframe-map %) cf) (findfrom filler slot))]
+            termsfrom (filter #(= (csneps/caseframe-for %) cf) (findfrom filler slot))]
         (if (empty? termsfrom) 
           #{}
           (recur (rest fs) (conj res termsfrom)))))))
@@ -52,7 +59,7 @@
   (let [result (loop [sfmap (map #(vector %1 %2) (seq (:slots cf)) (seq dcs))
                       res #{}]
                  (if (empty? sfmap)
-                   (map get-term res)
+                   (map csneps/get-term res)
                    (let [[slot fillers] (first sfmap)
                          sres (set (map #(:name %) (when (seq fillers) (find-terms-with-filled-slot cf slot fillers))))]
                      (cond
@@ -71,12 +78,12 @@
     (if (nil? result)
       nil
       ;; result is now a set of nodes that might have filler sets that are too large
-      (let [ret (for [n result :when (and (is-syntactic-type? (:type n))
+      (let [ret (for [n result :when (and (csneps/is-syntactic-type? (:type n))
                                           (or (nil? min)
                                               (= min (:min n)))
                                           (or (nil? max)
                                               (= max (:max n)))
-                                          (eqfillersets (@down-cableset n) dcs))]
+                                          (eqfillersets (@csneps/down-cableset n) dcs))]
                   n)]
         (first ret)))))
 
@@ -85,13 +92,13 @@
    term with it. Not yet designed to work with substitutions in nested terms,
    as I'm not sure it's needed in use yet."
   [term subst]
-  (let [new-dcs (loop [dcs (@down-cableset term)
+  (let [new-dcs (loop [dcs (@csneps/down-cableset term)
                        new-dcs '[]]
                   (if (empty? dcs)
                     new-dcs
                     (recur (rest dcs)
                            (conj new-dcs (set (replace subst (first dcs)))))))]
-    (find-exact (syntactic-type-of term) (@term-caseframe-map term) new-dcs)))
+    (find-exact (csneps/syntactic-type-of term) (@csneps/term-caseframe-map term) new-dcs)))
 
 (defn specificInstanceOfGeneric? 
   [genterm term subst]
@@ -107,8 +114,8 @@
       (and (cl-seqable? (first arg))
            (not (record? (first arg)))) (contains-new-term-or-cf? (first arg) var-list)
       (not (or (var-list (first arg))
-               (= (syntactic-type-of (first arg)) :csneps.core/Term)
-               (get-term (first arg))))
+               (= (csneps/syntactic-type-of (first arg)) :csneps.core/Term)
+               (csneps/get-term (first arg))))
                           true
       :else               (recur (rest arg)))))
 
@@ -124,11 +131,11 @@
 (defn find-vars-of-restriction-set-size
   "Returns all vars of type [quant] in the KB which have a restriction set of size [size]."
   [size quant]
-  (set (filter #(= (count (@restriction-set %)) size) 
+  (set (filter #(= (count (@csneps/restriction-set %)) size)
                (case quant
-                 :every @ARBITRARIES
-                 :some @INDEFINITES
-                 :qvar @QVARS))))
+                 :every @csneps/ARBITRARIES
+                 :some @csneps/INDEFINITES
+                 :qvar @csneps/QVARS))))
   
 (defn get-terms-from-find-results
   "Given results from a find operation, return all of the terms in the substitutions."
@@ -163,14 +170,14 @@
                                        (clojure.set/intersection possibles
                                                                  (apply clojure.set/union
                                                                         (map #(get-terms-from-find-results
-                                                                                (find-in (first rst) (@restriction-set %) var-list))
+                                                                                (find-in (first rst) (@csneps/restriction-set %) var-list))
                                                                              possibles))))))
             possibles (if (= quant :some)
                         ;; check that the dependencies are the same.
                         (let [deps (first (ind-dep-rsts var-label))
                               deps (map #(find-old-var-node % (get arb-rsts %) arb-rsts ind-dep-rsts qvar-rsts :every notsames) deps)]
-                          (filter #(and (= (count deps) (count (@dependencies %)))
-                                        (every? (fn [x] (get (@dependencies %) x)) deps)) possibles))
+                          (filter #(and (= (count deps) (count (@csneps/dependencies %)))
+                                        (every? (fn [x] (get (@csneps/dependencies %) x)) deps)) possibles))
                         possibles)
             nsct (count (notsames var-label))]
         (when possibles
@@ -196,8 +203,8 @@
           (if (and (symbol? subex)
                    (not (some #{subex} var-list))
                    (not (synvariable? subex))
-                   (get-term subex))
-            (clojure.set/intersection tset (findfrom (get-term subex) (first slots)))
+                   (csneps/get-term subex))
+            (clojure.set/intersection tset (findfrom (csneps/get-term subex) (first slots)))
             tset))))))
 
 (declare pattern-term-match)
@@ -209,7 +216,7 @@
   ;; and stop looking at them. 
   (let [vars (set (filter #(or (some #{%} var-list) (synvariable? %)) expr-set))
         non-vars (clojure.set/difference expr-set vars)
-        ground-terms (set (map #(get-term %) non-vars))]
+        ground-terms (set (map #(csneps/get-term %) non-vars))]
     ;; Check that all non-var terms are in the KB.
     (when (= (count ground-terms) (count (filter identity ground-terms)))
       ;; Check that any bound vars can be bound correctly.
@@ -235,7 +242,7 @@
     ;; dcs of the term we're comparing against.
     (and (cl-seqable? expr)
          (not (record? expr)))
-    (pattern-term-match expr (@down-cableset term) var-list subs)
+    (pattern-term-match expr (@csneps/down-cableset term) var-list subs)
     ;; Check if expr is a variable. If so, we need to verify that any new
     ;; substitution we create will be valid.
     (or (some #{expr} var-list)
@@ -248,9 +255,9 @@
     ;; for expr being a caseframe is handled in pattern-term-match).
     :else
     (if (set? term)
-      (when (and (get-term expr) (some #{(get-term expr)} term))
+      (when (and (csneps/get-term expr) (some #{(csneps/get-term expr)} term))
         subs)
-      (when (= (get-term expr) term)
+      (when (= (csneps/get-term expr) term)
         subs))))
 
 (defn match-expr-seq-to-dcs
@@ -273,7 +280,7 @@
     (cond 
       (and cf (cf/quotedpp? cf))
       (match-expr-seq-to-dcs (rest expr) dcs var-list subs)
-      (= (get-term (first expr)) (first (first dcs)))
+      (= (csneps/get-term (first expr)) (first (first dcs)))
       (match-expr-seq-to-dcs (rest expr) (rest dcs) var-list subs))))
 
 
@@ -281,7 +288,7 @@
   [expr termset var-list]
   (remove #(nil? %)
     (for [term termset]
-      (let [subs (pattern-term-match expr (@down-cableset term) var-list {})]
+      (let [subs (pattern-term-match expr (@csneps/down-cableset term) var-list {})]
         ;; TODO: Why is this like this? Very odd...
         (cond
           (seq subs) ;; non-empty sequence.
@@ -344,7 +351,7 @@
                                                                (rest target)
                                                                :varfn varfn :subs subs :sourcenode %)
                                                          (vals @(:children sourcenode)))
-      (and (molecularTerm? (:acceptWft sourcenode))    
+      (and (csneps/molecularTerm? (:acceptWft sourcenode))
            (seq? targetexpr))                          (map #(find-helper
                                                                (rest target)
                                                                :varfn varfn :subs subs :sourcenode %)

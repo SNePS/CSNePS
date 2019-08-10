@@ -4,6 +4,7 @@
             [csneps.core.find-utils :as find-utils]
             [csneps.core.contexts :as ct]
             [csneps.core.caseframes :as cf]
+            [csneps.core.find :as find]
             [csneps.core.relations :as slot]
             [csneps.core.printer :as print]
             [csneps.snip.message :as msg]
@@ -20,7 +21,7 @@
         [csneps.configuration]
         [csneps.debug]
         [csneps.snip.util]
-        [csneps.core.build :only (term-prewalk variable?)]
+        [csneps.core.build :only (term-prewalk)]
         [clojure.core.memoize :only (memo)]
         [clojure.pprint :only (cl-format)]
         [clojure.set])

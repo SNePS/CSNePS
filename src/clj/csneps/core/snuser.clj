@@ -21,11 +21,13 @@
         [clojure.set :only (union difference)]
         [csneps.core.relations :only (list-slots)]
         [csneps.core.contexts :only (currentContext defineContext listContexts setCurrentContext remove-from-context)]
-        [csneps.core.build :only (find *PRECISION* defrule unassert rewrite-propositional-expr)]
+        [csneps.core.build :only (*PRECISION* defrule unassert rewrite-propositional-expr)]
+        [csneps.core.find :only (find)]
         [csneps.core :only (showTypes list-types semantic-type-of)]
         [csneps.core.printer :only (writeKBToTextFile)]
         [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction ig-debug-all)]
         [csneps.core.arithmetic]
+        [csneps.utils.coreutils :only (synvariable?)]
         [csneps.util]
         [csneps.debug :only (debug set-debug-nodes set-debug-features)])
   (:import [edu.buffalo.csneps.util CountingLatch]))
@@ -102,7 +104,7 @@
         that are derivable in the current context;
         or the empty set if there are none."
   [exprpat]
-  (if (some build/synvariable? (flatten exprpat))
+  (if (some synvariable? (flatten exprpat))
     (snip/askwh-instances exprpat (ct/currentContext))
     (setOr
       (askif exprpat)

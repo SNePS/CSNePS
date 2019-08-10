@@ -521,7 +521,7 @@
         ;; This isn't a perfect solution, but it will stop infinite generation of (not (not ... ))
         ;; TODO: Somehow remove the new-msgs from the matched to allow later generation if needed.
         (when-not (and (= (type-of node) :csneps.core/Negation)
-                       (empty? (build/find (list 'not node))))
+                       (empty? (find/find (list 'not node))))
           (when showproofs
             (doseq [[fmsg dermsg] dermsgs-f]
               (send screenprinter (fn [_] (print-proof-step (build/variable-parse-and-build (list 'not node) :Propositional #{})
@@ -604,7 +604,7 @@
                                                             (:support-set message)
                                                             node
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "numericalentailment")
                                                                  "-elimination")))))))
         
@@ -632,7 +632,7 @@
                                                             (:support-set match-msg)
                                                             node
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "numericalentailment")
                                                                  "-elimination")))))))
         
@@ -711,7 +711,7 @@
                                                               (:support-set pos-match)
                                                               node
                                                               (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     (syntype-fsym-map (syntactic-type-of node))
                                                                      "andor")
                                                                    "-elimination (1)")))))))
 
@@ -745,7 +745,7 @@
                                                               (:support-set neg-match)
                                                               node
                                                               (str (or 
-                                                                     (build/syntype-fsym-map (syntactic-type-of node))
+                                                                     (syntype-fsym-map (syntactic-type-of node))
                                                                      "andor")
                                                                    "-elimination (2)")))))))
 
@@ -794,7 +794,7 @@
               (send screenprinter (fn [_] (print-proof-step node
                                                             (:support-set case2)
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "param2op")
                                                                  "-introduction"))))))
           (doall 
@@ -817,7 +817,7 @@
               (send screenprinter (fn [_] (print-proof-step node
                                                             (:support-set case1)
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "param2op")
                                                                  "-introduction"))))))
           (doall 
@@ -861,7 +861,7 @@
                                                             (:support-set more-than-min-true-match)
                                                             node
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "thresh")                                                               
                                                                  "-elimination (1)"))))))
           
@@ -894,7 +894,7 @@
                                                             (:support-set less-than-max-true-match)
                                                             node
                                                             (str (or 
-                                                                   (build/syntype-fsym-map (syntactic-type-of node))
+                                                                   (syntype-fsym-map (syntactic-type-of node))
                                                                    "thresh")                                                               
                                                                  "-elimination (2)"))))))
           
@@ -918,14 +918,14 @@
           rel-combined-messages (when new-combined-messages
                                   (filter #(= (:pos %) querytermct) new-combined-messages))]
       (doseq [rcm rel-combined-messages
-              :let [instance (build/find-term-with-subst-applied node (:subst rcm))]]
+              :let [instance (find/find-term-with-subst-applied node (:subst rcm))]]
         ;; {subst inst} added, even if inst is nil! We'll find it later if it shows up.
         (dosync (alter instances assoc node (assoc (@instances node) (:subst rcm) instance)))))
     ;; Msgs from unifiers.
     (when (and (@instances node)
             (nil? ((@instances node) (:subst message)))) 
       ;; The instance we have received may not be built yet.
-      (let [instance (or (build/find-term-with-subst-applied node (:subst message))
+      (let [instance (or (find/find-term-with-subst-applied node (:subst message))
                          (build/apply-sub-to-term node (:subst message)))]
         (dosync (alter instances assoc node (assoc (@instances node) (:subst message) instance))))))
       
@@ -954,7 +954,7 @@
   ;; discard it. We have to do this because unlike normal rules of inference, this rule
   ;; actually needs to know that's what it's receiving is asserted (the results won't have an OS
   ;; to make them contingent on the context). 
-  (when (ct/asserted? (build/find-term-with-subst-applied (:origin message) (:subst message)) (ct/currentContext))
+  (when (ct/asserted? (find/find-term-with-subst-applied (:origin message) (:subst message)) (ct/currentContext))
     (let [inchct (count (@ant-in-channels node)) ;; Should work even with sub-policies.
                                                   ;; What about shared sub-policies though?
           inst-msgs (filter #(= (:pos %) inchct) new-msgs)
@@ -999,7 +999,7 @@
         
         (let [instance (if (:fwd-infer message)
                          (build/apply-sub-to-term node (:subst rcm))
-                         (build/find-term-with-subst-applied node (:subst rcm)))
+                         (find/find-term-with-subst-applied node (:subst rcm)))
               inst-support ;(os-concat 
                              (os/os-union (:support-set rcm) (@support node))
                              ;; This can't be minimal, can it? DRS 7/5/14

@@ -3,6 +3,7 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.printer :as print]
             [csneps.core.relations :as slot]
+            [csneps.core.find :as find]
             [csneps.snip.messagestructure :as msgstruct]
             [csneps.debug :as debug]
             [clojure.core.match :as match]
@@ -16,6 +17,7 @@
         [csneps.configuration]
         [csneps.util]
         [csneps.utils.coreutils]
+        [csneps.core.unify.treenode]
         [clojure.walk :as walk :only [prewalk prewalk-replace postwalk-replace]]
         [csneps.core.find-utils]))
 
@@ -28,7 +30,6 @@
 (load "build_substitution")
 (load "build_subsumption")
 (load "build_unification")
-(load "build_find")
 (load "build_channel")
 (load "build_rules")
 (load "build_rewrite")
@@ -179,9 +180,9 @@
   (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
         existing-term (cond 
-                        max (find-exact syntype cf dcs-sets :min min :max max)
-                        min (find-exact syntype cf dcs-sets :min min)
-                        :else (find-exact syntype cf dcs-sets))
+                        max (find/find-exact syntype cf dcs-sets :min min :max max)
+                        min (find/find-exact syntype cf dcs-sets :min min)
+                        :else (find/find-exact syntype cf dcs-sets))
         term (or
                existing-term
                (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
@@ -925,10 +926,10 @@
   (or 
     (and 
       (or (= quant :qvar) (= quant :every)) 
-      (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
+      (find/find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
     (and reuse-inds
          (= quant :some)
-         (find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
+         (find/find-old-var-node var-label rsts arb-rsts ind-rsts qvar-rsts quant notsames))
     (let [name (case quant
                  :every (symbol (str "arb" (arb-counter)))
                  :some (symbol (str "ind" (ind-counter)))

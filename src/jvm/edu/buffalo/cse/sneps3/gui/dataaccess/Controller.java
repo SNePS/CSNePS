@@ -41,7 +41,7 @@ public class Controller {
 	
 	public static ISeq build_find(ISeq pattern){
 		if (build_find_fn == null) 
-			build_find_fn = RT.var("csneps.core.build", "find");
+			build_find_fn = RT.var("csneps.core.find", "find");
 		try {
 			return (ISeq)build_find_fn.invoke(pattern);
 		} catch (Exception e) {e.printStackTrace();}
