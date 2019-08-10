@@ -1,8 +1,8 @@
 (require 'cemerick.pomegranate.aether)
 (cemerick.pomegranate.aether/register-wagon-factory!
   "http" #(org.apache.maven.wagon.providers.http.HttpWagon.))
-(defproject Sneps3-Clojure "1.0.0-SNAPSHOT"
-  :description "CSNePS - Concurrent SNePS"
+(defproject CSNePS "1.0.0-SNAPSHOT"
+  :description "CSNePS Knowledge Representation and Reasoning System"
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/core.memoize "0.5.9"]

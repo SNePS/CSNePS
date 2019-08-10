@@ -303,8 +303,6 @@
 (defn exit [] (quit))
 
 (clojure.core/load "/csneps/core/initialize")
-(clojure.core/load "/csneps/test/benchmark")
-(clojure.core/load "/csneps/test/mapper_benchmark")
 
 (def cli-options
   ;; An option with a required argument
