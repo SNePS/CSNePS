@@ -43,23 +43,6 @@
   [name]
   (isa? @semantic-type-hierarchy name TOP-SEMANTIC-TYPE))
 
-;; This is only used on variable terms currently. Is that correct?
-(defn instantiate-sem-type
-  [termname type]
-  (let [newtypekey (keyword type)]
-    (dosync (alter type-map assoc termname newtypekey))
-    ;;If the type is a descendent of Proposition it has a support set, hcontext set, and supported
-      ;;nodes set.
-      (when (subtypep newtypekey :Proposition)
-          (dosync
-            (alter support-set assoc termname (ref (hash-set)))
-            (alter supported-nodes-set assoc termname (ref (hash-set)))))
-      ;;If the type is an Act or Action, it has a nil primaction to start.
-      (when (or (subtypep newtypekey :Act) (isa? @semantic-type-hierarchy newtypekey :Action))
-        (dosync
-          (alter primaction assoc termname nil)))
-      newtypekey))
-
 (defn subtypep
   "Checks if type1 is a descendent of type2"
   [type1 type2]

@@ -13,7 +13,8 @@
             [clojure.math.combinatorics :as cb]
             [clojure.zip :as zip]
             [clojure.set :as set]
-            [clojure.string])
+            [clojure.string]
+            [csneps.core :as csneps])
   (:refer-clojure :exclude [assert]) ;;Possible bug: This breaks loading clojure.math.combinatorics for no reason?
   (:use [csneps.core]
         [csneps.configuration]
@@ -614,7 +615,7 @@
           (adjust-type term (st/semantic-type-of term) semtype)
           (error (str "The name " expr " is not yet associated with a term.")))
       term ;Lower its semantic type, if necessary
-	    (adjust-type term (st/semantic-type-of term) semtype)
+      (adjust-type term (st/semantic-type-of term) semtype)
       :else
         (let [term (new-atom {:name expr})]
           (dosync 
@@ -949,7 +950,7 @@
          :every (inc-arb-counter)
          :some  (inc-ind-counter)
          :qvar  (inc-qvar-counter))
-       (instantiate-sem-type (:name varterm) :Entity)
+       (st/instantiate-sem-type varterm :Entity)
         
       varterm)))
 

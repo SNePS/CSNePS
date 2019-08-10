@@ -1060,7 +1060,7 @@
                                  :msgs (create-message-structure :csneps.core/Indefinite nil)
                                  :restriction-set (ref (set new-rsts))})]
     (inc-ind-counter)
-    (instantiate-sem-type (:name new-ind) (st/semantic-type-of ind))
+    (st/instantiate-sem-type new-ind (st/semantic-type-of ind))
     new-ind))
 
 (defn indefinite-instantiation
