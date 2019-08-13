@@ -925,9 +925,19 @@
   [message node]
   ;; Instance from g-channel
   (if (g-chan-to-node? (:origin message) node)
+    ;; It should be possible for a generic to be partially satisfied and to then produce a new generic from that.
+    ;; The main problem with this is that a substitution received from an arbitrary may not be entirely trustworthy -
+    ;; an arb, such as (every y (owns y (every x (Isa x Dog))) (Isa y Person)), could match (owns Dan Lassie) with
+    ;; only (Isa Dan Person) also asserted because it doesn't do deep checking on its restrictions (and it can't,
+    ;; it would never receive a message from, e.g., (Isa Lassie Dog). On the other hand, those extra restrictions can
+    ;; be handled here -- (Isa Lassie Dog) would have a g-channel to the generic node using the arb. We have to check
+    ;; that. The simplest way seems to be ensuring there are no substitutions for arbs that don't appear in the
+    ;; flaggedns.
     (let [new-combined-messages (msgstruct/get-new-messages (@msgs node) message)
           rel-combined-messages (when new-combined-messages
-                                  (filter #(> (:pos %) 0) new-combined-messages))]
+                                  (filter #(and (> (:pos %) 0)
+                                                (every? (:flaggedns %) (keys (:subst %))) )
+                                          new-combined-messages))]
 
       (doseq [rcm rel-combined-messages]
         
@@ -1026,6 +1036,7 @@
                                              :flaggedns {node true}
                                              :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
+
       (print-debug :rui #{node} (print-str "NEW RUI: Arb/Qvar" new-ruis "\n -- at" node "\n   -- via new message" message))
       (when (seq der-msg-t)
 ;        (send screenprinter (fn [_]  (println "NEWMESSAGE:" (count (for [msg new-msgs
