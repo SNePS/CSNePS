@@ -25,6 +25,7 @@
 
       ;;Remove term-type maps from semantic types.
       (ref-set csneps/type-map (hash-map))
+      (ref-set csneps/type-support (hash-map))
       (ref-set csneps/support-set (hash-map))
       (ref-set csneps/supported-nodes-set (hash-map))
       (ref-set csneps/primaction (hash-map))
