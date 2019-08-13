@@ -49,8 +49,7 @@
 (defn supported-types
   "Returns the list of supported semantic types of a term in the provided context."
   [term context]
-  (remove nil?
-          (map #(when (supported-type? term % context) %) (keys (@csneps/type-support (:name term))))))
+  (filter #(supported-type? term % context) (keys (@csneps/type-support (:name term)))))
 
 ;; When does gcsubtype really return >1 item? is that ever OK? How do we choose?
 (defn semtype-in-context
@@ -62,9 +61,9 @@
                (> (count types) 1) (reduce firstgcsubtype types)
                (= (count types) 1) (first types)
                :default (error (str "Term " (:name term) " has no type in context " (:name context))))]
-    (if-not type
-      (error (str "Term " (:name term) " has inconsistent type in context " (:name context)))
-      type)))
+    (if type
+      type
+      (error (str "Term " (:name term) " has inconsistent type in context " (:name context))))))
 
 (defn semantic-type-of
   [term]
