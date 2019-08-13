@@ -52,12 +52,14 @@
   (remove nil?
           (map #(when (supported-type? term % context) %) (keys (@csneps/type-support (:name term))))))
 
+;; When does gcsubtype really return >1 item? is that ever OK? How do we choose?
 (defn semtype-in-context
   "Returns the current type of a term in the given context."
   [term context]
-  (let [types (supported-types term context)
+  (let [firstgcsubtype (fn [t1 t2] (first (csneps/gcsubtype t1 t2)))
+        types (supported-types term context)
         type (cond
-               (> (count types) 1) (first (reduce csneps/gcsubtype types))
+               (> (count types) 1) (reduce firstgcsubtype types)
                (= (count types) 1) (first types)
                :default (error (str "Term " (:name term) " has no type in context " (:name context))))]
     (if-not type
