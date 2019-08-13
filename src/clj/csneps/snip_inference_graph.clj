@@ -1309,15 +1309,19 @@
 (defn create-message-structure
   "Create the RUI structure for a rule node. Chooses to 
    create P-Trees and S-Indexes as necessary."
-  [syntype dcs & {:keys [n]}]
+  [syntype dcs & {:keys [n properties]}]
+  ;(println syntype dcs n properties)
   (cond
     (empty? (filter arbitraryTerm? (flatten-term dcs)))
     (lms/make-linear-msg-set)
+    (:generic properties)
+    (ptree/make-ptree syntype dcs)
     (and (or (= syntype :csneps.core/Numericalentailment)
              (= syntype :csneps.core/Implication))
          (= n (count (first dcs))))
     (ptree/make-ptree syntype dcs)
-    (or (= syntype :csneps.core/Conjunction))
+    (or (= syntype :csneps.core/Conjunction)
+        (= syntype :csneps.core/Arbitrary))
     (ptree/make-ptree syntype dcs)
     :else
     (lms/make-linear-msg-set)))

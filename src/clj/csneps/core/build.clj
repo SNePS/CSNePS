@@ -196,7 +196,7 @@
                  (dosync 
                    (alter down-cableset assoc wft dcs-sets)
                    (alter term-caseframe-map assoc wft cf)
-                   (alter msgs assoc wft (create-message-structure syntype dcs-sets :n min))
+                   (alter msgs assoc wft (create-message-structure syntype dcs-sets :n min :properties properties))
                    (alter TERMS assoc (:name wft) wft)
                    (set-term-type wft (:type cf)))
                  
