@@ -939,6 +939,14 @@
                                                 (every? (:flaggedns %) (keys (:subst %))) )
                                           new-combined-messages))]
 
+      ;(println-agent "Generic-infer")
+      ;(println-agent "node" (:name node))
+      ;(println-agent "NCM" new-combined-messages)
+      ;(println-agent "msg" (prn-str message))
+      ;;(println-agent "resct" resct)
+      ;(println-agent "REL" (str rel-combined-messages))
+
+
       (doseq [rcm rel-combined-messages]
         
         (let [instance (if (:fwd-infer message)
@@ -1323,17 +1331,32 @@
   [syntype dcs & {:keys [n properties]}]
   ;(println syntype dcs n properties)
   (cond
-    (empty? (filter arbitraryTerm? (flatten-term dcs)))
-    (lms/make-linear-msg-set)
-    (:generic properties)
-    (ptree/make-ptree syntype dcs)
+    ;;; Generic terms.
+    (:Generic properties)
+    (let [flatdcs (conj dcs (map #(flatten-term % :vars? true) (apply union dcs)))
+          uniondcs (apply union flatdcs)
+          ;; I don't think this is perfect - what about nested generics?
+          arbdcs (filter arbitraryTerm? uniondcs)]
+      (if (= (count arbdcs) 1)
+        (pms/make-passthrough-msg-set)
+        ;(lms/make-linear-msg-set)))
+        (ptree/make-ptree syntype arbdcs)))
+    ;;; I don't think this does anything.
+    ;(empty? (filter arbitraryTerm? (flatten-term dcs)))
+    ;(lms/make-linear-msg-set)
+    ;;; Entailment
     (and (or (= syntype :csneps.core/Numericalentailment)
              (= syntype :csneps.core/Implication))
          (= n (count (first dcs))))
     (ptree/make-ptree syntype dcs)
-    (or (= syntype :csneps.core/Conjunction)
-        (= syntype :csneps.core/Arbitrary))
+    ;;; Conjunctions
+    (= syntype :csneps.core/Conjunction)
     (ptree/make-ptree syntype dcs)
+    ;;; Arbitrary Nodes
+    (= syntype :csneps.core/Arbitrary)
+    (if (= (count dcs) 1)
+      (pms/make-passthrough-msg-set)
+      (ptree/make-ptree syntype dcs))
     :else
     (lms/make-linear-msg-set)))
 

@@ -10,6 +10,7 @@
 (defrecord PTree
   [tree
    term-to-pnode-map
+   unify-msg-set
    matched-msgs
    sent-msgs]
   MessageStructure
@@ -17,10 +18,21 @@
     (let [new-msg (sanitize-message new-msg)
           starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns new-msg)))
           starting-msgset (:msgset starting-pnode)]
-      (if (@starting-msgset new-msg)
+      (cond
+        ;; If this messages flaggedns does not fit in with our tree, that means that it's a unifying message
+        ;; and not something we really need to process for computing new substitutions. Instead, just check if we've
+        ;; seen it already.
+        (nil? starting-msgset)
+        (if (@(:unify-msg-set this) new-msg)
+          #{}
+          (do
+            (dosync (alter (:unify-msg-set this) conj new-msg))
+            #{new-msg}))
         ;; If we've already seen the message, stop now.
+        (@starting-msgset new-msg)
         #{}
         ;; Otherwise, lets see how far this takes us!
+        :default
         (loop [currnode starting-pnode
                totest #{new-msg}]
           ;(binding [*print-level* 3] (send screenprinter (fn [_]  (println currnode totest))))
@@ -37,10 +49,16 @@
                   @(:parent currnode)
                   promote))))))))
   (seen-message? [this msg]
-    (let [msg (sanitize-message msg)
-          starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns msg)))
+    (let [smsg (sanitize-message msg)
+          starting-pnode ((:term-to-pnode-map this) (ffirst (:flaggedns smsg)))
           starting-msgset (:msgset starting-pnode)]
-      (@starting-msgset msg)))
+      ;; Sometimes starting-msgset is nil, only in the case of generic terms matched by unifiers, which won't have
+      ;; a pnode (e.g., From: wft23!: (Isa Lassie Dog) I-INFER pos:1 neg:0 support: #{[hyp #{wft23}]} substitution:
+      ;; {arb9: (every x (Isa x Dog)) Lassie} flaggedns: {wft23!: (Isa Lassie Dog) true} forward?: false). We use the
+      ;; simple unify-msg-set to check for this.
+      (if starting-msgset
+        (@starting-msgset smsg)
+        (or (@(:unify-msg-set this) smsg) (@(:matched-msgs this) smsg)))))
   (get-sent-messages [this chtype] (@(:sent-msgs this) chtype))
   (get-matched-messages
     [this]
@@ -103,7 +121,10 @@
   "Returns the set of arbitrary terms which are in the down cableset of term."
   [term]
   (loop [dcs (@csneps/down-cableset term)
-         vars #{}]
+         vars (if (csneps/arbitraryTerm? term)
+                #{term}
+                #{})]
+         ;vars #{}]
     (if (seq dcs)
       (recur (rest dcs)
              (union vars (set (filter csneps/arbitraryTerm? (first dcs)))))
@@ -190,11 +211,13 @@
                :csneps.core/Conjunction (first fillers)
                :csneps.core/Implication (first fillers)
                :csneps.core/Arbitrary fillers ;; really the restrictions.
-               :csneps.core/Numericalentailment (first fillers));; Only and-entailment!
+               :csneps.core/Numericalentailment (first fillers) ;; Only and-entailment!
+               fillers) ;; Generic terms only.
         var-pat-map (apply merge-with merge-var-term (map var-pat-map ants))
         adj-pat-seq (adjacent-pat-seq ants var-pat-map)
         [ptree tpmap] (pat-seq-to-ptree adj-pat-seq ants)]
-    (PTree. ptree tpmap (ref {}) (ref {}))))
+    ;(println fillers var-pat-map adj-pat-seq)
+    (PTree. ptree tpmap (ref #{}) (ref {}) (ref {}))))
 
 ;;; Debug and testing
 

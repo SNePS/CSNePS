@@ -13,6 +13,7 @@
             [csneps.snip.originset :as os]
             [csneps.snip.ptree :as ptree]
             [csneps.snip.linear_message_set :as lms]
+            [csneps.snip.passthrough-message-set :as pms]
             [csneps.snip.sindex :as sindex]
             [clojure.walk :as walk])
 ;  (:refer-clojure :exclude [merge])
