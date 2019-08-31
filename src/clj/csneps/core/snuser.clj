@@ -280,8 +280,12 @@
   (reset! snip/goaltrace false))
 
 (defn verboserules
-  []
-  (reset! build/verbose-rules true))
+  "Enable verbose output for condition-action rules. Optionally takes a function of two arguments, rule name and rule
+   bindings, which can be used to format output in custom ways."
+  ([verbosefn]
+   (reset! build/verbose-rules verbosefn))
+  ([]
+   (verboserules true)))
 
 (defn noverboserules
   []

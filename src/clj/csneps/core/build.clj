@@ -359,7 +359,10 @@
         actfn (bound-fn [subst] 
                 (when (= (count subs) (count (filter (fn [[k v]] (subst v)) subs)))
                   (when @verbose-rules
-                    (send debug/screenprinter (fn [_] (println rulename "firing with substitutions:" (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))))))
+                    (let [rulesubs (into {} (map (fn [[k v]] [k (:name (subst v))]) subs))]
+                      (if (fn? @verbose-rules)
+                        (@verbose-rules rulename rulesubs)
+                        (send debug/screenprinter (fn [_] (println rulename "firing with substitutions:" rulesubs))))))
                   (eval-forms-with-locals (into {} (map (fn [[k v]] [k (:name (subst v))]) subs)) forms)))
         name (build rulename :Thing {} #{})
         act (build (str "act" (.hashCode forms)) :Action {} #{})
