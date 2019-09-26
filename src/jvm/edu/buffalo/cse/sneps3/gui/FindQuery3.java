@@ -19,14 +19,17 @@ public class FindQuery3 extends javax.swing.JFrame {
 
     ShowInGraphQueryPanel qbe;
     NodeFind nf;
+    NodeFindPath nfp;
 
     /** Creates new form FindQuery3 */
     public FindQuery3() {
         initComponents();
         qbe = new ShowInGraphQueryPanel();
         nf = new NodeFind();
+        nfp = new NodeFindPath();
         jTabbedPane1.addTab("QBE", qbe.getContentPane());
         jTabbedPane1.addTab("Node", nf);
+        jTabbedPane1.addTab("Path", nfp);
         this.getRootPane().setDefaultButton(jButton_ok);
     }
 
@@ -90,8 +93,11 @@ public class FindQuery3 extends javax.swing.JFrame {
         if(jTabbedPane1.getSelectedIndex() == 0){
             qbe.performOK(true);
         }
-        else{
+        else if(jTabbedPane1.getSelectedIndex() == 1) {
             if(!nf.performOK()) return;
+        }
+        else if(jTabbedPane1.getSelectedIndex() == 2) {
+            nfp.performOK();
         }
         this.dispose();
     }//GEN-LAST:event_jButton_okActionPerformed
