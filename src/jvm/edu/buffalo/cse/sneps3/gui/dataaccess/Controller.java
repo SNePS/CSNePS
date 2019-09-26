@@ -50,7 +50,7 @@ public class Controller {
 	
 	public static String build_term_predicate(IPersistentMap term){
 		if (build_term_predicate_fn == null) 
-			build_term_predicate_fn = RT.var("csneps.core.build", "term-predicate");
+			build_term_predicate_fn = RT.var("csneps.utils.coreutils", "term-predicate");
 		try {
 			return build_term_predicate_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
