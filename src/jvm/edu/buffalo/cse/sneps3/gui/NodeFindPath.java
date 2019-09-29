@@ -18,17 +18,15 @@ import javax.swing.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import edu.buffalo.cse.sneps3.gui.graph.IEdge;
 import edu.buffalo.cse.sneps3.gui.graph.ITermNode;
 import edu.buffalo.cse.sneps3.gui.graph.SnepsGraph;
 import edu.buffalo.cse.sneps3.gui.graph.algorithms.UndirectedDijkstraDistance;
 import edu.buffalo.cse.sneps3.gui.graph.algorithms.UndirectedDijkstraShortestPath;
-import edu.buffalo.cse.sneps3.gui.graph.algorithms.UndirectedUnweightedShortestPath;
-import edu.uci.ics.jung.algorithms.shortestpath.DijkstraDistance;
-import edu.uci.ics.jung.algorithms.shortestpath.Distance;
-import edu.uci.ics.jung.algorithms.shortestpath.DistanceStatistics;
+
+import static javax.swing.LayoutStyle.ComponentPlacement.RELATED;
+import static javax.swing.LayoutStyle.ComponentPlacement.UNRELATED;
 
 /**
  *
@@ -38,7 +36,7 @@ public class NodeFindPath extends JPanel {
 
     private JLabel jLabel_node1;
     private JLabel jLabel_node2;
-    private javax.swing.JTextArea jTextArea1;
+    private javax.swing.JTextArea jTextArea_Directions;
     private JTextField jTextField_node1;
     private JTextField jTextField_node2;
 
@@ -128,33 +126,43 @@ public class NodeFindPath extends JPanel {
         jLabel_node2 = new JLabel();
         jTextField_node1 = new JTextField();
         jTextField_node2 = new JTextField();
-        jTextArea1 = new javax.swing.JTextArea();
+        jTextArea_Directions = new javax.swing.JTextArea();
 
         jLabel_node1.setText("Node 1:");
         jLabel_node2.setText("Node 2:");
 
-        jTextArea1.setBackground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
-        jTextArea1.setColumns(20);
-        jTextArea1.setEditable(false);
-        jTextArea1.setLineWrap(true);
-        jTextArea1.setRows(2);
-        jTextArea1.setText("You may enter a single node name or a space \nseparated list of node names.");
+        jTextArea_Directions.setBackground(javax.swing.UIManager.getDefaults().getColor("Panel.background"));
+        jTextArea_Directions.setColumns(20);
+        jTextArea_Directions.setEditable(false);
+        jTextArea_Directions.setLineWrap(true);
+        //jTextArea1.setRows(2);
+        jTextArea_Directions.setText("Enter the nodes to find the path between.");
 
-        layout.setHorizontalGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(jLabel_node1)
-                        .addComponent(jLabel_node2))
-                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                        .addComponent(jTextField_node1)
-                        .addComponent(jTextField_node2)));
+        layout.setHorizontalGroup(layout.createParallelGroup()
+                        .addComponent(jTextArea_Directions)
+                        .addGroup(layout.createSequentialGroup()
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel_node1)
+                                .addComponent(jLabel_node2))
+                            .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                                .addComponent(jTextField_node1)
+                                .addComponent(jTextField_node2))));
 
         layout.setVerticalGroup(layout.createSequentialGroup()
+                .addComponent(jTextArea_Directions)
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                         .addComponent(jLabel_node1)
                         .addComponent(jTextField_node1))
                 .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
                         .addComponent(jLabel_node2)
-                        .addComponent(jTextField_node2)));
+                        .addComponent(jTextField_node2))
+                        .addPreferredGap(RELATED,
+                                260, Short.MAX_VALUE)
+                );
+
+        //layout.linkSize(jTextField_node1, jTextField_node2);
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
 
         this.setLayout(layout);
     }
