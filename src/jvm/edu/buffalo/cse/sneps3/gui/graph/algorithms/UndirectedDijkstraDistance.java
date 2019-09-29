@@ -8,24 +8,22 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import edu.buffalo.cse.sneps3.gui.graph.IEdge;
 import edu.buffalo.cse.sneps3.gui.graph.ITermNode;
-import edu.uci.ics.jung.algorithms.shortestpath.DijkstraDistance;
+import edu.buffalo.cse.sneps3.gui.graph.SnepsGraph;
 import edu.uci.ics.jung.algorithms.shortestpath.Distance;
 import edu.uci.ics.jung.algorithms.util.BasicMapEntry;
 import edu.uci.ics.jung.algorithms.util.MapBinaryHeap;
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.Hypergraph;
 
 import java.util.*;
 
 public class UndirectedDijkstraDistance implements Distance<ITermNode<IEdge>> {
-    protected Hypergraph<ITermNode<IEdge>, IEdge> g;
+    protected SnepsGraph<ITermNode<IEdge>, IEdge> g;
     protected Function<? super IEdge, ? extends Number> nev;
     protected Map<ITermNode<IEdge>, UndirectedDijkstraDistance.SourceData> sourceMap;
     protected boolean cached;
     protected double max_distance;
     protected int max_targets;
 
-    public UndirectedDijkstraDistance(Hypergraph<ITermNode<IEdge>, IEdge> g, Function<? super IEdge, ? extends Number> nev, boolean cached) {
+    public UndirectedDijkstraDistance(SnepsGraph<ITermNode<IEdge>, IEdge> g, Function<? super IEdge, ? extends Number> nev, boolean cached) {
         this.g = g;
         this.nev = nev;
         this.sourceMap = new HashMap();
@@ -34,15 +32,15 @@ public class UndirectedDijkstraDistance implements Distance<ITermNode<IEdge>> {
         this.max_targets = 2147483647;
     }
 
-    public UndirectedDijkstraDistance(Hypergraph<ITermNode<IEdge>, IEdge> g, Function<? super IEdge, ? extends Number> nev) {
+    public UndirectedDijkstraDistance(SnepsGraph<ITermNode<IEdge>, IEdge> g, Function<? super IEdge, ? extends Number> nev) {
         this(g, nev, true);
     }
 
-    public UndirectedDijkstraDistance(Hypergraph<ITermNode<IEdge>, IEdge> g) {
+    public UndirectedDijkstraDistance(SnepsGraph<ITermNode<IEdge>, IEdge> g) {
         this(g, Functions.constant(1), true);
     }
 
-    public UndirectedDijkstraDistance(Hypergraph<ITermNode<IEdge>, IEdge> g, boolean cached) {
+    public UndirectedDijkstraDistance(SnepsGraph<ITermNode<IEdge>, IEdge> g, boolean cached) {
         this(g, Functions.constant(1), cached);
     }
 
@@ -164,7 +162,7 @@ public class UndirectedDijkstraDistance implements Distance<ITermNode<IEdge>> {
     }
 
     public LinkedHashMap<ITermNode<IEdge>, Number> getDistanceMap(ITermNode<IEdge> source, int numDests) {
-        if (!this.g.getVertices().contains(source)) {
+        if (!this.g.getShownAndHiddenVertices().contains(source)) {
             throw new IllegalArgumentException("Specified source vertex " + source + " is not part of graph " + this.g);
         } else if (numDests >= 1 && numDests <= this.g.getVertexCount()) {
             if (numDests > this.max_targets) {
@@ -226,7 +224,7 @@ public class UndirectedDijkstraDistance implements Distance<ITermNode<IEdge>> {
         protected SourceData(ITermNode<IEdge> source) {
             this.unknownVertices = new MapBinaryHeap(new UndirectedDijkstraDistance.VertexComparator(this.estimatedDistances));
             UndirectedDijkstraDistance.this.sourceMap.put(source, this);
-            this.estimatedDistances.put(source, new Double(0.0D));
+            this.estimatedDistances.put(source, 0.0);
             this.unknownVertices.add(source);
             this.reached_max = false;
             this.dist_reached = 0.0D;

@@ -8,9 +8,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import edu.buffalo.cse.sneps3.gui.graph.IEdge;
 import edu.buffalo.cse.sneps3.gui.graph.ITermNode;
+import edu.buffalo.cse.sneps3.gui.graph.SnepsGraph;
 import edu.uci.ics.jung.algorithms.shortestpath.ShortestPath;
 import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.Hypergraph;
 
 import java.util.*;
 
@@ -37,7 +37,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      * @param nev the class responsible for returning weights for edges
      * @param cached specifies whether the results are to be cached
      */
-    public UndirectedDijkstraShortestPath(Hypergraph<ITermNode<IEdge>, IEdge> g, Function<IEdge, ? extends Number> nev, boolean cached) {
+    public UndirectedDijkstraShortestPath(SnepsGraph<ITermNode<IEdge>, IEdge> g, Function<IEdge, ? extends Number> nev, boolean cached) {
         super(g, nev, cached);
     }
 
@@ -48,7 +48,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      * @param g the graph on which distances will be calculated
      * @param nev the class responsible for returning weights for edges
      */
-    public UndirectedDijkstraShortestPath(Hypergraph<ITermNode<IEdge>, IEdge> g, Function<IEdge, ? extends Number> nev) {
+    public UndirectedDijkstraShortestPath(SnepsGraph<ITermNode<IEdge>, IEdge> g, Function<IEdge, ? extends Number> nev) {
         super(g, nev);
     }
 
@@ -58,7 +58,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      *
      * @param g the graph on which distances will be calculated
      */
-    public UndirectedDijkstraShortestPath(Hypergraph<ITermNode<IEdge>, IEdge> g) {
+    public UndirectedDijkstraShortestPath(SnepsGraph<ITermNode<IEdge>, IEdge> g) {
         super(g);
     }
 
@@ -69,7 +69,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      * @param g the graph on which distances will be calculated
      * @param cached specifies whether the results are to be cached
      */
-    public UndirectedDijkstraShortestPath(Hypergraph<ITermNode<IEdge>, IEdge> g, boolean cached) {
+    public UndirectedDijkstraShortestPath(SnepsGraph<ITermNode<IEdge>, IEdge> g, boolean cached) {
         super(g, cached);
     }
 
@@ -102,7 +102,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
 
         Set<ITermNode<IEdge>> targets = new HashSet<ITermNode<IEdge>>();
         targets.add(target);
-        singleSourceShortestPath(source, targets, g.getVertices().size());
+        singleSourceShortestPath(source, targets, g.getShownAndHiddenVertices().size());
         @SuppressWarnings("unchecked")
         Map<ITermNode<IEdge>, IEdge> incomingEdgeMap = ((SourcePathData) sourceMap.get(source)).incomingEdges;
         IEdge incomingEdge = incomingEdgeMap.get(target);
@@ -123,7 +123,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      * @param source the node from which distances are measured
      */
     public Map<ITermNode<IEdge>, IEdge> getIncomingEdgeMap(ITermNode<IEdge> source) {
-        return getIncomingEdgeMap(source, g.getVertices().size());
+        return getIncomingEdgeMap(source, g.getShownAndHiddenVertices().size());
     }
 
     /**
@@ -138,9 +138,9 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      */
     public List<IEdge> getPath(ITermNode<IEdge> source, ITermNode<IEdge> target) {
         Preconditions.checkArgument(
-                g.getVertices().contains(target), "Specified target node %s  is not part of graph %s", target, g);
+                g.containsVertex(target), "Specified target node %s  is not part of graph %s", target, g);
         Preconditions.checkArgument(
-                g.getVertices().contains(source), "Specified source node %s  is not part of graph %s", source, g);
+                g.containsVertex(source), "Specified source node %s  is not part of graph %s", source, g);
 
         // we use a LinkedList here because we're always appending to the front
         LinkedList<IEdge> path = new LinkedList<IEdge>();
@@ -150,7 +150,7 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
         // wipe out results if results are not cached
         Set<ITermNode<IEdge>> targets = new HashSet<ITermNode<IEdge>>();
         targets.add(target);
-        singleSourceShortestPath(source, targets, g.getVertices().size());
+        singleSourceShortestPath(source, targets, g.getShownAndHiddenVertices().size());
         @SuppressWarnings("unchecked")
         Map<ITermNode<IEdge>, IEdge> incomingEdges = ((SourcePathData) sourceMap.get(source)).incomingEdges;
 
@@ -185,11 +185,11 @@ public class UndirectedDijkstraShortestPath extends UndirectedDijkstraDistance i
      */
     public LinkedHashMap<ITermNode<IEdge>, IEdge> getIncomingEdgeMap(ITermNode<IEdge> source, int numDests) {
         Preconditions.checkArgument(
-                g.getVertices().contains(source), "Specified source node %s  is not part of graph %s", source, g);
+                g.containsVertex(source), "Specified source node %s  is not part of graph %s", source, g);
         Preconditions.checkArgument(
-                numDests >= 1 && numDests <= g.getVertices().size(),
+                numDests >= 1 && numDests <= g.getShownAndHiddenVertices().size(),
                 "number of destinations must be in [1, %d]",
-                g.getVertices().size());
+                g.getShownAndHiddenVertices().size());
 
         singleSourceShortestPath(source, null, numDests);
 

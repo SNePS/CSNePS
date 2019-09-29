@@ -79,44 +79,45 @@ public class NodeFindPath extends JPanel {
     }
 
     protected boolean performOK(){
-        Term term1 = Term.getTerm(jTextField_node1.getText());
-        Term term2 = Term.getTerm(jTextField_node2.getText());
-        if (term1 == null){
+        SnepsGraph<ITermNode<IEdge>, IEdge> dsg = GUI2.getInstance().getGraph();
+
+        // Verify node existence.
+        ITermNode<IEdge> node1 = dsg.getVertex(jTextField_node1.getText());
+        ITermNode<IEdge> node2 = dsg.getVertex(jTextField_node2.getText());
+
+        if (node1 == null){
             JOptionPane.showMessageDialog(this, "Node with the label: " + jTextField_node1.getText() + " was not found.");
         }
-        if (term2 == null){
+        if (node2 == null){
             JOptionPane.showMessageDialog(this, "Node with the label: " + jTextField_node2.getText() + " was not found.");
         }
 
-
-        // TODO: Make path searching undirected.
-        // TODO: Allow searching notes not currently visible.
-
-        SnepsGraph<ITermNode<IEdge>, IEdge> dsg = GUI2.getInstance().getGraph();
-        //UndirectedUnweightedShortestPath sp = new UndirectedUnweightedShortestPath(GUI2.getInstance().getGraph());
-
-        UndirectedDijkstraDistance dd = new UndirectedDijkstraDistance(GUI2.getInstance().getGraph());
-        System.out.println("Distance: " + dd.getDistance(dsg.getVertex(jTextField_node1.getText()), dsg.getVertex(jTextField_node2.getText())));
-
-        //System.out.println("AVG: " + DistanceStatistics.diameter(dsg));
-        UndirectedDijkstraShortestPath dsp = new UndirectedDijkstraShortestPath(dsg);
-        List<IEdge> path = dsp.getPath(dsg.getVertex(jTextField_node1.getText()), dsg.getVertex(jTextField_node2.getText()));
-
-
-        Set<Term> nns = new HashSet<Term>();
-
-        for (IEdge e : path){
-            nns.add(e.getFrom().getTerm());
-            nns.add(e.getTo().getTerm());
+        if(GUI2.DEBUG && node1 != null && node2 != null){
+            UndirectedDijkstraDistance dd = new UndirectedDijkstraDistance(GUI2.getInstance().getGraph());
+            System.out.println("Distance: " + dd.getDistance(node1, node2));
         }
 
-        if(GUI2.DEBUG) System.out.println("Node Find: " + nns);
+        // Compute and show shortest path.
+        if (node1 != null && node2 != null){
+            UndirectedDijkstraShortestPath dsp = new UndirectedDijkstraShortestPath(dsg);
+            List<IEdge> path = dsp.getPath(node1, node2);
 
-        if(GUI2.getInstance().getGraphPanel().isShowingAll()){
-            GUI2.getInstance().getGraphPanel().displayOnlyTermSet(nns);
+            Set<Term> nns = new HashSet<Term>();
+
+            for (IEdge e : path){
+                nns.add(e.getFrom().getTerm());
+                nns.add(e.getTo().getTerm());
+            }
+
+            if(GUI2.DEBUG) System.out.println("Path : " + nns);
+
+            if(GUI2.getInstance().getGraphPanel().isShowingAll()){
+                GUI2.getInstance().getGraphPanel().displayOnlyTermSet(nns);
+            }
+            else GUI2.getInstance().getGraphPanel().displayTermSet(nns);
+            return true;
         }
-        else GUI2.getInstance().getGraphPanel().displayTermSet(nns);
-        return true;
+        return false;
     }
 
     private void initComponents() {

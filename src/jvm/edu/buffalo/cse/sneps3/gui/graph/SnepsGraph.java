@@ -78,6 +78,10 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
     public V getVertex(String name){
     	return vertices.get(name);
     }
+
+    public Collection<V> getShownAndHiddenVertices() {
+		return Collections.unmodifiableCollection(vertices.values());
+	}
     
 /*    public ITermNode<IEdge> findVertex(String s){
     	return vertices.get(s);
