@@ -52,7 +52,7 @@ public class Caseframe implements Comparable<Caseframe>{
 	
 	/**
 	 * 
-	 * @param newcfs
+	 * @param cljcfs
 	 * @return Returns only new caseframes created.
 	 */
 	public static ArrayList<Caseframe> createCaseframes(APersistentSet cljcfs){
@@ -128,11 +128,10 @@ public class Caseframe implements Comparable<Caseframe>{
 	}
 	
 	public static void addFSymbols(IPersistentMap fsyms){
-		for (Iterator<Map.Entry> iter = fsyms.iterator(); iter.hasNext(); ){
-			Map.Entry e = iter.next();
+		for (Map.Entry e : (Iterable<Map.Entry>) fsyms) {
 			fsymbols.put(
 					e.getKey().toString(),
-					create((IPersistentMap)e.getValue()));
+					create((IPersistentMap) e.getValue()));
 		}
 	}
 	
