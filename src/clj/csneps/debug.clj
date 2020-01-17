@@ -37,8 +37,8 @@
   [features nodes & message-strs]
   (let [features (if (seqable? features) (set features) #{features})
         nodes (if (and (seqable? nodes) (not (map? nodes))) (set nodes) #{nodes})] ;; Records are seqable.
-    (when (and (not (empty? (set/intersection features @debug-features)))
-               (or (empty? @debug-nodes)
-                   (empty? nodes)
-                   (not (empty? (set/intersection nodes @debug-nodes)))))
-      `(println-agent ~@message-strs))))
+    `(when (and (not (empty? (set/intersection ~features @debug-features)))
+                (or (empty? @debug-nodes)
+                    (empty? ~nodes)
+                    (not (empty? (set/intersection ~nodes @debug-nodes)))))
+       (println-agent ~@message-strs))))
