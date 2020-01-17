@@ -220,6 +220,9 @@
   ([term depth visited invoketermset subst context taskid]
     
     (dosync (commute (:future-bw-infer term) union invoketermset))
+
+    (when-not (ct/asserted? term context)
+      (path-based-derivable term context))
     
     ;; Some rules need special backward-inferring into. 
     (when-not (ct/asserted? term context)

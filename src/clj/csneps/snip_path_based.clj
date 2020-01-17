@@ -209,8 +209,8 @@
       return a singleton set of that proposition;
    else return the empty set."
   [p context]
-  (when @goaltrace
-    (cl-format true "~&I will consider using Path-Based inference.~%"))
+  ;(when @goaltrace
+  ;  (cl-format true "~&I will consider using Path-Based inference.~%"))
   (if (isa? (type-of p) :csneps.core/Molecular)
     (let [dcs (:down-cableset p)
           results (remove #(not (ct/asserted? % context))
