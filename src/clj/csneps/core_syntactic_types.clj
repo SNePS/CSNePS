@@ -71,6 +71,10 @@
 (defn carule?
   [o]
   (when (:type o) (isa? (:type o) ::CARule)))
+
+(defn implication?
+  [o]
+  (when (:type o) (isa? (:type o) ::Implication)))
               
 
 ;;; Syntactic Types

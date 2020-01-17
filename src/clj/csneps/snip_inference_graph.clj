@@ -217,7 +217,7 @@
                      gt))]
     (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid)))
   ;; Opens appropriate in-channels, sends messages to their originators.
-  ([term depth visited invoketermset subst context taskid] 
+  ([term depth visited invoketermset subst context taskid]
     
     (dosync (commute (:future-bw-infer term) union invoketermset))
     
@@ -254,6 +254,7 @@
     (when-not (and
                 (not (build/generic-term? term))
                 (not (carule? term))
+                (not (implication? term)) ;; We may need others. Numerical entailment?
                 (ct/asserted? term context))
       ;; Propogate backward-infer messages.
       (doseq [ch (union (@ant-in-channels term) (@semtype-in-channels term) {})]
