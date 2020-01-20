@@ -7,7 +7,7 @@
 (defn box
   "Returns a term whose name looks like n."
   [n]
-  (build/build n :Entity {}))
+  (build/build n :Entity {} #{}))
 
 (defn unbox
   "If term is a number, return it;
