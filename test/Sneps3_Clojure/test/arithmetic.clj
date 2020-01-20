@@ -1,13 +1,17 @@
 (ns Sneps3-Clojure.test.arithmetic
-  (:use [core]
-        [arithmetic]
+  (:use [csneps.core.arithmetic]
         [clojure.test])
-  (:require [snuser]))
+  (:require [csneps.core.snuser :as snuser]))
+
+(defn csneps-setup [f]
+  (csneps.snip.inference-graph.concurrent/startExecutor)
+  (f))
 
 (defn clearkb-fixture [f]
   (snuser/clearkb true)
   (f))
 
+(use-fixtures :once csneps-setup)
 (use-fixtures :each clearkb-fixture)
 
 (deftest add
