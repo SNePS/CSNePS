@@ -14,17 +14,24 @@
 (use-fixtures :once csneps-setup)
 (use-fixtures :each clearkb-fixture)
 
-(deftest atomic-implication-backward-infer
-  (snuser/assert '(if a b))
-  (snuser/assert 'a)
-  (is (= #{(snuser/find-term 'b)} (snuser/askif 'b))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Introduction Rules ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(deftest generic-derivation-backward-infer
-  (snuser/assert '(Isa (every x Cat) Animal))
-  (snuser/assert '(Isa Glacier Cat))
-  (snuser/assert '(Isa Fido Dog))
-  (is (empty? (snuser/askif '(Isa Fido Animal))))
-  (is (= #{(snuser/defineTerm '(Isa Glacier Animal))} (snuser/askif '(Isa Glacier Animal)))))
+(deftest atomic-consensus-introduction
+  (snuser/assert 'a)
+  (snuser/assert 'b)
+  (snuser/defineTerm 'c)
+  (snuser/assert '(not d))
+  (snuser/assert '(not e))
+  ;;; And
+  (let [andterm (snuser/defineTerm '(and a b))]
+    (is (= #{andterm} (snuser/askif '(and a b))))
+    (is (empty? (snuser/askif '(and a c)))))
+  ;; Nor
+  (let [norterm (snuser/defineTerm '(nor d e))]
+    (is (= #{norterm} (snuser/askif '(nor d e))))
+    (is (empty? (snuser/askif '(nor d c))))))
 
 (deftest atomic-andor-introduction
   (snuser/assert 'a)
@@ -32,10 +39,6 @@
   (snuser/defineTerm 'c)
   (snuser/defineTerm 'd)
   (snuser/defineTerm '(not e))
-  ;;; And
-  (let [andor (snuser/defineTerm '(and a b))]
-    (is (= #{andor} (snuser/askif '(and a b))))
-    (is (empty? (snuser/askif '(and a c)))))
   ;;; Or
   (let [andor-and (snuser/defineTerm '(or a b))
         andor-or (snuser/defineTerm '(or a c))]
@@ -58,3 +61,34 @@
     (is (= #{thresh-iff1} (snuser/askif '(iff a b))))
     (is (= #{thresh-iff2} (snuser/askif '(iff (not c) (not d)))))
     (is (empty? (snuser/askif '(iff a c))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Elimination Rules ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest atomic-implication-elimination-backward-infer
+  (snuser/assert '(if a b))
+  (snuser/assert 'a)
+  (is (= #{(snuser/find-term 'b)} (snuser/askif 'b))))
+
+(deftest generic-derivation-backward-infer
+  (snuser/assert '(Isa (every x Cat) Animal))
+  (snuser/assert '(Isa Glacier Cat))
+  (snuser/assert '(Isa Fido Dog))
+  (is (empty? (snuser/askif '(Isa Fido Animal))))
+  (is (= #{(snuser/defineTerm '(Isa Glacier Animal))} (snuser/askif '(Isa Glacier Animal)))))
+
+(deftest atomic-negation-elimination
+  (snuser/assert '(not (not a)))
+  (is (= #{(snuser/defineTerm 'a)} (snuser/askif 'a)))
+  (is (empty? (snuser/askif '(not a))))
+  (snuser/assert '(not (not (not b))))
+  (is (= #{(snuser/defineTerm '(not b))} (snuser/askif '(not b))))
+  (is (empty? (snuser/askif 'b))))
+
+(deftest conjunction-elimination
+  (snuser/assert '(and a b c))
+  (is (= #{(snuser/find-term 'a)} (snuser/askif 'a)))
+  (is (= #{(snuser/find-term 'b)} (snuser/askif 'b)))
+  (is (= #{(snuser/find-term 'c)} (snuser/askif 'c)))
+  (is (empty? (snuser/askif 'd))))
