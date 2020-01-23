@@ -1345,9 +1345,9 @@
         (pms/make-passthrough-msg-set)
         ;(lms/make-linear-msg-set)))
         (ptree/make-ptree syntype arbdcs)))
-    ;;; I don't think this does anything.
-    ;(empty? (filter arbitraryTerm? (flatten-term dcs)))
-    ;(lms/make-linear-msg-set)
+    ;; If there aren't any variables, we need to use the linear message set.
+    (empty? (filter arbitraryTerm? (flatten-term dcs)))
+    (lms/make-linear-msg-set)
     ;;; Entailment
     (and (or (= syntype :csneps.core/Numericalentailment)
              (= syntype :csneps.core/Implication))
