@@ -147,8 +147,9 @@
             (or (= type :i-channel)
                 (= type :g-channel))
             (not (variableTerm? orig))
-            (not (carule? orig))
-            (not= (syntactic-type-of orig) :csneps.core/Negation))
+            (not (carule? orig)))
+            ;(not= (syntactic-type-of orig) :csneps.core/Negation)) ;; I removed this because it broke (iff (not a) (not b)) intro,
+                                                                    ;; but I'm not sure why it was added to begin with.
       (submit-to-channel ch (msg/new-message {:origin orig
                                           :support-set #{['hyp #{(:name orig)}]}
                                           :flaggedns {orig true}

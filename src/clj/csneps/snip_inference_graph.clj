@@ -258,6 +258,9 @@
                 (not (build/generic-term? term))
                 (not (carule? term))
                 (not (implication? term)) ;; We may need others. Numerical entailment?
+                (not (andor? term)) ;; We might do better here to enumerate what *should* be derived again,
+                                    ;; rather than what not to.
+                (not (thresh? term))
                 (ct/asserted? term context))
       ;; Propogate backward-infer messages.
       (doseq [ch (union (@ant-in-channels term) (@semtype-in-channels term) {})]

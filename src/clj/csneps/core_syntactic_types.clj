@@ -75,7 +75,14 @@
 (defn implication?
   [o]
   (when (:type o) (isa? (:type o) ::Implication)))
-              
+
+(defn andor?
+  [o]
+  (when (:type o) (isa? (:type o) ::Andor)))
+
+(defn thresh?
+  [o]
+  (when (:type o) (isa? (:type o) ::Thresh)))
 
 ;;; Syntactic Types
 ;;; ===============
