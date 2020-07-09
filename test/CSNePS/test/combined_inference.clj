@@ -1,4 +1,4 @@
-(ns Sneps3-Clojure.test.combined-inference
+(ns CSNePS.test.combined-inference
   (:require [clojure.test :refer :all])
   (:require [csneps.core.snuser :as snuser])
   (:require [csneps.snip :as snip]))

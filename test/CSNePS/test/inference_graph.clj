@@ -1,4 +1,4 @@
-(ns Sneps3-Clojure.test.inference-graph
+(ns CSNePS.test.inference-graph
   (:require [clojure.test :refer :all])
   (:require [csneps.core.snuser :as snuser]))
 

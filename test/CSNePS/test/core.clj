@@ -1,6 +1,6 @@
-(ns Sneps3-Clojure.test.core
+(ns CSNePS.test.core
   (:use [clojure.test])
-  (:require [Sneps3-Clojure.test.arithmetic]))
+  (:require [CSNePS.test.arithmetic]))
 
 
 (defn load-sneps-fixture [f]
@@ -9,4 +9,4 @@
 (use-fixtures :once load-sneps-fixture)
 
 ;(deftest test-suite
-;  (run-tests 'Sneps3-Clojure.test.arithmetic))
+;  (run-tests 'CSNePS.test.arithmetic))
