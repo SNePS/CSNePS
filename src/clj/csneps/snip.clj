@@ -30,7 +30,7 @@
         [clojure.set])
   (:import [java.util Comparator]
            [java.util.concurrent TimeUnit LinkedBlockingQueue PriorityBlockingQueue ThreadPoolExecutor]
-           [edu.buffalo.csneps.util CountingLatch]))
+           [csneps.util CountingLatch]))
 
 (declare assertTrace askif)
 

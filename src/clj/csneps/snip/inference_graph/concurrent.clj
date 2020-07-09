@@ -10,7 +10,7 @@
 ;; Incremented whenever a message is submitted, and decremented once inference
 ;; on a message is complete, this allows us to determine when the graph is in
 ;; a quiescent state.
-(def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)}))
+(def infer-status (ref {nil (csneps.util.CountingLatch.)}))
 
 ;; Tasks have :priority metadata. This allows the queue to order them
 ;; properly for execution. Higher priority is executed first.
@@ -50,7 +50,7 @@
                          ig-cpus-to-use
                          (Long/MAX_VALUE) TimeUnit/NANOSECONDS queue))
   (.prestartAllCoreThreads ^ThreadPoolExecutor executorService)
-  (def infer-status (ref {nil (edu.buffalo.csneps.util.CountingLatch.)})))
+  (def infer-status (ref {nil (csneps.util.CountingLatch.)})))
 
 ;; Only used when exiting.
 (defn shutdownExecutor

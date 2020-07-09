@@ -1,5 +1,5 @@
 (ns csneps.gui
-  (:import [edu.buffalo.cse.sneps3.gui GUI2])
+  (:import [csneps.gui GUI2])
   (:use [clojure.tools.nrepl.server :only (start-server stop-server)]
         [csneps.util])
   (:require [clojure.tools.nrepl :as repl]
@@ -98,7 +98,7 @@
 (defn log
   [repl-view s type]
   ;(println "Logging: " (first s))
-  (.log ^edu.buffalo.cse.sneps3.gui.business.repl.IREPLView repl-view (str s "\n"))
+  (.log ^csneps.gui.business.repl.IREPLView repl-view (str s "\n"))
   ;(.append log-comp s)
   s)
 
@@ -117,9 +117,9 @@
   ;(println (repl/message client {:op :eval :code "(+ 1 2)" :ns "snuser"}))
   (try
     (repl/message client
-      (if (map? expr)
-        expr
-        {:op :eval :code expr :ns (.getCurrentNamespace ^edu.buffalo.cse.sneps3.gui.business.repl.IREPLView repl-view)}))  
+                  (if (map? expr)
+                    expr
+                    {:op :eval :code expr :ns (.getCurrentNamespace ^csneps.gui.business.repl.IREPLView repl-view)}))
     (catch Throwable t
       (.printStackTrace t)
       (log repl-view (eval-failure-msg nil expr) nil))))
@@ -132,7 +132,7 @@
   (future (doseq [{:keys [out err value ns status] :as resp} responses]
             ;(println "New data: " resp)
             ;(println "Resp: " responses)
-            (when ns (.setCurrentNamespace ^edu.buffalo.cse.sneps3.gui.business.repl.IREPLView repl-view ns))
+            (when ns (.setCurrentNamespace ^csneps.gui.business.repl.IREPLView repl-view ns))
             (doseq [[k v] (dissoc resp :id :ns :status :session)]
               ;(log repl-view v k))
               ;(doseq [[k v] (dissoc resp :id :ns :status :session)]
@@ -150,7 +150,7 @@
             )))
       
 (defn configure-repl
-  [^edu.buffalo.cse.sneps3.gui.business.repl.REPLView repl-view ^javax.swing.JTextArea log-comp repl-client session-id]
+  [^csneps.gui.business.repl.REPLView repl-view ^javax.swing.JTextArea log-comp repl-client session-id]
     
   (let [session-client (repl/client-session repl-client :session session-id)
         responses-promise (promise)]

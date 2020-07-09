@@ -59,7 +59,7 @@
 (defn blocking-submit-to-channel
   [ch msg]
   (let [taskid (gensym "task")]
-    (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+    (dosync (alter infer-status assoc taskid (csneps.util.CountingLatch.)))
     (submit-to-channel ch (assoc msg :taskid taskid))
     (.await ^CountingLatch (@infer-status taskid))))
 
@@ -121,7 +121,7 @@
           (when (build/pass-vs? valve-selector msg)
             (dosync (commute (:waiting-msgs channel) disj msg))
             (if (@infer-status taskid)
-              (do 
+              (do
                 ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
                 (.increment ^CountingLatch (@infer-status taskid)))
               (send screenprinter (fn [_]  
@@ -199,21 +199,21 @@
    set to track which nodes it has already visited."
   ([term] 
     (let [taskid (gensym "task")] 
-      (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+      (dosync (commute infer-status assoc taskid (csneps.util.CountingLatch.)))
       (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term taskid] 
     (let [gt (gensym "task")
           taskid (if taskid 
                    taskid
                    gt)]
-      (dosync (commute infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+      (dosync (commute infer-status assoc taskid (csneps.util.CountingLatch.)))
       (backward-infer term -10 #{} #{term} {} (ct/currentContext) taskid)))
   ([term invoketermset taskid] 
     (let [gt (gensym "task")
           taskid (if taskid 
                    taskid
                    (do 
-                     (dosync (commute infer-status assoc gt (edu.buffalo.csneps.util.CountingLatch.)))
+                     (dosync (commute infer-status assoc gt (csneps.util.CountingLatch.)))
                      gt))]
     (backward-infer term -10 #{} invoketermset {} (ct/currentContext) taskid)))
   ;; Opens appropriate in-channels, sends messages to their originators.
@@ -333,7 +333,7 @@
    through the graph."
   [term]
   (let [taskid (gensym "task")]
-    (dosync (alter infer-status assoc taskid (edu.buffalo.csneps.util.CountingLatch.)))
+    (dosync (alter infer-status assoc taskid (csneps.util.CountingLatch.)))
     ;; We need to pretend that a U-INFER message came in to this node.
     ;(send screenprinter (fn [_]  (println "inc-fwi")))
     (.increment ^CountingLatch (@infer-status taskid))
