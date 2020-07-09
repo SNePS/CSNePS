@@ -48,7 +48,7 @@
   (snuser/assert 'a)
   (snuser/assert 'b)
   (snuser/defineTerm 'c)
-  (snuser/defineTerm '(not e))
+  (snuser/assert '(not e))
   (let [andor-xor (snuser/defineTerm '(xor a e))]
     (is (= #{andor-xor} (snuser/askif '(xor a e))))
     (is (empty? (snuser/askif '(xor a b)))) ;; False
