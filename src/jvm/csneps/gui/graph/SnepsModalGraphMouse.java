@@ -19,6 +19,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.JPopupMenu;
 
@@ -66,7 +67,9 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                 
                 int dncsvis = node.getDownCablesetVisibleCount();
                 int upcsvis = node.getUpCablesetVisibleCount();
-                System.out.println("UpCSVis: " + upcsvis + " DnCSVis " + dncsvis);
+                Set<ITermNode<IEdge>> pickedNodes = GUI2.getInstance().getGraphPanel().getVV().getPickedVertexState().getPicked();
+                if(GUI2.DEBUG)
+                    System.out.println("UpCSVis: " + upcsvis + " DnCSVis " + dncsvis);
                 
                 if (upcsvis < node.getInEdges().size()) {
                     popup.add(new AbstractAction("Show All In Edges (" + (node.getInEdges().size() - upcsvis) + " edges)") {
@@ -157,14 +160,25 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     });
                 }
 
-                popup.add(new AbstractAction("Hide Node") {
+                if(pickedNodes.contains(node) && pickedNodes.size() > 1){
+                    popup.add(new AbstractAction("Hide Selected Nodes") {
+                        public void actionPerformed(ActionEvent e) {
+                            for (ITermNode pnode : pickedNodes ) {
+                                GUI2.getInstance().getGraph().hideVertex(pnode);
+                            }
+                            vv.repaint();
+                        }
+                    });
+                }
+                else{
+                    popup.add(new AbstractAction("Hide Node") {
+                        public void actionPerformed(ActionEvent e) {
+                            GUI2.getInstance().getGraph().hideVertex(node);
+                            vv.repaint();
+                        }
+                    });
+                }
 
-                    public void actionPerformed(ActionEvent e) {
-                    	GUI2.getInstance().getGraph().hideVertex(node);
-                    	vv.repaint();
-                        //JungGraphPanel.instance.hideNode(node);
-                    }
-                });
                 if (!node.getTerm().isAsserted()) {
                     popup.add(new AbstractAction("Assert") {
 
