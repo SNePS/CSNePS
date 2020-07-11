@@ -11,21 +11,16 @@
 
 package csneps.gui;
 
-import csneps.gui.business.Context;
-import csneps.gui.business.Slot;
-import csneps.gui.business.Caseframe;
-import csneps.gui.business.SemanticType;
-import csneps.gui.business.Term;
+import csneps.gui.business.*;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-
-import csneps.gui.business.IView;
-
 
 
 /**
@@ -243,5 +238,10 @@ public class SemanticTypesPanel extends javax.swing.JPanel implements IView {
 		// TODO Auto-generated method stub
 		
 	}
+
+    @Override
+    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear) {
+
+    }
 
 }

@@ -11,16 +11,13 @@
 
 package csneps.gui;
 
-import csneps.gui.business.Caseframe;
-import csneps.gui.business.Context;
-import csneps.gui.business.IView;
-import csneps.gui.business.Slot;
-import csneps.gui.business.SemanticType;
-import csneps.gui.business.Term;
+import csneps.gui.business.*;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
@@ -239,8 +236,13 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView {
 
 	public void termUpdate(Collection<Term> term, Boolean clear) {
 	}
-	
-	class SortedTreeModel extends DefaultTreeModel{
+
+    @Override
+    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear) {
+
+    }
+
+    class SortedTreeModel extends DefaultTreeModel{
 		private static final long serialVersionUID = 1L;
 
 		public SortedTreeModel(TreeNode root) {

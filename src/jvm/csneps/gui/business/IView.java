@@ -2,6 +2,8 @@ package csneps.gui.business;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 
 public interface IView {
@@ -17,4 +19,6 @@ public interface IView {
     public void slotUpdate(Collection<Slot> slot, Boolean clear);
     //Term updates
     public void termUpdate(Collection<Term> term, Boolean clear);
+    //Channel updates
+    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear);
 }

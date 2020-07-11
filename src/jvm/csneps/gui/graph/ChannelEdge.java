@@ -1,17 +1,17 @@
 package csneps.gui.graph;
 
-public class ChannelEdge extends Edge {
+import csneps.gui.business.Channel;
 
-	public enum ChannelType { ICHANNEL, YCHANNEL }
+public class ChannelEdge extends Edge {
 	
-	private ChannelType type;
+	private Channel.ChannelType type;
 	
-	public ChannelEdge(String relation, ITermNode<IEdge> from, ITermNode<IEdge> to, ChannelType type) {
+	public ChannelEdge(String relation, ITermNode<IEdge> from, ITermNode<IEdge> to, Channel.ChannelType type) {
 		super(relation, from, to);
 		this.type = type;
 	}
 	
-	public ChannelType getType(){
+	public Channel.ChannelType getType(){
 		return type;
 	}
 }

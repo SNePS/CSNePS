@@ -20,6 +20,8 @@ public class Channel {
 	private static Keyword valve_open = Keyword.intern("valve-open");
 	
 	private IPersistentMap channel;
+
+	public enum ChannelType { ICHANNEL, UCHANNEL, GCHANNEL }
 	
 	private Channel(IPersistentMap channel){
 		this.channel = channel;

@@ -7,11 +7,7 @@
 package csneps.gui;
 
 import com.google.common.base.Function;
-import csneps.gui.business.Caseframe;
-import csneps.gui.business.IView;
-import csneps.gui.business.SemanticType;
-import csneps.gui.business.Slot;
-import csneps.gui.business.Term;
+import csneps.gui.business.*;
 import csneps.gui.graph.ArrowFillTransformer;
 import csneps.gui.graph.ArrowShapeTransformer;
 import csneps.gui.graph.ChannelEdge;
@@ -64,11 +60,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.RoundRectangle2D;
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
@@ -236,7 +228,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 							return dashStroke;
 						}
 						else if (i instanceof ChannelEdge) {
-							if (((ChannelEdge) i).getType() == ChannelEdge.ChannelType.ICHANNEL)
+							if (((ChannelEdge) i).getType() == Channel.ChannelType.ICHANNEL)
 								return dotStroke;
 							return dashdotStroke;
 						}
@@ -955,6 +947,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		}
 
 		vv.repaint();
+
+	}
+
+	@Override
+	public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear) {
 
 	}
 

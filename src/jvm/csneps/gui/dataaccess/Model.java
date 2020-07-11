@@ -269,9 +269,13 @@ public class Model {
     		System.out.println(reset + " Ich " + changed.toString());
     		
     	Map<String, Set<Channel>> chs = Channel.createChannelCollection(changed);
-    	
+
     	for (String tname : chs.keySet())
     		Term.getTerm(tname).addIChannels(chs.get(tname));
+
+    	for (IView i : views){
+			i.channelUpdate(chs, Channel.ChannelType.ICHANNEL, reset);
+		}
     }
     
     public void termNameGChannelMapChanged(IPersistentMap changed, Boolean reset){
@@ -282,6 +286,10 @@ public class Model {
 		
 		for (String tname : chs.keySet())
     		Term.getTerm(tname).addGChannels(chs.get(tname));
+
+		for (IView i : views){
+			i.channelUpdate(chs, Channel.ChannelType.GCHANNEL, reset);
+		}
     }
 
     public void termNameUChannelMapChanged(IPersistentMap changed, Boolean reset){
@@ -292,6 +300,10 @@ public class Model {
 		
 		for (String tname : chs.keySet())
     		Term.getTerm(tname).addUChannels(chs.get(tname));
+
+		for (IView i : views){
+			i.channelUpdate(chs, Channel.ChannelType.UCHANNEL, reset);
+		}
     }
     
     /****************

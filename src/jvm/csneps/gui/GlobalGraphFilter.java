@@ -6,21 +6,17 @@
 
 package csneps.gui;
 
-import csneps.gui.business.Caseframe;
-import csneps.gui.business.Context;
-import csneps.gui.business.Slot;
-import csneps.gui.business.SemanticType;
-import csneps.gui.business.Term;
+import csneps.gui.business.*;
 
 import java.awt.Component;
 import java.awt.Frame;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import javax.swing.DefaultListModel;
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
-
-import csneps.gui.business.IView;
 
 /**
  *
@@ -147,6 +143,11 @@ public class GlobalGraphFilter extends javax.swing.JPanel implements IView {
     public void slotUpdate(Collection<Slot> slot, Boolean clear) { }
 
 	public void termUpdate(Collection<Term> term, Boolean clear) { }
+
+    @Override
+    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear) {
+
+    }
 
 }
 
