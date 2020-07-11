@@ -37,13 +37,7 @@ import java.awt.RenderingHints;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import javax.swing.JFileChooser;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.*;
 
 import org.freehep.graphicsbase.util.export.ExportDialog;
 
@@ -55,7 +49,7 @@ public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2020.07.09";
+	public static final String version = "2020.07.11";
 	
     public static final boolean DEBUG = false;
 
@@ -156,7 +150,7 @@ public class GUI2 extends javax.swing.JFrame{
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(screenshot);
 
-        jMenuItem12.setEnabled(false);
+        jMenuItem_globalFilter.setEnabled(false);
 
         //getGraphPanel().setStatusbarText("New assertions are not shown in the graph.");
     }
@@ -513,72 +507,86 @@ public class GUI2 extends javax.swing.JFrame{
     }
 
     private void initComponents() {
-        jToolBar1 = new javax.swing.JToolBar();
-        jButton1 = new javax.swing.JButton();
-        jToggleButton_repl = new javax.swing.JToggleButton();
-        jToggleButton_plugins = new javax.swing.JToggleButton();
-        jSplitPane1 = new javax.swing.JSplitPane();
-        splitPane_graphAndREPL = new javax.swing.JSplitPane();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
+        /*** Declarations ***/
+
+        /* Menus */
+        jMenuBar1 = new JMenuBar();
+
+        // File
+        jMenu_File = new JMenu();
+        jMenu_File_Load = new JMenu();
+        jMenu_File_Save = new JMenu();
+        jMenuItem_LoadToKB = new JMenuItem();
+        jMenuItem_loadDemo = new JMenuItem();
+        jMenuItem_saveCurrentKB = new JMenuItem();
+        //saveKBasDemo = new JMenuItem();
+        jMenuItem_exportGraph = new JMenuItem();
+        jMenuItem_quit = new JMenuItem();
+
+        // Graph
+        jMenu_graph = new JMenu();
+        jMenuItem_refreshGraph = new JMenuItem();
+        //jCheckBoxMenuItem_autoRefresh = new JCheckBoxMenuItem();
+        jMenuItem_relayout = new JMenuItem();
+        jCheckBoxMenuItem_autoRelayout = new JCheckBoxMenuItem();
+        jMenu_fontSize = new JMenu();
+        jMenuItem_size12 = new JMenuItem();
+        jMenuItem_size14 = new JMenuItem();
+        jMenuItem_size16 = new JMenuItem();
+        jMenuItem_size18 = new JMenuItem();
+        jMenuItem_size20 = new JMenuItem();
+        jCheckBoxMenuItem_antialias = new JCheckBoxMenuItem();
+        jMenuItem_showInGraph = new JMenuItem();
+        jMenuItem_globalFilter = new JMenuItem();
+
+        // SNePS
+        jMenu_sneps = new JMenu();
+        jMenuItem_clearKB = new JMenuItem();
+        jMenuItema_clearKBAll = new JMenuItem();
+
+        // Debug
+        jMenu_Debug = new JMenu();
+        jMenuItem_showChannels = new JMenuItem();
+
+        // Help
+        jMenu_help = new JMenu();
+        menuItem_csnepsmanual = new JMenuItem();
+        //menuItem_guidocs = new JMenuItem();
+
+        /* Toolbar */
+        jToolBar1 = new JToolBar();
+        jButton_AddFrameInstance = new JButton();
+        jToggleButton_repl = new JToggleButton();
+        jToggleButton_plugins = new JToggleButton();
+
+        /* Main Layout */
+        jSplitPane1 = new JSplitPane();
+        splitPane_graphAndREPL = new JSplitPane();
+        jTabbedPane1 = new JTabbedPane();
         jungGraphPanel1 = new JungGraphPanel();
         replPanel1 = new REPLPanel();
         pluginPanel1 = new PluginPanel();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu_File = new javax.swing.JMenu();
-        jMenu_File_Load = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
-        loadDemo = new javax.swing.JMenuItem();
-        jMenu_File_Save = new javax.swing.JMenu();
-        saveCurrentKB = new javax.swing.JMenuItem();
-        //saveKBasDemo = new javax.swing.JMenuItem();
-        jMenuItem10 = new javax.swing.JMenuItem();
-        jMenuItem3 = new javax.swing.JMenuItem();
-        jMenu_globablFilter = new javax.swing.JMenu();
-        jMenuItem9 = new javax.swing.JMenuItem();
-        jMenuItem12 = new javax.swing.JMenuItem();
-        jMenuItem_refreshGraph = new javax.swing.JMenuItem();
-        //jCheckBoxMenuItem_autoRefresh = new javax.swing.JCheckBoxMenuItem();
-        jMenuItem_relayout = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem_autoRelayout = new javax.swing.JCheckBoxMenuItem();
-        jMenu7 = new javax.swing.JMenu();
-        jMenuItem4 = new javax.swing.JMenuItem();
-        jMenuItem5 = new javax.swing.JMenuItem();
-        jMenuItem6 = new javax.swing.JMenuItem();
-        jMenuItem7 = new javax.swing.JMenuItem();
-        jMenuItem8 = new javax.swing.JMenuItem();
-        jCheckBoxMenuItem_antialias = new javax.swing.JCheckBoxMenuItem();
-        jMenu3 = new javax.swing.JMenu();
-        jMenuItem2 = new javax.swing.JMenuItem();
-        jMenuItem11 = new javax.swing.JMenuItem();
-        jMenu6 = new javax.swing.JMenu();
-        menuItem_csnepsmanual = new javax.swing.JMenuItem();
-        menuItem_guidocs = new javax.swing.JMenuItem();
 
+
+        /*** Functionality ***/
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        
+
+        /* Toolbar */
         jToolBar1.setRollover(true);
 
-        jButton1.setText("Add Frame Instance");
-        jButton1.setFocusable(false);
-        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-        jToolBar1.add(jButton1);
+        jButton_AddFrameInstance.setText("Add Frame Instance");
+        jButton_AddFrameInstance.setFocusable(false);
+        jButton_AddFrameInstance.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton_AddFrameInstance.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton_AddFrameInstance.addActionListener(e -> jButton1ActionPerformed(e));
+        jToolBar1.add(jButton_AddFrameInstance);
 
         jToggleButton_repl.setSelected(true);
         jToggleButton_repl.setText("REPL");
         jToggleButton_repl.setFocusable(false);
         jToggleButton_repl.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jToggleButton_repl.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jToggleButton_repl.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton_replActionPerformed(evt);
-            }
-        });
+        jToggleButton_repl.addActionListener(e -> jToggleButton_replActionPerformed(e));
         jToolBar1.add(jToggleButton_repl);
         
         jToggleButton_plugins.setSelected(true);
@@ -586,11 +594,7 @@ public class GUI2 extends javax.swing.JFrame{
         jToggleButton_plugins.setFocusable(false);
         jToggleButton_plugins.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         jToggleButton_plugins.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jToggleButton_plugins.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton_pluginsActionPerformed(evt);
-            }
-        });
+        jToggleButton_plugins.addActionListener(e -> jToggleButton_pluginsActionPerformed(e));
         jToolBar1.add(jToggleButton_plugins);
 
         jSplitPane1.setDividerLocation(850);
@@ -611,44 +615,35 @@ public class GUI2 extends javax.swing.JFrame{
         jSplitPane1.setLeftComponent(splitPane_graphAndREPL);
         jSplitPane1.setRightComponent(pluginPanel1);
 
+
+        /* Menu */
+        // File
         jMenu_File.setMnemonic('F');
         jMenu_File.setText("File");
 
         jMenu_File_Load.setMnemonic('L');
         jMenu_File_Load.setText("Load");
 
-        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
-        jMenuItem1.setMnemonic('L');
-        jMenuItem1.setText("Load to KB");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
-            }
-        });
-        jMenu_File_Load.add(jMenuItem1);
+        jMenuItem_LoadToKB.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        jMenuItem_LoadToKB.setMnemonic('L');
+        jMenuItem_LoadToKB.setText("Load to KB");
+        jMenuItem_LoadToKB.addActionListener(e -> jMenuItem1ActionPerformed(e));
+        jMenu_File_Load.add(jMenuItem_LoadToKB);
 
-        loadDemo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, InputEvent.ALT_DOWN_MASK));
-        loadDemo.setMnemonic('D');
-        loadDemo.setText("Demo");
-        loadDemo.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loadDemoActionPerformed(evt);
-            }
-        });
-        jMenu_File_Load.add(loadDemo);
+        jMenuItem_loadDemo.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_D, InputEvent.ALT_DOWN_MASK));
+        jMenuItem_loadDemo.setMnemonic('D');
+        jMenuItem_loadDemo.setText("Demo");
+        jMenuItem_loadDemo.addActionListener(e -> loadDemoActionPerformed(e));
+        jMenu_File_Load.add(jMenuItem_loadDemo);
 
         jMenu_File.add(jMenu_File_Load);
 
         jMenu_File_Save.setMnemonic('S');
         jMenu_File_Save.setText("Save");
 
-        saveCurrentKB.setText("Current KB");
-        saveCurrentKB.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                saveCurrentKBActionPerformed(evt);
-            }
-        });
-        jMenu_File_Save.add(saveCurrentKB);
+        jMenuItem_saveCurrentKB.setText("Current KB");
+        jMenuItem_saveCurrentKB.addActionListener(e -> saveCurrentKBActionPerformed(e));
+        jMenu_File_Save.add(jMenuItem_saveCurrentKB);
 
         /*saveKBasDemo.setText("KB as Demo");
         saveKBasDemo.addActionListener(new java.awt.event.ActionListener() {
@@ -658,54 +653,39 @@ public class GUI2 extends javax.swing.JFrame{
         });
         jMenu4.add(saveKBasDemo);*/
 
-        jMenuItem10.setText("Export Graph...");
-        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem10ActionPerformed(evt);
-            }
-        });
+        jMenuItem_exportGraph.setText("Export Graph...");
+        jMenuItem_exportGraph.addActionListener(e -> jMenuItem10ActionPerformed(e));
         if (javaVersion < 1.9) 
-        		jMenu_File_Save.add(jMenuItem10);
+            jMenu_File_Save.add(jMenuItem_exportGraph);
 
         jMenu_File.add(jMenu_File_Save);
 
-        jMenuItem3.setMnemonic('Q');
-        jMenuItem3.setText("Quit");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
-            }
-        });
-        jMenu_File.add(jMenuItem3);
+        jMenuItem_quit.setMnemonic('Q');
+        jMenuItem_quit.setText("Quit");
+        jMenuItem_quit.addActionListener(e -> System.exit(0));
+        jMenu_File.add(jMenuItem_quit);
 
         jMenuBar1.add(jMenu_File);
 
-        jMenu_globablFilter.setMnemonic('G');
-        jMenu_globablFilter.setText("Graph");
+        // Graph
+        jMenu_graph.setMnemonic('G');
+        jMenu_graph.setText("Graph");
 
-        jMenuItem9.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK));
-        jMenuItem9.setMnemonic('S');
-        jMenuItem9.setText("Show In Graph");
-        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem9ActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jMenuItem9);
+        jMenuItem_showInGraph.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK));
+        jMenuItem_showInGraph.setMnemonic('S');
+        jMenuItem_showInGraph.setText("Show In Graph");
+        jMenuItem_showInGraph.addActionListener(e -> jMenuItem9ActionPerformed(e));
+        jMenu_graph.add(jMenuItem_showInGraph);
 
-        jMenuItem12.setText("Globally Filter Graph by Caseframe");
-        jMenuItem12.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem12ActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jMenuItem12);
+        jMenuItem_globalFilter.setText("Globally Filter Graph by Caseframe");
+        jMenuItem_globalFilter.addActionListener(e -> GlobalGraphFilter.showFilterDialog(this));
+        jMenu_graph.add(jMenuItem_globalFilter);
 
-        jMenu_globablFilter.add(new JPopupMenu.Separator());
+        jMenu_graph.add(new JPopupMenu.Separator());
 
 		jCheckBoxMenuItem_showOntologyTerms = new javax.swing.JCheckBoxMenuItem("Show Ontology Terms", false);
 		jCheckBoxMenuItem_showOntologyTerms.addActionListener(e -> jungGraphPanel1.setShowOntologyTerms(jCheckBoxMenuItem_showOntologyTerms.isSelected()));
-		jMenu_globablFilter.add(jCheckBoxMenuItem_showOntologyTerms);
+		jMenu_graph.add(jCheckBoxMenuItem_showOntologyTerms);
 
 		jCheckBoxMenuItem_showNewAssertions = new javax.swing.JCheckBoxMenuItem("Show New Assertions in Graph", true);
 		jCheckBoxMenuItem_showNewAssertions.addActionListener(e -> {
@@ -718,17 +698,13 @@ public class GUI2 extends javax.swing.JFrame{
 			}
 		});
         
-        jMenu_globablFilter.add(jCheckBoxMenuItem_showNewAssertions);
-        jMenu_globablFilter.add(new JPopupMenu.Separator());
+        jMenu_graph.add(jCheckBoxMenuItem_showNewAssertions);
+        jMenu_graph.add(new JPopupMenu.Separator());
 
         jMenuItem_refreshGraph.setMnemonic('F');
         jMenuItem_refreshGraph.setText("Refresh");
-        jMenuItem_refreshGraph.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem_refreshGraphActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jMenuItem_refreshGraph);
+        jMenuItem_refreshGraph.addActionListener(e -> jMenuItem_refreshGraphActionPerformed(e));
+        jMenu_graph.add(jMenuItem_refreshGraph);
 
         /*jCheckBoxMenuItem_autoRefresh.setMnemonic('R');
         jCheckBoxMenuItem_autoRefresh.setSelected(true);
@@ -742,124 +718,91 @@ public class GUI2 extends javax.swing.JFrame{
 
         jMenuItem_relayout.setMnemonic('L');
         jMenuItem_relayout.setText("Relayout");
-        jMenuItem_relayout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem_relayoutActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jMenuItem_relayout);
+        jMenuItem_relayout.addActionListener(e -> jungGraphPanel1.displayGraph(jungGraphPanel1.getGraph()));
+        jMenu_graph.add(jMenuItem_relayout);
 
         jCheckBoxMenuItem_autoRelayout.setMnemonic('E');
         jCheckBoxMenuItem_autoRelayout.setSelected(true);
         jCheckBoxMenuItem_autoRelayout.setText("Auto Relayout");
-        jCheckBoxMenuItem_autoRelayout.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItem_autoRelayoutActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jCheckBoxMenuItem_autoRelayout);
+        jCheckBoxMenuItem_autoRelayout.addActionListener(e -> jCheckBoxMenuItem_autoRelayoutActionPerformed(e));
+        jMenu_graph.add(jCheckBoxMenuItem_autoRelayout);
 
-        jMenu7.setMnemonic('F');
-        jMenu7.setText("Font Size");
+        jMenu_fontSize.setMnemonic('F');
+        jMenu_fontSize.setText("Font Size");
 
-        jMenuItem4.setText("12");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemFontSizeActionPerformed(evt);
-            }
-        });
-        jMenu7.add(jMenuItem4);
+        jMenuItem_size12.setText("12");
+        jMenuItem_size12.addActionListener(e -> jungGraphPanel1.setFontSize(12));
+        jMenu_fontSize.add(jMenuItem_size12);
 
-        jMenuItem5.setText("14");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemFontSizeActionPerformed(evt);
-            }
-        });
-        jMenu7.add(jMenuItem5);
+        jMenuItem_size14.setText("14");
+        jMenuItem_size14.addActionListener(e -> jungGraphPanel1.setFontSize(14));
+        jMenu_fontSize.add(jMenuItem_size14);
 
-        jMenuItem6.setText("16");
-        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemFontSizeActionPerformed(evt);
-            }
-        });
-        jMenu7.add(jMenuItem6);
+        jMenuItem_size16.setText("16");
+        jMenuItem_size16.addActionListener(e -> jungGraphPanel1.setFontSize(16));
+        jMenu_fontSize.add(jMenuItem_size16);
 
-        jMenuItem7.setText("18");
-        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemFontSizeActionPerformed(evt);
-            }
-        });
-        jMenu7.add(jMenuItem7);
+        jMenuItem_size18.setText("18");
+        jMenuItem_size18.addActionListener(e -> jungGraphPanel1.setFontSize(18));
+        jMenu_fontSize.add(jMenuItem_size18);
 
-        jMenuItem8.setText("20");
-        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemFontSizeActionPerformed(evt);
-            }
-        });
-        jMenu7.add(jMenuItem8);
+        jMenuItem_size20.setText("20");
+        jMenuItem_size20.addActionListener(e -> jungGraphPanel1.setFontSize(20));
+        jMenu_fontSize.add(jMenuItem_size20);
 
-        jMenu_globablFilter.add(jMenu7);
+        jMenu_graph.add(jMenu_fontSize);
 
         jCheckBoxMenuItem_antialias.setSelected(true);
         jCheckBoxMenuItem_antialias.setText("Anti-Aliasing");
-        jCheckBoxMenuItem_antialias.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jCheckBoxMenuItem_antialiasActionPerformed(evt);
-            }
-        });
-        jMenu_globablFilter.add(jCheckBoxMenuItem_antialias);
+        jCheckBoxMenuItem_antialias.addActionListener(e -> jCheckBoxMenuItem_antialiasActionPerformed(e));
+        jMenu_graph.add(jCheckBoxMenuItem_antialias);
 
-        jMenuBar1.add(jMenu_globablFilter);
+        jMenuBar1.add(jMenu_graph);
 
-        jMenu3.setMnemonic('S');
-        jMenu3.setText("SNePS");
+        // SNePS Menu
+        jMenu_sneps.setMnemonic('S');
+        jMenu_sneps.setText("SNePS");
 
-        jMenuItem2.setMnemonic('C');
-        jMenuItem2.setText("Clear Knowledge Base");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jMenuItem2);
+        jMenuItem_clearKB.setMnemonic('C');
+        jMenuItem_clearKB.setText("Clear Knowledge Base");
+        jMenuItem_clearKB.addActionListener(e -> FnInterop.clearkb(false));
+        jMenu_sneps.add(jMenuItem_clearKB);
 
-        jMenuItem11.setMnemonic('L');
-        jMenuItem11.setText("Clear Knowledge Base, Slots, and Caseframes");
-        jMenuItem11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem11ActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jMenuItem11);
+        jMenuItema_clearKBAll.setMnemonic('L');
+        jMenuItema_clearKBAll.setText("Clear Knowledge Base, Slots, and Caseframes");
+        jMenuItema_clearKBAll.addActionListener(e -> FnInterop.clearkb(true));
+        jMenu_sneps.add(jMenuItema_clearKBAll);
 
-        jMenuBar1.add(jMenu3);
+        jMenuBar1.add(jMenu_sneps);
 
-        jMenu6.setMnemonic('H');
-        jMenu6.setText("Help");
+        // Debug Menu
+        jMenu_Debug.setMnemonic('D');
+        jMenu_Debug.setText("Debug");
+
+        jMenuItem_showChannels.setMnemonic('C');
+        jMenuItem_showChannels.setText("Show Channels (Uncollapsed Mode Only)");
+
+
+
+        // Help Menu
+        jMenu_help.setMnemonic('H');
+        jMenu_help.setText("Help");
 
         menuItem_csnepsmanual.setMnemonic('S');
         menuItem_csnepsmanual.setText("CSNePS Manual");
-        menuItem_csnepsmanual.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuItem_csnepsmanualActionPerformed(evt);
-            }
-        });
-        jMenu6.add(menuItem_csnepsmanual);
+        menuItem_csnepsmanual.addActionListener(e -> new pdfViewer("doc/manual.pdf"));
+        jMenu_help.add(menuItem_csnepsmanual);
 
-        menuItem_guidocs.setMnemonic('G');
-        menuItem_guidocs.setText("GUI Manual");
-        menuItem_guidocs.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                menuItem_guidocsActionPerformed(evt);
-            }
-        });
+//        menuItem_guidocs.setMnemonic('G');
+//        menuItem_guidocs.setText("GUI Manual");
+//        menuItem_guidocs.addActionListener(new java.awt.event.ActionListener() {
+//            public void actionPerformed(java.awt.event.ActionEvent evt) {
+//                menuItem_guidocsActionPerformed(evt);
+//            }
+//        });
         //jMenu6.add(menuItem_guidocs);
 
-        jMenuBar1.add(jMenu6);
+        jMenuBar1.add(jMenu_help);
 
         setJMenuBar(jMenuBar1);
         
@@ -890,10 +833,6 @@ public class GUI2 extends javax.swing.JFrame{
         } 
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
-
     private void saveCurrentKBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveCurrentKBActionPerformed
         JFileChooser chooser = new JFileChooser();
         chooser.setCurrentDirectory(currentDir);
@@ -902,12 +841,6 @@ public class GUI2 extends javax.swing.JFrame{
             currentDir = chooser.getCurrentDirectory();
             FnInterop.writeKBToTextFile(chooser.getSelectedFile().getAbsolutePath());
         }
-    }
-
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {
-        //model.clearContexts();
-        //asserts = "";
-        FnInterop.clearkb(false);
     }
 
     /*private void saveKBasDemoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveKBasDemoActionPerformed
@@ -1006,23 +939,9 @@ public class GUI2 extends javax.swing.JFrame{
     	//TODO: Implement auto relayout as part of building the graph.
     }
 
-    private void jMenuItem_relayoutActionPerformed(java.awt.event.ActionEvent evt) {
-    	jungGraphPanel1.displayGraph(jungGraphPanel1.getGraph());
-    }
-
-    private void menuItem_csnepsmanualActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItem_sneps3manualActionPerformed
-        pdfViewer manual = new pdfViewer("doc/manual.pdf");
-    }//GEN-LAST:event_menuItem_sneps3manualActionPerformed
-
-    private void menuItem_guidocsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItem_guidocsActionPerformed
-        pdfViewer manual = new pdfViewer("Docs/SNePSGUIDocs.pdf");
-    }//GEN-LAST:event_menuItem_guidocsActionPerformed
-
-    private void jMenuItemFontSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemFontSizeActionPerformed
-        JMenuItem m = (JMenuItem)evt.getSource();
-        int s = Integer.parseInt(m.getText());
-        jungGraphPanel1.setFontSize(s);
-    }//GEN-LAST:event_jMenuItemFontSizeActionPerformed
+//    private void menuItem_guidocsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuItem_guidocsActionPerformed
+//        pdfViewer manual = new pdfViewer("Docs/SNePSGUIDocs.pdf");
+//    }//GEN-LAST:event_menuItem_guidocsActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         AddToKBPanel ag = new AddToKBPanel();
@@ -1053,14 +972,6 @@ public class GUI2 extends javax.swing.JFrame{
         }
     }//GEN-LAST:event_jCheckBoxMenuItem_antialiasActionPerformed
 
-    private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {
-        FnInterop.clearkb(true);
-    }
-
-    private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
-        GlobalGraphFilter.showFilterDialog(this);
-    }//GEN-LAST:event_jMenuItem12ActionPerformed
-
     /**
     * @param args the command line arguments
     */
@@ -1083,47 +994,48 @@ public class GUI2 extends javax.swing.JFrame{
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_antialias;
-    //private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_autoRefresh;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_autoRelayout;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_showOntologyTerms;
-    private javax.swing.JCheckBoxMenuItem jCheckBoxMenuItem_showNewAssertions;
-    private javax.swing.JMenu jMenu_File;
-    private javax.swing.JMenu jMenu3;
-    private javax.swing.JMenu jMenu_File_Save;
-    private javax.swing.JMenu jMenu_File_Load;
-    private javax.swing.JMenu jMenu6;
-    private javax.swing.JMenu jMenu7;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem10;
-    private javax.swing.JMenuItem jMenuItem11;
-    private javax.swing.JMenuItem jMenuItem12;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
-    private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem6;
-    private javax.swing.JMenuItem jMenuItem7;
-    private javax.swing.JMenuItem jMenuItem8;
-    private javax.swing.JMenuItem jMenuItem9;
-    private javax.swing.JMenuItem jMenuItem_refreshGraph;
-    private javax.swing.JMenuItem jMenuItem_relayout;
-    private javax.swing.JMenu jMenu_globablFilter;
-    private javax.swing.JSplitPane jSplitPane1;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JToggleButton jToggleButton_repl;
-    private javax.swing.JToggleButton jToggleButton_plugins;
-    private javax.swing.JToolBar jToolBar1;
+    private JButton jButton_AddFrameInstance;
+    private JCheckBoxMenuItem jCheckBoxMenuItem_antialias;
+    //private JCheckBoxMenuItem jCheckBoxMenuItem_autoRefresh;
+    private JCheckBoxMenuItem jCheckBoxMenuItem_autoRelayout;
+    private JCheckBoxMenuItem jCheckBoxMenuItem_showOntologyTerms;
+    private JCheckBoxMenuItem jCheckBoxMenuItem_showNewAssertions;
+    private JMenu jMenu_File;
+    private JMenu jMenu_sneps;
+    private JMenu jMenu_File_Save;
+    private JMenu jMenu_File_Load;
+    private JMenu jMenu_help;
+    private JMenu jMenu_fontSize;
+    private JMenu jMenu_Debug;
+    private JMenuBar jMenuBar1;
+    private JMenuItem jMenuItem_LoadToKB;
+    private JMenuItem jMenuItem_exportGraph;
+    private JMenuItem jMenuItema_clearKBAll;
+    private JMenuItem jMenuItem_globalFilter;
+    private JMenuItem jMenuItem_clearKB;
+    private JMenuItem jMenuItem_quit;
+    private JMenuItem jMenuItem_size12;
+    private JMenuItem jMenuItem_size14;
+    private JMenuItem jMenuItem_size16;
+    private JMenuItem jMenuItem_size18;
+    private JMenuItem jMenuItem_size20;
+    private JMenuItem jMenuItem_showInGraph;
+    private JMenuItem jMenuItem_refreshGraph;
+    private JMenuItem jMenuItem_relayout;
+    private JMenuItem jMenuItem_showChannels;
+    private JMenu jMenu_graph;
+    private JSplitPane jSplitPane1;
+    private JTabbedPane jTabbedPane1;
+    private JToggleButton jToggleButton_repl;
+    private JToggleButton jToggleButton_plugins;
+    private JToolBar jToolBar1;
     private JungGraphPanel jungGraphPanel1;
-    private javax.swing.JMenuItem loadDemo;
-    private javax.swing.JMenuItem menuItem_guidocs;
-    private javax.swing.JMenuItem menuItem_csnepsmanual;
+    private JMenuItem jMenuItem_loadDemo;
+    //private JMenuItem menuItem_guidocs;
+    private JMenuItem menuItem_csnepsmanual;
     private PluginPanel pluginPanel1;
     private REPLPanel replPanel1;
-    private javax.swing.JMenuItem saveCurrentKB;
-    //private javax.swing.JMenuItem saveKBasDemo;
-    private javax.swing.JSplitPane splitPane_graphAndREPL;
+    private JMenuItem jMenuItem_saveCurrentKB;
+    //private JMenuItem saveKBasDemo;
+    private JSplitPane splitPane_graphAndREPL;
 }
