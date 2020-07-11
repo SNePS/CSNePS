@@ -438,42 +438,23 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 		jButton_showInGraph.setText("Show In Graph");
 		jButton_showInGraph.setFocusable(false);
-		jButton_showInGraph
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_showInGraph
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_showInGraph
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jButton_showInGraphActionPerformed(evt);
-					}
-				});
+		jButton_showInGraph.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_showInGraph.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_showInGraph.addActionListener(e -> jButton_showInGraphActionPerformed(e));
 		jToolBar1.add(jButton_showInGraph);
 
 		jButton_hideAll.setText("Hide All");
 		jButton_hideAll.setFocusable(false);
-		jButton_hideAll
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_hideAll
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_hideAll.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton_hideAllActionPerformed(evt);
-			}
-		});
+		jButton_hideAll.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_hideAll.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_hideAll.addActionListener(e -> jButton_hideAllActionPerformed(e));
 		jToolBar1.add(jButton_hideAll);
 
 		jButton_showAll.setText("Show All");
 		jButton_showAll.setFocusable(false);
-		jButton_showAll
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_showAll
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_showAll.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jButton_showAllActionPerformed(evt);
-			}
-		});
+		jButton_showAll.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_showAll.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_showAll.addActionListener(e -> jButton_showAllActionPerformed(e));
 		jToolBar1.add(jButton_showAll);
 
 		jToolBar1.add(jSeparator3);
@@ -481,13 +462,8 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		jLabel2.setText("Mouse:");
 		jToolBar1.add(jLabel2);
 
-		jComboBox_graphMode.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] {
-				"Picking", "Transforming" }));
-		jComboBox_graphMode.addActionListener(new java.awt.event.ActionListener() {
-			public void actionPerformed(java.awt.event.ActionEvent evt) {
-				jComboBox1ActionPerformed(evt);
-			}
-		});
+		jComboBox_graphMode.setModel(new javax.swing.DefaultComboBoxModel<String>(new String[] { "Picking", "Transforming" }));
+		jComboBox_graphMode.addActionListener(e -> jComboBox_graphModeActionPerformed(e));
 		jToolBar1.add(jComboBox_graphMode);
 		
 //		jToolBar1.add(jSeparator4);
@@ -512,21 +488,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		jToolBar1.add(jLabel1);
 
 		jToggleButton_lens.setText("Lens");
-		jToggleButton_lens
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jToggleButton_lensActionPerformed(evt);
-					}
-				});
+		jToggleButton_lens.addActionListener(e -> jToggleButton_lensActionPerformed(e));
 		jToolBar1.add(jToggleButton_lens);
 
 		jToggleButton_collapse.setText("Collapsed");
-		jToggleButton_collapse
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jToggleButton_collapseActionPerformed(evt);
-					}
-				});
+		jToggleButton_collapse.addActionListener(e -> jToggleButton_collapseActionPerformed(e));
 		jToolBar1.add(jToggleButton_collapse);
 
 		jToolBar2.setFloatable(false);
@@ -539,46 +505,25 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		jButton_scalePlus.setFont(new java.awt.Font("Ubuntu", 0, 12));
 		jButton_scalePlus.setText(" + ");
 		jButton_scalePlus.setFocusable(false);
-		jButton_scalePlus
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_scalePlus
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_scalePlus
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jButton_scalePlusActionPerformed(evt);
-					}
-				});
+		jButton_scalePlus.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_scalePlus.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_scalePlus.addActionListener(e -> jButton_scalePlusActionPerformed(e));
 		jToolBar2.add(jButton_scalePlus);
 
 		jButton_scaleMinus.setFont(new java.awt.Font("Ubuntu", 0, 12));
 		jButton_scaleMinus.setText(" - ");
 		jButton_scaleMinus.setFocusable(false);
-		jButton_scaleMinus
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_scaleMinus
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_scaleMinus
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jButton_scaleMinusActionPerformed(evt);
-					}
-				});
+		jButton_scaleMinus.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_scaleMinus.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_scaleMinus.addActionListener(e -> jButton_scaleMinusActionPerformed(e));
 		jToolBar2.add(jButton_scaleMinus);
 
 		jButton_scaleReset.setFont(new java.awt.Font("Ubuntu", 0, 12));
 		jButton_scaleReset.setText(" Reset ");
 		jButton_scaleReset.setFocusable(false);
-		jButton_scaleReset
-				.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-		jButton_scaleReset
-				.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-		jButton_scaleReset
-				.addActionListener(new java.awt.event.ActionListener() {
-					public void actionPerformed(java.awt.event.ActionEvent evt) {
-						jButton_scaleResetActionPerformed(evt);
-					}
-				});
+		jButton_scaleReset.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+		jButton_scaleReset.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+		jButton_scaleReset.addActionListener(e -> jButton_scaleResetActionPerformed(e));
 		jToolBar2.add(jButton_scaleReset);
 
 		jLabel_status.setText(" ");
@@ -629,7 +574,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		vv.repaint();
 	}
 
-	private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {
+	private void jComboBox_graphModeActionPerformed(java.awt.event.ActionEvent evt) {
 		if (jComboBox_graphMode.getSelectedItem().equals("Picking"))
 			graphMouse.setMode(Mode.PICKING);
 		else
