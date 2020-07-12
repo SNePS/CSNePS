@@ -200,7 +200,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 							new Function<IEdge, Shape>() {
 								public Shape apply(IEdge i) {
 										//Context<Graph<ITermNode<IEdge>, IEdge>, IEdge> i) {
-									if (i instanceof RestrictionEdge || i instanceof DependencyEdge) {
+									if (i instanceof RestrictionEdge || i instanceof DependencyEdge || i instanceof ChannelEdge) {
 										return quadcurve.apply(i);
 									}
 
@@ -342,6 +342,9 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 		
 		if (e instanceof DependencyEdge)
 			return dsg.addDependencyEdge((DependencyEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
+
+		if (e instanceof ChannelEdge)
+			return dsg.addChannelEdge((ChannelEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
 		
 		return dsg.addEdge(e, e.getFrom(), e.getTo(), EdgeType.DIRECTED);
 	}
@@ -395,6 +398,16 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	
 	public void showNode(ITermNode<IEdge> n){
 		dsg.showVertex(n);
+		vv.repaint();
+	}
+
+	public void showChannels(){
+		dsg.showChannels();
+		vv.repaint();
+	}
+
+	public void hideChannels(){
+		dsg.hideChannels();
 		vv.repaint();
 	}
 
@@ -896,8 +909,23 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	}
 
 	@Override
-	public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear) {
+	public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType type, Boolean clear) {
+		for (Set<Channel> sc : chs.values()){
+			for (Channel c : sc){
+				ITermNode<IEdge> from = dsg.getVertex(c.originator().getName());
+				ITermNode<IEdge> to = dsg.getVertex(c.destination().getName());
 
+				ChannelEdge ce = new ChannelEdge(type.toString(), from, to, type);
+
+				if (from == null || to == null){
+					System.err.println("Error adding channel edge from: " + c.originator() + " to: " + c.destination() + ". One of the graph nodes is null.");
+					return;
+				}
+
+				if (!addEdge(ce))
+					System.err.println("Error adding channel edge from: " + c.originator() + " to: " + c.destination());
+			}
+		}
 	}
 
 }

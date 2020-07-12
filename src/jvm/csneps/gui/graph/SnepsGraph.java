@@ -23,6 +23,7 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 	private HashSet<E> edges;
 	
 	private boolean collapsed = false;
+	private boolean showchannels = false;
 
 	//when things are added, removed, shown, or hidden it will make the graph "dirty."
 	private boolean VisibleNodesEdgesDirty;
@@ -138,14 +139,15 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
     }
     
     public boolean hideVertex(V vertex){
-    	if (!containsVertex(vertex))
+    	// If the vertex isn't in the graph or is already hidden, return false.
+    	if (!containsVertex(vertex) || !vertex.isVisible())
             return false;
     	
     	vertex.hide();
 
     	//Hide all predecessors since they are molecular.
-    	for(E e : getIncoming_internal(vertex)){ 
-    		hideVertex((V)e.getFrom());
+    	for(E e : getIncoming_internal(vertex)){
+			hideVertex((V)e.getFrom());
     	}
     	
     	//If this has been replaced by a collapsed arc, get rid of that.
@@ -183,7 +185,7 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
     }
     
     public boolean showVertex(V vertex){
-    	if (!containsVertex(vertex))
+    	if (!containsVertex(vertex) || vertex.isVisible())
             return false;
     	if(collapsed){
     		showVertex_Collapsed(vertex);
@@ -235,12 +237,11 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
     private Collection<E> getVisibleEdges(Collection<E> c){
     	Set<E> visedges = new HashSet<E>();
     	for (E e : c){
+    		if(e instanceof ChannelEdge && !showchannels) continue;
     		if(e.getTo().isVisible() && e.getFrom().isVisible()) visedges.add(e);
     	}
     	return visedges;
     }
-    
-    
     
     public Collection<E> getInEdges(V vertex) {
         if (!containsVertex(vertex))
@@ -353,6 +354,10 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 	
 	@SuppressWarnings("unchecked")
 	public boolean addDependencyEdge(DependencyEdge edge, Pair<? extends V> endpoints){
+		return addEdge_Helper((E)edge, endpoints, EdgeType.DIRECTED, true);
+	}
+
+	public boolean addChannelEdge(ChannelEdge edge, Pair<? extends V> endpoints){
 		return addEdge_Helper((E)edge, endpoints, EdgeType.DIRECTED, true);
 	}
 	
@@ -518,6 +523,7 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 	 ***********************************/
 	
 	public void showVertex_Collapsed(V vertex){
+		if (vertex.isVisible()) return;
 		
 		//Show all successors (which will only be there if this is molecular)
     	for(E e : getOutgoing_internal(vertex)){
@@ -594,6 +600,20 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
 	public boolean vertexCollapsed(V vertex){
 		if(!collapsed) return false;
 		return (collapsedVertices.get(vertex) != null);
+	}
+
+	/***************************
+	 ******** Channels *********
+	 ***************************/
+
+	public void showChannels(){
+		showchannels = true;
+		VisibleNodesEdgesDirty = true;
+	}
+
+	public void hideChannels(){
+		showchannels = false;
+		VisibleNodesEdgesDirty = true;
 	}
 	
 	

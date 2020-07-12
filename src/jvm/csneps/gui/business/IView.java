@@ -20,5 +20,5 @@ public interface IView {
     //Term updates
     public void termUpdate(Collection<Term> term, Boolean clear);
     //Channel updates
-    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType ichannel, Boolean clear);
+    public void channelUpdate(Map<String, Set<Channel>> chs, Channel.ChannelType type, Boolean clear);
 }

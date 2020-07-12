@@ -49,7 +49,7 @@ public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2020.07.11";
+	public static final String version = "2020.07.12";
 	
     public static final boolean DEBUG = false;
 
@@ -546,7 +546,7 @@ public class GUI2 extends javax.swing.JFrame{
 
         // Debug
         jMenu_Debug = new JMenu();
-        jMenuItem_showChannels = new JMenuItem();
+        jCheckBoxMenuItem_showChannels = new JCheckBoxMenuItem();
 
         // Help
         jMenu_help = new JMenu();
@@ -779,10 +779,16 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu_Debug.setMnemonic('D');
         jMenu_Debug.setText("Debug");
 
-        jMenuItem_showChannels.setMnemonic('C');
-        jMenuItem_showChannels.setText("Show Channels (Uncollapsed Mode Only)");
+        jCheckBoxMenuItem_showChannels.setMnemonic('C');
+        jCheckBoxMenuItem_showChannels.setText("Show Channels (Uncollapsed Mode Only)");
+        jCheckBoxMenuItem_showChannels.addActionListener(e -> {
+            if (jCheckBoxMenuItem_showChannels.isSelected())
+                jungGraphPanel1.showChannels();
+            else jungGraphPanel1.hideChannels();
+        });
+        jMenu_Debug.add(jCheckBoxMenuItem_showChannels);
 
-
+        jMenuBar1.add(jMenu_Debug);
 
         // Help Menu
         jMenu_help.setMnemonic('H');
@@ -1022,7 +1028,7 @@ public class GUI2 extends javax.swing.JFrame{
     private JMenuItem jMenuItem_showInGraph;
     private JMenuItem jMenuItem_refreshGraph;
     private JMenuItem jMenuItem_relayout;
-    private JMenuItem jMenuItem_showChannels;
+    private JCheckBoxMenuItem jCheckBoxMenuItem_showChannels;
     private JMenu jMenu_graph;
     private JSplitPane jSplitPane1;
     private JTabbedPane jTabbedPane1;
