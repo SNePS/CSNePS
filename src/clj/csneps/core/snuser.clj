@@ -27,7 +27,7 @@
         [csneps.core :only (showTypes list-types)]
         [csneps.core.semantic-types :only [semantic-type-of]]
         [csneps.core.printer :only (writeKBToTextFile)]
-        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer adopt unadopt attach-primaction ig-debug-all)]
+        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer attach-primaction ig-debug-all)]
         [csneps.core.arithmetic]
         [csneps.utils.coreutils :only (synvariable?)]
         [csneps.util]
@@ -35,19 +35,14 @@
   (:import [csneps.util CountingLatch])
   (:gen-class))
 
-(declare askif askifnot defineTerm find-term)
+(declare askif askifnot defineTerm find-rule find-term)
 
 (defn adopt-rule
   "Adopts the rule where rule is either the symbolic name of the rule or the rule wft itself."
   [rule]
-  (let [given-node (find-term rule)
-        rule-node (if (and given-node (isa? (csneps/syntactic-type-of given-node) :csneps.core/CARule))
-                    given-node
-                    (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))]
-                      (first (filter #(= rule (:name (ffirst (@csneps/down-cableset %)))) rules))))]
-    (println "rule: " + rule-node)
+  (let [rule-node (find-rule rule)]
     (if rule-node
-      (when-let [taskid (adopt rule-node)]
+      (when-let [taskid (snip/adopt rule-node)]
         (.await ^CountingLatch (@igc/infer-status taskid)))
       (error "Rule " rule " does not exist."))))
 
@@ -203,6 +198,20 @@
   `(doseq [tname# '~wftnames]
      (println (description (find-term tname#)))))
 
+(defn find-rule
+  "Finds the CARule associated with rule. If rule is already a CARule, just returns it. If rule is a wft name of a
+   CARule it will find the rule and return it. If rule is the name of a rule, it will find the rule and return it.
+   Otherwise nil."
+  [rule]
+  (if (isa? (csneps/syntactic-type-of rule) :csneps.core/CARule)
+    rule
+    (let [given-node (find-term rule)
+          rule-node (if (and given-node (isa? (csneps/syntactic-type-of given-node) :csneps.core/CARule))
+                    given-node
+                    (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))]
+                      (first (filter #(= rule (:name (ffirst (@csneps/down-cableset %)))) rules))))]
+      rule-node)))
+
 (defn find-term
   [term]
   ;; Cast to a string before a symbol since numbers cannot be converted directly to symbols.
@@ -282,6 +291,11 @@
 (defn nogoaltrace
   []
   (reset! snip/goaltrace false))
+
+(defn unadopt-rule
+  [rule]
+  (let [rule-node (find-rule rule)]
+    (snip/unadopt rule-node)))
 
 (defn verboserules
   "Enable verbose output for condition-action rules. Optionally takes a function of two arguments, rule name and rule
