@@ -38,14 +38,18 @@
 (declare askif askifnot defineTerm find-term)
 
 (defn adopt-rule
-  "Adopts the rule with the symbol rule-name as its name."
-  [rule-name]
-  (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))
-        rule (filter #(= rule-name (:name (ffirst (@csneps/down-cableset %)))) rules)]
-    (if (first rule)
-      (when-let [taskid (adopt (first rule))]
+  "Adopts the rule where rule is either the symbolic name of the rule or the rule wft itself."
+  [rule]
+  (let [given-node (find-term rule)
+        rule-node (if (and given-node (isa? (csneps/syntactic-type-of given-node) :csneps.core/CARule))
+                    given-node
+                    (let [rules (filter #(isa? (csneps/syntactic-type-of %) :csneps.core/CARule) (vals @csneps/TERMS))]
+                      (first (filter #(= rule (:name (ffirst (@csneps/down-cableset %)))) rules))))]
+    (println "rule: " + rule-node)
+    (if rule-node
+      (when-let [taskid (adopt rule-node)]
         (.await ^CountingLatch (@igc/infer-status taskid)))
-      (error "Rule " rule-name " does not exist."))))
+      (error "Rule " rule " does not exist."))))
 
 (defn adopt-rules
   "Takes a list of symbolic rule names to be adopted in order, one after the other.
