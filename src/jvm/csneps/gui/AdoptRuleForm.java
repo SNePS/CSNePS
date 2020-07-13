@@ -1,14 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * SemanticTypeForm.java
- *
- * Created on Mar 28, 2010, 8:43:27 PM
- */
-
 package csneps.gui;
 
 import csneps.gui.business.FnInterop;
