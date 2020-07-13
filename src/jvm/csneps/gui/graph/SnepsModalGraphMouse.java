@@ -206,7 +206,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                         });
                     }
                 }
-                
+
                 if(node.getTerm().isAsserted()) {
                     // Propositions and things that can be lowered in type to propositions can be unasserterd.
                     if (term.getType().equals("Proposition")

@@ -49,7 +49,7 @@ public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2020.07.12";
+	public static final String version = "2020.07.13";
 	
     public static final boolean DEBUG = false;
 
@@ -543,6 +543,7 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu_sneps = new JMenu();
         jMenuItem_clearKB = new JMenuItem();
         jMenuItema_clearKBAll = new JMenuItem();
+        jMenuItem_adoptRule = new JMenuItem();
 
         // Debug
         jMenu_Debug = new JMenu();
@@ -772,6 +773,16 @@ public class GUI2 extends javax.swing.JFrame{
         jMenuItema_clearKBAll.setText("Clear Knowledge Base, Slots, and Caseframes");
         jMenuItema_clearKBAll.addActionListener(e -> FnInterop.clearkb(true));
         jMenu_sneps.add(jMenuItema_clearKBAll);
+
+        jMenu_sneps.addSeparator();
+
+        jMenuItem_adoptRule.setMnemonic('A');
+        jMenuItem_adoptRule.setText("Adopt Rule...");
+        jMenuItem_adoptRule.addActionListener(e -> {
+            AdoptRuleForm arf = new AdoptRuleForm();
+            arf.setVisible(true);
+        });
+        jMenu_sneps.add(jMenuItem_adoptRule);
 
         jMenuBar1.add(jMenu_sneps);
 
@@ -1028,6 +1039,7 @@ public class GUI2 extends javax.swing.JFrame{
     private JMenuItem jMenuItem_showInGraph;
     private JMenuItem jMenuItem_refreshGraph;
     private JMenuItem jMenuItem_relayout;
+    private JMenuItem jMenuItem_adoptRule;
     private JCheckBoxMenuItem jCheckBoxMenuItem_showChannels;
     private JMenu jMenu_graph;
     private JSplitPane jSplitPane1;
