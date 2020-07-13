@@ -11,10 +11,12 @@ import clojure.lang.*;
 
 public class Controller {
 
+	private static IFn snuser_adopt_rule_fn;
 	private static IFn snuser_assert_fn;
 	private static IFn snuser_clearkb_fn;
 	private static IFn snuser_define_term_fn;
 	private static IFn snuser_define_caseframe_fn;
+	private static IFn snuser_unadopt_rule_fn;
 	private static IFn relations_define_slot_fn;
 	private static IFn csneps_define_type_fn;
 	private static IFn build_add_to_context_fn;
@@ -152,6 +154,14 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
+
+	public static void snuser_adopt_rule(Symbol name){
+		if (snuser_adopt_rule_fn == null)
+			snuser_adopt_rule_fn = Clojure.var("csneps.core.snuser", "adopt-rule");
+		try{
+			snuser_adopt_rule_fn.invoke(name);
+		} catch (Exception e) {e.printStackTrace();}
+	}
 	
 	public static IPersistentMap snuser_assert(PersistentList expr){
 		if (snuser_assert_fn == null)
@@ -178,6 +188,14 @@ public class Controller {
 			return (IPersistentMap)snuser_define_caseframe_fn.invoke(type, slots, Keyword.intern("fsymbols"), fsymbols);
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+
+	public static void snuser_unadopt_rule(Symbol name){
+		if (snuser_unadopt_rule_fn == null)
+			snuser_unadopt_rule_fn = Clojure.var("csneps.core.snuser", "unadopt-rule");
+		try{
+			snuser_unadopt_rule_fn.invoke(name);
+		} catch (Exception e) {e.printStackTrace();}
 	}
 	
 	public static IPersistentMap relations_define_slot(Symbol name, Keyword type, Integer min, Integer max, Symbol posadjust, Symbol negadjust){

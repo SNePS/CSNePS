@@ -8,6 +8,7 @@ import csneps.gui.business.Context;
 import csneps.gui.business.FnInterop;
 import csneps.gui.CaseframeBasedShowHideDialog;
 import csneps.gui.GUI2;
+import csneps.gui.business.Term;
 import edu.uci.ics.jung.algorithms.layout.GraphElementAccessor;
 import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
@@ -62,15 +63,18 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
             } else {
                 popup.setVisible(false);
                 popup.removeAll();
-                
-                
-                
+
+
+
                 int dncsvis = node.getDownCablesetVisibleCount();
                 int upcsvis = node.getUpCablesetVisibleCount();
                 Set<ITermNode<IEdge>> pickedNodes = GUI2.getInstance().getGraphPanel().getVV().getPickedVertexState().getPicked();
+
+                Term term = node.getTerm();
+
                 if(GUI2.DEBUG)
                     System.out.println("UpCSVis: " + upcsvis + " DnCSVis " + dncsvis);
-                
+
                 if (upcsvis < node.getInEdges().size()) {
                     popup.add(new AbstractAction("Show All In Edges (" + (node.getInEdges().size() - upcsvis) + " edges)") {
 
@@ -84,7 +88,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     popup.add(new AbstractAction("Show In Edges By Relation") {
 
                         public void actionPerformed(ActionEvent e) {
-                        	CaseframeBasedShowHideDialog cd = 
+                        	CaseframeBasedShowHideDialog cd =
                         			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInHiddenFSymbols(node)));
 
                             cd.setHelpText("   Select the relations you        wish to show in the graph.");
@@ -134,7 +138,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     popup.add(new AbstractAction("Hide In Edges By Relation") {
 
                         public void actionPerformed(ActionEvent e) {
-                        	CaseframeBasedShowHideDialog cd = 
+                        	CaseframeBasedShowHideDialog cd =
                         			new CaseframeBasedShowHideDialog(GUI2.getInstance(), new ArrayList<String>(GUI2.getInstance().getGraph().getInShownFSymbols(node)));
 
                             cd.setHelpText("   Select the relations you       wish to hide from the graph.");
@@ -179,23 +183,52 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     });
                 }
 
-                if (!node.getTerm().isAsserted()) {
-                    popup.add(new AbstractAction("Assert") {
+                if (!term.isAsserted()){
+                    // Propositions and things that can be lowered in type to propositions can be asserterd.
+                    if(term.getType().equals("Proposition")
+                            || term.getType().equals("Propositional")
+                            || term.getType().equals("Entity")) {
+                        popup.add(new AbstractAction("Assert") {
+                            public void actionPerformed(ActionEvent e) {
+                                FnInterop.addToContext(node.getTerm(), Context.getCurrentContext());
+                                GUI2.getInstance().getGraphPanel().getVV().repaint();
+                            }
+                        });
+                    }
 
-                        public void actionPerformed(ActionEvent e) {
-                        	FnInterop.addToContext(node.getTerm(), Context.getCurrentContext());
-                        	GUI2.getInstance().getGraphPanel().getVV().repaint();
-                        }
-                    });
+                    // CARules can be adopted.
+                    if(term.getType().equals("CARule")){
+                        popup.add(new AbstractAction("Adopt") {
+                            public void actionPerformed(ActionEvent e) {
+                                FnInterop.adoptRule(term);
+                                GUI2.getInstance().getGraphPanel().getVV().repaint();
+                            }
+                        });
+                    }
                 }
-                if(node.getTerm().isAsserted()){
-                	popup.add(new AbstractAction("Unassert") {
+                
+                if(node.getTerm().isAsserted()) {
+                    // Propositions and things that can be lowered in type to propositions can be unasserterd.
+                    if (term.getType().equals("Proposition")
+                            || term.getType().equals("Propositional")
+                            || term.getType().equals("Entity")) {
+                        popup.add(new AbstractAction("Unassert") {
+                            public void actionPerformed(ActionEvent e) {
+                                FnInterop.unassertTerm(node.getTerm());
+                                GUI2.getInstance().getGraphPanel().getVV().repaint();
+                            }
+                        });
+                    }
 
-                        public void actionPerformed(ActionEvent e) {
-                        	FnInterop.unassertTerm(node.getTerm());
-                        	GUI2.getInstance().getGraphPanel().getVV().repaint();
-                        }
-                    });
+                    // CARules can be unadopted.
+                    if(term.getType().equals("CARule")){
+                        popup.add(new AbstractAction("Unadopt") {
+                            public void actionPerformed(ActionEvent e) {
+                                FnInterop.unadoptRule(term);
+                                GUI2.getInstance().getGraphPanel().getVV().repaint();
+                            }
+                        });
+                    }
                 }
 
                 popup.show(vv, e.getX(), e.getY());

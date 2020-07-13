@@ -30,6 +30,10 @@ public class FnInterop {
 	//////////////
 	/// snuser ///
 	//////////////
+
+	public static void adoptRule(Term rule) {
+		Controller.snuser_adopt_rule(Symbol.intern(rule.getName()));
+	}
 	
 	public static void clearkb(Boolean clearall){
 		Controller.snuser_clearkb(clearall);
@@ -78,10 +82,14 @@ public class FnInterop {
 	    
 	    return Caseframe.create(Controller.snuser_define_caseframe(Keyword.intern(type), PersistentList.create(slotsyms), PersistentList.create(fsyms)));
 	}
+
+	public static void unadoptRule(Term rule) {
+		Controller.snuser_unadopt_rule(Symbol.intern(rule.getName()));
+	}
 	
-	//////////////
-	/// sneps3 ///
-	//////////////
+	///////////////////
+	/// csneps.core ///
+	///////////////////
 	
 	public static SemanticType defineType(String newtype, ArrayList<SemanticType> parents){
 		ArrayList<String> parentstrings = new ArrayList<String>();
@@ -116,9 +124,9 @@ public class FnInterop {
 		return Controller.caseframes_caseframe_name(cf).toString();
 	} 
 	
-	//////////////////////
-	/// sneps3-printer ///
-	//////////////////////
+	///////////////
+	/// printer ///
+	///////////////
 	
 	public static String termString(IPersistentMap term){
 		return Controller.csneps_core_printer_term_printer(term);
@@ -178,7 +186,7 @@ public class FnInterop {
 	}
 	
 	/////////////////////////
-	/// sneps3.core.build ///
+	/// csneps.core.build ///
 	/////////////////////////
 	
 	public static void addToContext(Term term, Context c){
