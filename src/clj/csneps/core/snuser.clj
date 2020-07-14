@@ -341,5 +341,7 @@
     (clearkb true)
     (if (:cli options)
       (reply.main/launch {:custom-eval '(in-ns 'csneps.core.snuser)})
-      (gui/startGUI))))
+      (do
+        (.start (Thread. gui/startGUI))
+        (reply.main/launch {:custom-eval '(in-ns 'csneps.core.snuser)})))))
 
