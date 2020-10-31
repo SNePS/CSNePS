@@ -31,6 +31,7 @@
         [csneps.core.arithmetic]
         [csneps.utils.coreutils :only (synvariable?)]
         [csneps.util]
+        [csneps.utils.dotgraph :only (generate-dotfile)]
         [csneps.debug :only (debug set-debug-nodes set-debug-features)])
   (:import [csneps.util CountingLatch])
   (:gen-class))
