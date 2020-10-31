@@ -4,11 +4,17 @@
   (:require [csneps.core :as csneps]
             [csneps.core.semantic-types :as st]
             [csneps.core.caseframes :as cf]
+            [csneps.core.contexts :as ct]
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
+(defn display-name [term]
+  (if (ct/asserted? term (ct/currentContext))
+    (str \" (:name term) "!\"")
+    (str \" (:name term) "\"")))
+
 (defn filler-to-dot [term slot filler]
-  (str (:name term) " -> " (:name filler) " [label=\"  " (:name slot) "\" arrowhead=\"open\"];"))
+  (str (display-name term) " -> " (display-name filler) " [label=\"  " (:name slot) "\" arrowhead=\"open\"];"))
 
 (defn relation-to-dot [term slot fillers]
   (str/join "\n" (map #(filler-to-dot term slot %) fillers)))
@@ -23,10 +29,11 @@
         destination (if (= (count slots) 2)
                       (second slots) ;; 2 slot case
                       (nth slots 2))] ;; 3 slot case
-    (str (:name (first (term-relations origin)))
+    (str (display-name (first (term-relations origin)))
          " -> "
-         (:name (first (term-relations destination)))
-         " [label=\"  " (cf/caseframe-name cf) "\" arrowhead=\"empty\"];")))
+         (display-name (first (term-relations destination)))
+         " [label=\"  " (cf/caseframe-name cf) (if (ct/asserted? term (ct/currentContext)) "!" "")
+            "\" arrowhead=\"empty\"];")))
 
 ;; There are two cases for collapseable terms:
 ;; 3 slots, Propositional, has fsymbols, no in edges.
