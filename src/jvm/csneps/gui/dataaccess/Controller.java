@@ -30,6 +30,7 @@ public class Controller {
 	private static IFn contexts_define_context_fn;
 	private static IFn contexts_hyps_fn;
 	private static IFn contexts_set_current_context_fn;
+	private static IFn csneps_gui_start_gui_fn;
 	private static IFn csneps_core_molecular_term_qmark_fn;
 	private static IFn csneps_core_variable_term_qmark_fn;
 	private static IFn csneps_core_printer_term_printer_fn;
@@ -259,5 +260,11 @@ public class Controller {
 			return csneps_core_printer_term_printer_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+
+	public static void gui_startGUI() {
+		if (csneps_gui_start_gui_fn == null)
+			csneps_gui_start_gui_fn = Clojure.var("csneps.gui", "startGUI");
+		csneps_gui_start_gui_fn.invoke();
 	}
 }
