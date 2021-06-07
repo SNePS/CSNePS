@@ -216,9 +216,9 @@ public class FnInterop {
 		Controller.build_unassert(term.getClojureTerm());
 	}
 	
-	//////////////////////
-	/// sneps3-printer ///
-	//////////////////////
+	///////////////////////////
+	/// csneps.core.printer ///
+	///////////////////////////
 	
 	public static void writeKBToTextFile(String fname, String headerfname){
 		Controller.csneps_printer_print_kb_to_text_file(fname, headerfname);

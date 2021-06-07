@@ -1,9 +1,15 @@
+/*
+ Making use of the API is really like having access to the back end of the GUI.
+ */
+
 package csneps.api;
 
 import clojure.java.api.Clojure;
 import clojure.lang.IFn;
+import csneps.gui.GUI2;
 import csneps.gui.business.FnInterop;
 import csneps.gui.dataaccess.Controller;
+import csneps.gui.dataaccess.Model;
 
 public class CSNePS extends FnInterop {
 
@@ -26,5 +32,8 @@ public class CSNePS extends FnInterop {
         IFn startExecutor = Clojure.var("csneps.snip.inference-graph.concurrent", "startExecutor");
         startExecutor.invoke();
         clearkb(true);
+        GUI2.model = new Model();
+        Controller.gui_add_watches(GUI2.getModel());
+        GUI2.initializeModel();
     }
 }

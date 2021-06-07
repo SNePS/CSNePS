@@ -9,6 +9,64 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.contexts :as ct]))
 
+(defn add-watches
+  [model]
+  (let [typechangefn (fn [ref key oldvalue newvalue] (.typesChanged model
+                                                                    (map-difference (:parents oldvalue) (:parents newvalue))
+                                                                    (if (>= (count oldvalue) (count newvalue)) true false)))
+        termchangefn (fn [ref key oldvalue newvalue] (.termsChanged model
+                                                                    (map-difference oldvalue newvalue)
+                                                                    (empty? newvalue)))
+        contextchangefn (fn [ref key oldvalue newvalue] (let [clear? (>= (count oldvalue) (count newvalue))]
+                                                          (if clear?
+                                                            (.contextsChanged
+                                                              model
+                                                              newvalue
+                                                              true)
+                                                            (.contextsChanged
+                                                              model(GUI2/getModel)
+                                                              (map-difference oldvalue newvalue)
+                                                              false))))
+        slotchangefn (fn [ref key oldvalue newvalue] (.slotsChanged model
+                                                                    (map-difference oldvalue newvalue)
+                                                                    (if (>= (count oldvalue) (count newvalue)) true false)))
+        caseframechangefn (fn [ref key oldvalue newvalue] (.caseframesChanged model
+                                                                              (set/difference newvalue oldvalue)
+                                                                              (if (>= (count oldvalue) (count newvalue)) true false)))
+        fsymbolchangefn (fn [ref key oldvalue newvalue] (.fsymbolsChanged model
+                                                                          (map-difference oldvalue newvalue)))
+        currentcontexthypschangefn (fn [ref key oldvalue newvalue] (.currentContextHypsChanged model
+                                                                                               (set/difference newvalue oldvalue)))
+        currentcontextchangefn (fn [ref key oldvalue newvalue] (.currentContextChanged model
+                                                                                       newvalue)
+                                 (remove-watch (:hyps oldvalue) :currhyps)
+                                 (add-watch (:hyps newvalue) :currhyps currentcontexthypschangefn))
+        ;; Refs removed from terms.
+        ichannelschangefn (fn [ref key oldvalue newvalue]
+                            (.termNameIChannelMapChanged model
+                                                         (map-difference newvalue oldvalue)
+                                                         (empty? newvalue)))
+        uchannelschangefn (fn [ref key oldvalue newvalue]
+                            (.termNameUChannelMapChanged model
+                                                         (map-difference newvalue oldvalue)
+                                                         (empty? newvalue)))
+        gchannelschangefn (fn [ref key oldvalue newvalue]
+                            (.termNameGChannelMapChanged model
+                                                         (map-difference newvalue oldvalue)
+                                                         (empty? newvalue)))]
+    (add-watch csneps/semantic-type-hierarchy :types typechangefn)
+    (add-watch csneps/TERMS :terms termchangefn)
+    (add-watch ct/CONTEXTS :contexts contextchangefn)
+    (add-watch slot/SLOTS :slots slotchangefn)
+    (add-watch cf/CASEFRAMES :cfs caseframechangefn)
+    (add-watch cf/FN2CF :fsyms fsymbolchangefn)
+    (add-watch ct/CONTEXTS :cts contextchangefn)
+    (add-watch ct/*CurrentContext* :currct currentcontextchangefn)
+    (add-watch (:hyps (ct/currentContext)) :currhyps currentcontexthypschangefn)
+    (add-watch csneps/i-channels :ichannels ichannelschangefn)
+    (add-watch csneps/g-channels :gchannels gchannelschangefn)
+    (add-watch csneps/u-channels :uchannels uchannelschangefn)))
+
 (defn startGUI
   ([] (startGUI (set (vals @csneps/TERMS))))
   ([termset]

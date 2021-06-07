@@ -30,11 +30,12 @@ public class Controller {
 	private static IFn contexts_define_context_fn;
 	private static IFn contexts_hyps_fn;
 	private static IFn contexts_set_current_context_fn;
-	private static IFn csneps_gui_start_gui_fn;
 	private static IFn csneps_core_molecular_term_qmark_fn;
 	private static IFn csneps_core_variable_term_qmark_fn;
 	private static IFn csneps_core_printer_term_printer_fn;
 	private static IFn csneps_print_print_kb_to_text_file_fn;
+	private static IFn csneps_gui_start_gui_fn;
+	private static IFn csneps_gui_add_watches_fn;
 	
 	public static ISeq build_find(ISeq pattern){
 		if (build_find_fn == null) 
@@ -262,9 +263,19 @@ public class Controller {
 		return null;
 	}
 
+	///////////////////
+	/// Used by API ///
+	///////////////////
+
 	public static void gui_startGUI() {
 		if (csneps_gui_start_gui_fn == null)
 			csneps_gui_start_gui_fn = Clojure.var("csneps.gui", "startGUI");
 		csneps_gui_start_gui_fn.invoke();
+	}
+
+	public static void gui_add_watches(Model m) {
+		if (csneps_gui_add_watches_fn == null)
+			csneps_gui_add_watches_fn = Clojure.var("csneps.gui", "add-watches");
+		csneps_gui_add_watches_fn.invoke(m);
 	}
 }

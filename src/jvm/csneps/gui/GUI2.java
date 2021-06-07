@@ -94,8 +94,9 @@ public class GUI2 extends javax.swing.JFrame{
 
 	/** Creates new form GUI2 */
 	public GUI2() {
-		// Initialize the model.
-		model = new Model();
+		// Create the model if we don't already have one.
+		if(model == null)
+		    model = new Model();
 
 		caseFrameForm = new DefineCaseframeForm();
 		if (javaVersion < 1.9)
@@ -226,7 +227,7 @@ public class GUI2 extends javax.swing.JFrame{
     	replPanel1.makeClojureCall(s);
     }
 	
-	public void initializeModel(){
+	public static void initializeModel(){
 		model.setTypesRef(RT.var("csneps.core", "semantic-type-hierarchy"));
 		model.initializeTypes();
 		model.setSlotsRef(RT.var("csneps.core.relations", "SLOTS")); //Ref to Map of name -> Slot
@@ -246,7 +247,7 @@ public class GUI2 extends javax.swing.JFrame{
 		model.initializeTerms();
 	}
 	
-	public void initializeModel(PersistentHashSet termset){
+	public static void initializeModel(PersistentHashSet termset){
 		model.setTypesRef(RT.var("csneps.core", "semantic-type-hierarchy"));
 		model.initializeTypes();
 		model.setSlotsRef(RT.var("csneps.core.relations", "SLOTS")); //Ref to Map of name -> Slot
