@@ -8,9 +8,10 @@ import clojure.lang.IPersistentMap;
 import clojure.lang.ASeq;
 import clojure.lang.RT;
 import clojure.lang.Keyword;
+import csneps.api.ISlot;
 import csneps.gui.GUI2;
 
-public class Slot implements Comparable<Slot>{
+public class Slot implements Comparable<Slot>, ISlot {
 
 	private static HashMap<String, Slot> slots = new HashMap<String, Slot>();
 	

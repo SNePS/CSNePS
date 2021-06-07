@@ -1,19 +1,15 @@
 package csneps.gui.business;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.Var;
+import csneps.api.ITerm;
 
-public class Term {
+public class Term implements ITerm {
 
 	private final static HashMap<String, Term> terms = new HashMap<String, Term>();
 	private final static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
@@ -135,7 +131,7 @@ public class Term {
 		return fsymbol;
 	}
 	
-	public ArrayList<Term> getUpCablesetTerms(){
+	public List<Term> getUpCablesetTerms(){
 		if(upcablesetterms != null) return upcablesetterms;
 		
 		upcablesetterms = new ArrayList<Term>();
@@ -143,7 +139,7 @@ public class Term {
 		return upcablesetterms;
 	}
 	
-	public HashMap<Slot, Set<Term>> getUpCableset(){
+	public Map<Slot, Set<Term>> getUpCableset(){
 		if (upcableset.get(this.getName()) != null){
 			return upcableset.get(this.getName());
 		}

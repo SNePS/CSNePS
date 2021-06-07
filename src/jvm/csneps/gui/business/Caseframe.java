@@ -14,9 +14,10 @@ import clojure.lang.IPersistentMap;
 import clojure.lang.IPersistentVector;
 import clojure.lang.PersistentVector;
 import clojure.lang.Keyword;
+import csneps.api.ICaseframe;
 import csneps.gui.GUI2;
 
-public class Caseframe implements Comparable<Caseframe>{
+public class Caseframe implements Comparable<Caseframe>, ICaseframe {
 
 	private static HashMap<String, Caseframe> cfs = new HashMap<String, Caseframe>();
 	private static HashMap<String, Caseframe> fsymbols = new HashMap<String, Caseframe>();

@@ -43,6 +43,7 @@
 \newcommand{\cable}[2]{$\langle$\texttt{#1, \{#2\}}$\rangle$}
 \newcommand{\cableset}[1]{\texttt{\{#1\}}}
 \newcommand{\lcableset}[2]{\texttt{#1:\{#2\}}} % labelled cableset
+\newcommand{\docjava}[3]{\vspace{3ex}\par\noindent\ct{#1 #2(#3)}\indexct{#2}\hfill [\textit{Method}]\newline}
 
 \title{\bf CSNePS USER'S MANUAL\thanks{The development of SNePS was supported
     in part by: the National Science Foundation under Grants IRI-8610517 and
@@ -56,10 +57,12 @@
     ONR under contract N00014-98-C-0062 to Apple Aid, Inc.; the U.S. Army CECOM
     Intelligence and Information Warfare Directorate (I2WD) through a contract
     with CACI Technologies and through Contract \#DAAB-07-01-D-G001 with
-    Booze$\cdot$Allen \& Hamilton; and a Multidisciplinary University Research
+    Booze$\cdot$Allen \& Hamilton; a Multidisciplinary University Research
     Initiative (MURI) grant (Number W911NF-09-1-0392) for ``Unified Research on
     Network-based Hard/Soft Information Fusion,'' issued by the US Army Research
-    Office (ARO) under the program management of Dr. John Lavery.}}
+    Office (ARO) under the program management of Dr. John Lavery; and the National
+    Library of Medicine under Grant 1R15LM013030-01 for ``Automatic Generation 
+    of Computer Interpretable Guidelines'' under grant management of Dr. Hua-Chuan Sim.}}
 
 %\author{ \bf
 %Stuart C. Shapiro \\ \bf
@@ -72,17 +75,17 @@
 %Buffalo, NY 14260-2000 \\[2ex] \bf
 %\date{\today}}
 
-\author[1]{Stuart C. Shapiro}
-\author[2]{Daniel R. Schlegel}
+\author[1]{Daniel R. Schlegel}
+\author[2]{Stuart C. Shapiro}
 \author[ ]{The SNePS Implementation Group}
-\affil[1]{Department of Computer Science and Engineering \protect\\ 
+\affil[1]{Department of Computer Science\protect\\
+State University of New York at Oswego\protect\\
+464 Shineman Center\protect\\
+Oswego, NY 13126}
+\affil[2]{Department of Computer Science and Engineering \protect\\ 
 State University of New York at Buffalo  \protect\\ 
 338 Davis Hall \protect\\
 Buffalo, NY 14260-2500\protect\vspace{1em}}
-\affil[2]{Department of Computer Science\protect\\
-State University of New York at Oswego\protect\\
-396 Shineman Center\protect\\
-Oswego, NY 13126}
 
 \renewcommand\Authands{ and }
 
@@ -124,6 +127,7 @@ Elissa Feit\\
 David Forster\\
 Richard B. Fritzson\\
 James Geller\\
+Kate Gordon\\
 Susan M. Haller\\
 Richard G. Hull\\
 Haythem Ismail\\
@@ -742,6 +746,138 @@ Prints messages waiting in channels incoming to \textit{term}, or if \textit{ter
 
 \docfun{snip/print-ptree}{\textit{ptree}}
 Given a P-Tree, \textit{ptree}, prints it to the terminal in a human readable form.
+
+\chapter{Java API}
+
+CSNePS has a Java API, residing within the \texttt{csneps.api} package and used internally by the GUI, which allows a user to easily integrate CSNePS into a Java program. 
+
+\section{The \texttt{CSNePS} class}
+
+The main class used for interacting with CSNePS is the \texttt{CSNePS} class in the \texttt{csneps.api} package. 
+
+\docjava{static void}{adoptRule}{\texttt{ITerm} \textit{rule}}
+Adopts the provided \texttt{Term} instance which is a rule.
+
+\docjava{static ITerm}{assertTerm}{\texttt{String} \textit{expr}}
+Defines and asserts a term in the current context provided as a CSNePS expression.
+
+\docjava{static ICaseframe}{defineCaseframe}{\texttt{String} \textit{type}, \texttt{String} \textit{name}, \\ \hspace*{2cm}\texttt{ArrayList<ISlot>} \textit{slots}}
+Defines a caseframe of the provided type, with the given name, and with the provided slots.
+
+\docjava{static ICaseframe}{defineCaseframe}{\texttt{String} \textit{type}, \texttt{ArrayList<Slot>} \textit{slots} \\ \hspace*{2cm} \texttt{ArrayList<Slot>} \textit{fsymbols}}
+Defines a caseframe of the provided type, with the provided slots, and using the provided fsymbols.
+
+\docjava{static IContext}{defineContext}{String \textit{name}, ArrayList<IContext> \textit{parents}, \\ \hspace*{2cm} Set<Term> \textit{hyps}}
+Define a new context with the provided name, inheriting hypotheses from parents, and having its own hypotheses (hyps).
+
+\docjava{static void}{setCurrentContext}{IContext \textit{c}}
+Change the current context to \texttt{\textit{c}}.
+
+\docjava{static ISlot}{defineSlot}{String \textit{name}, ISemanticType \textit{type}, Integer \textit{min}, \\ \hspace*{2cm} Integer \textit{max}, String \textit{posadjust}, String \textit{negadjust}}
+
+\docjava{static ITerm}{defineTerm}{\texttt{String} \textit{expr}}
+Defines (but does not assert) a term provided as a CSNePS expression.
+
+\docjava{static ISemanticType}{defineType}{\texttt{String} \textit{newtype}, \\ \hspace*{2cm} \texttt{ArrayList<ISemanticType>} \textit{parents}}
+Define a new semantic type with the provided name and parents.
+
+\docjava{static Set<ITerm>}{find}{String pattern}
+Returns terms which match the provided pattern.
+
+\docjava{static Boolean}{isAsserted}{ITerm \textit{term}, IContext \textit{context}}
+Returns \texttt{true} if \textit{term} is asserted in \textit{context} and \texttt{false} otherwise.
+
+\docjava{static void}{unadoptRule}{\texttt{ITerm} \textit{rule}}
+Unadopts the provided \texttt{Term} instance which is a rule.
+
+\docjava{static ITerm}{assertTerm}{\texttt{ITerm} \textit{term}}
+Unasserts a term in the current context.
+
+\section{The \texttt{ICaseframe} interface}
+
+\docjava{Set<String>}{getFSymbols}{}
+Return this caseframe's fsymbols.
+
+\docjava{String}{getName}{}
+Returns the name of a claseframe. 
+
+\docjava{ISemanticType}{getType}{}
+Returns the semantic type of the caseframe.
+
+\docjava{List<ISlot>}{getSlots}{}
+Return the slots for this caseframe.
+
+\section{The \texttt{IContext} interface}
+
+\docjava{Set<ITerm>}{getHyps}{}
+Return the set of terms which are hypothesized in this context.
+
+\docjava{String}{getName}{};
+Return the name of the context.
+
+\docjava{List<IContext>}{getParents}{};
+Return the parents of the context.
+
+\section{The \texttt{ISemanticType} interface}
+
+\docjava{Set<ISemanticType>}{getAncestors}{}
+Return all of the ancestors of this semantic type.
+
+\docjava{String}{getName}{}
+Return the name of this semantic type.
+
+\docjava{List<ISemanticType>}{getParents}{}
+Return the parents of this semantic type.
+
+\docjava{boolean}{hasAncestor}{SemanticType \textit{type}}
+Returns \texttt{true} if this semantic type has \texttt{\textit{type}} as an ancestor, otherwise \texttt{false}.
+
+\docjava{boolean}{hasParent}{SemanticType \textit{type}}
+Returns \texttt{true} if this semantic type has \texttt{\textit{type}} as a parent, otherwise \texttt{false}.
+
+\section{The \texttt{ISlot} interface}
+
+\docjava{Long}{getMax}{}
+Returns the maximum number of fillers this slot can hold.
+
+\docjava{Long}{getMin}{}
+Returns the minimum number of fillers this slot can hold.
+
+\docjava{String}{getName}{}
+Returns the name of the slot.
+
+\docjava{ISemanticType}{getType}{}
+Returns the semantic type of the slot.
+
+\section{The \texttt{ITerm} interface}
+
+\docjava{ICaseframe}{getCaseframe}{}
+Returns the caseframe this term is an instance of.
+
+\docjava{Set<ITerm>}{getDependencies}{}
+Return the dependencies in this term (only if it is an indefinite).
+
+\docjava{String}{getFSymbol}{}
+Return the function symbool (predicate or caseframe fsymbol) for this term.
+
+\docjava{String}{getName}{}
+Return the name of the term (either the term itself, or if molecular, the \texttt{wft} name).
+
+\docjava{Set<ITerm>}{getRestrictionset}{}
+Return the restriction set if this is an arbitrary or indefinite term.
+
+\docjava{Map<ISlot, Set<ITerm>>}{getUpCableset}{}
+Return the up cableset for this term.
+
+\docjava{List<ITerm>}{getUpCablesetTerms}{}
+Return the terms in the up cableset of this term.
+
+\docjava{Boolean}{isMolecular}{}
+True if this term is molecular, otherwise false.
+
+\docjava{Boolean}{isVariable}{}
+True if this term is a variable, otherwise false.
+
 
 \backmatter
 \appendix

@@ -1,10 +1,6 @@
 package csneps.gui.business;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 import clojure.lang.IPersistentMap;
 import clojure.lang.IPersistentVector;
@@ -12,6 +8,7 @@ import clojure.lang.ISeq;
 import clojure.lang.Keyword;
 import clojure.lang.MapEntry;
 import clojure.lang.PersistentVector;
+import csneps.api.IContext;
 import csneps.gui.GUI2;
 
 /**
@@ -19,7 +16,7 @@ import csneps.gui.GUI2;
  * 
  * @author Daniel R. Schlegel
  */
-public class Context implements Comparable<Context> {
+public class Context implements Comparable<Context>, IContext {
 
 	private static HashMap<String, Context> contexts = new HashMap<String, Context>();
 
@@ -83,8 +80,8 @@ public class Context implements Comparable<Context> {
 		return context.valAt(name_key).toString();
 	}
 
-	public ArrayList<Context> getParents() {
-		ArrayList<Context> p = new ArrayList<Context>();
+	public List<Context> getParents() {
+		List<Context> p = new ArrayList<Context>();
 		IPersistentVector v = PersistentVector.create((ISeq) context.valAt(parents_key));
 		for (int i = 0; i < v.length(); i++) {
 			if (v.nth(i) != null) // Vector created from empty list contains nil.

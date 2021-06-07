@@ -43,7 +43,12 @@ public class FnInterop {
 		return Term.create(Controller.snuser_assert((PersistentList)RT.readString(expr)));
 	}
 
-	
+	// TODO add something like this.
+//	public static void assertTerm(Term term){
+//		Controller.snuser_assert(term.getClojureTerm());
+//	}
+
+	// This is called somewhere but maybe shouldn't be?
 	public static Term assertETerm(String expr){
 		// Not implemented in CSNePS.
 		return null;

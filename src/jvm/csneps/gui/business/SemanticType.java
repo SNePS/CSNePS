@@ -11,9 +11,10 @@ import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
 import clojure.lang.Keyword;
 import clojure.lang.RT;
+import csneps.api.ISemanticType;
 import csneps.gui.GUI2;
 
-public class SemanticType {
+public class SemanticType implements ISemanticType {
 	private static HashMap<String, SemanticType> semtypes = new HashMap<String, SemanticType>();
 	
 	private String typename;
