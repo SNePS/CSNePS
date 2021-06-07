@@ -25,6 +25,8 @@ public class CSNePS extends FnInterop {
         Controller.snuser_clearkb(clearall);
     }
 
+    public static void load(String filename) { Controller.snuser_load(filename); }
+
     // Internal implementation //
     private static void load_csneps(){
         IFn require = Clojure.var("clojure.core", "require");

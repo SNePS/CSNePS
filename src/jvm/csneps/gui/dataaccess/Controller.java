@@ -16,6 +16,7 @@ public class Controller {
 	private static IFn snuser_clearkb_fn;
 	private static IFn snuser_define_term_fn;
 	private static IFn snuser_define_caseframe_fn;
+	private static IFn snuser_load_fn;
 	private static IFn snuser_unadopt_rule_fn;
 	private static IFn relations_define_slot_fn;
 	private static IFn csneps_define_type_fn;
@@ -277,5 +278,11 @@ public class Controller {
 		if (csneps_gui_add_watches_fn == null)
 			csneps_gui_add_watches_fn = Clojure.var("csneps.gui", "add-watches");
 		csneps_gui_add_watches_fn.invoke(m);
+	}
+
+	public static void snuser_load(String filename) {
+		if (snuser_load_fn == null)
+			snuser_load_fn = Clojure.var("csneps.core.snuser", "load");
+		snuser_load_fn.invoke(filename);
 	}
 }

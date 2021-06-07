@@ -761,6 +761,9 @@ Adopts the provided \texttt{Term} instance which is a rule.
 \docjava{static ITerm}{assertTerm}{\texttt{String} \textit{expr}}
 Defines and asserts a term in the current context provided as a CSNePS expression.
 
+\docjava{static void}{clearkb}{boolean \textit{clearall}}
+Clear the knowledgebase. If \texttt{\textit{clearall}} is \texttt{true}, clear types, slots, and caseframes as well as terms. If \texttt{false}, clear only terms.
+
 \docjava{static ICaseframe}{defineCaseframe}{\texttt{String} \textit{type}, \texttt{String} \textit{name}, \\ \hspace*{2cm}\texttt{ArrayList<ISlot>} \textit{slots}}
 Defines a caseframe of the provided type, with the given name, and with the provided slots.
 
@@ -787,10 +790,16 @@ Returns terms which match the provided pattern.
 \docjava{static Boolean}{isAsserted}{ITerm \textit{term}, IContext \textit{context}}
 Returns \texttt{true} if \textit{term} is asserted in \textit{context} and \texttt{false} otherwise.
 
+\docjava{static void}{load}{String \textit{filename}}
+Load a file. Intended to be used to load assertions into the knowledge base, this technically can be used to load individual Clojure files as well.
+
+\docjava{static void}{startGUI}{}
+Start the CSNePS user interface.
+
 \docjava{static void}{unadoptRule}{\texttt{ITerm} \textit{rule}}
 Unadopts the provided \texttt{Term} instance which is a rule.
 
-\docjava{static ITerm}{assertTerm}{\texttt{ITerm} \textit{term}}
+\docjava{static ITerm}{unassertTerm}{\texttt{ITerm} \textit{term}}
 Unasserts a term in the current context.
 
 \section{The \texttt{ICaseframe} interface}
