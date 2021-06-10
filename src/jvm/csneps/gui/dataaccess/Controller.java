@@ -37,6 +37,7 @@ public class Controller {
 	private static IFn csneps_print_print_kb_to_text_file_fn;
 	private static IFn csneps_gui_start_gui_fn;
 	private static IFn csneps_gui_add_watches_fn;
+	private static IFn snip_pathsfrom_fn;
 	
 	public static ISeq build_find(ISeq pattern){
 		if (build_find_fn == null) 
@@ -262,6 +263,16 @@ public class Controller {
 			return csneps_core_printer_term_printer_fn.invoke(term).toString();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+
+	////////////
+	/// snip ///
+	////////////
+
+	public static IPersistentSet snip_pathsfrom(IPersistentMap term, IPersistentList path){
+		if (snip_pathsfrom_fn == null)
+			snip_pathsfrom_fn = Clojure.var("csneps.snip", "pathsfrom");
+		return (IPersistentSet) snip_pathsfrom_fn.invoke(term, path);
 	}
 
 	///////////////////

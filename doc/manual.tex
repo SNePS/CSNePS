@@ -793,6 +793,9 @@ Returns \texttt{true} if \textit{term} is asserted in \textit{context} and \text
 \docjava{static void}{load}{String \textit{filename}}
 Load a file. Intended to be used to load assertions into the knowledge base, this technically can be used to load individual Clojure files as well.
 
+\docjava{static Set<ITerm>}{pathsFrom}{ITerm term, String path}
+Follows the given path from term and returns all nodes at the end of the path.
+
 \docjava{static void}{startGUI}{}
 Start the CSNePS user interface.
 

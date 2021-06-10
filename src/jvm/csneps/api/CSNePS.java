@@ -5,11 +5,15 @@
 package csneps.api;
 
 import clojure.java.api.Clojure;
-import clojure.lang.IFn;
+import clojure.lang.*;
 import csneps.gui.GUI2;
 import csneps.gui.business.FnInterop;
+import csneps.gui.business.Term;
 import csneps.gui.dataaccess.Controller;
 import csneps.gui.dataaccess.Model;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class CSNePS extends FnInterop {
 
@@ -26,6 +30,21 @@ public class CSNePS extends FnInterop {
     }
 
     public static void load(String filename) { Controller.snuser_load(filename); }
+
+    public static Set<Term> pathsfrom(Term term, String path){
+
+        Set<Term> results = new HashSet<>();
+
+        IPersistentSet res = Controller.snip_pathsfrom(term.getClojureTerm(), (IPersistentList) RT.readString(path));
+        ISeq resSeq = res.seq();
+
+        while(resSeq != null && resSeq.count() > 0){
+            results.add(Term.create((IPersistentMap) resSeq.first()));
+            resSeq = resSeq.next();
+        }
+
+        return results;
+    }
 
     // Internal implementation //
     private static void load_csneps(){
