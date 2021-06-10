@@ -9,6 +9,7 @@ public interface ITerm {
     String getName();
     ICaseframe getCaseframe();
     Set<Term> getDependencies();
+    String getDescription();
     String getFSymbol();
     Set<Term> getRestrictionset();
     Map<Slot, Set<Term>> getUpCableset();

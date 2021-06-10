@@ -127,7 +127,11 @@ public class FnInterop {
 	
 	public static String getCaseframeName(IPersistentMap cf){
 		return Controller.caseframes_caseframe_name(cf).toString();
-	} 
+	}
+
+	public static String getDescription(IPersistentMap term){
+		return Controller.caseframes_description(term);
+	}
 	
 	///////////////
 	/// printer ///

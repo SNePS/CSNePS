@@ -124,6 +124,10 @@ public class Term implements ITerm {
 	public void setCaseframe(Caseframe c){
 		caseframe = c;
 	}
+
+	public String getDescription(){
+		return FnInterop.getDescription(this.getClojureTerm());
+	}
 	
 	public String getFSymbol(){
 		if (fsymbol != null) return fsymbol;

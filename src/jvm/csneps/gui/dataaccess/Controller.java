@@ -24,6 +24,7 @@ public class Controller {
 	private static IFn build_find_fn;
 	private static IFn build_term_predicate_fn;
 	private static IFn build_unassert_fn;
+	private static IFn caseframes_description_fn;
 	private static IFn caseframes_caseframe_name_fn;
 	private static IFn caseframes_quotedpp_qmark_fn;
 	private static IFn contexts_asserted_qmark_fn;
@@ -175,6 +176,8 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
+
+
 	
 	public static IPersistentMap snuser_define_caseframe(Keyword type, IPersistentList slots){
 		if (snuser_define_caseframe_fn == null)
@@ -219,6 +222,12 @@ public class Controller {
 			return caseframes_caseframe_name_fn.invoke(cf).toString();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+
+	public static String caseframes_description(IPersistentMap term){
+		if (caseframes_description_fn == null)
+			caseframes_description_fn = Clojure.var("csneps.core.caseframes", "description");
+		return (String) caseframes_description_fn.invoke(term);
 	}
 	
 	public static Boolean caseframes_quotedpp_qmark(IPersistentMap cf){
