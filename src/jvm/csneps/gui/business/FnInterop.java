@@ -211,7 +211,7 @@ public class FnInterop {
 			IPersistentVector item = (IPersistentVector)clores.first();
 			results.add(Term.create((IPersistentMap)item.nth(0)));
 			clores = clores.next();
-			System.out.println(results);
+			//System.out.println(results);
 		}
 		
 		return results;
