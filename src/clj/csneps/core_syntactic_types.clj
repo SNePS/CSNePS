@@ -475,7 +475,7 @@
   [term]
   (if (isa? (type-of term) ::Term)
     term
-    (get @TERMS term)))
+    (get @TERMS (symbol term))))
 
 (defn is-syntactic-type?
   [x]

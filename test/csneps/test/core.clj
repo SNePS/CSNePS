@@ -1,4 +1,4 @@
-(ns CSNePS.test.core
+(ns csneps.test.core
   (:use [clojure.test])
   (:require [CSNePS.test.arithmetic]))
 

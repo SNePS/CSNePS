@@ -1,4 +1,4 @@
-(ns CSNePS.test.arithmetic
+(ns csneps.test.arithmetic
   (:use [csneps.core.arithmetic]
         [clojure.test])
   (:require [csneps.core.snuser :as snuser]))

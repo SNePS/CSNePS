@@ -17,28 +17,26 @@
 (defineSlot part :type Thing)
 (defineSlot group :type Thing)
 
- 
 ;;; Caseframes
-
 (defineCaseframe 'Proposition '(actions agent object)
   :docstring "[agent] [actions] [object]"
   :fsymbols '(Owns Buys))
 
 ;;; Assert some propositions to find
-
 (assert '(Isa Fido Dog))
 (assert '(Isa Rover Dog))
 (assert '(Isa Fluffy Cat))
-(assert '(Isa Cat Cat))
-
+(assert '(Isa Glacier Cat))
 
 ;;; Test if a base proposition can be found.
-
 (find '(Isa Rover Dog))
 
 ;;; Demonstrate proper use of variables
 (find '(Isa x Dog))
 (find '(Isa x Dog) '(x))
+
+;;; Demonistrates auto-detected variables
+(find '(Isa ?x Dog))
 
 ;;; Find all terms, mostly ungrounded expression
 (find '(Isa x y) '(x y))
@@ -60,12 +58,10 @@
 (find '(Isa (Isa x y) z) '(x y z))
 (find '(Isa (Isa x y) y) '(x y))
 
-
 ;;; Demonstrate that mtching works with unquoted caseframes
 (assert '(Buys Mike Dog))
 (assert '(Buys Mike Cat))
 (find '(Buys Mike x) '(x))
-
 
 ;;; Assert some propositions with sets
 (assert '(Isa (setof Fido Rover Lassie Rags) Dog))
