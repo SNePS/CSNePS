@@ -132,6 +132,10 @@ public class FnInterop {
 	public static String getDescription(IPersistentMap term){
 		return Controller.caseframes_description(term);
 	}
+
+	public static void sameFrame(String newFrame, String oldFrame) {
+		Controller.caseframes_sameframe(Symbol.intern(newFrame), Symbol.intern(oldFrame));
+	}
 	
 	///////////////
 	/// printer ///

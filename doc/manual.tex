@@ -773,6 +773,9 @@ Defines a caseframe of the provided type, with the provided slots, and using the
 \docjava{static IContext}{defineContext}{String \textit{name}, ArrayList<IContext> \textit{parents}, \\ \hspace*{2cm} Set<Term> \textit{hyps}}
 Define a new context with the provided name, inheriting hypotheses from parents, and having its own hypotheses (hyps).
 
+\docjava{static void}{sameFrame}{String \textit{newFrame}, String \textit{oldFrame}}
+Add the function symbol \textit{newFrame} to the frame associated with the function symbol \textit{oldFrame}.
+
 \docjava{static void}{setCurrentContext}{IContext \textit{c}}
 Change the current context to \texttt{\textit{c}}.
 

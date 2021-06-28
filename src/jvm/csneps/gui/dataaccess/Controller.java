@@ -26,6 +26,7 @@ public class Controller {
 	private static IFn build_unassert_fn;
 	private static IFn caseframes_description_fn;
 	private static IFn caseframes_caseframe_name_fn;
+	private static IFn caseframes_sameframe_fn;
 	private static IFn caseframes_quotedpp_qmark_fn;
 	private static IFn contexts_asserted_qmark_fn;
 	private static IFn contexts_ontology_term_qmark_fn;
@@ -228,6 +229,12 @@ public class Controller {
 		if (caseframes_description_fn == null)
 			caseframes_description_fn = Clojure.var("csneps.core.caseframes", "description");
 		return (String) caseframes_description_fn.invoke(term);
+	}
+
+	public static void caseframes_sameframe(Symbol newFrame, Symbol oldFrame){
+		if (caseframes_sameframe_fn == null)
+			caseframes_sameframe_fn = Clojure.var("csneps.core.caseframes", "sameFrame");
+		caseframes_sameframe_fn.invoke(newFrame, oldFrame);
 	}
 	
 	public static Boolean caseframes_quotedpp_qmark(IPersistentMap cf){
