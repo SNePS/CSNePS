@@ -610,6 +610,9 @@ Returns a list of vector pairs. In each pair, the first element is an instance o
 \textit{exprpat} would give that instance. \textit{exprpat} may be any wft
 with variables, symbols starting with a ``?'', in the place of any subterms.
 
+\docfun{find-frame}{\textit{fsym}}
+Returns the caseframe associated with the given function symbol. If the frame has only a single function symbol, or has multiople through fsymbols it returns the appropriate one. 
+
 \docfun{findTerm}{\textit{name}}
 Returns the term named \texttt{\textit{name}}, or \texttt{nil} if
 there isn't one.  The name of an atomic term is a symbol, string, or

@@ -17,7 +17,7 @@
   (:use [clojure.pprint :only (cl-format)]
         [clojure.core.memoize :only (memo-clear!)]
         [clojure.walk]
-        [csneps.core.caseframes :only (list-caseframes sameFrame description)]
+        [csneps.core.caseframes :only (find-frame list-caseframes sameFrame description)]
         [csneps.demo :only (demo)]
         [clojure.set :only (union difference)]
         [csneps.core.relations :only (list-slots)]
