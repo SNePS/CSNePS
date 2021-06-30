@@ -776,6 +776,10 @@ Defines a caseframe of the provided type, with the provided slots, and using the
 \docjava{static IContext}{defineContext}{String \textit{name}, ArrayList<IContext> \textit{parents}, \\ \hspace*{2cm} Set<Term> \textit{hyps}}
 Define a new context with the provided name, inheriting hypotheses from parents, and having its own hypotheses (hyps).
 
+\docjava{static ICaseframe}{findFrame}{\texttt{String} \textit{sym}} 
+Returns the caseframe with the given string as either the name of the frame (if it has only a single function symbol), or with the string as one of the multiple fsymbols if defined in that way.
+
+
 \docjava{static void}{sameFrame}{String \textit{newFrame}, String \textit{oldFrame}}
 Add the function symbol \textit{newFrame} to the frame associated with the function symbol \textit{oldFrame}.
 

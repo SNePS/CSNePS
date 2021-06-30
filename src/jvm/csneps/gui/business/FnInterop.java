@@ -133,6 +133,10 @@ public class FnInterop {
 		return Controller.caseframes_description(term);
 	}
 
+	public static Caseframe findFrame(String sym) {
+		return Caseframe.create(Controller.caseframes_find_frame(Symbol.intern(sym)));
+	}
+
 	public static void sameFrame(String newFrame, String oldFrame) {
 		Controller.caseframes_sameframe(Symbol.intern(newFrame), Symbol.intern(oldFrame));
 	}
