@@ -975,7 +975,7 @@
                                          :type 'I-INFER
                                          :fwd-infer? (:fwd-infer? message)
                                          :taskid (:taskid message))]
-          
+
           ;(when instance 
             ;(println instance (os-union (:support-set rcm) (@support instance)))
             ;(dosync 
@@ -1000,41 +1000,42 @@
               nil
               (submit-to-channel ch der-msg))))))
     ;; Instance from unifying term.
-    (let [instance (:origin message)]
-      (when-not (msgstruct/seen-message? (@msgs node) message) ;; Don't bother if we've already seen this message.
-        (let [subst-support (set 
-                              (map (fn [t] (:name t)) 
-                                   (flatten 
-                                     (map (fn [a] (apply-to-all-restrictions (:subst message) a))
-                                          (filter #(arbitraryTerm? %) 
-                                                  (keys (:subst message)))))))
-              ;;; Next line is experimental! Not sure how it overlaps with subst-support, if it all.
-              expanded-subst (build/expand-substitution node (:subst message))
-              outgoing-support (if (seq subst-support)
-                                 (os/os-union (:support-set message)
-                                           #{['der subst-support]})
-                                 (:support-set message))
-              der-msg (msg/derivative-message message
-                                          :origin node
-                                          :support-set outgoing-support
-                                          :subst expanded-subst
-                                          :type 'I-INFER
-                                          :flaggedns {node true}
-                                          :fwd-infer? (:fwd-infer? message)
-                                          :taskid (:taskid message))]
-          
-      ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
-       (msgstruct/add-matched-and-sent-messages (@msgs node) #{(msg/sanitize-message message)} {:i-channel #{der-msg} :g-channel #{der-msg}})
-       (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
-       (when (and showproofs 
-                  (ct/asserted? node (ct/currentContext)) 
-                  (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
-         (send screenprinter (fn [_] (print-proof-step instance
-                                                       outgoing-support
-                                                       node
-                                                       "generic-instantiation (2)"))))
-       (doseq [ch (union (@i-channels node) (@g-channels node))]
-         (submit-to-channel ch der-msg)))))))
+    (when (= (:neg message) 0) ; If it's negative somehow I don't think we want to do this. (Maybe instantiate negation?)
+      (let [instance (:origin message)]
+        (when-not (msgstruct/seen-message? (@msgs node) message) ;; Don't bother if we've already seen this message.
+          (let [subst-support (set
+                                (map (fn [t] (:name t))
+                                     (flatten
+                                       (map (fn [a] (apply-to-all-restrictions (:subst message) a))
+                                            (filter #(arbitraryTerm? %)
+                                                    (keys (:subst message)))))))
+                ;;; Next line is experimental! Not sure how it overlaps with subst-support, if it all.
+                expanded-subst (build/expand-substitution node (:subst message))
+                outgoing-support (if (seq subst-support)
+                                   (os/os-union (:support-set message)
+                                             #{['der subst-support]})
+                                   (:support-set message))
+                der-msg (msg/derivative-message message
+                                            :origin node
+                                            :support-set outgoing-support
+                                            :subst expanded-subst
+                                            :type 'I-INFER
+                                            :flaggedns {node true}
+                                            :fwd-infer? (:fwd-infer? message)
+                                            :taskid (:taskid message))]
+
+        ;(send screenprinter (fn [_] (println "!!!" message (:subst message) outgoing-support)))
+         (msgstruct/add-matched-and-sent-messages (@msgs node) #{(msg/sanitize-message message)} {:i-channel #{der-msg} :g-channel #{der-msg}})
+         (dosync (alter instances assoc node (assoc (@instances node) instance (:subst message))))
+         (when (and showproofs
+                    (ct/asserted? node (ct/currentContext))
+                    (filter #(build/pass-message? % der-msg) (union (@i-channels node) (@g-channels node))))
+           (send screenprinter (fn [_] (print-proof-step instance
+                                                         outgoing-support
+                                                         node
+                                                         "generic-instantiation (2)"))))
+         (doseq [ch (union (@i-channels node) (@g-channels node))]
+           (submit-to-channel ch der-msg))))))))
               
     
 (defn arbqvar-instantiation
@@ -1284,22 +1285,26 @@
         (not (rule? term))
         (not (carule? term))
         (not (variableTerm? term)))
-      (do 
-        (when (:u-true? message)
-          (dosync (os/alter-support term (os/os-concat (@support term) (:support-set message)))))
+      (do
+        ;; Why would this ever happen on an i-message?
+        ;(when (:u-true? message)
+        ;  (send screenprinter (fn [_]  (println "BUG?: u-true? is true on an i-message.")))
+        ;  (dosync (os/alter-support term (os/os-concat (@support term) (:support-set message)))))
         ;; Send this new info onward
-        (let [imsg (msg/derivative-message message
-                                       :origin term
-                                       :support-set (:support-set message)
-                                       :flaggedns {term true}
-                                       :type 'I-INFER)]
-          ;; Save the message for future terms which might have channels
-          ;; from this. Sometimes necessary for forward focused reasoning.
-          (when (@msgs term) (msgstruct/add-matched-and-sent-messages (@msgs term) #{(msg/sanitize-message message)} {:i-channel #{imsg}}))
-          ;; Do the sending.
-          (doseq [cqch (@i-channels term)] 
-            (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
-              (submit-to-channel cqch imsg)))))
+        (when-not (> (:neg message) 0) ;; If the message is negative that we just received, it doesn't really tell us
+                                       ;; anything that we need to pass on.
+          (let [imsg (msg/derivative-message message
+                                         :origin term
+                                         :support-set (:support-set message)
+                                         :flaggedns {term true}
+                                         :type 'I-INFER)]
+            ;; Save the message for future terms which might have channels
+            ;; from this. Sometimes necessary for forward focused reasoning.
+            (when (@msgs term) (msgstruct/add-matched-and-sent-messages (@msgs term) #{(msg/sanitize-message message)} {:i-channel #{imsg}}))
+            ;; Do the sending.
+            (doseq [cqch (@i-channels term)]
+              (when (not= (:destination cqch) (:orign message)) ;; Don't just send it back where it came from.
+                (submit-to-channel cqch imsg))))))
       ;; Otherwise...
       :else
       (let [new-msgs (msgstruct/get-new-messages (@msgs term) message)]
