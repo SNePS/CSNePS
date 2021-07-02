@@ -44,7 +44,16 @@
   (doseq [subrule (get (cf/dcsRelationTermsetMap policy) (slot/find-slot 'subrule))]
     (unadopt subrule)))
 
+;; TODO
+(defmacro define-primaction [name vars & forms]
+
+  )
+
+;; TODO
+(defn perform [actform])
+
 (defn attach-primaction [act fname]
   {:pre [(subtypep (st/semantic-type-of act) :Act)
          @(primaction-fns fname)]}
   (dosync (alter primaction assoc act @(primaction-fns fname))))
+

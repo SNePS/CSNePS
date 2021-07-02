@@ -27,7 +27,8 @@
         [csneps.core :only (showTypes list-types)]
         [csneps.core.semantic-types :only [semantic-type-of]]
         [csneps.core.printer :only (writeKBToTextFile)]
-        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer attach-primaction ig-debug-all)]
+        [csneps.snip :only (definePath pathsfrom cancel-infer-of cancel-infer-from cancel-focused-infer
+                                       define-primaction attach-primaction perform ig-debug-all)]
         [csneps.core.arithmetic]
         [csneps.utils.coreutils :only (synvariable?)]
         [csneps.util]

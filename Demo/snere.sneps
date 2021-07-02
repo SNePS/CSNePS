@@ -1,12 +1,12 @@
 ;;; Demonstration of SNeRE
 
-(in-package :snuser)
-(clearkb t)
+(in-ns 'csneps.core.snuser)
+(clearkb true)
 
 ;;; Action functions that need no arguments may be attached to Acts.
-(attachPrimaction (defineTerm 'helloWorld 'Act)
-		   (definePrimaction helloWorldfn ()
-		     (format t "~&Hello world.~%")))
+(attach-primaction (defineTerm 'helloWorld 'Act)
+		   (define-primaction helloWorldfn ()
+													(cl-format true "~&Hello world.~%")))
 (perform 'helloWorld)
 
 ;;; An Act with an action of no arguments.
@@ -15,24 +15,24 @@
 (defineCaseframe 'Act '(actions) :fsymbols '(sayHello))
 
  ;;; Attach a primitive action function to the action function symbol.
-(attachPrimaction (defineTerm 'sayHello 'Action)
-		   (definePrimaction sayHellofn ()
-		     (format t "~&Hello.~%")))
+(attach-primaction (defineTerm 'sayHello 'Action)
+		   (define-primaction sayHellofn ()
+													(cl-format true "~&Hello.~%")))
 ;;; Now, can perform it.
 (perform '(sayHello))
 
 ;;; Associate another action function symbol to the same caseframe,
 (sameFrame 'sayHiThere 'sayHello)
 ;;; attach another action function of no arguments to it,
-(attachPrimaction (defineTerm 'sayHiThere 'Action)
-		   (definePrimaction sayHiTherefn ()
-		     (format t "~&Hi there.~%")))
+(attach-primaction (defineTerm 'sayHiThere 'Action)
+		   (define-primaction sayHiTherefn ()
+		     (cl-format true "~&Hi there.~%")))
 ;;; and perform it.
 (perform '(sayHiThere))
 
 ;;; Attach an existing primitive action function to another action symbol.
 (sameFrame 'sayHi 'sayHiThere)
-(attachPrimaction (defineTerm 'sayHi 'Action)
+(attach-primaction (defineTerm 'sayHi 'Action)
 		   'sayHiTherefn)
 (perform '(sayHi))
 
@@ -40,8 +40,8 @@
 (defineType Person (Thing))
 (defineSlot addressee :type Person  :posadjust none :negadjust none)
 (defineCaseframe 'Act '(actions addressee) :fsymbols '(Greet))
-(attachPrimaction (defineTerm 'Greet 'Action)
-		   (definePrimaction greetfn (addressee)
-		     (set:loopset for person in addressee
-				  do (format t "~&Hello ~S.~%" person))))
+(attach-primaction (defineTerm 'Greet 'Action)
+		   (define-primaction greetfn (addressee)
+		     (for [person addressee]
+				   (cl-format true "~&Hello ~S.~%" person))))
 (perform '(Greet (setof Stu Bill)))
