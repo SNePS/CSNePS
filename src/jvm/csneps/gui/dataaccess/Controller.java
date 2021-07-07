@@ -144,7 +144,7 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public static IPersistentMap snuser_define_term(PersistentList expr){
+	public static IPersistentMap snuser_define_term(Object expr){
 		if (snuser_define_term_fn == null)
 			snuser_define_term_fn = Clojure.var("csneps.core.snuser", "defineTerm");
 		try{

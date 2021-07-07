@@ -55,7 +55,7 @@ public class FnInterop {
 	}
 	
 	public static Term defineTerm(String expr){
-		return Term.create(Controller.snuser_define_term((PersistentList)RT.readString(expr)));
+		return Term.create(Controller.snuser_define_term(RT.readString(expr)));
 	}
 	
 	public static Term defineTerm(String expr, SemanticType type){
