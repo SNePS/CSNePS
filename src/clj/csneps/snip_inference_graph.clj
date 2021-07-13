@@ -1293,6 +1293,9 @@
         ;; Send this new info onward
         (when-not (> (:neg message) 0) ;; If the message is negative that we just received, it doesn't really tell us
                                        ;; anything that we need to pass on.
+          ;; We've received word that we are true given the substitution provided by the generic.
+          (dosync (os/alter-support term (os/os-concat (@support term) (:support-set message))))
+          ;; Pass on the message.
           (let [imsg (msg/derivative-message message
                                          :origin term
                                          :support-set (:support-set message)

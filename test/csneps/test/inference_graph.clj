@@ -97,6 +97,12 @@
   (is (empty? (snuser/askif '(Isa Fido Animal))))
   (is (= #{(snuser/defineTerm '(Isa Glacier Animal))} (snuser/askif '(Isa Glacier Animal)))))
 
+(deftest generic-elimination-krnovice
+  (snuser/krnovice true)
+  (snuser/assert '(cat (every x (Isa x Cat))))
+  (snuser/assert '(Isa Glacier Cat))
+  (is = (#{(snuser/defineTerm '(cat Glacier))} (snuser/askif '(cat Glacier)))))
+
 (deftest negation-elimination
   (snuser/assert '(not (not a)))
   (is (= #{(snuser/defineTerm 'a)} (snuser/askif 'a)))
