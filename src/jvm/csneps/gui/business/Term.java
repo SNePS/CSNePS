@@ -266,6 +266,14 @@ public class Term implements ITerm {
 	public Boolean isVariable(){
 		return FnInterop.variableTermQ(term);
 	}
+
+	public boolean isArbitrary() {
+		return getType().equals("Arbitrary");
+	}
+
+	public boolean isIndefinite() {
+		return getType().equals("Indefinite");
+	}
 	
 	public void resetAsserted(){
 		// Noop 

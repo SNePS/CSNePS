@@ -16,4 +16,6 @@ public interface ITerm {
     List<Term> getUpCablesetTerms();
     Boolean isMolecular();
     Boolean isVariable();
+    boolean isArbitrary();
+    boolean isIndefinite();
 }
