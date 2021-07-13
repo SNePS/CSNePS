@@ -48,6 +48,6 @@
   :java-source-path "src/jvm/" ;leiningen 1.x compat.
   ;:project-init (require 'clojure.pprint) 
   :repl-options [:print clojure.core/println] ;[:print clojure.pprint/pprint]
-  :jvm-opts ["-server"] 
+  ;:jvm-opts ["-server"]
   :main csneps.core.snuser
   :profiles {:uberjar {:aot :all}})
