@@ -1,6 +1,7 @@
 (ns csneps.test.inference-graph
   (:require [clojure.test :refer :all])
-  (:require [csneps.core.snuser :as snuser]))
+  (:require [csneps.core.snuser :as snuser]
+            [csneps.core.contexts :as ct]))
 
 (defn csneps-setup [f]
   (csneps.snip.inference-graph.concurrent/startExecutor)
@@ -130,3 +131,26 @@
   (snuser/assert 'a)
   (is (= #{(snuser/defineTerm '(not b))} (snuser/askif '(not b))))
   (is (empty? (snuser/askif '(not a)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Forward Inference ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest simple-forward
+  (snuser/assert '(xor a b c))
+  (snuser/assert '(if x a))
+  (snuser/assert '(iff (not a) (not y)))
+  (snuser/assert '(iff (not c) (not q)))
+  (snuser/assert! 'x)
+  ;; Wait a tick...
+  (Thread/sleep 100)
+  ;; Check if
+  (is (= (ct/currentContext) (ct/asserted? (snuser/find-term 'a) (ct/currentContext))))
+  ;; Check XOR
+  (is (= (ct/currentContext) (ct/asserted? (snuser/defineTerm '(not b)) (ct/currentContext))))
+  (is (= (ct/currentContext) (ct/asserted? (snuser/defineTerm '(not c)) (ct/currentContext))))
+  ;; Ensure iff didn't fire
+  (is (= nil (ct/asserted? (snuser/find-term '(not a)) (ct/currentContext))))
+  (is (= nil (ct/asserted? (snuser/find-term '(not y)) (ct/currentContext))))
+  ;; Check other iff that should fire
+  (is (= (ct/currentContext) (ct/asserted? (snuser/defineTerm '(not q)) (ct/currentContext)))))
