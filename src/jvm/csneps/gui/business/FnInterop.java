@@ -244,5 +244,13 @@ public class FnInterop {
 	public static void writeKBToTextFile(String fname){
 		Controller.csneps_printer_print_kb_to_text_file(fname);
 	}
+
+	///////////////
+	/// Clojure ///
+	///////////////
+
+	public static void loadString(String string) {
+		Controller.clojure_load_string(string);
+	}
 	
 }

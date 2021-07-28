@@ -12,6 +12,11 @@ import csneps.gui.business.Term;
 import csneps.gui.dataaccess.Controller;
 import csneps.gui.dataaccess.Model;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,6 +35,22 @@ public class CSNePS extends FnInterop {
     }
 
     public static void load(String filename) { Controller.snuser_load(filename); }
+
+    public static void load(InputStream inputStream) {
+        String str = "";
+        StringBuilder buffer = new StringBuilder();
+        try {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            while ((str = reader.readLine()) != null) {
+                buffer.append(str).append("\n");
+            }
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+
+        loadString(buffer.toString());
+    }
 
     public static Set<Term> pathsfrom(Term term, String path){
 

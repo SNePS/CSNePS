@@ -34,6 +34,7 @@ public class Controller {
 	private static IFn contexts_define_context_fn;
 	private static IFn contexts_hyps_fn;
 	private static IFn contexts_set_current_context_fn;
+	private static IFn clojure_core_load_string_fn;
 	private static IFn csneps_core_molecular_term_qmark_fn;
 	private static IFn csneps_core_variable_term_qmark_fn;
 	private static IFn csneps_core_printer_term_printer_fn;
@@ -318,5 +319,11 @@ public class Controller {
 		if (snuser_load_fn == null)
 			snuser_load_fn = Clojure.var("csneps.core.snuser", "load");
 		snuser_load_fn.invoke(filename);
+	}
+
+	public static void clojure_load_string(String string) {
+		if (clojure_core_load_string_fn == null)
+			clojure_core_load_string_fn = Clojure.var("clojure.core", "load-string");
+		clojure_core_load_string_fn.invoke(string);
 	}
 }
