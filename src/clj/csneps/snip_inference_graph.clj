@@ -1249,7 +1249,7 @@
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   
   ;; I-INFER can result in both introduction and elimination.
-  
+  (when (:infer @debug-features) (send screenprinter (fn [_]  (println "Trying I-INFER - DRS" (@msgs term)))))
   (when (and (= (:type message) 'I-INFER)
              (or (not (@msgs term))
                  (not (msgstruct/seen-message? (@msgs term) message))))

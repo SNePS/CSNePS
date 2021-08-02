@@ -102,8 +102,10 @@
   [term]
   (@term-caseframe-map term))
 
-
-
+(defn part-of-terms
+  "Returns the terms which a given term is part of."
+  [term]
+  (map deref (vals (@up-cablesetw term))))
 
 ;; Load the rest of the csneps.core namespace.
 (load "core_syntactic_types")

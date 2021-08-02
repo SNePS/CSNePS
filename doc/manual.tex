@@ -485,13 +485,13 @@ Asserts the term expressed by \cv{expr} in the current context.
 Asserts the term expressed by \cv{expr} in the current context, and triggers
 forward inference.
 
-%\docfun{attachPrimaction}{\textit{term primfun}}
-%Puts the function named \texttt{\textit{primfun}} in the
-%\texttt{primaction} slot of the given \texttt{\textit{term}}, which
-%must be an \texttt{Act} or an \texttt{Action}.  If
-%\texttt{\textit{term}} is an \texttt{Act}, it can then be
-%\texttt{perform}ed; if it is an \texttt{Action}, an \texttt{Act} can
-%then be \texttt{perform}ed whose \texttt{Action} is \texttt{\textit{term}}.
+\docfun{attach-primaction}{\textit{term primfun}}
+Puts the function named \texttt{\textit{primfun}} in the
+\texttt{primaction} slot of the given \texttt{\textit{term}}, which
+must be an \texttt{Act} or an \texttt{Action}.  If
+\texttt{\textit{term}} is an \texttt{Act}, it can then be
+\texttt{perform}ed; if it is an \texttt{Action}, an \texttt{Act} can
+then be \texttt{perform}ed whose \texttt{Action} is \texttt{\textit{term}}.
 
 \docfun{cancel-focused-infer}{}
 Cancels all focused inference tasks. 
@@ -532,14 +532,14 @@ and a path expression, \cv{path} (\textit{see} \S\ref{sec:pathsyntax}), generate
 the functions that will compute that path and its converse, and store them in
 the slot named \cv{slotname}.
 
-%\docmacro{definePrimaction}{\textit{primactionfun vars} \&body
-%  \textit{forms}} Creates the primitive action function named
-%\texttt{\textit{primactionfun}}.  \texttt{\textit{vars}} should be a
-%(possibly empty) list of slot names that get bound to the appropriate
-%node sets.  However, if any \texttt{\textit{var}} is enclosed in
-%parentheses, it gets bound to a member of the appropriate node set.
-%\texttt{\textit{forms}} syntax is just as it is for \texttt{defun}.
-%Returns the function name, \texttt{\textit{primactionfun}}.
+\docmacro{define-primaction}{\textit{primactionfun vars} \&body
+  \textit{forms}} Creates the primitive action function named
+\texttt{\textit{primactionfun}}.  \texttt{\textit{vars}} should be a
+(possibly empty) vector of slot names that get bound to the appropriate
+node sets.  However, if any \texttt{\textit{var}} is enclosed in
+parentheses, it gets bound to a member of the appropriate node set.
+\texttt{\textit{forms}} syntax is just as it is for \texttt{defn}.
+Returns the function built.
 
 \docmacro{defineSlot}{\textit{name} \&key \textit{type docstring
     posadjust negadjust min max path}}
@@ -658,8 +658,8 @@ Returns the set of terms at the end of the given \cv{path} (\textit{see}
 \S\ref{sec:pathsyntax}) from \cv{terms}, which must be a term, the name of a
 term, a list of terms or names of terms, or a set of terms.
 
-%\docfun{perform}{\textit{actform}}
-%Performs the \texttt{Act} expressed by the form \texttt{\textit{actform}}.
+\docfun{perform}{\textit{actform}}
+Performs the \texttt{Act} expressed by the form \texttt{\textit{actform}}.
 
 \docvar{PRECISION}
 A positive integer: a floating point number will be rounded to this
@@ -802,6 +802,9 @@ Returns \texttt{true} if \textit{term} is asserted in \textit{context} and \text
 
 \docjava{static void}{load}{String \textit{filename}}
 Load a file. Intended to be used to load assertions into the knowledge base, this technically can be used to load individual Clojure files as well.
+
+\docjava{static Set<Term>}{partOfTerms}{ITerm term}
+Return the terms which the given term is immediately part of. Follows the up-cableset one step.
 
 \docjava{static Set<ITerm>}{pathsFrom}{ITerm term, String path}
 Follows the given path from term and returns all nodes at the end of the path.

@@ -4,15 +4,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import clojure.lang.*;
 import csneps.gui.dataaccess.Controller;
-import clojure.lang.IPersistentMap;
-import clojure.lang.IPersistentVector;
-import clojure.lang.ISeq;
-import clojure.lang.Keyword;
-import clojure.lang.PersistentHashSet;
-import clojure.lang.PersistentList;
-import clojure.lang.RT;
-import clojure.lang.Symbol;
 
 public class FnInterop {
 
@@ -107,6 +100,19 @@ public class FnInterop {
 		
 		Controller.csneps_core_define_type(Symbol.intern(newtype), PersistentList.create(parentsyms));
 		return SemanticType.create(newtype, parentstrings);
+	}
+
+	public static Set<Term> partOfTerms(Term term){
+		Set<Term> result = new HashSet<>();
+		ISeq terms = Controller.csneps_core_part_of_terms(term.getClojureTerm()).seq();
+
+		while(terms != null && terms.count() > 0){
+			IPersistentMap t = (IPersistentMap) terms.first();
+			result.add(Term.create(t));
+			terms = terms.next();
+		}
+
+		return result;
 	}
 	
 	public static Boolean molecularTermQ(IPersistentMap term){

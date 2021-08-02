@@ -11,36 +11,27 @@ import clojure.lang.*;
 
 public class Controller {
 
-	private static IFn snuser_adopt_rule_fn;
-	private static IFn snuser_assert_fn;
-	private static IFn snuser_clearkb_fn;
-	private static IFn snuser_define_term_fn;
-	private static IFn snuser_define_caseframe_fn;
-	private static IFn snuser_load_fn;
-	private static IFn snuser_unadopt_rule_fn;
+	private static IFn snuser_adopt_rule_fn, snuser_assert_fn, snuser_clearkb_fn, snuser_define_term_fn,
+			snuser_define_caseframe_fn, snuser_load_fn, snuser_unadopt_rule_fn;
+
 	private static IFn relations_define_slot_fn;
 	private static IFn csneps_define_type_fn;
-	private static IFn build_add_to_context_fn;
-	private static IFn build_find_fn;
-	private static IFn build_term_predicate_fn;
-	private static IFn build_unassert_fn;
-	private static IFn caseframes_description_fn;
-	private static IFn caseframes_find_frame_fn;
-	private static IFn caseframes_caseframe_name_fn;
-	private static IFn caseframes_sameframe_fn;
-	private static IFn caseframes_quotedpp_qmark_fn;
-	private static IFn contexts_asserted_qmark_fn;
-	private static IFn contexts_ontology_term_qmark_fn;
-	private static IFn contexts_define_context_fn;
-	private static IFn contexts_hyps_fn;
-	private static IFn contexts_set_current_context_fn;
+
+	private static IFn build_add_to_context_fn, build_find_fn, build_term_predicate_fn, build_unassert_fn;
+
+	private static IFn caseframes_description_fn, caseframes_find_frame_fn, caseframes_caseframe_name_fn,
+			caseframes_sameframe_fn, caseframes_quotedpp_qmark_fn;
+
+	private static IFn contexts_asserted_qmark_fn, contexts_ontology_term_qmark_fn, contexts_define_context_fn,
+			contexts_hyps_fn, contexts_set_current_context_fn;
+
 	private static IFn clojure_core_load_string_fn;
-	private static IFn csneps_core_molecular_term_qmark_fn;
-	private static IFn csneps_core_variable_term_qmark_fn;
-	private static IFn csneps_core_printer_term_printer_fn;
+
+	private static IFn csneps_core_part_of_terms_fn, csneps_core_molecular_term_qmark_fn,
+			csneps_core_variable_term_qmark_fn, csneps_core_printer_term_printer_fn;
+
 	private static IFn csneps_print_print_kb_to_text_file_fn;
-	private static IFn csneps_gui_start_gui_fn;
-	private static IFn csneps_gui_add_watches_fn;
+	private static IFn csneps_gui_start_gui_fn, csneps_gui_add_watches_fn;
 	private static IFn snip_pathsfrom_fn;
 	
 	public static ISeq build_find(ISeq pattern){
@@ -302,6 +293,12 @@ public class Controller {
 	///////////////////
 	/// Used by API ///
 	///////////////////
+
+	public static IPersistentSet csneps_core_part_of_terms(IPersistentMap term){
+		if (csneps_core_part_of_terms_fn == null)
+			csneps_core_part_of_terms_fn = Clojure.var("csneps.core", "part-of-terms");
+		return (IPersistentSet) csneps_core_part_of_terms_fn.invoke(term);
+	}
 
 	public static void gui_startGUI() {
 		if (csneps_gui_start_gui_fn == null)
