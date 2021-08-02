@@ -1,6 +1,7 @@
 (ns csneps.test.inference-graph
   (:require [clojure.test :refer :all])
   (:require [csneps.core.snuser :as snuser]
+            [csneps.core.find :as find]
             [csneps.core.contexts :as ct]))
 
 (defn csneps-setup [f]
@@ -154,3 +155,12 @@
   (is (= nil (ct/asserted? (snuser/find-term '(not y)) (ct/currentContext))))
   ;; Check other iff that should fire
   (is (= (ct/currentContext) (ct/asserted? (snuser/defineTerm '(not q)) (ct/currentContext)))))
+
+(deftest generic-forward
+  (snuser/assert '(Isa (every x (Isa x Cat)) Animal))
+  (snuser/assert! '(Isa Glacier Cat))
+  ;; Wait a tick...
+  (Thread/sleep 100)
+  ;; defining the term may cause it to be derived if it wasn't before, so check if it's there first.
+  (is (not (empty? (find/find '(Isa Glacier Animal)))))
+  (is (= (ct/currentContext) (ct/asserted? (snuser/defineTerm '(Isa Glacier Animal)) (ct/currentContext)))))

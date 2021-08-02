@@ -4,19 +4,19 @@
 (clearkb true)
 
 ;;; Action functions that need no arguments may be attached to Acts.
-(attach-primaction (defineTerm 'helloWorld 'Act)
-		   (define-primaction helloWorldfn ()
+(attach-primaction (defineTerm 'helloWorld :Act)
+		   (define-primaction helloWorldfn []
 													(cl-format true "~&Hello world.~%")))
 (perform 'helloWorld)
 
 ;;; An Act with an action of no arguments.
 ;;; Define a caseframe with just an action slot,
 ;;;    and give it a function symbol.
-(defineCaseframe 'Act '(actions) :fsymbols '(sayHello))
+(defineCaseframe 'Act '(action) :fsymbols '(sayHello))
 
  ;;; Attach a primitive action function to the action function symbol.
-(attach-primaction (defineTerm 'sayHello 'Action)
-		   (define-primaction sayHellofn ()
+(attach-primaction (defineTerm 'sayHello :Action)
+		   (define-primaction sayHellofn []
 													(cl-format true "~&Hello.~%")))
 ;;; Now, can perform it.
 (perform '(sayHello))
@@ -24,24 +24,24 @@
 ;;; Associate another action function symbol to the same caseframe,
 (sameFrame 'sayHiThere 'sayHello)
 ;;; attach another action function of no arguments to it,
-(attach-primaction (defineTerm 'sayHiThere 'Action)
-		   (define-primaction sayHiTherefn ()
+(attach-primaction (defineTerm 'sayHiThere :Action)
+		   (define-primaction sayHiTherefn []
 		     (cl-format true "~&Hi there.~%")))
 ;;; and perform it.
 (perform '(sayHiThere))
 
 ;;; Attach an existing primitive action function to another action symbol.
 (sameFrame 'sayHi 'sayHiThere)
-(attach-primaction (defineTerm 'sayHi 'Action)
+(attach-primaction (defineTerm 'sayHi :Action)
 		   'sayHiTherefn)
 (perform '(sayHi))
 
 ;;; An action with one argument
 (defineType Person (Thing))
 (defineSlot addressee :type Person  :posadjust none :negadjust none)
-(defineCaseframe 'Act '(actions addressee) :fsymbols '(Greet))
-(attach-primaction (defineTerm 'Greet 'Action)
-		   (define-primaction greetfn (addressee)
+(defineCaseframe 'Act '(action addressee) :fsymbols '(Greet))
+(attach-primaction (defineTerm 'Greet :Action)
+		   (define-primaction greetfn [addressee]
 		     (for [person addressee]
 				   (cl-format true "~&Hello ~S.~%" person))))
 (perform '(Greet (setof Stu Bill)))

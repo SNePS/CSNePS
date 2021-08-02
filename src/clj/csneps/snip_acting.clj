@@ -48,14 +48,26 @@
 ;; Further analysis of the SNePS 2 SNeRE and other such systems should be performed before this is actively used.
 (defmacro define-primaction
   "Creates the function definition of the primitive action named name.
-    vars should be a (possibly empty) list of slot names
+    vars should be a (possibly empty) vector of slot names
       that get bound to the appropriate nodes.
     However, if any var is enclosed in parentheses,
-       it gets bound to a member of the appropriate node set.
+       it gets bound to some randomly selected member of the appropriate node set.
     forms syntax is just as it is for standard Clojure function definition."
   [name vars & forms]
-
-  )
+  (let [stripped-vars (mapv #(if (seq? %) (first %) %) vars)
+        act-node-var 'act-node-var
+        primaction-fn `(fn [~act-node-var]
+                        ~(if (empty? stripped-vars)
+                          `((fn [] ~@forms))
+                          `((fn ~stripped-vars ~@forms)
+                            ~(mapv (fn [rel]
+                                    (if (seq? rel)
+                                      `(first (pb-findtos ~act-node-var (first '~rel)))
+                                      `(pb-findtos ~act-node-var '~rel)))
+                                  vars))
+                          ))]
+    (dosync (alter primaction-fns assoc name primaction-fn))
+    primaction-fn))
 
 (defn perform
   "actform will be defined as an Act term (which might already exist).
@@ -64,8 +76,8 @@
           and there is a primitive action function for that action, it will be applied to the act;
       Else an error will be raised."
   [actform]
-  (let [act (build/build actform :Act)
-        todo (pb-findtos act 'actions)
+  (let [act (build/build actform :Act {} #{})
+        todo (pb-findtos act 'action)
         action (first todo)]
     (cond
       ;; This act has a primitive action associated with it.
@@ -79,8 +91,15 @@
       :default
       (error "I don't know how to perform " act "."))))
 
-(defn attach-primaction [act fname]
-  {:pre [(subtypep (st/semantic-type-of act) :Act)
-         @(primaction-fns fname)]}
-  (dosync (alter primaction assoc act @(primaction-fns fname))))
+(defn attach-primaction [act fn-or-fname]
+  {:pre [(or (subtypep (st/semantic-type-of act) :Act)
+             (subtypep (st/semantic-type-of act) :Action))]}
+  (let [prim-fn (cond
+                  (fn? fn-or-fname) fn-or-fname
+                  (@primaction-fns fn-or-fname) (eval (@primaction-fns fn-or-fname))
+                  :default (error "I can't find the primitive action function " fn-or-fname))]
+    (dosync (alter primaction assoc act prim-fn)))
+  nil)
+
+
 

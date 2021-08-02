@@ -33,7 +33,7 @@
                  [org.swinglabs/swingx "1.6.1"]
                  [net.xeon/jspf.core "1.0.2"]
                  [org.clojure/tools.cli "0.4.1"]
-                 [reply/reply "0.4.3"]
+                 [reply/reply "0.4.4"]
                  [aleph "0.4.6"]
                  [gloss "0.2.6"]]
   :dev [[org.clojure/tools.namespace "0.2.4"]]
