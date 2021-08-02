@@ -1,7 +1,8 @@
 (ns csneps.core
   (:require [clojure.pprint]
             [clojure.set]
-            [clojure.string :as st])
+            [clojure.string :as st]
+            [clojure.set :as set])
   (:use [csneps.util]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -105,7 +106,7 @@
 (defn part-of-terms
   "Returns the terms which a given term is part of."
   [term]
-  (map deref (vals (@up-cablesetw term))))
+  (apply set/union  (map deref (vals (@up-cablesetw term)))))
 
 ;; Load the rest of the csneps.core namespace.
 (load "core_syntactic_types")
