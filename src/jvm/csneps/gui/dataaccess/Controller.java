@@ -10,15 +10,20 @@ import clojure.java.api.Clojure;
 import clojure.lang.*;
 
 public class Controller {
-
+	/// snuser
 	private static IFn snuser_adopt_rule_fn, snuser_assert_fn, snuser_clearkb_fn, snuser_define_term_fn,
 			snuser_define_caseframe_fn, snuser_load_fn, snuser_unadopt_rule_fn;
 
+	/// slots
 	private static IFn relations_define_slot_fn;
+
+	/// csneps
 	private static IFn csneps_define_type_fn;
 
+	/// build
 	private static IFn build_add_to_context_fn, build_find_fn, build_term_predicate_fn, build_unassert_fn;
 
+	/// caseframes
 	private static IFn caseframes_description_fn, caseframes_find_frame_fn, caseframes_caseframe_name_fn,
 			caseframes_sameframe_fn, caseframes_quotedpp_qmark_fn;
 
@@ -28,6 +33,7 @@ public class Controller {
 	private static IFn clojure_core_load_string_fn;
 
 	private static IFn csneps_core_part_of_terms_fn, csneps_core_molecular_term_qmark_fn,
+			csneps_core_generic_term_qmark_fn, csneps_core_analytic_term_qmark_fn,
 			csneps_core_variable_term_qmark_fn, csneps_core_printer_term_printer_fn;
 
 	private static IFn csneps_print_print_kb_to_text_file_fn;
@@ -244,7 +250,25 @@ public class Controller {
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
-	
+
+	public static Boolean csneps_core_analytic_term_qmark(IPersistentMap term){
+		if (csneps_core_analytic_term_qmark_fn == null)
+			csneps_core_analytic_term_qmark_fn = Clojure.var("csneps.core", "analyticTerm?");
+		try{
+			return (Boolean)csneps_core_analytic_term_qmark_fn.invoke(term);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+
+	public static Boolean csneps_core_generic_term_qmark(IPersistentMap term){
+		if (csneps_core_generic_term_qmark_fn == null)
+			csneps_core_generic_term_qmark_fn = Clojure.var("csneps.core", "genericTerm?");
+		try{
+			return (Boolean)csneps_core_generic_term_qmark_fn.invoke(term);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+
 	public static Boolean csneps_core_molecular_term_qmark(IPersistentMap term){
 		if (csneps_core_molecular_term_qmark_fn == null)
 			csneps_core_molecular_term_qmark_fn = Clojure.var("csneps.core", "molecularTerm?");

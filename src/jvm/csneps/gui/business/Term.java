@@ -274,6 +274,14 @@ public class Term implements ITerm {
 	public boolean isIndefinite() {
 		return getType().equals("Indefinite");
 	}
+
+	public boolean isGeneric() {
+		return FnInterop.genericTermQ(this);
+	}
+
+	public boolean isAnalytic() {
+		return FnInterop.analyticTermQ(this);
+	}
 	
 	public void resetAsserted(){
 		// Noop 

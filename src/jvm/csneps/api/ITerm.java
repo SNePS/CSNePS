@@ -18,4 +18,6 @@ public interface ITerm {
     Boolean isVariable();
     boolean isArbitrary();
     boolean isIndefinite();
+    boolean isGeneric();
+    boolean isAnalytic();
 }

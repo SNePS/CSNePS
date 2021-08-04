@@ -115,12 +115,25 @@ public class FnInterop {
 		return result;
 	}
 	
+	// TODO: Investigate whether these should be written in a similar way to analytic/generic below.
 	public static Boolean molecularTermQ(IPersistentMap term){
 		return Controller.csneps_core_molecular_term_qmark(term);
 	}
 	
 	public static Boolean variableTermQ(IPersistentMap term){
 		return Controller.csneps_core_variable_term_qmark(term);
+	}
+
+	public static boolean analyticTermQ(Term term) {
+		Boolean result = Controller.csneps_core_analytic_term_qmark(term.getClojureTerm());
+		if (result == null) return false;
+		return result;
+	}
+
+	public static Boolean genericTermQ(Term term) {
+		Boolean result = Controller.csneps_core_generic_term_qmark(term.getClojureTerm());
+		if (result == null) return false;
+		return result;
 	}
 	
 	//////////////////
