@@ -21,7 +21,7 @@ public class AdoptRuleForm extends javax.swing.JFrame {
     	lm = new DefaultListModel<String>();
 
     	for(Term t : Term.getTerms()){
-    	    if (t.getType().equals("CARule") && !t.isAsserted()){
+    	    if (t.getSyntacticType().equals("CARule") && !t.isAsserted()){
     	        lm.addElement(t.getDownCableset().get(Slot.getSlot("rulename")).toArray()[0].toString());
             }
         }

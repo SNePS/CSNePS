@@ -102,4 +102,7 @@ public class SemanticType implements ISemanticType {
 	public String toString(){
 		return typename;
 	}
+
+	// Can't have twp types with the same name - they must be equal.
+	public boolean equals(SemanticType other) { return this.typename.equals(other.typename); }
 }

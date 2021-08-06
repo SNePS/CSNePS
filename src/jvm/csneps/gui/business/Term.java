@@ -101,8 +101,12 @@ public class Term implements ITerm {
 		return termname;
 	}
 	
-	public String getType(){
+	public String getSyntacticType(){
 		return ((Keyword)term.valAt(type_key)).getName();
+	}
+
+	public SemanticType getSemanticType(){
+		return SemanticType.getSemanticType(FnInterop.getSemanticTypeOf(this));
 	}
 	
 	public Double getActivation(){
@@ -268,11 +272,11 @@ public class Term implements ITerm {
 	}
 
 	public boolean isArbitrary() {
-		return getType().equals("Arbitrary");
+		return getSyntacticType().equals("Arbitrary");
 	}
 
 	public boolean isIndefinite() {
-		return getType().equals("Indefinite");
+		return getSyntacticType().equals("Indefinite");
 	}
 
 	public boolean isGeneric() {

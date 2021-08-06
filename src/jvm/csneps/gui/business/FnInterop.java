@@ -135,6 +135,11 @@ public class FnInterop {
 		if (result == null) return false;
 		return result;
 	}
+
+	public static String getSemanticTypeOf(Term term){
+		Keyword semtype = Controller.csneps_core_semantic_types_semantic_type_of(term.getClojureTerm());
+		return semtype.getName();
+	}
 	
 	//////////////////
 	/// caseframes ///

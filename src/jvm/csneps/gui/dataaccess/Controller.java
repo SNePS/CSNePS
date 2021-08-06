@@ -36,6 +36,8 @@ public class Controller {
 			csneps_core_generic_term_qmark_fn, csneps_core_analytic_term_qmark_fn,
 			csneps_core_variable_term_qmark_fn, csneps_core_printer_term_printer_fn;
 
+	private static IFn csneps_core_semantic_types_semantic_type_of_fn;
+
 	private static IFn csneps_print_print_kb_to_text_file_fn;
 	private static IFn csneps_gui_start_gui_fn, csneps_gui_add_watches_fn;
 	private static IFn snip_pathsfrom_fn;
@@ -132,6 +134,15 @@ public class Controller {
 		try{
 			csneps_print_print_kb_to_text_file_fn.invoke(fname, header);
 		} catch (Exception e) {e.printStackTrace();}
+	}
+
+	public static Keyword csneps_core_semantic_types_semantic_type_of(IPersistentMap term){
+		if (csneps_core_semantic_types_semantic_type_of_fn == null)
+			csneps_core_semantic_types_semantic_type_of_fn = Clojure.var("csneps.core.semantic-types", "semantic-type-of");
+		try{
+			return (Keyword) csneps_core_semantic_types_semantic_type_of_fn.invoke(term);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
 	}
 	
 	public static void snuser_clearkb(Boolean clearall){

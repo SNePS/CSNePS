@@ -66,6 +66,7 @@
       (error (str "Term " (:name term) " has inconsistent type in context " (:name context))))))
 
 (defn semantic-type-of
+  "Returns the current semantic type of a term."
   [term]
   (if semtype-objectlang-experimental
     (semtype-in-context term (ct/currentContext))

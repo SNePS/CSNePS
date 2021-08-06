@@ -185,9 +185,9 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
 
                 if (!term.isAsserted()){
                     // Propositions and things that can be lowered in type to propositions can be asserterd.
-                    if(term.getType().equals("Proposition")
-                            || term.getType().equals("Propositional")
-                            || term.getType().equals("Entity")) {
+                    if(term.getSyntacticType().equals("Proposition")
+                            || term.getSyntacticType().equals("Propositional")
+                            || term.getSyntacticType().equals("Entity")) {
                         popup.add(new AbstractAction("Assert") {
                             public void actionPerformed(ActionEvent e) {
                                 FnInterop.addToContext(node.getTerm(), Context.getCurrentContext());
@@ -197,7 +197,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     }
 
                     // CARules can be adopted.
-                    if(term.getType().equals("CARule")){
+                    if(term.getSyntacticType().equals("CARule")){
                         popup.add(new AbstractAction("Adopt") {
                             public void actionPerformed(ActionEvent e) {
                                 FnInterop.adoptRule(term);
@@ -209,9 +209,9 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
 
                 if(node.getTerm().isAsserted()) {
                     // Propositions and things that can be lowered in type to propositions can be unasserterd.
-                    if (term.getType().equals("Proposition")
-                            || term.getType().equals("Propositional")
-                            || term.getType().equals("Entity")) {
+                    if (term.getSyntacticType().equals("Proposition")
+                            || term.getSyntacticType().equals("Propositional")
+                            || term.getSyntacticType().equals("Entity")) {
                         popup.add(new AbstractAction("Unassert") {
                             public void actionPerformed(ActionEvent e) {
                                 FnInterop.unassertTerm(node.getTerm());
@@ -221,7 +221,7 @@ public class SnepsModalGraphMouse<V, E> extends DefaultModalGraphMouse<V, E> imp
                     }
 
                     // CARules can be unadopted.
-                    if(term.getType().equals("CARule")){
+                    if(term.getSyntacticType().equals("CARule")){
                         popup.add(new AbstractAction("Unadopt") {
                             public void actionPerformed(ActionEvent e) {
                                 FnInterop.unadoptRule(term);
