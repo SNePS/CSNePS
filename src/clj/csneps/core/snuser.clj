@@ -181,7 +181,7 @@
     (seq? term)
     (do
       (rewrite-propositional-expr term)
-      (build/variable-parse-and-build term :Propositional #{}))
+      (build/variable-parse-and-build term (or (first semtype) :Propositional) #{}))
     :else
     (build/build term (or (first semtype) :Entity) {} #{})))
 
