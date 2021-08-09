@@ -394,7 +394,7 @@
   ;; Find a support set in msg-support where everything
   ;; is currently believed, and pick it as the one to 
   ;; report.
-  (when-let [support (first (asserted-support-sets msg-support))]
+  (when-let [support (first (non-self-der-support-sets (asserted-support-sets msg-support) result-term))]
     (println)
     (println "Since:" rule-node)
     (doseq [s support]
