@@ -371,9 +371,19 @@
   (let [all-asserted (fn [l] (every? #(ct/asserted? (get-term %) (ct/currentContext)) l))]
     (filter all-asserted (map second ss))))
 
+;; TODO: We are clearly producing duplicate messages (or, really, messages which have the same real/useful origin
+;;       sets but different useless/nonsense ones. We really should just not be producing the nonsense ones.
+;;       These nonsense origin sets have the node we're at being derived by a real origin set + the term itself,
+;;       which is wrong.
+(defn non-self-der-support-sets
+  [ss result-term]
+    (filter (fn [support-set]
+              (not (some #(= % (:name result-term)) support-set)))
+            ss))
+
 (defn print-proof-step
   ([result-term msg-support rule-name]
-    (when-let [support (first (asserted-support-sets msg-support))]
+    (when-let [support (first (non-self-der-support-sets (asserted-support-sets msg-support) result-term))]
       (println)
       (println "Since:" (get-term (first support)))
       (doseq [s (rest support)]
@@ -731,13 +741,13 @@
                                                  :u-true? true))
                                     case2s))]
           (when showproofs 
-            (doseq [[case2 dermsg] dermsgs]
+            (doseq [[case2 _] dermsgs]
               (send screenprinter (fn [_] (print-proof-step node
-                                                            (:support-set case2)
-                                                            (str (or 
-                                                                   (syntype-fsym-map (syntactic-type-of node))
-                                                                   "param2op")
-                                                                 "-introduction"))))))
+                                                              (:support-set case2)
+                                                              (str (or
+                                                                     (syntype-fsym-map (syntactic-type-of node))
+                                                                     "param2op")
+                                                                   "-introduction"))))))
           (doall 
             (for [[_ dermsg] dermsgs]
               [true (:support-set dermsg) (zipmap ich (repeat (count ich) dermsg))]))))
