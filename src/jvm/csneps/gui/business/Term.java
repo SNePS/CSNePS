@@ -37,6 +37,7 @@ public class Term implements ITerm {
 	private final static Keyword type_key = Keyword.intern("type");
 	private final static Keyword min_key = Keyword.intern("min");
 	private final static Keyword max_key = Keyword.intern("max");
+	private final static Keyword var_label = Keyword.intern("var-label");
 	private final static Keyword activation_key = Keyword.intern("activation-value");
 	
 	private IPersistentMap term;
@@ -120,6 +121,8 @@ public class Term implements ITerm {
 	public Long getMax(){
 		return (Long)term.valAt(max_key);
 	}
+
+	public String getVarLabel() { return term.valAt(var_label).toString(); }
 	
 	public Caseframe getCaseframe(){
 		return caseframe;

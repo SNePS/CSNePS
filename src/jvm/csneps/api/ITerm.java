@@ -14,6 +14,7 @@ public interface ITerm {
     Set<Term> getDependencies();
     String getDescription();
     String getFSymbol();
+    String getVarLabel();
     Set<Term> getRestrictionset();
     Map<Slot, Set<Term>> getUpCableset();
     List<Term> getUpCablesetTerms();

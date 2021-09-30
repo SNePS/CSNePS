@@ -45,3 +45,6 @@
 		     (for [person addressee]
 				   (cl-format true "~&Hello ~S.~%" person))))
 (perform '(Greet (setof Stu Bill)))
+
+;;; SNePS 2 demo examples
+;; (define-primaction sayfn )

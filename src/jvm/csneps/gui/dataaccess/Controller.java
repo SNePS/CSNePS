@@ -266,7 +266,7 @@ public class Controller {
 		if (csneps_core_analytic_term_qmark_fn == null)
 			csneps_core_analytic_term_qmark_fn = Clojure.var("csneps.core", "analyticTerm?");
 		try{
-			return (Boolean)csneps_core_analytic_term_qmark_fn.invoke(term);
+			return csneps_core_analytic_term_qmark_fn.invoke(term) instanceof Keyword;
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
@@ -275,7 +275,7 @@ public class Controller {
 		if (csneps_core_generic_term_qmark_fn == null)
 			csneps_core_generic_term_qmark_fn = Clojure.var("csneps.core", "genericTerm?");
 		try{
-			return (Boolean)csneps_core_generic_term_qmark_fn.invoke(term);
+			return csneps_core_generic_term_qmark_fn.invoke(term) instanceof Keyword;
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}
