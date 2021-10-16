@@ -189,21 +189,22 @@
                         :else (find/find-exact syntype cf dcs-sets))
         term (or
                existing-term
-               (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
+               (dosync
+                 (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
                                                         :min (if (nil? min) 0 min)
                                                         :max (if (nil? max) 0 max)
                                                         :closed-vars closed-vars})]
-                 (dosync 
+
                    (alter down-cableset assoc wft dcs-sets)
                    (alter term-caseframe-map assoc wft cf)
                    (alter msgs assoc wft (create-message-structure syntype dcs-sets :n min :properties properties))
                    (alter TERMS assoc (:name wft) wft)
-                   (set-term-type wft (:type cf)))
+                   (set-term-type wft (:type cf))
                  
-                 (initialize-syntype wft)
+                   (initialize-syntype wft)
                  
-                 (cf/add-caseframe-term wft :cf cf)
-                 wft))]
+                   (cf/add-caseframe-term wft :cf cf)
+                   wft)))]
 
     (adjust-type term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
     
