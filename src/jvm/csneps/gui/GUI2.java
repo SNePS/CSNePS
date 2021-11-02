@@ -49,7 +49,7 @@ public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2020.07.13";
+	public static final String version = "2021.11.02";
 	
     public static final boolean DEBUG = false;
 

@@ -18,14 +18,14 @@ import csneps.gui.GUI2;
  */
 public class Context implements Comparable<Context>, IContext {
 
-	private static HashMap<String, Context> contexts = new HashMap<String, Context>();
+	private static final HashMap<String, Context> contexts = new HashMap<String, Context>();
 
-	private static Keyword name_key = Keyword.intern("name");
-	private static Keyword parents_key = Keyword.intern("parents");
+	private static final Keyword name_key = Keyword.intern("name");
+	private static final Keyword parents_key = Keyword.intern("parents");
 
 	private static Context currentContext;
 
-	private IPersistentMap context;
+	private final IPersistentMap context;
 
 	private Context(IPersistentMap context) {
 		this.context = context;

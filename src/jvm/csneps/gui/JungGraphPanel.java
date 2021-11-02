@@ -362,7 +362,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	}
 
 	public void showAll() {
-		dsg.showAll();
+		dsg.showAll(this::shouldShowTerm);
 		vv.repaint();
 		showing_all = true;
 	}
@@ -823,7 +823,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			//System.out.println("Ont term? " + tn.getTerm() + " " + tn.getTerm().isOntologyTerm());
 
 			if (showOntologyTerms) return true;
-			else if (!tn.getTerm().isOntologyTerm()) return true;
+			else return !tn.getTerm().isOntologyTerm();
 		}
 		return false;
 	}

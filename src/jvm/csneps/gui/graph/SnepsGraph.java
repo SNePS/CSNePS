@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 //import org.apache.commons.collections15.Factory;
 
@@ -183,6 +184,17 @@ public class SnepsGraph<V extends ITermNode<E>, E extends IEdge> extends Abstrac
     	for(V v : vertices.values())
     		if(!v.isVisible()) showVertex(v);
     }
+
+	/**
+	 * Show all vertices that pass a filter function.
+	 * @param filterFn A predicate.
+	 */
+	public void showAll(Predicate<V> filterFn){
+		vertices.values().stream()
+				.filter(filterFn)
+				.filter(v -> !v.isVisible())
+				.forEach(this::showVertex);
+	}
     
     public boolean showVertex(V vertex){
     	if (!containsVertex(vertex) || vertex.isVisible())
