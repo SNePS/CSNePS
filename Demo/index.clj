@@ -44,5 +44,6 @@
                 ["Demonstration of focused inference." "focusedinfer.sneps"]
                 ["Demonstration of inference using generics." "genericinfer.sneps"]
                 ["Demonstration of subsumption inference." "subsumption.sneps"]
-                ["Demonstration of production rules." "production-rules.sneps"]])
+                ["Demonstration of production rules." "production-rules.sneps"]
+                ["Demonstration of modeling with krnovice." "dissertation-examples.sneps"]])
                 

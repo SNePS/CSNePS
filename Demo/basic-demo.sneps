@@ -66,7 +66,7 @@
 (assert '(Isa 3 Integer))
 (assert '(Isa 3.1415932 Transcendental))
 ;;; A term can also be a wft name
-(assert '(Isa wft1 Proposition))
+(assert '(Isa wft17 Proposition))
 ;;; Type of input term is irrelevant
 (assert '(Isa "3" Integer))
 ;;; *PRECISION* determines round-off of floating point numbers
@@ -76,7 +76,8 @@
 (clearkb)
 ;;; Set arguments
 (assert '(Isa (setof Fido Rover) Dog))
-(assert '(Isa (setof Rover Fido) Dog))
+;;; Sets can be written two ways
+(assert '(Isa #{Rover Fido} Dog))
 ;;; A bigger set is different
 (assert '(Isa (setof Fido Rover Lassie) Dog))
 ;;; A smaller set is different

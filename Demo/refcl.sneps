@@ -51,4 +51,4 @@
 
 ;;; The relation wft2 is the reflexive closure of <,
 ;;;     and it holds between 5 and 5.
-(assert '(wft2 5 5))
+(assert '(wft24 5 5))

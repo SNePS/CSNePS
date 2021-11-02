@@ -17,10 +17,12 @@
 (assert '(wantsTo (every d Dog) (every a Act (likesDoing d a))))
 
 ;; If a dog wants to go outside, it barks at the door.
-(assert '(if (wantsTo (every d Dog) goOutside)
+(assert '(if (wantsTo (any d Dog) goOutside)
             (performs d barkAtDoor)))
             
 (askwh '(performs Fido (?x Act)))
+
+(list-terms)
 
 ;Since wft10!: (wantsTo (every d  (Isa d Dog)) (every a  (likesDoing d a) (Isa a Act)))
 ;  and wft1!: (Isa Fido Dog)
@@ -54,6 +56,8 @@
 (assert '(Isa (every z Antelope) Animal))
 
 (assert! '(Isa (every x (Isa x Wheat)) Grain))
+
+(list-terms)
 
 ;Since wft2!: (Isa (every x (Isa x Grain)) Plant) 
 ;  and wft19!: (Isa (every x (Isa x Wheat)) Grain)
@@ -99,8 +103,8 @@
                                         (not (Free x)))))
            
 ;; Azam is an arrested person.
-(assert '(Arrested Azam))
 (assert '(Isa Azam Person))
+(assert '(Arrested Azam)) ;; TODO: Allow this to do forward inference.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -2,7 +2,7 @@
 ;;; Demos for Focused Inference
 ;;; By: Daniel R. Schlegel
 ;;; Created: 11/7/2013
-;;; Modified: 11/7/2013
+;;; Modified: 11/1/2021
 
 (clearkb true)
 
@@ -18,14 +18,17 @@
 ;; Focused inference should have been cancelled, as the intended
 ;; result was derived. 
 (list-focused-inference-tasks)
+(list-terms :originsets true)
 
 ;;; Backward-in-Forward Reasoning
 (clearkb true)
 (assert! 'q)
 (list-focused-inference-tasks)
 (assert '(if p (if q r)))
+(list-terms :originsets true)
 (list-focused-inference-tasks)
 (assert 'p)
+(list-terms :originsets true)
 
 ;;; Examples from Schlegel's dissertation:
 
@@ -47,23 +50,25 @@
 
 (assert '(Arrested Azam))
 
+(list-terms)
+
 ;; It should now be derived that Azam is detained.
 
 ;; Forward
 
-(clearkb true)
+;(clearkb true)
 
 ;; A person is either detained or free.
-(assert '(xor (Detained (every x (Isa x Person))) (Free x)))
+;(assert '(xor (Detained (every x (Isa x Person))) (Free x)))
 
 ;; Azam is a Person
-(assert! '(Isa Azam Person))
+;(assert! '(Isa Azam Person))
 
 ;; Azam is arrested
-(assert! '(Arrested Azam))
+;(assert! '(Arrested Azam))
 
 ;; If a person is arrested, they are detained.
-(assert '(if (Arrested (every x (Isa x Person))) (Detained x)))
+;(assert '(if (Arrested (every x (Isa x Person))) (Detained x)))
 
 ;; This should derive (not (Free Azam))
 
