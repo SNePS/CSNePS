@@ -188,6 +188,15 @@ public class Controller {
 		return null;
 	}
 
+	public static IPersistentMap snuser_assert(Symbol expr){
+		if (snuser_assert_fn == null)
+			snuser_assert_fn = Clojure.var("csneps.core.snuser", "assert");
+		try{
+			return (IPersistentMap)snuser_assert_fn.invoke(expr);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+
 
 	
 	public static IPersistentMap snuser_define_caseframe(Keyword type, IPersistentList slots){

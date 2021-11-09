@@ -33,7 +33,12 @@ public class FnInterop {
 	}
 	
 	public static Term assertTerm(String expr){
-		return Term.create(Controller.snuser_assert((PersistentList)RT.readString(expr)));
+		Object read = RT.readString(expr);
+		if (read instanceof PersistentList)
+			return Term.create(Controller.snuser_assert((PersistentList) read));
+		else if (read instanceof Symbol)
+			return Term.create(Controller.snuser_assert((Symbol) read));
+		return null;
 	}
 
 	// TODO add something like this.
