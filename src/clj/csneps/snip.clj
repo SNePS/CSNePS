@@ -29,7 +29,7 @@
         [clojure.pprint :only (cl-format)]
         [clojure.set])
   (:import [java.util Comparator]
-           [java.util.concurrent TimeUnit LinkedBlockingQueue PriorityBlockingQueue ThreadPoolExecutor]
+           [java.util.concurrent TimeUnit LinkedBlockingQueue PriorityBlockingQueue ThreadPoolExecutor RejectedExecutionException]
            [csneps.util CountingLatch]))
 
 (declare assertTrace askif)

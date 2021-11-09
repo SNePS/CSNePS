@@ -181,15 +181,16 @@
        the max parameter, given for andor and thresh."
   [cf dcs syntype semtype & {:keys [fsemtype min max closed-vars properties]}]
   ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
-  (let [dcs-sets (map make-set-if-not-set dcs)
+  (dosync
+    (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
         existing-term (cond 
                         max (find/find-exact syntype cf dcs-sets :min min :max max)
                         min (find/find-exact syntype cf dcs-sets :min min)
                         :else (find/find-exact syntype cf dcs-sets))
-        term (or
-               existing-term
-               (dosync
+        term
+               (or
+                 existing-term
                  (let [wft ((get-new-syntype-fn syntype) {:name (symbol (str "wft" (inc-wft-counter)))
                                                         :min (if (nil? min) 0 min)
                                                         :max (if (nil? max) 0 max)
@@ -204,7 +205,7 @@
                    (initialize-syntype wft)
                  
                    (cf/add-caseframe-term wft :cf cf)
-                   wft)))]
+                   wft))]
 
     (adjust-type term (or (@type-map (:name term)) (:type cf)) (if fsemtype fsemtype semtype))
     
@@ -219,7 +220,7 @@
         (build-unifier-channels unif))
       (addTermToUnificationTree term))
     
-    term))
+    term)))
   
 
 (defn build-andor

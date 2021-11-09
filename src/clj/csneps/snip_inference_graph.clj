@@ -51,8 +51,9 @@
           (when (@infer-status (:taskid message))
             (.increment ^CountingLatch (@infer-status (:taskid message))))
           (print-debug :msgrx #{(:originator channel) (:destination channel)} (print-str "MSGRX: " message "\n -- on channel" channel))
-          (.execute ^ThreadPoolExecutor executorService 
-            (priority-partial 1 initiate-node-task (:destination channel) message)))
+          (try (.execute ^ThreadPoolExecutor executorService
+                  (priority-partial 1 initiate-node-task (:destination channel) message))
+               (catch RejectedExecutionException e "Couldn't submit message, pool shutting down.")))
         ;; Cache in the waiting-msgs
         (dosync (alter (:waiting-msgs channel) conj message))))))
 
@@ -319,14 +320,16 @@
           (doseq [[ch subst] affected-chs]
             (when (:originator ch)
 	            (when taskid (.increment ^CountingLatch (@infer-status taskid)))
-	            (.execute ^ThreadPoolExecutor executorService 
+              (try
+                (.execute ^ThreadPoolExecutor executorService
 	                (priority-partial Integer/MAX_VALUE 
 	                                  (fn [t c id s h] (cancel-infer t c id s h) (when id (.decrement ^CountingLatch (@infer-status id))))
 	                                  (:originator ch) 
 	                                  cancel-for-term 
 	                                  taskid
 	                                  subst
-	                                  hyps))))))))
+	                                  hyps))
+                (catch RejectedExecutionException e "Couldn't submit message, pool shutting down."))))))))
 
 (defn forward-infer
   "Begins inference in term. Ignores the state of valves in sending I-INFER and U-INFER messages
@@ -1187,8 +1190,10 @@
     (let [result-term (if (:u-true? message)
                         (build/apply-sub-to-term term (:subst message))
                         (build/build (list 'not (build/apply-sub-to-term term (:subst message))) :Proposition {} #{}))]
-      
-      (when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
+
+      ;; This is over-zealous in focused reasoning tasks. In the basic demo it ends up shutting down the inference
+      ;; beyond where we want it to.
+      ;(when-not (:fwd-infer? message) (cancel-infer result-term nil (:taskid message) (:subst message) (:support-set message)))
       
       ;; When this hasn't already been derived otherwise in this ct, let the user know.
       (when (and print-intermediate-results
