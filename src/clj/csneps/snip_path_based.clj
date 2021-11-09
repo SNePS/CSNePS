@@ -213,13 +213,14 @@
   ;  (cl-format true "~&I will consider using Path-Based inference.~%"))
   (if (isa? (type-of p) :csneps.core/Molecular)
     (let [dcs (:down-cableset p)
-          results (remove #(not (ct/asserted? % context))
-                          (apply intersection
-                                 (map set 
-                                      (apply concat
-                                             (map (fn [[slot fillers]]
-                                                    (map #(pb-findfroms % slot) fillers))
-                                                  (cf/dcsRelationTermsetMap p))))))]
+          result-sets (map set
+                           (apply concat
+                                  (map (fn [[slot fillers]]
+                                         (map #(pb-findfroms % slot) fillers))
+                                       (cf/dcsRelationTermsetMap p))))
+          results (when-not (empty? result-sets)
+                    (remove #(not (ct/asserted? % context))
+                            (apply intersection result-sets)))]
       (if (and (seq results)
                (some #(find/eqfillersets (@down-cableset %) dcs) results))
         (do 
