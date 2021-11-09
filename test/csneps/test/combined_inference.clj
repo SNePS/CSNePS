@@ -21,4 +21,6 @@
   (snuser/assert '(Equiv a b))
   (snuser/assert '(Equiv b c))
   (snuser/assert '(if (Isa c q) (Isa c r)))
+  (snuser/askif '(Isa c r))
+  (Thread/sleep 100) ;; Give it a sec...
   (is (= #{(snuser/defineTerm '(Isa c r))} (snuser/askif '(Isa c r)))))
