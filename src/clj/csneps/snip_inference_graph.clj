@@ -1059,11 +1059,15 @@
           resct (count (@restriction-set node))
           der-msg-t (filter #(= (:pos %) resct) new-ruis)
           new-msgs (map #(msg/derivative-message %
-                                             :origin node 
-                                             :type 'I-INFER 
-                                             :taskid (:taskid message) 
-                                             :flaggedns {node true}
-                                             :fwd-infer? (:fwd-infer? message)) der-msg-t)
+                                                 :origin node
+                                                 :type 'I-INFER
+                                                 :taskid (:taskid message)
+                                                 ;; The arb shouldn't comment on substitutions than for itself.
+                                                 ;; Whoever receives the messages can re-combine them, as it will
+                                                 ;; need to do for the flaggedns anyway.
+                                                 :subst {node ((:subst message) node)}
+                                                 :flaggedns {node true}
+                                                 :fwd-infer? (:fwd-infer? message)) der-msg-t)
           gch (@g-channels node)]
 
       (print-debug :rui #{node} (print-str "NEW RUI: Arb/Qvar" new-ruis "\n -- at" node "\n   -- via new message" message))

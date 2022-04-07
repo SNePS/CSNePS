@@ -133,6 +133,19 @@
   (is (= #{(snuser/defineTerm '(not b))} (snuser/askif '(not b))))
   (is (empty? (snuser/askif '(not a)))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; More complicated elimination ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(deftest two-level-generic-elimination
+  (snuser/assert '(Isa (every x Cat) Animal))
+  (snuser/assert '(Isa (every x SiameseCat) Cat))
+  (snuser/assert '(Isa Glacier SiameseCat))
+  (snuser/assert '(Isa Fido Dog))
+  (is (= #{(snuser/defineTerm '(Isa Glacier Cat))} (snuser/askif '(Isa Glacier Cat))))
+  (is (= #{(snuser/defineTerm '(Isa Glacier Animal))} (snuser/askif '(Isa Glacier Animal))))
+  (is (= #{(snuser/defineTerm '(Isa (every x SiameseCat) Animal))} (snuser/askif '(Isa (every x SiameseCat) Animal)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Forward Inference ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
