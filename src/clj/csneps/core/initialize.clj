@@ -6,6 +6,9 @@
     (let [clearall (first clear?)]
       ;; Stop any ongoing inference. 
       (igc/resetExecutor)
+
+      ;; Stop the GUI from updating
+      (gui/remove-watches)
       
       ;; Initialize Contexts
       (ref-set ct/CONTEXTS (hash-map))
@@ -30,6 +33,9 @@
       (ref-set csneps/supported-nodes-set (hash-map))
       (ref-set csneps/primaction (hash-map))
 
+      ;; Reset semtype channels
+      (ref-set csneps/semtype-in-channels {})
+      (ref-set csneps/semtype-to-channel-map {})
 
       ;; Initialize the set of terms.
       (ref-set csneps/WFTCOUNT 0)
@@ -167,15 +173,19 @@
           :docstring "[proposition] is closed over [closedvar]")
         (defineCaseframe 'Policy '('rule rulename condition action subrule)
           :docstring "for the rule [name] to fire, [condition] must be matched,
-                      then [action] may occur, and [subrule] may be matched."))
-      ))
-  
-  (build/initial-semtypes-to-obj-lang)
+                      then [action] may occur, and [subrule] may be matched.")) ;; end if clearall
+
+    ))
+
+  (build/all-semtypes-to-obj-lang)
   
   ;; Do this outside the dosync (see above).
   (ct/setCurrentContext 'DefaultCT)
+
+  (gui/reinitialize-gui)
 
   ;; Output message.
   (if (first clear?)
     (println "Knowledge Base cleared. Contexts, slots, caseframes, and semantic types reinitialized.")
     (println "Knowledge Base cleared. Contexts reinitialized.")))
+

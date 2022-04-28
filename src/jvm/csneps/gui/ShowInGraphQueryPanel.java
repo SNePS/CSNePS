@@ -12,6 +12,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.JCheckBox;
 
 /**
@@ -79,7 +80,7 @@ public class ShowInGraphQueryPanel extends QBEBasePanel{
 
     private HashMap<Slot, ArrayList<Integer>> slotToTablePositions(){
         HashMap<Slot, ArrayList<Integer>> ret = new HashMap<Slot, ArrayList<Integer>>();
-        ArrayList<Slot> slots = getSelectedCF().getSlots();
+        List<Slot> slots = getSelectedCF().getSlots();
         for(Slot s : slots){
             ret.put(s, findInTable(s));
         }

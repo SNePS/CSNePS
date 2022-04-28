@@ -96,4 +96,5 @@
 ;; Ahmad is a POI
 (assert '(POI Ahmad))
 
-;; It should now be derived that Azam is not being sought out.
+;; It should now be derived that Azam is being sought out.
+(list-terms :originsets true)

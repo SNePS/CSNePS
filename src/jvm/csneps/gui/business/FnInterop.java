@@ -218,6 +218,10 @@ public class FnInterop {
 	public static void setCurrentContext(Context c){
 		Controller.contexts_set_current_context(c.getClojureContext());
 	}
+
+	public static Context getCurrentContext(){
+		return Context.create(Controller.contexts_current_context());
+	}
 	
 	public static Set<Term> hyps(Context c){
 		Set<Term> hyps = new HashSet<Term>();

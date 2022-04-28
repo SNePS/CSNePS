@@ -1,10 +1,7 @@
 package csneps.gui.business;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
@@ -33,7 +30,7 @@ public class Channel {
 	}
 	
 	public static Set<Channel> createChannels(APersistentSet channels){
-		Set<Channel> chs = new HashSet<Channel>();
+		Set<Channel> chs = Collections.synchronizedSet(new HashSet<>());
 		
 		for (Iterator itr = channels.iterator(); itr.hasNext(); ){
     		chs.add(create((IPersistentMap)itr.next()));
@@ -43,7 +40,7 @@ public class Channel {
 	}
 	
 	public static Map<String, Set<Channel>> createChannelCollection(IPersistentMap channels){
-		Map<String, Set<Channel>> chs = new HashMap<String, Set<Channel>>();
+		Map<String, Set<Channel>> chs = new ConcurrentHashMap<String, Set<Channel>>();
 		
 		for(Iterator<MapEntry> itr = channels.iterator(); itr.hasNext(); ){
 			MapEntry e = itr.next();

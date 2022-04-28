@@ -1,14 +1,14 @@
 package csneps.gui.business;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 
 public interface IView {
     //Context updates
-    public void ctUpdate(ArrayList<Context> c, Boolean clear);
+    public void ctUpdate(List<Context> c, Boolean clear);
     //Current context
     public void ctCurrent(Context c);
     //SemanticType updates

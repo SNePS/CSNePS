@@ -48,7 +48,7 @@ public class Model {
     Var restriction_set_ref;
     Var dependencies_ref;
     Var down_cableset_ref;
-    Var caseframe_ref;   
+    public static Var caseframe_ref;
 
     public Model(){ 
         views = new ArrayList<IView>();
@@ -154,17 +154,21 @@ public class Model {
     }
     
     private void initializeTerm(Term term){
-    	term.setCaseframe(getCaseframe(term.getClojureTerm()));
+    	//term.setCaseframe(getCaseframe(term.getClojureTerm()));
 		term.setDownCableset(getDownCableset(term));
 		term.setRestrictionset(getRestrictionset(term));
 		term.setDependencies(getDepends(term));
     }
     
     public void initializeTerms(){
-    	initializeTerms(PersistentHashSet.create(RT.vals((IPersistentMap)((Ref)terms_ref.get()).deref())));
+    	initializeTerms(PersistentHashSet.create(RT.vals(((Ref)terms_ref.get()).deref())), false);
     }
+
+	public void initializeTerms(boolean clear){
+		initializeTerms(PersistentHashSet.create(RT.vals(((Ref)terms_ref.get()).deref())), clear);
+	}
     
-    public void initializeTerms(APersistentSet termset){
+    public void initializeTerms(APersistentSet termset, boolean clear){
     	Collection<Term> t = Term.reinitializeTerms(termset);
     	
     	for (Term term : t){
@@ -172,7 +176,7 @@ public class Model {
     	}
     	
     	for(IView i : views){
-    		i.termUpdate(t, false);
+    		i.termUpdate(t, clear);
         }
     }
     
@@ -216,7 +220,7 @@ public class Model {
     	if(clear)
     		Context.clearContexts();
     	
-    	ArrayList<Context> newcts = Context.createContexts(addedcontexts);
+    	List<Context> newcts = Context.createContexts(addedcontexts);
     	
     	for(IView i : views){
     		i.ctUpdate(newcts, clear);
@@ -310,15 +314,7 @@ public class Model {
      * Pull Methods *
      ****************/
     
-    // Some things are better "pulled" then "pushed". 
-    
-    public Caseframe getCaseframe(IPersistentMap term){
-    	IPersistentMap namecfmap = (IPersistentMap)((Ref)caseframe_ref.get()).deref();
-    	if(namecfmap.containsKey(term)){
-    		return Caseframe.create((IPersistentMap)namecfmap.entryAt(term).getValue());
-    	}
-    	return null;
-    }
+    // Some things are better "pulled" then "pushed".
     
     public HashMap<IPersistentMap, Caseframe> getPartialNameCFMap(ArrayList<IPersistentMap> terms){
     	IPersistentMap namecfmap = (IPersistentMap)((Ref)caseframe_ref.get()).deref();
@@ -352,7 +348,7 @@ public class Model {
     	
     	HashMap<Slot, Set<Term>> downcableset = new HashMap<Slot, Set<Term>>();
     	
-    	ArrayList<Slot> termslots = term.getCaseframe().getSlots();
+    	List<Slot> termslots = term.getCaseframe().getSlots();
 
     	IPersistentMap namedcsmap = (IPersistentMap)((Ref)down_cableset_ref.get()).deref();
     	

@@ -1,11 +1,7 @@
 package csneps.gui.business;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.IPersistentMap;
@@ -15,7 +11,7 @@ import csneps.api.ISemanticType;
 import csneps.gui.GUI2;
 
 public class SemanticType implements ISemanticType {
-	private static HashMap<String, SemanticType> semtypes = new HashMap<String, SemanticType>();
+	private static Map<String, SemanticType> semtypes = new ConcurrentHashMap<String, SemanticType>();
 	
 	private String typename;
 	private ArrayList<String> parents;
@@ -42,7 +38,7 @@ public class SemanticType implements ISemanticType {
 	}
 	
 	public static Collection<SemanticType> reinitializeSemanticTypes(IPersistentMap stsfull){
-		semtypes = new HashMap<String, SemanticType>();
+		semtypes = new ConcurrentHashMap<>();
 		semtypes.put("Entity", new SemanticType("Entity", new ArrayList<String>()));
 		
 		IPersistentMap sts = (IPersistentMap)stsfull.valAt(Keyword.intern("parents"));

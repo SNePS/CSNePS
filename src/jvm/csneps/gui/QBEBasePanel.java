@@ -28,6 +28,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.DefaultCellEditor;
@@ -418,7 +419,7 @@ public class QBEBasePanel extends javax.swing.JFrame {
 
         Caseframe cf = (Caseframe)jComboBox_cf.getSelectedItem();
         if(cf == null) return; //This is really more for debug purposes.
-        ArrayList<Slot> slots = cf.getSlots();
+        List<Slot> slots = cf.getSlots();
 
         if(!cf.getType().getName().equals("Propositional")){
             jCheckBox_asserted.setSelected(false);

@@ -14,8 +14,8 @@ package csneps.gui;
 import csneps.gui.business.*;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JTree;
@@ -208,7 +208,7 @@ public class SemanticTypesPanel extends javax.swing.JPanel implements IView {
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
 
-    public void ctUpdate(ArrayList<Context> c, Boolean clear) {
+    public void ctUpdate(List<Context> c, Boolean clear) {
         //Do nothing
     }
 

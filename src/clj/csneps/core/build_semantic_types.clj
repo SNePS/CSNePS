@@ -46,7 +46,7 @@
 	  (define-type* :Category '(:Thing))
 	  (define-type* :Action '(:Thing))))
 
-(defn initial-semtypes-to-obj-lang
+(defn all-semtypes-to-obj-lang
   []
   (doseq [[c ps] (:parents @semantic-type-hierarchy)]
     (assert-type-generic c ps)))

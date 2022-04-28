@@ -12,7 +12,7 @@
 package csneps.gui;
 
 import java.awt.event.KeyEvent;
-import javax.swing.JTextArea;
+import javax.swing.*;
 
 import csneps.gui.business.repl.REPLView;
 
@@ -28,31 +28,33 @@ import java.util.Stack;
  */
 public class REPLPanel extends javax.swing.JPanel {
 
-	private JTextArea output;
+	// GUI Components
+	private JScrollPane jScrollPane1;
+	private JSplitPane jSplitPane1;
+	private JTextArea jTextArea_output;
+	private JTextField jTextField_input;
+
 
 	private REPLView replView;
-
 	private Stack<Character> parens;
-	
 	private ArrayList<String> history;
 	
 	private int historyLoc = -1;
 	
 	/** Creates new form REPLPanel */
 	public REPLPanel() {
-		history = new ArrayList<String>();
+		history = new ArrayList<>();
 		
 		initComponents();
 		this.setLayout(new BorderLayout());
 		add(jSplitPane1, BorderLayout.CENTER);
-		output = jTextArea_output;
 		jTextArea_output.setEditable(false);
 		
 		jSplitPane1.setResizeWeight(1.0);
 		jSplitPane1.setDividerSize(0);
 		jSplitPane1.setDividerLocation(this.getHeight() - 15);
 		
-		parens = new Stack<Character>();
+		parens = new Stack<>();
 	}
 
 	public void connect(){
@@ -67,7 +69,7 @@ public class REPLPanel extends javax.swing.JPanel {
 	private boolean parenMatchError(Character c, int offset, boolean silent){
 		if(!silent) appendText("Unexpected character: " + c + " at offset: " + offset + '\n');
 		if(!silent) System.out.println("Unexpected character: " + c + " at offset: " + offset);
-		parens = new Stack<Character>();
+		parens = new Stack<>();
 		return false;
 	}
 	
@@ -130,17 +132,11 @@ public class REPLPanel extends javax.swing.JPanel {
 	public void appendText(String strText) {
 		final String appendText = strText;
 		// The text must be appended in a separate thread.
-		java.awt.EventQueue.invokeLater( new Runnable()
-		{
-			public void run()
-			{
-				jTextArea_output.append(appendText);
-			}
-		});
+		java.awt.EventQueue.invokeLater(() -> jTextArea_output.append(appendText));
 	}
 
 	public JTextArea getLogComponent(){
-		return output;
+		return jTextArea_output;
 	}
 
 	private void initComponents() {
@@ -197,10 +193,5 @@ public class REPLPanel extends javax.swing.JPanel {
 		else historyLoc = -1;
 
 	}
-
-	private javax.swing.JScrollPane jScrollPane1;
-	private javax.swing.JSplitPane jSplitPane1;
-	private javax.swing.JTextArea jTextArea_output;
-	private javax.swing.JTextField jTextField_input;
 }
 

@@ -1,6 +1,7 @@
 package csneps.gui.business;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import clojure.lang.IPersistentMap;
 import clojure.lang.IPersistentVector;
@@ -18,7 +19,7 @@ import csneps.gui.GUI2;
  */
 public class Context implements Comparable<Context>, IContext {
 
-	private static final HashMap<String, Context> contexts = new HashMap<String, Context>();
+	private static final Map<String, Context> contexts = new ConcurrentHashMap<String, Context>();
 
 	private static final Keyword name_key = Keyword.intern("name");
 	private static final Keyword parents_key = Keyword.intern("parents");
@@ -44,8 +45,8 @@ public class Context implements Comparable<Context>, IContext {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static ArrayList<Context> createContexts(IPersistentMap cljcts) {
-		ArrayList<Context> cts = new ArrayList<Context>();
+	public static List<Context> createContexts(IPersistentMap cljcts) {
+		List<Context> cts = Collections.synchronizedList(new ArrayList<>());
 		for (Iterator<MapEntry> itr = cljcts.iterator(); itr.hasNext();) {
 			cts.add(create((IPersistentMap) itr.next().getValue()));
 		}
@@ -66,6 +67,8 @@ public class Context implements Comparable<Context>, IContext {
 	}
 
 	public static Context getCurrentContext() {
+		if (currentContext == null)
+			currentContext = FnInterop.getCurrentContext();
 		return currentContext;
 	}
 

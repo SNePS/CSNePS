@@ -49,7 +49,7 @@ public class GUI2 extends javax.swing.JFrame{
 	private static final long serialVersionUID = 1L;
 	public static final double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
 
-	public static final String version = "2021.11.02";
+	public static final String version = "2022.04.11";
 	
     public static final boolean DEBUG = false;
 
@@ -163,7 +163,7 @@ public class GUI2 extends javax.swing.JFrame{
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
-    		initializeModel();
+            initializeModel();
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage());}
     }
@@ -244,7 +244,7 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
-		model.initializeTerms();
+		model.initializeTerms(true);
 	}
 	
 	public static void initializeModel(PersistentHashSet termset){
@@ -264,7 +264,7 @@ public class GUI2 extends javax.swing.JFrame{
 		model.setContextsRef(RT.var("csneps.core.contexts", "CONTEXTS")); //Ref to Map of name -> Context
 		model.setCurrentContextRef(RT.var("csneps.core.contexts", "*CurrentContext*"));
 		model.initializeContexts();
-		model.initializeTerms(termset);
+		model.initializeTerms(termset, false);
 	}
 
     public void startup(){
@@ -904,7 +904,6 @@ public class GUI2 extends javax.swing.JFrame{
             if(returnVal == JFileChooser.APPROVE_OPTION) {
                 currentDir = chooser.getCurrentDirectory();
                 File f = chooser.getSelectedFile();
-                jTabbedPane1.setTitleAt(0, "Graph View: " + f.getName());
                 BufferedReader reader = new BufferedReader( new FileReader (f));
                 String line  = null;
                 StringBuilder stringBuilder = new StringBuilder();
@@ -920,7 +919,7 @@ public class GUI2 extends javax.swing.JFrame{
         			demoMode.dispose();
         		}
                 
-                demoMode = new DemoMode();
+                demoMode = new DemoMode(f.getName());
                 demoMode.setVisible(true);
                 demoMode.setupDemo(stringBuilder.toString(), this);
             }

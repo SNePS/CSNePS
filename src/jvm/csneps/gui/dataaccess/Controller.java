@@ -28,7 +28,7 @@ public class Controller {
 			caseframes_sameframe_fn, caseframes_quotedpp_qmark_fn;
 
 	private static IFn contexts_asserted_qmark_fn, contexts_ontology_term_qmark_fn, contexts_define_context_fn,
-			contexts_hyps_fn, contexts_set_current_context_fn;
+			contexts_hyps_fn, contexts_set_current_context_fn, contexts_current_context_fn;
 
 	private static IFn clojure_core_load_string_fn;
 
@@ -90,6 +90,15 @@ public class Controller {
 			contexts_asserted_qmark_fn = Clojure.var("csneps.core.contexts", "asserted?");
 		try{
 			return (IPersistentMap)contexts_asserted_qmark_fn.invoke(term, context, Keyword.intern("local"), local);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+
+	public static IPersistentMap contexts_current_context(){
+		if (contexts_current_context_fn == null)
+			contexts_current_context_fn = Clojure.var("csneps.core.contexts", "currentContext");
+		try{
+			return (IPersistentMap)contexts_current_context_fn.invoke();
 		} catch (Exception e) {e.printStackTrace();}
 		return null;
 	}

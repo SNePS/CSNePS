@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import javax.swing.JOptionPane;
 
 import csneps.gui.business.Caseframe;
@@ -165,7 +166,7 @@ public class AddToKBPanel extends QBEBasePanel{
     	String termString = "(";
 
         Caseframe cf = (Caseframe)getJCBCF().getSelectedItem();
-        ArrayList<Slot> slots = cf.getSlots();
+        List<Slot> slots = cf.getSlots();
 
         // Function Symbol
         if(!cf.getFSymbols().isEmpty()) termString += table_model.getValueAt(0, 1).toString();

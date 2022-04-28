@@ -9,6 +9,8 @@
             [csneps.core.caseframes :as cf]
             [csneps.core.contexts :as ct]))
 
+(def gui (ref nil))
+
 (defn add-watches
   [model]
   (let [typechangefn (fn [ref key oldvalue newvalue] (.typesChanged model
@@ -74,62 +76,30 @@
           port (+ 1000 (.nextInt ^java.util.Random rgen 9000))
           srv (start-server :port port)
           termset (set (map #(csneps/get-term %) termset))
-          GUI (new GUI2 port termset)
-          typechangefn (fn [ref key oldvalue newvalue] (.typesChanged (GUI2/getModel)
-                                                                      (map-difference (:parents oldvalue) (:parents newvalue))
-                                                                      (if (>= (count oldvalue) (count newvalue)) true false)))
-          termchangefn (fn [ref key oldvalue newvalue] (.termsChanged (GUI2/getModel)
-                                                                      (map-difference oldvalue newvalue)
-                                                                      (empty? newvalue)))
-          contextchangefn (fn [ref key oldvalue newvalue] (let [clear? (>= (count oldvalue) (count newvalue))]
-                                                            (if clear? 
-                                                              (.contextsChanged 
-                                                                (GUI2/getModel)
-                                                                newvalue
-                                                                true)
-                                                              (.contextsChanged 
-                                                                (GUI2/getModel)
-                                                                (map-difference oldvalue newvalue)
-                                                                false))))
-          slotchangefn (fn [ref key oldvalue newvalue] (.slotsChanged (GUI2/getModel)
-                                                                      (map-difference oldvalue newvalue)
-                                                                      (if (>= (count oldvalue) (count newvalue)) true false)))
-          caseframechangefn (fn [ref key oldvalue newvalue] (.caseframesChanged (GUI2/getModel)
-                                                                                (set/difference newvalue oldvalue)
-                                                                                (if (>= (count oldvalue) (count newvalue)) true false)))
-          fsymbolchangefn (fn [ref key oldvalue newvalue] (.fsymbolsChanged (GUI2/getModel)
-                                                                                (map-difference oldvalue newvalue)))
-          currentcontexthypschangefn (fn [ref key oldvalue newvalue] (.currentContextHypsChanged (GUI2/getModel)
-                                                                                (set/difference newvalue oldvalue)))
-          currentcontextchangefn (fn [ref key oldvalue newvalue] (.currentContextChanged (GUI2/getModel)
-                                                                                newvalue)
-                                   (remove-watch (:hyps oldvalue) :currhyps)
-                                   (add-watch (:hyps newvalue) :currhyps currentcontexthypschangefn))
-          ;; Refs removed from terms.
-          ichannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameIChannelMapChanged (GUI2/getModel)
-                                (map-difference newvalue oldvalue)
-                                (empty? newvalue)))
-          uchannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameUChannelMapChanged (GUI2/getModel)
-                                (map-difference newvalue oldvalue)
-                                (empty? newvalue)))
-          gchannelschangefn (fn [ref key oldvalue newvalue] 
-                              (.termNameGChannelMapChanged (GUI2/getModel)
-                                (map-difference newvalue oldvalue)
-                                (empty? newvalue)))] 
-      (add-watch csneps/semantic-type-hierarchy :types typechangefn)
-      (add-watch csneps/TERMS :terms termchangefn)
-      (add-watch ct/CONTEXTS :contexts contextchangefn)
-      (add-watch slot/SLOTS :slots slotchangefn)
-      (add-watch cf/CASEFRAMES :cfs caseframechangefn)
-      (add-watch cf/FN2CF :fsyms fsymbolchangefn)
-      (add-watch ct/CONTEXTS :cts contextchangefn)
-      (add-watch ct/*CurrentContext* :currct currentcontextchangefn)
-      (add-watch (:hyps (ct/currentContext)) :currhyps currentcontexthypschangefn)
-      (add-watch csneps/i-channels :ichannels ichannelschangefn)
-      (add-watch csneps/g-channels :gchannels gchannelschangefn)
-      (add-watch csneps/u-channels :uchannels uchannelschangefn))))
+          GUI (new GUI2 port termset)]
+      (dosync (ref-set gui GUI))
+      (add-watches GUI2/model))))
+
+;; A clearkb required entirely reinitializing the model.
+(defn remove-watches []
+  (when @gui
+    (remove-watch csneps/semantic-type-hierarchy :types)
+    (remove-watch csneps/TERMS :terms)
+    (remove-watch ct/CONTEXTS :contexts)
+    (remove-watch slot/SLOTS :slots)
+    (remove-watch cf/CASEFRAMES :cfs)
+    (remove-watch cf/FN2CF :fsyms)
+    (remove-watch ct/CONTEXTS :cts)
+    (remove-watch ct/*CurrentContext* :currct)
+    (remove-watch (:hyps (ct/currentContext)) :currhyps)
+    (remove-watch csneps/i-channels :ichannels)
+    (remove-watch csneps/g-channels :gchannels)
+    (remove-watch csneps/u-channels :uchannels)))
+
+(defn reinitialize-gui []
+  (when @gui
+    (add-watches GUI2/model)
+    (GUI2/initializeModel)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Helpers for the REPL ;;;

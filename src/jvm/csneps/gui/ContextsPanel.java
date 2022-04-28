@@ -9,8 +9,8 @@ package csneps.gui;
 import csneps.gui.business.*;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JTree;
@@ -205,7 +205,7 @@ public class ContextsPanel extends javax.swing.JPanel implements IView, TreeSele
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JTree jTree_contexts;
 
-    public void ctUpdate(ArrayList<Context> v, Boolean clear) {
+    public void ctUpdate(List<Context> v, Boolean clear) {
         repopulate(Context.getContexts());
         jTree_contexts.repaint();
     }

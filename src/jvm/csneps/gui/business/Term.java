@@ -1,37 +1,24 @@
 package csneps.gui.business;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
-import clojure.lang.APersistentSet;
-import clojure.lang.IPersistentMap;
-import clojure.lang.Keyword;
-import clojure.lang.MapEntry;
-import clojure.lang.Var;
+import clojure.lang.*;
 import csneps.api.ITerm;
+import csneps.gui.GUI2;
+import csneps.gui.dataaccess.Model;
 
 public class Term implements ITerm {
 
-	private final static HashMap<String, Term> terms = new HashMap<String, Term>();
-	private final static HashMap<String, HashMap<Slot, Set<Term>>> upcableset = new HashMap<String, HashMap<Slot, Set<Term>>>();
-	private final static HashMap<String, Set<Term>> restrictionset = new HashMap<String, Set<Term>>();
-	private final static HashMap<String, Set<Term>> dependenciesset = new HashMap<String, Set<Term>>();
+	private final static Map<String, Term> terms = new ConcurrentHashMap<String, Term>();
+	private final static Map<String, Map<Slot, Set<Term>>> upcableset = new ConcurrentHashMap<>();
+	private final static Map<String, Set<Term>> restrictionset = new ConcurrentHashMap<String, Set<Term>>();
+	private final static Map<String, Set<Term>> dependenciesset = new ConcurrentHashMap<String, Set<Term>>();
 	
-	private final static HashMap<String, Set<Channel>> ichannels = new HashMap<String, Set<Channel>>(); 
-	private final static HashMap<String, Set<Channel>> uchannels = new HashMap<String, Set<Channel>>(); 
-	private final static HashMap<String, Set<Channel>> gchannels = new HashMap<String, Set<Channel>>(); 
-	private final static HashMap<String, Set<Channel>> antinchannels = new HashMap<String, Set<Channel>>(); 
-	
-	Var i_channels_ref;
-    Var u_channels_ref;
-    Var g_channels_ref;
-    Var ant_in_channels_ref;
-    Var up_cableset_w_ref;
-    Var restriction_set_ref;
-    Var dependencies_ref;
-    Var down_cableset_ref;
-    Var caseframe_ref;   
-	
-	
+	private final static Map<String, Set<Channel>> ichannels = new ConcurrentHashMap<String, Set<Channel>>();
+	private final static Map<String, Set<Channel>> uchannels = new ConcurrentHashMap<String, Set<Channel>>();
+	private final static Map<String, Set<Channel>> gchannels = new ConcurrentHashMap<String, Set<Channel>>();
+	private final static Map<String, Set<Channel>> antinchannels = new ConcurrentHashMap<String, Set<Channel>>();
 	
 	private final static Keyword name_key = Keyword.intern("name");
 	private final static Keyword type_key = Keyword.intern("type");
@@ -42,9 +29,9 @@ public class Term implements ITerm {
 	
 	private IPersistentMap term;
 	
-	private ArrayList<Term> upcablesetterms;
+	private List<Term> upcablesetterms;
 	private Caseframe caseframe;
-	private HashMap<Slot, Set<Term>> downcableset;
+	private Map<Slot, Set<Term>> downcableset;
 	
 	
 	private String termstring;
@@ -64,8 +51,8 @@ public class Term implements ITerm {
 		return t;
 	}
 	
-	public static HashSet<Term> createTerms(IPersistentMap term){
-		HashSet<Term> hs = new HashSet<Term>();
+	public static Set<Term> createTerms(IPersistentMap term){
+		Set<Term> hs = Collections.synchronizedSet(new HashSet<>());
 		for(Iterator<MapEntry> itr = term.iterator(); itr.hasNext(); ){
 			hs.add(create((IPersistentMap)itr.next().getValue()));
 		}
@@ -123,8 +110,17 @@ public class Term implements ITerm {
 	}
 
 	public String getVarLabel() { return term.valAt(var_label).toString(); }
-	
+
 	public Caseframe getCaseframe(){
+		if (caseframe == null) {
+			IPersistentMap namecfmap = (IPersistentMap) ((Ref) Model.caseframe_ref.get()).deref();
+			if (namecfmap.containsKey(term)) {
+				caseframe = Caseframe.create((IPersistentMap) namecfmap.entryAt(term).getValue());
+			}
+			else {
+				System.err.println("Error: No caseframe for term " + this);
+			}
+		}
 		return caseframe;
 	}
 	
@@ -145,7 +141,7 @@ public class Term implements ITerm {
 	public List<Term> getUpCablesetTerms(){
 		if(upcablesetterms != null) return upcablesetterms;
 		
-		upcablesetterms = new ArrayList<Term>();
+		upcablesetterms = Collections.synchronizedList(new ArrayList<>());
 		
 		return upcablesetterms;
 	}
@@ -159,12 +155,12 @@ public class Term implements ITerm {
 	
 	private void addToUpCableset(Slot s, Term t){
 		if (upcableset.get(this.getName()) == null)
-			upcableset.put(this.getName(), new HashMap<Slot,Set<Term>>());
+			upcableset.put(this.getName(), new ConcurrentHashMap<Slot,Set<Term>>());
 		
-		HashMap<Slot, Set<Term>> ucs = upcableset.get(this.getName());
+		Map<Slot, Set<Term>> ucs = upcableset.get(this.getName());
 		
 		if(ucs.get(s) == null)
-			ucs.put(s, new HashSet<Term>());
+			ucs.put(s, Collections.synchronizedSet(new HashSet<>()));
 		
 		Set<Term> slotterms = ucs.get(s);
 		
@@ -174,7 +170,7 @@ public class Term implements ITerm {
 		upcablesetterms.add(t);
 	}
 	
-	public HashMap<Slot, Set<Term>> getDownCableset(){
+	public Map<Slot, Set<Term>> getDownCableset(){
 		return downcableset;
 	}
 	
@@ -222,7 +218,7 @@ public class Term implements ITerm {
 		if (chs == null) return;
 	
 		if(!uchannels.containsKey(this.getName()))
-			uchannels.put(this.getName(), new HashSet<Channel>());
+			uchannels.put(this.getName(), Collections.synchronizedSet(new HashSet<Channel>()));
 		
 		uchannels.get(this.getName()).addAll(chs);
 	}
@@ -235,7 +231,7 @@ public class Term implements ITerm {
 		if (chs == null) return;
 	
 		if(!ichannels.containsKey(this.getName()))
-			ichannels.put(this.getName(), new HashSet<Channel>());
+			ichannels.put(this.getName(), Collections.synchronizedSet(new HashSet<>()));
 		
 		ichannels.get(this.getName()).addAll(chs);
 	}
@@ -248,7 +244,7 @@ public class Term implements ITerm {
 		if (chs == null) return;
 	
 		if(!gchannels.containsKey(this.getName()))
-			gchannels.put(this.getName(), new HashSet<Channel>());
+			gchannels.put(this.getName(), Collections.synchronizedSet(new HashSet<Channel>()));
 		
 		gchannels.get(this.getName()).addAll(chs);
 	}
@@ -261,7 +257,7 @@ public class Term implements ITerm {
 		if (chs == null) return;
 	
 		if(!antinchannels.containsKey(this.getName()))
-			antinchannels.put(this.getName(), new HashSet<Channel>());
+			antinchannels.put(this.getName(), Collections.synchronizedSet(new HashSet<Channel>()));
 		
 		antinchannels.get(this.getName()).addAll(chs);
 	}

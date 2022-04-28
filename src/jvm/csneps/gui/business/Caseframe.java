@@ -1,12 +1,7 @@
 package csneps.gui.business;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import clojure.lang.APersistentSet;
 import clojure.lang.ISeq;
@@ -19,18 +14,17 @@ import csneps.gui.GUI2;
 
 public class Caseframe implements Comparable<Caseframe>, ICaseframe {
 
-	private static HashMap<String, Caseframe> cfs = new HashMap<String, Caseframe>();
-	private static HashMap<String, Caseframe> fsymbols = new HashMap<String, Caseframe>();
+	private static Map<String, Caseframe> cfs = new ConcurrentHashMap<String, Caseframe>();
+	private static Map<String, Caseframe> fsymbols = new ConcurrentHashMap<String, Caseframe>();
 	
 	private static Keyword name_key = Keyword.intern("name");
 	private static Keyword type_key = Keyword.intern("type");
 	private static Keyword slots_key = Keyword.intern("slots");
-	
-	
+
 	private IPersistentMap cf;
 	
-	private ArrayList<String> slotnames;
-	private ArrayList<Slot> slots;
+	private List<String> slotnames;
+	private List<Slot> slots;
 	
 	private Caseframe(IPersistentMap cf){
 		this.cf = cf;
@@ -70,7 +64,7 @@ public class Caseframe implements Comparable<Caseframe>, ICaseframe {
 	}
 	
 	public static Collection<Caseframe> reinitializeCaseframes(IPersistentMap fsyms, APersistentSet scs){
-		cfs = new HashMap<String, Caseframe>();
+		cfs = new ConcurrentHashMap<>();
 		for (Iterator<IPersistentMap> iter = scs.iterator(); iter.hasNext(); ){
 			create(iter.next());
 		}
@@ -101,23 +95,21 @@ public class Caseframe implements Comparable<Caseframe>, ICaseframe {
 		return SemanticType.getSemanticType(((Keyword)cf.valAt(type_key)).getName());
 	}
 	
-	public ArrayList<String> getSlotNames(){
+	public List<String> getSlotNames(){
 		if(slotnames == null){
-			
-			slotnames = new ArrayList<String>();
+			slotnames = Collections.synchronizedList(new ArrayList<>());
 			IPersistentVector v = PersistentVector.create((ISeq)cf.valAt(slots_key));
 			for(int i = 0; i < v.length(); i++){
 				IPersistentMap cljslot = (IPersistentMap)v.nth(i);
 				slotnames.add(cljslot.valAt(name_key).toString());
-			} 
-			
+			}
 		}
 		return slotnames;
 	}
 	
-	public ArrayList<Slot> getSlots(){
+	public List<Slot> getSlots(){
 		if(slots == null){
-			slots = new ArrayList<Slot>();
+			slots = Collections.synchronizedList(new ArrayList<>());
 
 			for(String s : getSlotNames()){
 				slots.add(Slot.getSlot(s));
@@ -141,7 +133,7 @@ public class Caseframe implements Comparable<Caseframe>, ICaseframe {
 	
 	// We shouldn't cache this since (sameFrame ...) allows adding them.
 	public Set<String> getFSymbols(){
-		Set<String> fsyms = new HashSet<String>();
+		Set<String> fsyms = Collections.synchronizedSet(new HashSet<>());
 		if(FnInterop.quotedppQ(cf)) return fsyms;
 		
 		for(String k : fsymbols.keySet()){

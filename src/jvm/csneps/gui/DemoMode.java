@@ -34,15 +34,12 @@ public class DemoMode extends javax.swing.JFrame {
     private String buffer;
 
     /** Creates new form DemoMode */
-    public DemoMode() {
+    public DemoMode(String name) {
         initComponents();
-        // Get the default toolkit
-        Toolkit toolkit = Toolkit.getDefaultToolkit();
+        setTitle("Demo: " + name);
 
-        // Get the current screen size
-        Dimension scrnsize = toolkit.getScreenSize();
-
-        this.setLocation(((int)scrnsize.getWidth()-this.getWidth())/2, this.getY());
+        // Center the window on the screen.
+        setLocationRelativeTo(null);
     }
 
     public void setupDemo(String s, GUI2 p){
@@ -150,7 +147,7 @@ public class DemoMode extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new DemoMode().setVisible(true);
+                new DemoMode("test").setVisible(true);
             }
         });
     }

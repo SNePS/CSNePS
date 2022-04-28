@@ -10,8 +10,8 @@ import csneps.gui.business.*;
 
 import java.awt.Component;
 import java.awt.Frame;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.DefaultListModel;
@@ -128,7 +128,7 @@ public class GlobalGraphFilter extends javax.swing.JPanel implements IView {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextArea jTextArea1;
 
-    public void ctUpdate(ArrayList<Context> c, Boolean clear) { }
+    public void ctUpdate(List<Context> c, Boolean clear) { }
 
     public void ctCurrent(Context c) { }
 

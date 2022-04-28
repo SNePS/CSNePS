@@ -802,7 +802,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 	}
 
-	public void ctUpdate(ArrayList<csneps.gui.business.Context> c, Boolean clear) {
+	public void ctUpdate(List<csneps.gui.business.Context> c, Boolean clear) {
 		vv.repaint();
 	}
 
@@ -866,7 +866,7 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 
 			// Deal with edges within molecular terms.
 			if (t.isMolecular()) {
-				HashMap<Slot, Set<Term>> dcs = t.getDownCableset();
+				Map<Slot, Set<Term>> dcs = t.getDownCableset();
 				for (Entry<Slot, Set<Term>> entry : dcs.entrySet()) {
 					for (Term endterm : entry.getValue()) {
 						ITermNode<IEdge> targetnode = dsg.getVertex(endterm.getName());
@@ -927,5 +927,4 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 			}
 		}
 	}
-
 }

@@ -14,10 +14,7 @@ package csneps.gui;
 import csneps.gui.business.*;
 
 import java.awt.BorderLayout;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
@@ -166,8 +163,8 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView {
         if(jTree1.getSelectionPath() == null || jTree1.getSelectionPath().getLastPathComponent() == treeModel.getRoot()) return;
         Caseframe selectedCaseframe = (Caseframe)((DefaultMutableTreeNode)jTree1.getSelectionPath().getLastPathComponent()).getUserObject();
 
-        ArrayList<Slot> selected = selectedCaseframe.getSlots();
-        ArrayList<Slot> unselected = new ArrayList<Slot>();
+        List<Slot> selected = selectedCaseframe.getSlots();
+        List<Slot> unselected = new ArrayList<Slot>();
         for(Slot s : Slot.getSlots()){
             if(!selected.contains(s)) unselected.add(s);
         }
@@ -194,7 +191,7 @@ public class CaseframesPanel extends javax.swing.JPanel implements IView {
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
 
-    public void ctUpdate(ArrayList<Context> c, Boolean clear) {
+    public void ctUpdate(List<Context> c, Boolean clear) {
     }
 
     public void stUpdate(Collection<SemanticType> v, Boolean clear) {
