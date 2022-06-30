@@ -337,6 +337,9 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 	}
 
 	public boolean addEdge(Edge e) {
+		// This is a condition which would otherwise cause a crash!
+		if (e.getFrom() == null || e.getTo() == null) return false;
+
 		if (e instanceof RestrictionEdge)
 			return dsg.addRestrictionEdge((RestrictionEdge)e, new Pair<ITermNode<IEdge>>(e.getFrom(), e.getTo()));
 		
