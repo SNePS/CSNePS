@@ -8,7 +8,7 @@
   ([term subst]
     (apply-sub-to-term term subst nil))
   ([term subst ignore-type]
-  (term-prewalk #(subst % %) term :with-restrictions true)))
+  (term-prewalk #(subst % %) term :with-restrictions true :ignore-type ignore-type)))
 
 ;; Ex: subs1: {arb2: (every x (Isa x Cat)) arb1: (every x (Isa x Entity))}
 ;;     subs2: {arb1: (every x (Isa x Entity)) cat!}

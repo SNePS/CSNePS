@@ -176,11 +176,11 @@
            determined by the fillers of its slots
            (only used by rule nodes,
             the semantic types of whose arguments
-            are to be used instead of the type proposition;
+            are to be used instead of the type proposition);
        the min parameter, given for andor and thresh;
        the max parameter, given for andor and thresh."
   [cf dcs syntype semtype & {:keys [fsemtype min max closed-vars properties]}]
-  ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)))
+  ;(println "building molecular..." dcs (doall (map make-set-if-not-set dcs)) properties fsemtype)
   (dosync
     (let [dcs-sets (map make-set-if-not-set dcs)
         tests (doall (map check-min-max dcs-sets (:slots cf)))
@@ -632,7 +632,7 @@
             (assert term (ct/find-context 'OntologyCT)))
           (when (= expr 'False)
             (assert 
-              (build (list 'not term) :Proposition substitution)
+              (build (list 'not term) :Propositional substitution)
               (ct/find-context 'OntologyCT)))
           term))))
 
