@@ -90,7 +90,15 @@
         grayColorOfRex (snuser/find-term 'grayColorOfRex)]
     (is (= (count ans) 1))
     (is (= (count (first ans)) 2))
-    (is (= ans (list {qvar1 rex, qvar2 grayColorOfRex})))))
+    (is (= ans (list {qvar1 rex, qvar2 grayColorOfRex}))))
+  (let [ans (snuser/askwh '(BearerOf (?x IndependentContinuant) (?y GrayColor)))
+        qvar1 (snuser/find-term 'qvar1)
+        qvar3 (snuser/find-term 'qvar3)
+        rex (snuser/find-term 'rex)
+        grayColorOfRex (snuser/find-term 'grayColorOfRex)]
+    (is (= (count ans) 1))
+    (is (= (count (first ans)) 2))
+    (is (= ans (list {qvar1 rex, qvar3 grayColorOfRex})))))
 
 (deftest multi-restrict-qvar-tests
   (let [ans (snuser/askwh '(BearerOf (?x IndependentContinuant) (?y SpecificallyDependentContinuant (Isa ?y GrayColor))))
