@@ -873,6 +873,11 @@ public class JungGraphPanel extends javax.swing.JPanel implements IView {
 				for (Entry<Slot, Set<Term>> entry : dcs.entrySet()) {
 					for (Term endterm : entry.getValue()) {
 						ITermNode<IEdge> targetnode = dsg.getVertex(endterm.getName());
+						if (targetnode == null) {
+							System.err.println("Error adding edge from: " + tn + " to: " + endterm.getName() +
+									", " + endterm.getName() + " has no node in the graph.");
+							continue;
+						}
 
 						// It's possible that one of the arguments of a new molecular node is hidden.
 						// Make sure to make it visible.
