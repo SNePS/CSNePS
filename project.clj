@@ -15,6 +15,8 @@
                  [net.sf.jung/jung-visualization "2.1.1"]
                  [net.sf.jung/jung-io "2.1.1"]
                  [net.sf.jung/jung-algorithms "2.1.1"]
+                ;;  [javax.media/jai_core "1.1.3"]
+                 ;; https://mvnrepository.com/artifact/javax.media/jai_core
                  ;[net.sf.jung/jung-jai "2.0.1"]
                  ;[net.sf.jung/jung-3d "2.0.1"]
                  [junit/junit "3.8.2"]
@@ -31,7 +33,7 @@
                  [org.freehep/freehep-graphicsio-swf "2.4"]
                  [org.jpedal/jpedal-lgpl "4.74b27"]
                  [org.swinglabs/swingx "1.6.1"]
-                 [net.xeon/jspf.core "1.0.2"]
+                 [net.xeon/jspf-core "1.0.2"]
                  [org.clojure/tools.cli "0.4.1"]
                  [reply/reply "0.4.4"]
                  [aleph "0.4.6"]
@@ -39,7 +41,6 @@
   :dev [[org.clojure/tools.namespace "0.2.4"]]
   :repositories {"FreeHEP" "http://java.freehep.org/maven2"
                  "mvnrepo" "https://mvnrepository.com"
-                 "jpedal" "http://maven.geomajas.org"
                  "local" ~(str (.toURI (java.io.File. "local_maven_repo")))}
   :plugins [[lein-swank "1.4.5"]]
   :source-paths ["src/clj/"]
