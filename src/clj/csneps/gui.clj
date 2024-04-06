@@ -76,7 +76,7 @@
           port (+ 1000 (.nextInt ^java.util.Random rgen 9000))
           srv (start-server :port port)
           termset (set (map #(csneps/get-term %) termset))
-          GUI (new GUI2 port termset)]
+          GUI (new GUI2 port termset false)]
       (dosync (ref-set gui GUI))
       (add-watches GUI2/model))))
 

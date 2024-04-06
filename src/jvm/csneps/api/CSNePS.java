@@ -19,6 +19,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CSNePS extends FnInterop {
 
@@ -28,6 +29,11 @@ public class CSNePS extends FnInterop {
 
     public void startGUI(){
         Controller.gui_startGUI();
+    }
+
+    public void startGUI(Set<String> termNames) {
+        PersistentHashSet hs = PersistentHashSet.create(termNames.stream().map(Symbol::intern).collect(Collectors.toList()));
+        Controller.gui_startGUI(hs);
     }
 
     public static void clearkb(boolean clearall){

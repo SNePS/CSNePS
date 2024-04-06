@@ -359,6 +359,12 @@ public class Controller {
 		csneps_gui_start_gui_fn.invoke();
 	}
 
+	public static void gui_startGUI(IPersistentSet terms) {
+		if (csneps_gui_start_gui_fn == null)
+			csneps_gui_start_gui_fn = Clojure.var("csneps.gui", "startGUI");
+		csneps_gui_start_gui_fn.invoke(terms);
+	}
+
 	public static void gui_add_watches(Model m) {
 		if (csneps_gui_add_watches_fn == null)
 			csneps_gui_add_watches_fn = Clojure.var("csneps.gui", "add-watches");

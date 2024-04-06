@@ -101,5 +101,38 @@
     (dosync (alter primaction assoc act prim-fn)))
   nil)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Acting System Primitive Actions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn define-acting-primitives []
+  ;;; Mental Acts ;;;
+  ;; TODO: believe should use a special form of belief revision.
+  (define-primaction believe [prop]
+                     (build/assert prop (ct/currentContext)))
+  ;; disbelieve unasserts a propositional term from the current context.
+  (define-primaction disbelieve [prop]
+                     (build/unassert prop))
+  ;; adopts a policy.
+  (define-primaction adopt [policy]
+                     (adopt policy))
+  ;; unadopt a policy.
+  (define-primaction unadopt [policy]
+                     (unadopt policy))
+
+  ;;; Control Acts ;;;
+  ;; snsequence performs a list of acts in order.
+  (define-primaction snsequence [act-form-list]
+                     (doseq [act-form act-form-list]
+                       (perform act-form)))
+
+  ;;
+
+
+
+
+
+  )
+
 
 

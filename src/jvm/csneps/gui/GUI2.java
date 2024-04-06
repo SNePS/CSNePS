@@ -7,7 +7,9 @@
 
 package csneps.gui;
 
+import clojure.lang.IPersistentMap;
 import csneps.gui.business.FnInterop;
+import csneps.gui.business.Term;
 import csneps.gui.graph.IEdge;
 import csneps.gui.graph.ITermNode;
 import csneps.gui.graph.SnepsGraph;
@@ -15,8 +17,7 @@ import csneps.gui.util.OSTools;
 
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 
 //Clojure
 import clojure.lang.PersistentHashSet;
@@ -167,15 +168,31 @@ public class GUI2 extends javax.swing.JFrame{
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage());}
     }
-    
-    public GUI2(int portnum, PersistentHashSet termset){
+
+    /**
+     * Main constructor for the GUI
+     * @param portnum port number to connect to Clojure on
+     * @param termset set of terms to show
+     * @param loadAll if true, load all of the terms (not only those shown)
+     */
+    public GUI2(int portnum, PersistentHashSet termset, boolean loadAll){
     	this();
     	if (DEBUG) System.out.println("Port: " + portnum + " Terms: " + termset);
     	try {
     		cljconn = new Connection("nrepl://localhost:" + portnum);
     		replPanel1.appendText("; Connection to Clojure established.\n");
     		replPanel1.connect();
-    		initializeModel(termset);
+            if (loadAll){
+                initializeModel();
+                Set<Term> termsToShow = new HashSet<>();
+                for (Iterator<IPersistentMap> iter = termset.iterator(); iter.hasNext(); ) {
+                    termsToShow.add(Term.create(iter.next()));
+                }
+                jungGraphPanel1.displayOnlyTermSet(termsToShow);
+            }
+            else {
+                initializeModel(termset);
+            }
     	}
     	catch(Exception e) {System.out.println("Error connecting to nrepl" + e.getMessage()); e.printStackTrace();}
     }

@@ -3,6 +3,7 @@ package csneps.gui.business;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import clojure.lang.*;
 import csneps.gui.dataaccess.Controller;
