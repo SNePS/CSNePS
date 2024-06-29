@@ -3,7 +3,7 @@
   "http" #(org.apache.maven.wagon.providers.http.HttpWagon.))
 (defproject CSNePS "1.0.0-SNAPSHOT"
   :description "CSNePS Knowledge Representation and Reasoning System"
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.11.3"]
                  [org.clojure/core.match "0.2.1"]
                  [org.clojure/core.memoize "0.5.9"]
                  [org.clojure/math.numeric-tower "0.0.4"]
@@ -29,7 +29,7 @@
                  [org.freehep/freehep-graphicsio-ps "2.4"]
                  [org.freehep/freehep-graphicsio-svg "2.4"]
                  [org.freehep/freehep-graphicsio-swf "2.4"]
-                 [org.jpedal/jpedal-lgpl "4.74b27"]
+                 ;[org.jpedal/jpedal-lgpl "4.74b27"]
                  [org.swinglabs/swingx "1.6.1"]
                  [net.xeon/jspf.core "1.0.2"]
                  [org.clojure/tools.cli "0.4.1"]

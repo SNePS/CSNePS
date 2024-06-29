@@ -823,10 +823,10 @@ public class GUI2 extends javax.swing.JFrame{
         jMenu_help.setMnemonic('H');
         jMenu_help.setText("Help");
 
-        menuItem_csnepsmanual.setMnemonic('S');
-        menuItem_csnepsmanual.setText("CSNePS Manual");
-        menuItem_csnepsmanual.addActionListener(e -> new pdfViewer("doc/manual.pdf"));
-        jMenu_help.add(menuItem_csnepsmanual);
+        //menuItem_csnepsmanual.setMnemonic('S');
+        //menuItem_csnepsmanual.setText("CSNePS Manual");
+        //menuItem_csnepsmanual.addActionListener(e -> new pdfViewer("doc/manual.pdf"));
+        //jMenu_help.add(menuItem_csnepsmanual);
 
 //        menuItem_guidocs.setMnemonic('G');
 //        menuItem_guidocs.setText("GUI Manual");
