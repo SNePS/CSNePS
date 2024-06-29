@@ -328,7 +328,8 @@
   (let [targetnode (second (first target))
         sourcenode (if (= (type targetnode) csneps.core.unify.treenode.DistNode)
                      (findDistNode (:name targetnode) (:arity targetnode) distnodes)
-                     source)]
+                     source)
+        target-children (when (:children targetnode) @(:children targetnode))]
     ;(binding [*print-level* 4] 
     ;  (println "Source: " sourcenode "\nTarget: " targetnode)
     ;  (println "Source Binding:" s "\nTarget Binding:" t))
@@ -336,7 +337,7 @@
       (not (and s t))                                 [nil nil]
       (and (nil? sourcenode) (nil? targetnode))       [s t]
       (distnode? sourcenode)                          (map #(unifyTreeWithChain
-                                                              @(:children targetnode)
+                                                              target-children
                                                               :variable? variable? :s s :t t :source %
                                                               :distnodes distnodes)
                                                         (vals @(:children sourcenode)))
@@ -344,7 +345,7 @@
            (:name (:acceptWft targetnode))
            (= (:name (:acceptWft sourcenode))
               (:name (:acceptWft targetnode))))       (map #(unifyTreeWithChain
-                                                              @(:children targetnode)
+                                                              target-children
                                                               :variable? variable? :s s :t t :source %
                                                               :distnodes distnodes)
                                                                (vals @(:children sourcenode)))
@@ -352,7 +353,7 @@
            (molecularTerm? (:acceptWft targetnode)))  (if (or (not-empty @(:children sourcenode))
                                                               (not-empty @(:children targetnode)))
                                                         (map #(unifyTreeWithChain
-                                                                @(:children targetnode)
+                                                                target-children
                                                                 :variable? variable? :s s :t t :source %
                                                                 :distnodes distnodes)
                                                           (vals @(:children sourcenode)))
@@ -377,7 +378,7 @@
                                                         (for [[sb tb] setunifres
                                                               source (vals @(:children sourcenode))]
                                                           (unifyTreeWithChain
-                                                            @(:children targetnode)
+                                                            target-children
                                                             :variable variable? :s sb :t tb :source source
                                                             :distnodes distnodes)))
       :else nil)))
@@ -385,9 +386,10 @@
 (defn getUnifiers
   [term & {:keys [varfn distnodes] :or {varfn variable? distnodes @DistNodes}}]
   (let [tempdist (ref {})
-        termchain (addTermToUnificationTree term :distnodes tempdist)
-        unifiers (when (findDistNode (:name (second (first @tempdist))) (:arity (second (first @tempdist))) distnodes)
-                   (remove nil? (flatten (unifyTreeWithChain @tempdist :variable? varfn :distnodes distnodes))))]
+        _ (addTermToUnificationTree term :distnodes tempdist)
+        tempdist @tempdist
+        unifiers (when (findDistNode (:name (second (first tempdist))) (:arity (second (first tempdist))) distnodes)
+                   (remove nil? (flatten (unifyTreeWithChain tempdist :variable? varfn :distnodes distnodes))))]
     (for [u unifiers
           :let [[subsourcebind subtargetbind] (->> [(:sourcebind u) (:targetbind u)]
                                                 (subst-bindings variable?)
