@@ -39,7 +39,7 @@ public class Controller {
 	private static IFn csneps_core_semantic_types_semantic_type_of_fn;
 
 	private static IFn csneps_print_print_kb_to_text_file_fn;
-	private static IFn csneps_gui_start_gui_fn, csneps_gui_add_watches_fn;
+	private static IFn csneps_gui_start_gui_fn, csneps_gui_add_watches_fn, csneps_gui_remove_watches_fn;
 	private static IFn snip_pathsfrom_fn;
 	
 	public static ISeq build_find(ISeq pattern){
@@ -369,6 +369,12 @@ public class Controller {
 		if (csneps_gui_add_watches_fn == null)
 			csneps_gui_add_watches_fn = Clojure.var("csneps.gui", "add-watches");
 		csneps_gui_add_watches_fn.invoke(m);
+	}
+
+	public static void gui_remove_watches() {
+		if (csneps_gui_remove_watches_fn == null)
+			csneps_gui_remove_watches_fn = Clojure.var("csneps.gui", "remove-watches");
+		csneps_gui_remove_watches_fn.invoke();
 	}
 
 	public static void snuser_load(String filename) {

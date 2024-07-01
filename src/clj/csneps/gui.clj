@@ -82,7 +82,7 @@
 
 ;; A clearkb required entirely reinitializing the model.
 (defn remove-watches []
-  (when @gui
+  ;(when @gui
     (remove-watch csneps/semantic-type-hierarchy :types)
     (remove-watch csneps/TERMS :terms)
     (remove-watch ct/CONTEXTS :contexts)
@@ -91,10 +91,11 @@
     (remove-watch cf/FN2CF :fsyms)
     (remove-watch ct/CONTEXTS :cts)
     (remove-watch ct/*CurrentContext* :currct)
-    (remove-watch (:hyps (ct/currentContext)) :currhyps)
+    (when (:hyps (ct/currentContext))
+      (remove-watch (:hyps (ct/currentContext)) :currhyps))
     (remove-watch csneps/i-channels :ichannels)
     (remove-watch csneps/g-channels :gchannels)
-    (remove-watch csneps/u-channels :uchannels)))
+    (remove-watch csneps/u-channels :uchannels));)
 
 (defn reinitialize-gui []
   (when @gui

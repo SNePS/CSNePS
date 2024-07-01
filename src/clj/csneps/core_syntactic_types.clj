@@ -27,11 +27,10 @@
 
 (defn type-of
   [expr]
-  (let [stype (ref true)]
-      (cond
-        (:type expr) (:type expr)
-        (keyword? expr) expr
-        true (type expr))))
+  (cond
+    (:type expr) (:type expr)
+    (keyword? expr) expr
+    true (type expr)))
 
 (defn term? 
   [o]

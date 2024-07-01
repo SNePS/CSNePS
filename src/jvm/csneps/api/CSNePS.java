@@ -55,7 +55,16 @@ public class CSNePS extends FnInterop {
             e.printStackTrace();
         }
 
-        loadString(buffer.toString());
+        if (buffer.length() > 10000) { // Big load operation
+            Controller.gui_remove_watches();
+            loadString(buffer.toString());
+            GUI2.model = new Model();
+            Controller.gui_add_watches(GUI2.getModel());
+            GUI2.initializeModel();
+        }
+        else {
+            loadString(buffer.toString());
+        }
     }
 
     public static Set<Term> pathsfrom(Term term, String path){

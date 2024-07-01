@@ -412,19 +412,20 @@
 (defn build-unifier-channels
   "Channels built between unifiable terms."
   [unif]
-  ;; No unifier channels should originate from a WhQuestion, or an analytic generic
-  (when-not (and (@property-map (:source unif)) 
-                 (or ((@property-map (:source unif)) :WhQuestion)
-                     ((@property-map (:source unif)) :Analytic)))
-    ;(println "building unif channel from " (:source unif) "to" (:target unif) "pmap" (@property-map (:source unif)))
-    (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
-      (cond 
-        (and (@property-map (:target unif)) ((@property-map (:target unif)) :Analytic))
-        (install-channel s->t (:source unif) (:target unif) :i-channel)
+  (let [pm @property-map]
+    ;; No unifier channels should originate from a WhQuestion, or an analytic generic
+    (when-not (and (pm (:source unif))
+                   (or ((pm (:source unif)) :WhQuestion)
+                       ((pm (:source unif)) :Analytic)))
+      ;(println "building unif channel from " (:source unif) "to" (:target unif) "pmap" (@property-map (:source unif)))
+      (let [s->t (build-channel (:source unif) (:target unif) (:sourcebind unif) (:targetbind unif))]
+        (cond
+          (and (pm (:target unif)) ((pm (:target unif)) :Analytic))
+          (install-channel s->t (:source unif) (:target unif) :i-channel)
 
-        (or (not (@property-map (:source unif)))
-            (and (@property-map (:source unif)) (not ((@property-map (:source unif)) :Analytic))))
-        (install-channel s->t (:source unif) (:target unif) :i-channel)))))
+          (or (not (pm (:source unif)))
+              (and (pm (:source unif)) (not ((pm (:source unif)) :Analytic))))
+          (install-channel s->t (:source unif) (:target unif) :i-channel))))))
 
 (defn build-internal-channels
   [rnode ants cqs]

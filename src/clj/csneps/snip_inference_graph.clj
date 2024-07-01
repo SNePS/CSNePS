@@ -48,8 +48,8 @@
         ;; Process the message immediately. For forward infer, this ammounts to 
         ;; ignoring the status of the valve.
         (do 
-          (when (@infer-status (:taskid message))
-            (.increment ^CountingLatch (@infer-status (:taskid message))))
+          (when-let [status (@infer-status (:taskid message))]
+            (.increment ^CountingLatch status))
           (print-debug :msgrx #{(:originator channel) (:destination channel)} (print-str "MSGRX: " message "\n -- on channel" channel))
           (try (.execute ^ThreadPoolExecutor executorService
                   (priority-partial 1 initiate-node-task (:destination channel) message))
@@ -121,10 +121,10 @@
           (print-debug :valveselect #{(:originator channel) (:destination channel)} (print-str "VS (new): " (build/pass-vs? valve-selector msg) "\n -- for message" msg " \n   -- in channel" channel))
           (when (build/pass-vs? valve-selector msg)
             (dosync (commute (:waiting-msgs channel) disj msg))
-            (if (@infer-status taskid)
+            (if-let [status (@infer-status taskid)]
               (do
                 ;(send screenprinter (fn [_]  (println "inc-stc" taskid (derivative-message msg :taskid taskid))))
-                (.increment ^CountingLatch (@infer-status taskid)))
+                (.increment ^CountingLatch status))
               (send screenprinter (fn [_]  
                                      (println) 
                                      (println "Warning: No taskid when adding valve selector to" channel) 
@@ -231,14 +231,15 @@
         (and 
           (= (syntactic-type-of term) :csneps.core/Implication)
           (= (count (first (@down-cableset term))) 1))
-        (let [ant (ffirst (@down-cableset term))
+        (let [dcs (@down-cableset term)
+              ant (ffirst dcs)
               ct (if ((ct/hyps (ct/currentContext)) ant)
                    (ct/currentContext)
                    (ct/defineContext 
                      (gensym (:name (ct/currentContext))) 
                      :parents (list (ct/currentContext))
                      :hyps #{(:name ant)}))]
-          (doseq [cq (second (@down-cableset term))]    
+          (doseq [cq (second dcs)]
             (when taskid (.increment ^CountingLatch (@infer-status taskid)))
             (.execute ^ThreadPoolExecutor executorService 
               (priority-partial depth 

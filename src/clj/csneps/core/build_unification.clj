@@ -316,8 +316,9 @@
     ;(binding [*print-level* 4] 
     ;  (println unifiers))
     (doall 
-      (for [[sn tn [sb tb]] unifiers] 
-        (map #(unifyTreeWithChain @(:children tn) :variable? variable? :s sb :t tb :source %) (vals @(:children sn)))))))
+      (for [[sn tn [sb tb]] unifiers
+            :let [tn-children @(:children tn)]]
+        (map #(unifyTreeWithChain tn-children :variable? variable? :s sb :t tb :source %) (vals @(:children sn)))))))
 
 (defn unifyVarTree
   [variable? sourcenode targetnode [s t]]
@@ -326,7 +327,7 @@
 (defn unifyTreeWithChain
   [target & {:keys [variable? s t source distnodes] :or {variable? variable?, s {}, t {}, source true, distnodes @DistNodes}}]
   (let [targetnode (second (first target))
-        sourcenode (if (= (type targetnode) csneps.core.unify.treenode.DistNode)
+        sourcenode (if (distnode? targetnode)
                      (findDistNode (:name targetnode) (:arity targetnode) distnodes)
                      source)
         target-children (when (:children targetnode) @(:children targetnode))]
@@ -351,7 +352,7 @@
                                                                (vals @(:children sourcenode)))
       (and (molecularTerm? (:acceptWft sourcenode))
            (molecularTerm? (:acceptWft targetnode)))  (if (or (not-empty @(:children sourcenode))
-                                                              (not-empty @(:children targetnode)))
+                                                              (not-empty target-children))
                                                         (map #(unifyTreeWithChain
                                                                 target-children
                                                                 :variable? variable? :s s :t t :source %
