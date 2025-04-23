@@ -92,6 +92,26 @@
     (rewrite-propositional-expr expr)
     (build/assert expr (currentContext))))
 
+;; Attempts to resolve each symbol in expr, and if it can resolve it, evals the symbol.
+;; This is useful when you have a term stored in a variable, and then want to assert something about it
+;; but don't want to use Clojure's nasty escape syntax.
+;; e.g.
+;; (def term1 (assert '(Isa x y)))
+;; (assert* '(Isa term1 Proposition))
+;; yields: (Isa (Isa x y) Proposition)
+;; This is equivalent, in this case, to saying:
+;; (assert `(~'Isa ~term1 ~'Proposition))
+;; But note, this uses (resolve ...) to try to resolve the list elements. If one is a built-in function or variable
+;; like: cat, then you should quote the input.
+(defn assert* [expr & {:keys [precision]}]
+  (binding [*PRECISION* (or precision *PRECISION*)]
+    (rewrite-propositional-expr expr)
+    (build/assert
+      (vec (for [e expr]
+             (if (and (symbol? e) (resolve e))
+               (eval e)
+                e))) (currentContext))))
+
 (defn assert! [expr & {:keys [precision]}]
   (binding [*PRECISION* (or precision *PRECISION*)]
     (rewrite-propositional-expr expr)
